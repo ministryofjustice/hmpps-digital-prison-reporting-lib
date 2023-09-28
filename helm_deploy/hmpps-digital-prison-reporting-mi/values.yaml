@@ -1,0 +1,46 @@
+---
+generic-service:
+  nameOverride: hmpps-digital-prison-reporting-mi
+
+  replicaCount: 4
+
+  image:
+    repository: quay.io/hmpps/hmpps-digital-prison-reporting-mi
+    tag: app_version    # override at deployment time
+    port: 8080
+
+  ingress:
+    enabled: true
+    host: app-hostname.local    # override per environment
+    tlsSecretName: hmpps-digital-prison-reporting-mi-cert
+
+  # Environment variables to load into the deployment
+  env:
+    JAVA_OPTS: "-Xmx512m"
+    SERVER_PORT: "8080"
+    SPRING_PROFILES_ACTIVE: "logstash"
+    APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=$(APPINSIGHTS_INSTRUMENTATIONKEY)"
+    APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
+
+  # Pre-existing kubernetes secrets to load as environment variables in the deployment.
+  # namespace_secrets:
+  #   [name of kubernetes secret]:
+  #     [name of environment variable as seen by app]: [key of kubernetes secret to load]
+
+  namespace_secrets:
+    hmpps-digital-prison-reporting-mi:
+      APPINSIGHTS_INSTRUMENTATIONKEY: "APPINSIGHTS_INSTRUMENTATIONKEY"
+    redshift-jdbc:
+      REDSHIFT_JDBC_USER: "user"
+      REDSHIFT_JDBC_PASSWORD: "password"
+    hmpps-auth:
+      SYSTEM_CLIENT_ID: "system_client_id"
+      SYSTEM_CLIENT_SECRET: "system_client_secret"
+
+  allowlist:
+    cloudplatform-live-1: "35.178.209.113/32"
+    cloudplatform-live-2: "3.8.51.207/32"
+    cloudplatform-live-3: "35.177.252.54/32"
+
+generic-prometheus-alerts:
+  targetApplication: hmpps-digital-prison-reporting-mi
