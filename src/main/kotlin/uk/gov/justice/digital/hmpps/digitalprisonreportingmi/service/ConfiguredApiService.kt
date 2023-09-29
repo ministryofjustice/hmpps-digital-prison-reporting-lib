@@ -1,5 +1,15 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportingmi.service
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import com.google.gson.reflect.TypeToken
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
@@ -9,9 +19,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.ConfiguredApiR
 import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.StubbedProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.model.DataSet
 import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportingmi.data.model.SchemaField
+import java.lang.reflect.Type
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 @Service
@@ -73,12 +87,16 @@ class ConfiguredApiService(
     )
   }
 
-  private fun getDataSet(reportId: String, reportVariantId: String) =
-    stubbedProductDefinitionRepository.getProductDefinitions()
+  private fun getDataSet(reportId: String, reportVariantId: String): DataSet {
+    val gson: Gson = GsonBuilder()
+      .registerTypeAdapter(LocalDate::class.java, LocalDateTypeAdapter())
+      .create()
+    return gson.fromJson<List<ProductDefinition>>(this::class.java.classLoader.getResource("stubbedProductDefinition.json").readText(), object : TypeToken<List<ProductDefinition>>() {}.type)
       .filter { it.id == reportId }
       .flatMap { pd -> pd.dataSet.filter { it.id == getDataSetId(reportId, reportVariantId) } }
       .ifEmpty { throw ValidationException("Invalid dataSetId provided: ${getDataSetId(reportId, reportVariantId)}") }
       .first()
+  }
 
   private fun getDataSetId(reportId: String, reportVariantId: String) =
     getReportVariant(reportId, reportVariantId)
@@ -175,13 +193,17 @@ class ConfiguredApiService(
       .specification
       ?.field
 
-  private fun getReportVariant(reportId: String, reportVariantId: String) =
-    stubbedProductDefinitionRepository.getProductDefinitions()
+  private fun getReportVariant(reportId: String, reportVariantId: String): Report {
+    val gson: Gson = GsonBuilder()
+      .registerTypeAdapter(LocalDate::class.java, LocalDateTypeAdapter())
+      .create()
+    return gson.fromJson<List<ProductDefinition>>(this::class.java.classLoader.getResource("stubbedProductDefinition.json").readText(), object : TypeToken<List<ProductDefinition>>() {}.type)
       .filter { it.id == reportId }
       .ifEmpty { throw ValidationException("$INVALID_REPORT_ID_MESSAGE $reportId") }
       .flatMap { it.report.filter { report -> report.id == reportVariantId } }
       .ifEmpty { throw ValidationException("$INVALID_REPORT_VARIANT_ID_MESSAGE $reportVariantId") }
       .first()
+  }
 
   private fun truncateRangeFilters(filters: Map<String, String>): Map<String, String> {
     return filters.entries
@@ -209,5 +231,25 @@ class ConfiguredApiService(
 
   private fun transformKey(key: String, schemaFields: List<SchemaField>): String {
     return schemaFields.first { it.name.lowercase() == key.lowercase() }.name
+  }
+}
+
+class LocalDateTypeAdapter : JsonSerializer<LocalDate?>, JsonDeserializer<LocalDate?> {
+  private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+  override fun serialize(
+    date: LocalDate?,
+    typeOfSrc: Type?,
+    context: JsonSerializationContext?,
+  ): JsonElement {
+    return JsonPrimitive(date?.format(formatter))
+  }
+
+  @Throws(JsonParseException::class)
+  override fun deserialize(
+    json: JsonElement,
+    typeOfT: Type?,
+    context: JsonDeserializationContext?,
+  ): LocalDate {
+    return LocalDate.parse(json.getAsString(), formatter)
   }
 }
