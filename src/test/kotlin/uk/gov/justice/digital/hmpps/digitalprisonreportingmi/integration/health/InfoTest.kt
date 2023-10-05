@@ -16,7 +16,7 @@ class InfoTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("build.name").isEqualTo("hmpps-digital-prison-reporting-mi")
+      .jsonPath("build.name").isEqualTo("hmpps-digital-prison-reporting-mi-lib")
   }
 
   @Test
