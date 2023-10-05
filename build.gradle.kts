@@ -115,10 +115,10 @@ tasks.jar {
   enabled = true
 }
 
- repositories {
+repositories {
   mavenLocal()
   mavenCentral()
- }
+}
 
 java {
   withSourcesJar()
