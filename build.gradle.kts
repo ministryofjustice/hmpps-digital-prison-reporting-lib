@@ -74,6 +74,7 @@ publishing {
     create<MavenPublication>("digitalprisonreportingmilib") {
       from(components["java"])
       pom {
+        group = "uk.gov.justice.service.hmpps"
         name.set(base.archivesName)
         artifactId = base.archivesName.get()
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
@@ -84,15 +85,15 @@ publishing {
             url.set("https://opensource.org/licenses/MIT")
           }
         }
-//        developers {
-//          developer {
-//            id.set("gavriil-g-moj")
-//            name.set("Gavriil  Gavriilidis")
-//            email.set("gavriil.gavriilidis@digital.justice.gov.uk")
-//          }
-//        }
+        developers {
+          developer {
+            id.set("gavriil-g-moj")
+            name.set("Digital Prison Reporting")
+            email.set("digitalprisonreporting@digital.justice.gov.uk")
+          }
+        }
         scm {
-          url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi")
+          url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi-lib")
         }
       }
     }
@@ -114,10 +115,10 @@ tasks.jar {
   enabled = true
 }
 
-// repositories {
-//  mavenLocal()
-//  mavenCentral()
-// }
+ repositories {
+  mavenLocal()
+  mavenCentral()
+ }
 
 java {
   withSourcesJar()

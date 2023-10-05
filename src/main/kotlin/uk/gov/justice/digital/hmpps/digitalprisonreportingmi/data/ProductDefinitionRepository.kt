@@ -23,7 +23,7 @@ class ProductDefinitionRepository {
     val gson: Gson = GsonBuilder()
       .registerTypeAdapter(LocalDate::class.java, LocalDateTypeAdapter())
       .create()
-    return gson.fromJson(this::class.java.classLoader.getResource("productDefinition.json").readText(), object : TypeToken<List<ProductDefinition>>() {}.type)
+    return gson.fromJson(this::class.java.classLoader.getResource("productDefinition.json")?.readText(), object : TypeToken<List<ProductDefinition>>() {}.type)
   }
 }
 class LocalDateTypeAdapter : JsonSerializer<LocalDate?>, JsonDeserializer<LocalDate?> {
@@ -42,6 +42,6 @@ class LocalDateTypeAdapter : JsonSerializer<LocalDate?>, JsonDeserializer<LocalD
     typeOfT: Type?,
     context: JsonDeserializationContext?,
   ): LocalDate {
-    return LocalDate.parse(json.getAsString(), formatter)
+    return LocalDate.parse(json.asString, formatter)
   }
 }
