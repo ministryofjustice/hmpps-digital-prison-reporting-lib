@@ -12,7 +12,7 @@
     </layout>
   </appender>
 
-  <logger name="uk.gov.justice.digital.hmpps.digitalprisonreportingmi.DigitalPrisonReportingMiKt" additivity="false"
+  <logger name="uk.gov.justice.digital.hmpps.digitalprisonreportinglib.DigitalPrisonReportingMiKt" additivity="false"
           level="DEBUG">
     <appender-ref ref="consoleAppender"/>
   </logger>

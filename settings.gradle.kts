@@ -1,1 +1,1 @@
-rootProject.name = "hmpps-digital-prison-reporting-mi-lib"
+rootProject.name = "hmpps-digital-prison-reporting-lib"
