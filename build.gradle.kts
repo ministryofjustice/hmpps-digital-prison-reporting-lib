@@ -22,17 +22,11 @@ dependencies {
 
   implementation("com.google.code.gson:gson:2.8.5")
 
-  // Security
-  implementation("org.springframework.boot:spring-boot-starter-security")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
   // Testing
   testImplementation("com.h2database:h2")
-  testImplementation("io.jsonwebtoken:jjwt:0.9.1")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
 }
 

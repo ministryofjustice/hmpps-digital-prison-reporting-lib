@@ -12,7 +12,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
   fun `Stubbed definition is returned as expected`() {
     val result = webTestClient.get()
       .uri("/definitions")
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -58,7 +57,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "HTML")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -83,7 +81,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "SVG")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -103,7 +100,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "HTML")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk

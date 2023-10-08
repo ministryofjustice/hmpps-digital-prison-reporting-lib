@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config
 
-import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
-import io.swagger.v3.oas.models.security.SecurityScheme
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -15,16 +13,6 @@ class OpenApiConfig {
       .info(
         Info().title("Digital Prison Reporting MI API")
           .version("v1.0.0"),
-      )
-      .components(
-        Components()
-          .addSecuritySchemes(
-            "bearer-jwt",
-            SecurityScheme()
-              .type(SecurityScheme.Type.HTTP)
-              .scheme("bearer")
-              .bearerFormat("JWT"),
-          ),
       )
   }
 }
