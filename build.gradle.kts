@@ -10,6 +10,7 @@ plugins {
   id("org.barfuin.gradle.jacocolog") version "3.1.0"
   id("maven-publish")
   id("signing")
+  id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 configurations {
@@ -57,6 +58,7 @@ tasks.jacocoTestReport {
 publishing {
   repositories {
     mavenLocal()
+    mavenCentral()
   }
   publications {
     create<MavenPublication>("digitalprisonreportinglib") {
@@ -65,7 +67,7 @@ publishing {
         group = "uk.gov.justice.service.hmpps"
         name.set(base.archivesName)
         artifactId = base.archivesName.get()
-        version = "1.0.0"
+        version = "1.0.0-beta"
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
         url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi")
         licenses {
@@ -89,9 +91,9 @@ publishing {
   }
 }
 signing {
-  setRequired {
-    gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
-  }
+//  setRequired {
+//    gradle.taskGraph.allTasks.any { it is PublishToMavenRepository }
+//  }
   val signingKey: String? by project
   val signingPassword: String? by project
   useInMemoryPgpKeys(signingKey, signingPassword)
@@ -149,4 +151,14 @@ project.getTasksByName("check", false).forEach {
     ""
   }
   it.dependsOn("$prefix:ktlintCheck")
+}
+nexusPublishing {
+  repositories {
+    create("sonatype") {
+      nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+      username.set("digitalprisonreporting")
+      password.set("b7e5wU8974@iN369w!0Dyt$*8E")
+    }
+  }
 }
