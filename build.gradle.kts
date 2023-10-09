@@ -59,7 +59,7 @@ publishing {
     mavenLocal()
   }
   publications {
-    create<MavenPublication>("digitalprisonreportingmilib") {
+    create<MavenPublication>("digitalprisonreportinglib") {
       from(components["java"])
       pom {
         group = "uk.gov.justice.service.hmpps"
@@ -95,7 +95,7 @@ signing {
   val signingKey: String? by project
   val signingPassword: String? by project
   useInMemoryPgpKeys(signingKey, signingPassword)
-  sign(publishing.publications["digitalprisonreportingmilib"])
+  sign(publishing.publications["digitalprisonreportinglib"])
 }
 java.sourceCompatibility = JavaVersion.VERSION_19
 
