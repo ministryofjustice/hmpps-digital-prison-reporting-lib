@@ -64,8 +64,6 @@ workflows:
           filters:
             tags:
               ignore: /.*/
-      - hmpps/helm_lint:
-          name: helm_lint
 
   security:
     triggers:
