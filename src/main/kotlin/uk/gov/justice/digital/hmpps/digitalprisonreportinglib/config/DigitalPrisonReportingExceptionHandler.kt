@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 @RestControllerAdvice
-class DigitalPrisonReportingMiExceptionHandler {
+class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(ValidationException::class)
   @ResponseStatus(BAD_REQUEST)
   fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> {
