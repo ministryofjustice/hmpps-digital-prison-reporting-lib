@@ -157,8 +157,8 @@ nexusPublishing {
     create("sonatype") {
       nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
       snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
-      username.set("digitalprisonreporting")
-      password.set("b7e5wU8974@iN369w!0Dyt$*8E")
+      username.set(System.getenv("OSSRH_USERNAME"))
+      password.set(System.getenv("OSSRH_PASSWORD"))
     }
   }
 }
