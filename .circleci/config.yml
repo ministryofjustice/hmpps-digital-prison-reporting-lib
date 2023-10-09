@@ -64,6 +64,10 @@ workflows:
           filters:
             tags:
               ignore: /.*/
+      - publish:
+          filters:
+            tags:
+              ignore: /.*/
 
   security:
     triggers:
