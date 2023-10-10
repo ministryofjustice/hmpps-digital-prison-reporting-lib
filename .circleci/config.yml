@@ -46,7 +46,7 @@ jobs:
       - run:
           command: |
             ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
-            ./gradlew publishToSonatype closeSonatypeStagingRepository
+            ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
       - save_cache:
           paths:
             - ~/.gradle
@@ -64,10 +64,21 @@ workflows:
           filters:
             tags:
               ignore: /.*/
-      - publish:
+      - publish-approval:
+          type: approval
+          requires:
+            - validate
           filters:
-            tags:
-              ignore: /.*/
+            branches:
+              only:
+                - main
+      - publish:
+          requires:
+            - publish-approval
+          filters:
+            branches:
+              only:
+                - main
 
   security:
     triggers:
