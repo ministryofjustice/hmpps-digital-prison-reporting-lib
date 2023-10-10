@@ -10,7 +10,7 @@ plugins {
   id("org.barfuin.gradle.jacocolog") version "3.1.0"
   id("maven-publish")
   id("signing")
-  id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+  id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
 configurations {
