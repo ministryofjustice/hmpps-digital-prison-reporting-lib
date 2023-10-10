@@ -17,37 +17,15 @@ Requires Java 17 or above
 
 ## Overview
 
-Provides a front end for Management Information Visualisation and Presentation
+
 
 ## Local Development
 
 This project uses gradle which is bundled with the repository and also makes use
 of
 
-- [micronaut](https://micronaut.io/) - for compile time dependency injection
-- [lombok](https://projectlombok.org/) - to reduce boilerplate when creating data classes
+- [spring boot](https://spring.io/projects/spring-boot) - as a web framework and for compile time dependency injection
 - [jacoco](https://docs.gradle.org/current/userguide/jacoco_plugin.html) - for test coverage reports
-
-## Running Locally against Dev
-1. Add implementation("com.h2database:h2:2.1.214") to build.gradle
-2. Change the existing datasource config in the application.yml file to the following:
-```
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop
-  datasource:
-    url: jdbc:h2:mem:datamart;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS domain\;
-    username: sa
-    password: sa
-    driver-class-name: org.h2.Driver
-```
-3. Add the following two environment variables on intellij run configuration
-    ```HMPPS_AUTH_URL https://sign-in-dev.hmpps.service.justice.gov.uk/auth```
-    <br/><br/>
-    ```AUTHORISED_ROLES ROLE_PRISONS_REPORTING_USER```
-4. Optional: Change the org.springframework.security level to DEBUG in logback-spring.xml
-5. Run main from DigitalPrisonReportingMi
 
 ## Testing
 
@@ -92,31 +70,17 @@ project.
 ### Commit Messages
 
 - Prefix any commit messages with the JIRA ticket number where available
-- Otherwise use the prefix `NOJIRA`
+- Otherwise, use the prefix `NOJIRA`
 
 ### Pull Requests
 
 - Reference or link any relevant JIRA tickets in the pull request notes
 - At least one approval is required before a PR can be merged
 
-## Deployment
+### Integrating to your Spring Boot project
+To integrate the library into your project you will need to add the dependency to your build.gradle file, e.g:
+`implementation("uk.gov.justice.service.hmpps:hmpps-digital-prison-reporting-lib:1.0.0")`
 
-The app is deployed to the namespace: `hmpps-digital-prison-reporting-mi-<env>`.
-
-Config for the dev environment can be found here: https://github.com/ministryofjustice/cloud-platform-environments/tree/main/namespaces/live.cloud-platform.service.justice.gov.uk/hmpps-digital-prison-reporting-mi-dev
-
-Additionally, the RedShift credentials need to be manually deployed to each environment. The file `redshift-jdbc-secret.yaml` should be updated with the base64 encoded values and applied to the environment.
-
-_NB: Please do not commit these changes to `redshift-jdbc-secret.yaml`._
-
-Example of base64 encoding a secret value:
-
-```
-echo -n 'placeholder' | base64
-```
-
-Example of applying the secret to an environment:
-
-```
-kubectl -n hmpps-digital-prison-reporting-mi-dev apply -f redshift-jdbc-secret.yaml
-```
+You will also need to add the following to your Spring Boot application class:
+`@ComponentScan("yourapplicationpackage","uk.gov.justice.digital.hmpps.digitalprisonreportinglib")`
+Where you will need to replace "yourapplicationpackage" with the actual package of your application.

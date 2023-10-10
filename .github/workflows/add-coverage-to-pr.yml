@@ -1,0 +1,38 @@
+name: Add coverage to PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '19'
+          distribution: 'corretto'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Calculate test coverage
+        id: calculate-test-coverage
+        run: |
+          ./gradlew jacocoTestReport > logs.txt
+          grep 'Test Coverage:' logs.txt -A6 > message.txt
+
+      - name: PR comment
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          comment_tag: coverage
+          filePath: message.txt

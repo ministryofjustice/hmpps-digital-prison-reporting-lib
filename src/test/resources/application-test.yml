@@ -1,0 +1,17 @@
+server:
+  shutdown: immediate
+
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    url: jdbc:h2:mem:datamart;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS domain\;
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+
+management.endpoint:
+  health.cache.time-to-live: 0
+  info.cache.time-to-live: 0
