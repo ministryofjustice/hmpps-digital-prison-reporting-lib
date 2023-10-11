@@ -89,6 +89,11 @@ You will also need to add the following to your Spring Boot application class:
 `@ComponentScan("yourapplicationpackage","uk.gov.justice.digital.hmpps.digitalprisonreportinglib")`
 Where you will need to replace "yourapplicationpackage" with the actual package of your application.
 
+### Open API Docs
+The API documentation is generated via the following dependency:
+`implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")`
+By using this for your Open API configuration you will be able to see the API docs on the swagger endpoint exposed by your application.
+
 ### Publishing Locally
 Run the following command to publish the artifact to your local maven repository:
 `./gradlew publishToMavenLocal -x signDigitalprisonreportinglibPublication`
