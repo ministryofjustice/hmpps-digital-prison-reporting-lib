@@ -1,14 +1,14 @@
 # hmpps-digital-prison-reporting-mi-lib
 Common library to create reports.
 
-[![repo standards badge](https://img.shields.io/badge/dynamic/json?color=blue&style=flat&logo=github&label=MoJ%20Compliant&query=%24.result&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-digital-prison-reporting-mi)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-github-repositories.html#hmpps-digital-prison-reporting-mi "Link to report")
-[![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-digital-prison-reporting-mi/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-digital-prison-reporting-mi)
-[![Docker Repository on Quay](https://quay.io/repository/hmpps/hmpps-digital-prison-reporting-mi/status "Docker Repository on Quay")](https://quay.io/repository/hmpps/hmpps-digital-prison-reporting-mi)
-[![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://hmpps-digital-prison-reporting-mi-dev.hmpps.service.justice.gov.uk/webjars/swagger-ui/index.html?configUrl=/v3/api-docs)
+[![repo standards badge](https://img.shields.io/badge/dynamic/json?color=blue&style=flat&logo=github&label=MoJ%20Compliant&query=%24.result&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-digital-prison-reporting-lib)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-github-repositories.html#hmpps-digital-prison-reporting-lib "Link to report")
+[![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-digital-prison-reporting-lib/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-digital-prison-reporting-lib)
+[![Configured Data API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://digital-prison-reporting-mi-test.hmpps.service.justice.gov.uk/swagger-ui/index.html#/Configured%20Data%20API)
+[![Report Definition API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://digital-prison-reporting-mi-test.hmpps.service.justice.gov.uk/swagger-ui/index.html#/Report%20Definition%20API)
 
 This project is generated from ministryofjustice/hmpps-template-kotlin
 
-Requires Java 17 or above
+Requires Java 19 or above
 
 #### CODEOWNER
 
@@ -76,6 +76,10 @@ project.
 
 - Reference or link any relevant JIRA tickets in the pull request notes
 - At least one approval is required before a PR can be merged
+
+### Versioning
+* Use [semantic versioning](https://semver.org/) to indicate the scope of the change.
+* For versions considered unstable add a suffix to the version number such as `-beta` or `-wip` to indicate this.
 
 ## Integrating to your Spring Boot project
 To integrate the library into your project you will need to add the dependency to your build.gradle file, e.g:
