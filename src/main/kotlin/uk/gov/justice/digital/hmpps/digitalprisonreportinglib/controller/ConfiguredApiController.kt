@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Min
+import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -13,12 +14,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AuthenticationResolver
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 
 @Validated
 @RestController
 @Tag(name = "Configured Data API")
-class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
+class ConfiguredApiController(val configuredApiService: ConfiguredApiService, val authenticationResolver: AuthenticationResolver) {
   object FiltersPrefix {
     const val FILTERS_PREFIX = "filters."
     const val RANGE_FILTER_START_SUFFIX = ".start"
@@ -53,7 +56,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
+    authentication: Authentication,
   ): List<Map<String, Any>> {
+    (authentication as AuthAwareAuthenticationToken).caseloads
     return configuredApiService.validateAndFetchData(reportId, reportVariantId, filtersOnly(filters), selectedPage, pageSize, sortColumn, sortedAsc)
   }
 
@@ -70,6 +75,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
+    authentication: Authentication,
   ): Count {
     return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters))
   }

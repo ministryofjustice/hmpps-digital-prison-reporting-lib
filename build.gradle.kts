@@ -22,6 +22,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.8.5")
+  implementation("org.springframework.boot:spring-boot-starter-security")
+  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
@@ -67,7 +69,7 @@ publishing {
         group = "uk.gov.justice.service.hmpps"
         name.set(base.archivesName)
         artifactId = base.archivesName.get()
-        version = "1.0.0-rc.2"
+        version = "1.0.0-rc.3-SNAPSHOT"
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
         url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi")
         licenses {
