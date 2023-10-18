@@ -60,6 +60,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("sortedAsc", false)
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -78,6 +79,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   fun `Configured API count returns the number of records`() {
     webTestClient.get()
       .uri("/reports/external-movements/last-month/count")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -99,6 +101,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("filters.direction", direction?.lowercase())
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -117,6 +120,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${FILTERS_PREFIX}direction", "out")
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -258,6 +262,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam(paramName, paramValue)
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isBadRequest

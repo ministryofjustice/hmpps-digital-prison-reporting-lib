@@ -36,6 +36,7 @@ class ConfiguredApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean,
+    caseloads: List<String>,
   ): List<Map<String, Any>> {
     val dataSet = getDataSet(reportId, reportVariantId)
     validateFilters(reportId, reportVariantId, filters, dataSet)
@@ -51,6 +52,7 @@ class ConfiguredApiService(
           pageSize,
           validatedSortColumn,
           sortedAsc,
+          caseloads,
         ),
       dataSet.schema.field,
     )
@@ -60,6 +62,7 @@ class ConfiguredApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
+    caseloads: List<String>,
   ): Count {
     val dataSet = getDataSet(reportId, reportVariantId)
     validateFilters(reportId, reportVariantId, filters, dataSet)
@@ -69,6 +72,7 @@ class ConfiguredApiService(
         rangeFilters.associate(transformMapEntryToPair()),
         filtersExcludingRange.associate(transformMapEntryToPair()),
         dataSet.query,
+        caseloads,
       ),
     )
   }

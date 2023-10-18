@@ -29,16 +29,16 @@ class ConfiguredApiRepository {
     pageSize: Long,
     sortColumn: String,
     sortedAsc: Boolean,
+    caseloads: List<String>,
   ): List<Map<String, Any>> {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters)
+    if (caseloads.isEmpty()) {
+      return emptyList()
+    }
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads)
     val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
-      """SELECT *
-      FROM ($query) Q
-      $whereClause
-      ORDER BY $sortColumn $sortingDirection 
-                    limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;""",
+      buildQuery(query, whereClause, sortColumn, sortingDirection, pageSize, selectedPage),
       preparedStatementNamedParams,
     )
       .map {
@@ -49,12 +49,20 @@ class ConfiguredApiRepository {
     return result
   }
 
+  private fun buildQuery(query: String, whereClause: String, sortColumn: String, sortingDirection: String, pageSize: Long, selectedPage: Long) =
+    """SELECT *
+        FROM ($query) Q
+        $whereClause
+        ORDER BY $sortColumn $sortingDirection 
+                      limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+
   fun count(
     rangeFilters: Map<String, String>,
     filtersExcludingRange: Map<String, String>,
     query: String,
+    caseloads: List<String>,
   ): Long {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads)
     return jdbcTemplate.queryForList(
       "SELECT count(*) as total FROM ($query) $whereClause",
       preparedStatementNamedParams,
@@ -69,7 +77,7 @@ class ConfiguredApiRepository {
     }
   }
 
-  private fun buildWhereClause(filtersExcludingRange: Map<String, String>, rangeFilters: Map<String, String>): Pair<MapSqlParameterSource, String> {
+  private fun buildWhereClause(filtersExcludingRange: Map<String, String>, rangeFilters: Map<String, String>, caseloads: List<String>): Pair<MapSqlParameterSource, String> {
     val preparedStatementNamedParams = MapSqlParameterSource()
     filtersExcludingRange.forEach { preparedStatementNamedParams.addValue(it.key, it.value.lowercase()) }
     rangeFilters.forEach { preparedStatementNamedParams.addValue(it.key, it.value) }
@@ -77,7 +85,9 @@ class ConfiguredApiRepository {
     val whereRange = buildWhereRangeCondition(rangeFilters)
     //    val whereClause = whereNoRange?.let { "WHERE ${whereRange?.let { "$whereNoRange AND $whereRange"} ?: whereNoRange}" } ?: whereRange?.let { "WHERE $it" } ?: ""
     val allFilters = whereNoRange?.plus(whereRange?.let { " AND $it" } ?: "") ?: whereRange
-    val whereClause = allFilters?.let { "WHERE $it" } ?: ""
+    val caseloadsStringArray = "(${caseloads.map { "\'$it\'" }.joinToString()})"
+    val caseloadsWhereClause = "origin IN $caseloadsStringArray OR  destination IN $caseloadsStringArray"
+    val whereClause = allFilters?.let { "WHERE $it AND ($caseloadsWhereClause)" } ?: "WHERE $caseloadsWhereClause"
     return Pair(preparedStatementNamedParams, whereClause)
   }
 

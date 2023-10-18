@@ -15,13 +15,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AuthenticationResolver
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 
 @Validated
 @RestController
 @Tag(name = "Configured Data API")
-class ConfiguredApiController(val configuredApiService: ConfiguredApiService, val authenticationResolver: AuthenticationResolver) {
+class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
   object FiltersPrefix {
     const val FILTERS_PREFIX = "filters."
     const val RANGE_FILTER_START_SUFFIX = ".start"
@@ -58,8 +57,16 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService, va
     @PathVariable("reportVariantId") reportVariantId: String,
     authentication: Authentication,
   ): List<Map<String, Any>> {
-    (authentication as AuthAwareAuthenticationToken).caseloads
-    return configuredApiService.validateAndFetchData(reportId, reportVariantId, filtersOnly(filters), selectedPage, pageSize, sortColumn, sortedAsc)
+    return configuredApiService.validateAndFetchData(
+      reportId,
+      reportVariantId,
+      filtersOnly(filters),
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      (authentication as AuthAwareAuthenticationToken).caseloads,
+    )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")
@@ -77,7 +84,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService, va
     @PathVariable("reportVariantId") reportVariantId: String,
     authentication: Authentication,
   ): Count {
-    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters))
+    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), (authentication as AuthAwareAuthenticationToken).caseloads)
   }
 
   private fun filtersOnly(filters: Map<String, String>): Map<String, String> {
