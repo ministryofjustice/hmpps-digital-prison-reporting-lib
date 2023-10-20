@@ -174,6 +174,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${FILTERS_PREFIX}direction", direction)
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()

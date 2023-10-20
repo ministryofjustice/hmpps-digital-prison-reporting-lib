@@ -21,3 +21,6 @@ spring:
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
+caseloads:
+  host: https://nomis-user-roles-api-dev.prison.service.justice.gov.uk
+  path: me/caseloads
