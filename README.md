@@ -89,6 +89,12 @@ You will also need to add the following to your Spring Boot application class:
 `@ComponentScan("yourapplicationpackage","uk.gov.justice.digital.hmpps.digitalprisonreportinglib")`
 Where you will need to replace "yourapplicationpackage" with the actual package of your application.
 
+You will also need to instantiate the AuthAwareAuthenticationToken class in order to pass as a 3rd parameter the list of active caseload ids since this is used
+for row level security in the library, as the JWT token is needed to retrieve the caseload user details.
+Retrieving these details can be done simply by calling the getActiveCaseloadIds method of the CaseloadService and passing the JWT as a parameter.
+An example can be found [here](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/digitalprisonreportingmi/security/AuthAwareTokenConverter.kt#L15).
+The AuthAwareAuthenticationToken can then be used in your controllers to retrieve the caseload ids should you need to implement row level security. 
+
 ### Open API Docs
 The API documentation is generated via the following dependency:
 `implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")`
