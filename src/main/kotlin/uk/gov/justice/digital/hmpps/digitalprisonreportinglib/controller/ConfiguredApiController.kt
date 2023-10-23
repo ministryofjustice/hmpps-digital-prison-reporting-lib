@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 
 @Validated
@@ -53,8 +54,18 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
+    authentication: AuthAwareAuthenticationToken,
   ): List<Map<String, Any>> {
-    return configuredApiService.validateAndFetchData(reportId, reportVariantId, filtersOnly(filters), selectedPage, pageSize, sortColumn, sortedAsc)
+    return configuredApiService.validateAndFetchData(
+      reportId,
+      reportVariantId,
+      filtersOnly(filters),
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      authentication.caseloads,
+    )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")
@@ -70,8 +81,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
+    authentication: AuthAwareAuthenticationToken,
   ): Count {
-    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters))
+    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.caseloads)
   }
 
   private fun filtersOnly(filters: Map<String, String>): Map<String, String> {

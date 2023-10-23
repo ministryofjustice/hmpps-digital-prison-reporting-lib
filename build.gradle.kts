@@ -22,6 +22,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.8.5")
+  implementation("org.springframework.boot:spring-boot-starter-security")
+  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
@@ -29,6 +31,9 @@ dependencies {
   // Testing
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
+  testImplementation("io.jsonwebtoken:jjwt:0.12.2")
+  // https://mvnrepository.com/artifact/com.github.tomakehurst/wiremock
+  testImplementation("com.github.tomakehurst:wiremock:3.0.1")
 }
 
 java {
@@ -67,7 +72,7 @@ publishing {
         group = "uk.gov.justice.service.hmpps"
         name.set(base.archivesName)
         artifactId = base.archivesName.get()
-        version = "1.0.0-rc.2"
+        version = "1.0.0-rc.3"
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
         url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi")
         licenses {

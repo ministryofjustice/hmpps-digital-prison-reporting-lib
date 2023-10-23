@@ -11,6 +11,7 @@ import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DATE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DESTINATION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DIRECTION
@@ -19,16 +20,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.REASON
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.TYPE
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner1
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner2
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner3
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner5
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
-import java.time.LocalDateTime
 
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
 
@@ -39,11 +33,12 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   lateinit var prisonerRepository: PrisonerRepository
 
   @BeforeEach
-  fun setup() {
-    AllMovements.allExternalMovements.forEach {
+  override fun setup() {
+    super.setup()
+    ConfiguredApiRepositoryTest.AllMovements.allExternalMovements.forEach {
       externalMovementRepository.save(it)
     }
-    AllPrisoners.allPrisoners.forEach {
+    ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners.forEach {
       prisonerRepository.save(it)
     }
   }
@@ -60,15 +55,14 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("sortedAsc", false)
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
       .expectBody()
       .json(
         """[
-        {"prisonNumber": "${movementPrisoner5[PRISON_NUMBER]}", "name": "${movementPrisoner5[NAME]}", "date": "${movementPrisoner5[DATE]}", "origin": "${movementPrisoner5[ORIGIN]}", "destination": "${movementPrisoner5[DESTINATION]}", "direction": "${movementPrisoner5[DIRECTION]}", "type": "${movementPrisoner5[TYPE]}", "reason": "${movementPrisoner5[REASON]}"},
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}", "origin": "${movementPrisoner4[ORIGIN]}", "destination": "${movementPrisoner4[DESTINATION]}", "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"},
-        {"prisonNumber": "${movementPrisoner3[PRISON_NUMBER]}", "name": "${movementPrisoner3[NAME]}", "date": "${movementPrisoner3[DATE]}", "origin": "${movementPrisoner3[ORIGIN]}", "destination": "${movementPrisoner3[DESTINATION]}", "direction": "${movementPrisoner3[DIRECTION]}", "type": "${movementPrisoner3[TYPE]}", "reason": "${movementPrisoner3[REASON]}"}
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}", "origin": "${movementPrisoner4[ORIGIN]}", "destination": "${movementPrisoner4[DESTINATION]}", "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
       """,
       )
@@ -78,18 +72,19 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   fun `Configured API count returns the number of records`() {
     webTestClient.get()
       .uri("/reports/external-movements/last-month/count")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
       .expectBody()
-      .jsonPath("count").isEqualTo("5")
+      .jsonPath("count").isEqualTo("1")
   }
 
   @ParameterizedTest
   @CsvSource(
-    "In,  4",
+    "In,  0",
     "Out, 1",
-    ",    5",
+    ",    1",
   )
   fun `Configured API count returns filtered value`(direction: String?, numberOfResults: Int) {
     webTestClient.get()
@@ -99,6 +94,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("filters.direction", direction?.lowercase())
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -117,6 +113,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${FILTERS_PREFIX}direction", "out")
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -137,6 +134,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month")
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -144,11 +142,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       .json(
         """
       [
-        {"prisonNumber": "${movementPrisoner5[PRISON_NUMBER]}", "name": "${movementPrisoner5[NAME]}", "date": "${movementPrisoner5[DATE]}", "origin": "${movementPrisoner5[ORIGIN]}", "destination": "${movementPrisoner5[DESTINATION]}", "direction": "${movementPrisoner5[DIRECTION]}", "type": "${movementPrisoner5[TYPE]}", "reason": "${movementPrisoner5[REASON]}"},
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}", "origin": "${movementPrisoner4[ORIGIN]}", "destination": "${movementPrisoner4[DESTINATION]}", "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"},
-        {"prisonNumber": "${movementPrisoner3[PRISON_NUMBER]}", "name": "${movementPrisoner3[NAME]}", "date": "${movementPrisoner3[DATE]}", "origin": "${movementPrisoner3[ORIGIN]}", "destination": "${movementPrisoner3[DESTINATION]}", "direction": "${movementPrisoner3[DIRECTION]}", "type": "${movementPrisoner3[TYPE]}", "reason": "${movementPrisoner3[REASON]}"},
-        {"prisonNumber": "${movementPrisoner2[PRISON_NUMBER]}", "name": "${movementPrisoner2[NAME]}", "date": "${movementPrisoner2[DATE]}", "origin": "${movementPrisoner2[ORIGIN]}", "destination": "${movementPrisoner2[DESTINATION]}", "direction": "${movementPrisoner2[DIRECTION]}", "type": "${movementPrisoner2[TYPE]}", "reason": "${movementPrisoner2[REASON]}"},
-        {"prisonNumber": "${movementPrisoner1[PRISON_NUMBER]}", "name": "${movementPrisoner1[NAME]}", "date": "${movementPrisoner1[DATE]}", "origin": "${movementPrisoner1[ORIGIN]}", "destination": "${movementPrisoner1[DESTINATION]}", "direction": "${movementPrisoner1[DIRECTION]}", "type": "${movementPrisoner1[TYPE]}", "reason": "${movementPrisoner1[REASON]}"}
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}", "origin": "${movementPrisoner4[ORIGIN]}", "destination": "${movementPrisoner4[DESTINATION]}", "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]
       """,
       )
@@ -156,11 +150,11 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @CsvSource(
-    "in,  4",
-    "In,  4",
+    "in,  0",
+    "In,  0",
     "out, 1",
     "Out, 1",
-    ",    5",
+    ",    1",
   )
   fun `Configured API returns filtered values`(direction: String?, numberOfResults: Int) {
     val results = webTestClient.get()
@@ -170,6 +164,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${FILTERS_PREFIX}direction", direction)
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -258,87 +253,9 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam(paramName, paramValue)
           .build()
       }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isBadRequest
   }
-}
-object AllMovements {
-  val externalMovement1 = ExternalMovementEntity(
-    1,
-    8894,
-    LocalDateTime.of(2023, 1, 31, 0, 0, 0),
-    LocalDateTime.of(2023, 1, 31, 3, 1, 0),
-    "Ranby",
-    "Kirkham",
-    "In",
-    "Admission",
-    "Unconvicted Remand",
-  )
-  val externalMovement2 = ExternalMovementEntity(
-    2,
-    5207,
-    LocalDateTime.of(2023, 4, 25, 0, 0, 0),
-    LocalDateTime.of(2023, 4, 25, 12, 19, 0),
-    "Elmley",
-    "Pentonville",
-    "In",
-    "Transfer",
-    "Transfer In from Other Establishment",
-  )
-  val externalMovement3 = ExternalMovementEntity(
-    3,
-    4800,
-    LocalDateTime.of(2023, 4, 30, 0, 0, 0),
-    LocalDateTime.of(2023, 4, 30, 13, 19, 0),
-    "Wakefield",
-    "Dartmoor",
-    "In",
-    "Transfer",
-    "Transfer In from Other Establishment",
-  )
-  val externalMovement4 = ExternalMovementEntity(
-    4,
-    7849,
-    LocalDateTime.of(2023, 5, 1, 0, 0, 0),
-    LocalDateTime.of(2023, 5, 1, 15, 19, 0),
-    "Cardiff",
-    "Maidstone",
-    "Out",
-    "Transfer",
-    "Transfer Out to Other Establishment",
-  )
-  val externalMovement5 = ExternalMovementEntity(
-    5,
-    6851,
-    LocalDateTime.of(2023, 5, 20, 0, 0, 0),
-    LocalDateTime.of(2023, 5, 20, 14, 0, 0),
-    "Isle of Wight",
-    "Northumberland",
-    "In",
-    "Transfer",
-    "Transfer In from Other Establishment",
-  )
-  val allExternalMovements = listOf(
-    externalMovement1,
-    externalMovement2,
-    externalMovement3,
-    externalMovement4,
-    externalMovement5,
-  )
-}
-object AllPrisoners {
-  val prisoner8894 = PrisonerEntity(8894, "G2504UV", "FirstName2", "LastName1", null)
-  val prisoner5207 = PrisonerEntity(5207, "G2927UV", "FirstName1", "LastName1", null)
-  val prisoner4800 = PrisonerEntity(4800, "G3418VR", "FirstName3", "LastName3", null)
-  val prisoner7849 = PrisonerEntity(7849, "G3411VR", "FirstName4", "LastName5", 142595)
-  val prisoner6851 = PrisonerEntity(6851, "G3154UG", "FirstName5", "LastName5", null)
-
-  val allPrisoners = listOf(
-    prisoner8894,
-    prisoner5207,
-    prisoner4800,
-    prisoner7849,
-    prisoner6851,
-  )
 }
