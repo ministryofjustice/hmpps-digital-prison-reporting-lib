@@ -32,6 +32,7 @@ class ConfiguredApiRepository {
     caseloads: List<String>,
   ): List<Map<String, Any>> {
     if (caseloads.isEmpty()) {
+      log.warn("Zero records returned as the user has no active caseloads.")
       return emptyList()
     }
     val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads)
