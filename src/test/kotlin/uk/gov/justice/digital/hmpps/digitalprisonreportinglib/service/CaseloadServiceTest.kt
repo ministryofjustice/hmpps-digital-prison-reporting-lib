@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyVararg
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.springframework.http.HttpHeaders
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.reactive.function.client.WebClient
@@ -22,17 +25,18 @@ class CaseloadServiceTest {
   fun `get active caseload ID`() {
     val jwt = createJwtHeaders()
     val expectedCaseloadResponse: CaseloadService.CaseloadResponse =
-      CaseloadService.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI",  "WANDSWORTH (HMP)")))
+      CaseloadService.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
     val actual = caseloadService.getActiveCaseloadIds(jwt)
 
     assertEquals(listOf(expectedCaseloadResponse.activeCaseload.id), actual)
   }
+
   @Test
   fun `getActiveCaseloadId should return an empty list for any account type other than GENERAL`() {
     val jwt = createJwtHeaders()
     val expectedCaseloadResponse: CaseloadService.CaseloadResponse =
-      CaseloadService.CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI",  "WANDSWORTH (HMP)")))
+      CaseloadService.CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
     val actual = caseloadService.getActiveCaseloadIds(jwt)
 

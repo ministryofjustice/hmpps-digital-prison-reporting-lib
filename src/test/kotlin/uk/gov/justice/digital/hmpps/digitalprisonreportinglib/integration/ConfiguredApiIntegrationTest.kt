@@ -31,8 +31,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerEntit
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 import java.time.LocalDateTime
 
-//This currently fails as the auth set up is not working correctly in test.
-//The integration test has been performed in the mi application with the new version of the library
+// This currently fails as the auth set up is not working correctly in test.
+// The integration test has been performed in the mi application with the new version of the library
 @Disabled
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
 

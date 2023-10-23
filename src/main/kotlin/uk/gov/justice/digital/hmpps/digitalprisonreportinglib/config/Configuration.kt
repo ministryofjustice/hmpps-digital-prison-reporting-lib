@@ -10,6 +10,7 @@ class Configuration {
 
   @Value("\${caseloads.host}")
   lateinit var host: String
+
   @Value("\${caseloads.path}")
   lateinit var path: String
 
