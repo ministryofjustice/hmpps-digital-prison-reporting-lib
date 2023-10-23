@@ -24,8 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 
-// This currently fails as the auth set up is not working correctly in test.
-// The integration test has been performed in the mi application with the new version of the library
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
 
   @Autowired
