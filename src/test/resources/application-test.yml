@@ -15,12 +15,12 @@ spring:
 #    oauth2:
 #      resourceserver:
 #        jwt:
-#          jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
+#          jwk-set-uri: http://localhost:9999/.well-known/jwks.json
     user:
       roles: ROLE_PRISONS_REPORTING_USER
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
 caseloads:
-  host: https://nomis-user-roles-api-dev.prison.service.justice.gov.uk
+  host: http://localhost:9999
   path: me/caseloads

@@ -32,6 +32,8 @@ dependencies {
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.12.2")
+  // https://mvnrepository.com/artifact/com.github.tomakehurst/wiremock
+  testImplementation("com.github.tomakehurst:wiremock:3.0.1")
 }
 
 java {
@@ -70,7 +72,7 @@ publishing {
         group = "uk.gov.justice.service.hmpps"
         name.set(base.archivesName)
         artifactId = base.archivesName.get()
-        version = "1.0.0-rc.3-SNAPSHOT"
+        version = "1.0.0-rc.3"
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
         url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi")
         licenses {

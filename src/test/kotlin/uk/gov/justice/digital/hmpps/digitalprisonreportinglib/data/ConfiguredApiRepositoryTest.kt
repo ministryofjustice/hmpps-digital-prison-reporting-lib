@@ -57,7 +57,7 @@ class ConfiguredApiRepositoryTest {
     "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
     "ON movements.prisoner = prisoners.id"
 
-  private val caseloads = listOf("BOLTCC", "WII", "NSI", "LEICCC", "PTI")
+  private val caseloads = listOf("BOLTCC", "WWI", "NSI", "LEICCC", "PTI")
 
   @Test
   fun `should return 2 external movements for the selected page 2 and pageSize 2 sorted by date in ascending order`() {
@@ -373,7 +373,7 @@ class ConfiguredApiRepositoryTest {
       LocalDateTime.of(2023, 5, 1, 0, 0, 0),
       LocalDateTime.of(2023, 5, 1, 15, 19, 0),
       "LWSTMC",
-      "WII",
+      "WWI",
       "Out",
       "Transfer",
       "Transfer Out to Other Establishment",
@@ -433,7 +433,7 @@ class ConfiguredApiRepositoryTest {
 
     val movementPrisoner3 = mapOf(PRISON_NUMBER to "G3418VR", NAME to "LastName3, F", DATE to "2023-04-30", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BFI", DESTINATION to "NSI", REASON to "Transfer In from Other Establishment")
 
-    val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to "2023-05-01", DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "LWSTMC", DESTINATION to "WII", REASON to "Transfer Out to Other Establishment")
+    val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to "2023-05-01", DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "LWSTMC", DESTINATION to "WWI", REASON to "Transfer Out to Other Establishment")
 
     val movementPrisoner5 = mapOf(PRISON_NUMBER to "G3154UG", NAME to "LastName5, F", DATE to "2023-05-20", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BOLTCC", DESTINATION to "HEI", REASON to "Transfer In from Other Establishment")
   }
