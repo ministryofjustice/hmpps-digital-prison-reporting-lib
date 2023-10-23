@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
-import com.github.tomakehurst.wiremock.http.HttpHeader
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -54,26 +53,9 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setup() {
-//    stubGrantToken()
     stubMeCaseloadsResponse(createCaseloadJsonResponse("WWI"))
   }
 
-  fun stubGrantToken() {
-    wireMockServer.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/auth/oauth/token"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeaders(com.github.tomakehurst.wiremock.http.HttpHeaders(HttpHeader("Content-Type", "application/json")))
-            .withBody(
-              """{
-                    "token_type": "bearer",
-                    "access_token": "ABCDE"
-                }
-              """.trimIndent(),
-            ),
-        ),
-    )
-  }
   protected fun stubMeCaseloadsResponse(jsonNode: JsonNode) {
     wireMockServer.stubFor(
       WireMock.get("/me/caseloads").willReturn(
