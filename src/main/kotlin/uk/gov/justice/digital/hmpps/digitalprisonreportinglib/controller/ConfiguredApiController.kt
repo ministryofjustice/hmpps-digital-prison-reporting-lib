@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Min
-import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -55,7 +54,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    authentication: Authentication,
+    authentication: AuthAwareAuthenticationToken,
   ): List<Map<String, Any>> {
     return configuredApiService.validateAndFetchData(
       reportId,
@@ -65,7 +64,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       pageSize,
       sortColumn,
       sortedAsc,
-      (authentication as AuthAwareAuthenticationToken).caseloads,
+      authentication.caseloads,
     )
   }
 
@@ -82,9 +81,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    authentication: Authentication,
+    authentication: AuthAwareAuthenticationToken,
   ): Count {
-    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), (authentication as AuthAwareAuthenticationToken).caseloads)
+    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.caseloads)
   }
 
   private fun filtersOnly(filters: Map<String, String>): Map<String, String> {
