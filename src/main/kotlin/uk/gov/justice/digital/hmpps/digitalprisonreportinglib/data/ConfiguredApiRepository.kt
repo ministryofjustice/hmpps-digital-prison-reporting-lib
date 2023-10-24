@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import java.sql.Timestamp
 
 @Service
-@Suppress("UNCHECKED_CAST")
 class ConfiguredApiRepository {
 
   companion object {
@@ -30,12 +29,13 @@ class ConfiguredApiRepository {
     sortColumn: String,
     sortedAsc: Boolean,
     caseloads: List<String>,
+    caseloadFields: List<String>,
   ): List<Map<String, Any>> {
     if (caseloads.isEmpty()) {
       log.warn("Zero records returned as the user has no active caseloads.")
       return emptyList()
     }
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads, caseloadFields)
     val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
@@ -62,8 +62,9 @@ class ConfiguredApiRepository {
     filtersExcludingRange: Map<String, String>,
     query: String,
     caseloads: List<String>,
+    caseloadFields: List<String>,
   ): Long {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads, caseloadFields)
     return jdbcTemplate.queryForList(
       "SELECT count(*) as total FROM ($query) $whereClause",
       preparedStatementNamedParams,
@@ -78,26 +79,32 @@ class ConfiguredApiRepository {
     }
   }
 
-  private fun buildWhereClause(filtersExcludingRange: Map<String, String>, rangeFilters: Map<String, String>, caseloads: List<String>): Pair<MapSqlParameterSource, String> {
+  private fun buildWhereClause(filtersExcludingRange: Map<String, String>, rangeFilters: Map<String, String>, caseloads: List<String>, caseloadFields: List<String>): Pair<MapSqlParameterSource, String> {
     val preparedStatementNamedParams = MapSqlParameterSource()
     filtersExcludingRange.forEach { preparedStatementNamedParams.addValue(it.key, it.value.lowercase()) }
     rangeFilters.forEach { preparedStatementNamedParams.addValue(it.key, it.value) }
     val whereNoRange = filtersExcludingRange.keys.joinToString(" AND ") { k -> "lower($k) = :$k" }.ifEmpty { null }
     val whereRange = buildWhereRangeCondition(rangeFilters)
-    //    val whereClause = whereNoRange?.let { "WHERE ${whereRange?.let { "$whereNoRange AND $whereRange"} ?: whereNoRange}" } ?: whereRange?.let { "WHERE $it" } ?: ""
     val allFilters = whereNoRange?.plus(whereRange?.let { " AND $it" } ?: "") ?: whereRange
-    val caseloadsStringArray = "(${caseloads.map { "\'$it\'" }.joinToString()})"
-    val caseloadsWhereClause = "origin_code IN $caseloadsStringArray OR  destination_code IN $caseloadsStringArray"
+    val caseloadsWhereClause = buildCaseloadsWhereClause(caseloads, caseloadFields)
     val whereClause = allFilters?.let { "WHERE $it AND ($caseloadsWhereClause)" } ?: "WHERE $caseloadsWhereClause"
     return Pair(preparedStatementNamedParams, whereClause)
   }
 
+  private fun buildCaseloadsWhereClause(caseloads: List<String>, caseloadFields: List<String>): String {
+    if (caseloadFields.isEmpty()) {
+      return "TRUE"
+    }
+    val caseloadsStringArray = "(${caseloads.joinToString(",") { "\'$it\'" }})"
+    return caseloadFields.joinToString(" OR ") { "$it IN $caseloadsStringArray" }
+  }
+
   private fun buildWhereRangeCondition(rangeFilters: Map<String, String>) =
     rangeFilters.keys.joinToString(" AND ") { k ->
-      if (k.endsWith("$RANGE_FILTER_START_SUFFIX")) {
-        "${k.removeSuffix("$RANGE_FILTER_START_SUFFIX")} >= :$k"
-      } else if (k.endsWith("$RANGE_FILTER_END_SUFFIX")) {
-        "${k.removeSuffix("$RANGE_FILTER_END_SUFFIX")} <= :$k"
+      if (k.endsWith(RANGE_FILTER_START_SUFFIX)) {
+        "${k.removeSuffix(RANGE_FILTER_START_SUFFIX)} >= :$k"
+      } else if (k.endsWith(RANGE_FILTER_END_SUFFIX)) {
+        "${k.removeSuffix(RANGE_FILTER_END_SUFFIX)} <= :$k"
       } else {
         throw ValidationException("Range filter does not have a .start or .end suffix: $k")
       }

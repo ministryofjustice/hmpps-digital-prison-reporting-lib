@@ -31,13 +31,15 @@
         "type" : "String"
       }, {
         "name" : "origin_code",
-        "type" : "String"
+        "type" : "String",
+        "caseload" : true
       }, {
         "name" : "destination",
         "type" : "String"
       },{
         "name" : "destination_code",
-        "type" : "String"
+        "type" : "String",
+        "caseload" : true
       }, {
         "name" : "direction",
         "type" : "String"
