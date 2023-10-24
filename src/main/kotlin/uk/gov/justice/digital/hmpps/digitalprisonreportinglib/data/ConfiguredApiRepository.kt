@@ -87,7 +87,7 @@ class ConfiguredApiRepository {
     //    val whereClause = whereNoRange?.let { "WHERE ${whereRange?.let { "$whereNoRange AND $whereRange"} ?: whereNoRange}" } ?: whereRange?.let { "WHERE $it" } ?: ""
     val allFilters = whereNoRange?.plus(whereRange?.let { " AND $it" } ?: "") ?: whereRange
     val caseloadsStringArray = "(${caseloads.map { "\'$it\'" }.joinToString()})"
-    val caseloadsWhereClause = "origin IN $caseloadsStringArray OR  destination IN $caseloadsStringArray"
+    val caseloadsWhereClause = "origin_code IN $caseloadsStringArray OR  destination_code IN $caseloadsStringArray"
     val whereClause = allFilters?.let { "WHERE $it AND ($caseloadsWhereClause)" } ?: "WHERE $caseloadsWhereClause"
     return Pair(preparedStatementNamedParams, whereClause)
   }

@@ -51,7 +51,9 @@ class ConfiguredApiRepositoryTest {
     "movements.direction," +
     "movements.type," +
     "movements.origin," +
+    "movements.origin_code," +
     "movements.destination," +
+    "movements.destination_code," +
     "movements.reason\n" +
     "FROM datamart.domain.movements_movements as movements\n" +
     "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
@@ -102,11 +104,19 @@ class ConfiguredApiRepositoryTest {
 
   @TestFactory
   fun `should return all rows for the selected page and pageSize sorted by 'origin' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "origin", expectedForAscending = movementPrisoner3, expectedForDescending = movementPrisoner1)
+    assertExternalMovements(sortColumn = "origin", expectedForAscending = movementPrisoner3, expectedForDescending = movementPrisoner4)
+
+  @TestFactory
+  fun `should return all rows for the selected page and pageSize sorted by 'origin_code' when sortedAsc is true and when it is false`() =
+    assertExternalMovements(sortColumn = "origin_code", expectedForAscending = movementPrisoner3, expectedForDescending = movementPrisoner1)
 
   @TestFactory
   fun `should return all rows for the selected page and pageSize sorted by 'destination' when sortedAsc is true and when it is false`() =
     assertExternalMovements(sortColumn = "destination", expectedForAscending = movementPrisoner5, expectedForDescending = movementPrisoner4)
+
+  @TestFactory
+  fun `should return all rows for the selected page and pageSize sorted by 'destination_code' when sortedAsc is true and when it is false`() =
+    assertExternalMovements(sortColumn = "destination_code", expectedForAscending = movementPrisoner5, expectedForDescending = movementPrisoner4)
 
   @TestFactory
   fun `should return all rows for the selected page and pageSize sorted by 'direction' when sortedAsc is true and when it is false`() =
@@ -211,7 +221,9 @@ class ConfiguredApiRepositoryTest {
       9846,
       LocalDateTime.of(2050, 6, 1, 0, 0, 0),
       LocalDateTime.of(2050, 6, 1, 12, 0, 0),
+      "Bolton Crown Court",
       "BOLTCC",
+      null,
       null,
       null,
       "Transfer",
@@ -225,8 +237,10 @@ class ConfiguredApiRepositoryTest {
       AllMovementPrisoners.DATE to "2050-06-01",
       AllMovementPrisoners.DIRECTION to null,
       AllMovementPrisoners.TYPE to "Transfer",
-      AllMovementPrisoners.ORIGIN to "BOLTCC",
+      AllMovementPrisoners.ORIGIN to "Bolton Crown Court",
+      AllMovementPrisoners.ORIGIN_CODE to "BOLTCC",
       AllMovementPrisoners.DESTINATION to null,
+      AllMovementPrisoners.DESTINATION_CODE to null,
       AllMovementPrisoners.REASON to "Transfer In from Other Establishment",
     )
     try {
@@ -339,7 +353,9 @@ class ConfiguredApiRepositoryTest {
       8894,
       LocalDateTime.of(2023, 1, 31, 0, 0, 0),
       LocalDateTime.of(2023, 1, 31, 3, 1, 0),
+      "KINGSTON (HMP)",
       "PTI",
+      "THORN CROSS (HMPYOI)",
       "TCI",
       "In",
       "Admission",
@@ -350,7 +366,9 @@ class ConfiguredApiRepositoryTest {
       5207,
       LocalDateTime.of(2023, 4, 25, 0, 0, 0),
       LocalDateTime.of(2023, 4, 25, 12, 19, 0),
+      "Leicester Crown Court",
       "LEICCC",
+      "LEICESTER (HMP)",
       "LCI",
       "In",
       "Transfer",
@@ -361,7 +379,9 @@ class ConfiguredApiRepositoryTest {
       4800,
       LocalDateTime.of(2023, 4, 30, 0, 0, 0),
       LocalDateTime.of(2023, 4, 30, 13, 19, 0),
+      "BEDFORD (HMP)",
       "BFI",
+      "NORTH SEA CAMP (HMP)",
       "NSI",
       "In",
       "Transfer",
@@ -372,7 +392,9 @@ class ConfiguredApiRepositoryTest {
       7849,
       LocalDateTime.of(2023, 5, 1, 0, 0, 0),
       LocalDateTime.of(2023, 5, 1, 15, 19, 0),
+      "Lowestoft (North East Suffolk) Magistrat",
       "LWSTMC",
+      "WANDSWORTH (HMP)",
       "WWI",
       "Out",
       "Transfer",
@@ -383,7 +405,9 @@ class ConfiguredApiRepositoryTest {
       6851,
       LocalDateTime.of(2023, 5, 20, 0, 0, 0),
       LocalDateTime.of(2023, 5, 20, 14, 0, 0),
+      "Bolton Crown Court",
       "BOLTCC",
+      "HMP HEWELL",
       "HEI",
       "In",
       "Transfer",
@@ -424,17 +448,19 @@ class ConfiguredApiRepositoryTest {
     const val DIRECTION = "DIRECTION"
     const val TYPE = "TYPE"
     const val ORIGIN = "ORIGIN"
+    const val ORIGIN_CODE = "ORIGIN_CODE"
     const val DESTINATION = "DESTINATION"
+    const val DESTINATION_CODE = "DESTINATION_CODE"
     const val REASON = "REASON"
 
-    val movementPrisoner1 = mapOf(PRISON_NUMBER to "G2504UV", NAME to "LastName1, F", DATE to "2023-01-31", DIRECTION to "In", TYPE to "Admission", ORIGIN to "PTI", DESTINATION to "TCI", REASON to "Unconvicted Remand")
+    val movementPrisoner1 = mapOf(PRISON_NUMBER to "G2504UV", NAME to "LastName1, F", DATE to "2023-01-31", DIRECTION to "In", TYPE to "Admission", ORIGIN to "KINGSTON (HMP)", ORIGIN_CODE to "PTI", DESTINATION to "THORN CROSS (HMPYOI)", DESTINATION_CODE to "TCI", REASON to "Unconvicted Remand")
 
-    val movementPrisoner2 = mapOf(PRISON_NUMBER to "G2927UV", NAME to "LastName1, F", DATE to "2023-04-25", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "LEICCC", DESTINATION to "LCI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner2 = mapOf(PRISON_NUMBER to "G2927UV", NAME to "LastName1, F", DATE to "2023-04-25", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Leicester Crown Court", ORIGIN_CODE to "LEICCC", DESTINATION to "LEICESTER (HMP)", DESTINATION_CODE to "LCI", REASON to "Transfer In from Other Establishment")
 
-    val movementPrisoner3 = mapOf(PRISON_NUMBER to "G3418VR", NAME to "LastName3, F", DATE to "2023-04-30", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BFI", DESTINATION to "NSI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner3 = mapOf(PRISON_NUMBER to "G3418VR", NAME to "LastName3, F", DATE to "2023-04-30", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BEDFORD (HMP)", ORIGIN_CODE to "BFI", DESTINATION to "NORTH SEA CAMP (HMP)", DESTINATION_CODE to "NSI", REASON to "Transfer In from Other Establishment")
 
-    val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to "2023-05-01", DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "LWSTMC", DESTINATION to "WWI", REASON to "Transfer Out to Other Establishment")
+    val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to "2023-05-01", DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "Lowestoft (North East Suffolk) Magistrat", ORIGIN_CODE to "LWSTMC", DESTINATION to "WANDSWORTH (HMP)", DESTINATION_CODE to "WWI", REASON to "Transfer Out to Other Establishment")
 
-    val movementPrisoner5 = mapOf(PRISON_NUMBER to "G3154UG", NAME to "LastName5, F", DATE to "2023-05-20", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BOLTCC", DESTINATION to "HEI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner5 = mapOf(PRISON_NUMBER to "G3154UG", NAME to "LastName5, F", DATE to "2023-05-20", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Bolton Crown Court", ORIGIN_CODE to "BOLTCC", DESTINATION to "HMP HEWELL", DESTINATION_CODE to "HEI", REASON to "Transfer In from Other Establishment")
   }
 }
