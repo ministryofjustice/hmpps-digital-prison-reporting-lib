@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient
 @Configuration
 class SecurityAutoConfig(
   @Value("\${dpr.lib.caseloads.host}") private val caseloadHost: String,
-  @Value("\${dpr.lib.caseloads.path}") private val caseloadPath: String = "me/caseloads",
+  @Value("\${dpr.lib.caseloads.path:me/caseloads}") private val caseloadPath: String,
 ) {
 
   @Bean
