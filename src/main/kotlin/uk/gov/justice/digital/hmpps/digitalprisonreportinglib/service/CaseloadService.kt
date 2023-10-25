@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Case
 class CaseloadService(val webClient: WebClient) {
 
   fun getActiveCaseloadIds(jwt: Jwt): List<String> {
-    val caseloadResponse = webClient.get().header("Authorization", "Bearer $jwt").retrieve().bodyToMono(CaseloadResponse::class.java).block()
+    val caseloadResponse = webClient.get().header("Authorization", "Bearer ${jwt.tokenValue}").retrieve().bodyToMono(CaseloadResponse::class.java).block()
     if (caseloadResponse.accountType != "GENERAL") {
       return emptyList()
     }
