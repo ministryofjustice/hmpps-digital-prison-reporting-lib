@@ -42,6 +42,7 @@ class ConfiguredApiService(
     validateFilters(reportId, reportVariantId, filters, dataSet)
     val (rangeFilters, filtersExcludingRange) = filters.entries.partition { (k, _) -> k.endsWith(RANGE_FILTER_START_SUFFIX) || k.endsWith(RANGE_FILTER_END_SUFFIX) }
     val validatedSortColumn = validateSortColumnOrGetDefault(sortColumn, reportId, dataSet, reportVariantId)
+
     return formatToSchemaFieldsCasing(
       configuredApiRepository
         .executeQuery(
@@ -53,10 +54,14 @@ class ConfiguredApiService(
           validatedSortColumn,
           sortedAsc,
           caseloads,
+          getCaseloadFields(dataSet),
         ),
       dataSet.schema.field,
     )
   }
+
+  private fun getCaseloadFields(dataSet: DataSet) =
+    dataSet.schema.field.filter { it.caseload }.map { it.name }
 
   fun validateAndCount(
     reportId: String,
@@ -73,6 +78,7 @@ class ConfiguredApiService(
         filtersExcludingRange.associate(transformMapEntryToPair()),
         dataSet.query,
         caseloads,
+        getCaseloadFields(dataSet),
       ),
     )
   }
