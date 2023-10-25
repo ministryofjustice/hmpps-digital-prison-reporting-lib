@@ -5,5 +5,4 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Product
 interface ProductDefinitionRepository {
 
   fun getProductDefinitions(): List<ProductDefinition>
-
 }

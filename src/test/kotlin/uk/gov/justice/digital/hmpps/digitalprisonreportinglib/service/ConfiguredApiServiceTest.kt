@@ -11,11 +11,15 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTypeAdaptor
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 
 class ConfiguredApiServiceTest {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-    IsoLocalDateTypeAdaptor()
+    IsoLocalDateTypeAdaptor(),
+    "productDefinition.json",
   )
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
   private val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository)
