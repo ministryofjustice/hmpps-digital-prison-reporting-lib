@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
+package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -15,19 +15,19 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Case
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-class CaseloadServiceTest {
+class DefaultCaseloadProviderTest {
 
   private val webClient = mock<WebClient>()
-  private val caseloadService: CaseloadService = CaseloadService(webClient)
+  private val caseloadProvider: CaseloadProvider = DefaultCaseloadProvider(webClient)
 
   @Test
   @SuppressWarnings("rawtypes")
   fun `get active caseload ID`() {
     val jwt = createJwtHeaders()
-    val expectedCaseloadResponse: CaseloadService.CaseloadResponse =
-      CaseloadService.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
+    val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
+      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
-    val actual = caseloadService.getActiveCaseloadIds(jwt)
+    val actual = caseloadProvider.getActiveCaseloadIds(jwt)
 
     assertEquals(listOf(expectedCaseloadResponse.activeCaseload.id), actual)
   }
@@ -35,10 +35,10 @@ class CaseloadServiceTest {
   @Test
   fun `getActiveCaseloadId should return an empty list for any account type other than GENERAL`() {
     val jwt = createJwtHeaders()
-    val expectedCaseloadResponse: CaseloadService.CaseloadResponse =
-      CaseloadService.CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
+    val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
+      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
-    val actual = caseloadService.getActiveCaseloadIds(jwt)
+    val actual = caseloadProvider.getActiveCaseloadIds(jwt)
 
     assertEquals(emptyList<String>(), actual)
   }
@@ -50,14 +50,14 @@ class CaseloadServiceTest {
     return jwt
   }
 
-  private fun mockWebClientCall(expectedCaseloadResponse: CaseloadService.CaseloadResponse) {
+  private fun mockWebClientCall(expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse) {
     val requestHeadersUriSpec = mock<RequestHeadersUriSpec<*>>()
     whenever(webClient.get()).thenReturn(requestHeadersUriSpec)
     val requestHeaderSpec = mock<WebClient.RequestHeadersSpec<*>>()
     whenever(requestHeadersUriSpec.header(any(), anyVararg())).thenReturn(requestHeaderSpec)
     val responseSpec = mock<WebClient.ResponseSpec>()
     whenever(requestHeaderSpec.retrieve()).thenReturn(responseSpec)
-    whenever(responseSpec.bodyToMono(CaseloadService.CaseloadResponse::class.java)).thenReturn(
+    whenever(responseSpec.bodyToMono(DefaultCaseloadProvider.CaseloadResponse::class.java)).thenReturn(
       Mono.just(expectedCaseloadResponse),
     )
   }

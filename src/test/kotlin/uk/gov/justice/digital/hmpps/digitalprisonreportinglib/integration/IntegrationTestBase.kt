@@ -22,7 +22,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
 
-  @Value("\${spring.security.user.roles}")
+  @Value("\${dpr.lib.user.role}")
   lateinit var authorisedRole: String
 
   @Autowired

@@ -1,24 +1,21 @@
-package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
+package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
 import org.springframework.core.convert.converter.Converter
-import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CaseloadService
 
-class AuthAwareTokenConverter(private val caseloadService: CaseloadService) : Converter<Jwt, AbstractAuthenticationToken> {
+class DefaultAuthAwareTokenConverter(private val caseloadProvider: CaseloadProvider) : AuthAwareTokenConverter {
   private val jwtGrantedAuthoritiesConverter: Converter<Jwt, Collection<GrantedAuthority>> =
     JwtGrantedAuthoritiesConverter()
 
-  override fun convert(jwt: Jwt): AbstractAuthenticationToken {
+  override fun convert(jwt: Jwt): AuthAwareAuthenticationToken {
     val claims = jwt.claims
     val principal = findPrincipal(claims)
     val authorities = extractAuthorities(jwt)
 
-    return AuthAwareAuthenticationToken(jwt, principal, authorities, caseloadService.getActiveCaseloadIds(jwt))
+    return AuthAwareAuthenticationToken(jwt, principal, authorities, caseloadProvider.getActiveCaseloadIds(jwt))
   }
 
   private fun findPrincipal(claims: Map<String, Any?>): String {
