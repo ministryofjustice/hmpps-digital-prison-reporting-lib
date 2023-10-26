@@ -11,12 +11,13 @@ spring:
     username: sa
     password: sa
     driver-class-name: org.h2.Driver
-  security:
-    user:
-      roles: ROLE_PRISONS_REPORTING_USER
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
-caseloads:
-  host: http://localhost:9999
-  path: me/caseloads
+
+dpr:
+  lib:
+    caseloads:
+      host: http://localhost:9999
+    user:
+      role: ROLE_PRISONS_REPORTING_USER
