@@ -74,7 +74,7 @@ publishing {
         artifactId = base.archivesName.get()
         version = "1.0.0-rc.7"
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
-        url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-mi-lib")
+        url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-lib")
         licenses {
           license {
             name.set("MIT")
