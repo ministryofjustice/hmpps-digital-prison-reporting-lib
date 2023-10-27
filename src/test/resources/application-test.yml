@@ -11,6 +11,12 @@ spring:
     username: sa
     password: sa
     driver-class-name: org.h2.Driver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: test
+
 management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
