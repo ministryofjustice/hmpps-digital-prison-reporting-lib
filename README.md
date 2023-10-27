@@ -87,7 +87,7 @@ See [Integrating into your Spring Boot project](integrating-with-library.md).
 
 ### Publishing Locally
 Run the following command to publish the artifact to your local maven repository:
-`./gradlew publishToMavenLocal -x signDigitalprisonreportinglibPublication`
+`./gradlew publishToMavenLocal`
 
 ## Publishing to Maven Central
 
