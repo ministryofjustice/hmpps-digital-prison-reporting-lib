@@ -10,7 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
-@ConditionalOnProperty(name = ["dpr.lib.user.role"])
+@ConditionalOnProperty(name = ["dpr.lib.user.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
 class ResourceServerConfiguration(
   @Value("\${dpr.lib.user.role}") private var authorisedRole: String,
 ) {

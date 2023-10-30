@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Min
 import org.springframework.validation.annotation.Validated
@@ -36,6 +37,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
   @GetMapping("/reports/{reportId}/{reportVariantId}")
   @Operation(
     description = "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
   fun configuredApiDataset(
     @RequestParam(defaultValue = "1")
@@ -71,6 +73,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")
   @Operation(
     description = "Returns the number of records for the given report ID and report variant ID filtered by the filters provided in the query.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
   fun configuredApiCount(
     @Parameter(
