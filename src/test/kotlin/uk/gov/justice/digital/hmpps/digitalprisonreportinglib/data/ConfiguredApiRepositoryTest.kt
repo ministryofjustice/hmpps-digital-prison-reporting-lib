@@ -59,7 +59,7 @@ class ConfiguredApiRepositoryTest {
     "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
     "ON movements.prisoner = prisoners.id"
 
-  private val caseloads = listOf("BOLTCC", "WWI", "NSI", "LEICCC", "PTI")
+  private val caseloads = listOf("HEI", "LWSTMC", "NSI", "LCI", "TCI")
   private val caseloadFields = listOf("origin_code", "destination_code")
 
   @Test
@@ -226,7 +226,7 @@ class ConfiguredApiRepositoryTest {
       "BOLTCC",
       null,
       null,
-      null,
+      "Out",
       "Transfer",
       "Transfer In from Other Establishment",
     )
@@ -236,7 +236,7 @@ class ConfiguredApiRepositoryTest {
       AllMovementPrisoners.PRISON_NUMBER to "W2505GF",
       AllMovementPrisoners.NAME to "LastName6, F",
       AllMovementPrisoners.DATE to "2050-06-01",
-      AllMovementPrisoners.DIRECTION to null,
+      AllMovementPrisoners.DIRECTION to "Out",
       AllMovementPrisoners.TYPE to "Transfer",
       AllMovementPrisoners.ORIGIN to "Bolton Crown Court",
       AllMovementPrisoners.ORIGIN_CODE to "BOLTCC",
@@ -255,7 +255,7 @@ class ConfiguredApiRepositoryTest {
         1,
         "date",
         true,
-        caseloads,
+        listOf("BOLTCC"),
         caseloadFields,
       )
       Assertions.assertEquals(listOf(movementPrisonerNullValues), actual)
@@ -267,11 +267,92 @@ class ConfiguredApiRepositoryTest {
   }
 
   @Test
-  fun `should return only the rows whose origin or destination is in the caseloads list`() {
-    val caseloads = listOf("LWSTMC")
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 1, 5, "date", true, caseloads, caseloadFields)
-    Assertions.assertEquals(listOf(movementPrisoner4), actual)
-    Assertions.assertEquals(1, actual.size)
+  fun `should return only the rows whose origin code is in the caseloads list and its direction is "Out" or the destination code is in the caseloads list and its direction is "IN"`() {
+    val externalMovementOriginCaseloadDirectionIn = ExternalMovementEntity(
+      6,
+      9846,
+      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
+      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
+      "Lowestoft (North East Suffolk) Magistrat",
+      "LWSTMC",
+      "Manchester",
+      "MNCH",
+      "In",
+      "Transfer",
+      "Transfer In from Other Establishment",
+    )
+    val prisoner9846 = PrisonerEntity(9846, "W2505GF", "FirstName6", "LastName6", null)
+
+    val externalMovementDestinationCaseloadDirectionOut = ExternalMovementEntity(
+      7,
+      9847,
+      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
+      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
+      "Manchester",
+      "MNCH",
+      "Lowestoft (North East Suffolk) Magistrat",
+      "LWSTMC",
+      "Out",
+      "Transfer",
+      "Transfer In from Other Establishment",
+    )
+    val prisoner9847 = PrisonerEntity(9847, "AB905GF", "FirstName6", "LastName6", null)
+
+    val externalMovementDestinationCaseloadDirectionIn = ExternalMovementEntity(
+      8,
+      9848,
+      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
+      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
+      "Manchester",
+      "MNCH",
+      "Lowestoft (North East Suffolk) Magistrat",
+      "LWSTMC",
+      "In",
+      "Transfer",
+      "Transfer In from Other Establishment",
+    )
+    val prisoner9848 = PrisonerEntity(9848, "DD105GF", "FirstName6", "LastName6", null)
+    val movementPrisonerDestinationCaseloadDirectionIn = mapOf(
+      AllMovementPrisoners.PRISON_NUMBER to "DD105GF",
+      AllMovementPrisoners.NAME to "LastName6, F",
+      AllMovementPrisoners.DATE to "2023-06-01",
+      AllMovementPrisoners.DIRECTION to "In",
+      AllMovementPrisoners.TYPE to "Transfer",
+      AllMovementPrisoners.ORIGIN to "Manchester",
+      AllMovementPrisoners.ORIGIN_CODE to "MNCH",
+      AllMovementPrisoners.DESTINATION to "Lowestoft (North East Suffolk) Magistrat",
+      AllMovementPrisoners.DESTINATION_CODE to "LWSTMC",
+      AllMovementPrisoners.REASON to "Transfer In from Other Establishment",
+    )
+
+    try {
+      externalMovementRepository.save(externalMovementOriginCaseloadDirectionIn)
+      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionOut)
+      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.save(prisoner9846)
+      prisonerRepository.save(prisoner9847)
+      prisonerRepository.save(prisoner9848)
+      val actual = configuredApiRepository.executeQuery(
+        query,
+        mapOf("date$RANGE_FILTER_START_SUFFIX" to "2022-06-01", "date$RANGE_FILTER_END_SUFFIX" to "2024-06-01"),
+        emptyMap(),
+        1,
+        10,
+        "date",
+        true,
+        listOf("LWSTMC"),
+        caseloadFields,
+      )
+      Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerDestinationCaseloadDirectionIn), actual)
+      Assertions.assertEquals(2, actual.size)
+    } finally {
+      externalMovementRepository.delete(externalMovementOriginCaseloadDirectionIn)
+      externalMovementRepository.delete(externalMovementDestinationCaseloadDirectionOut)
+      externalMovementRepository.delete(externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.delete(prisoner9846)
+      prisonerRepository.delete(prisoner9847)
+      prisonerRepository.delete(prisoner9848)
+    }
   }
 
   @Test

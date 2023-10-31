@@ -53,7 +53,7 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setup() {
-    stubMeCaseloadsResponse(createCaseloadJsonResponse("WWI"))
+    stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
   }
 
   protected fun stubMeCaseloadsResponse(jsonNode: JsonNode) {
@@ -62,7 +62,7 @@ abstract class IntegrationTestBase {
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withJsonBody(createCaseloadJsonResponse("WWI")),
+          .withJsonBody(jsonNode),
       ),
     )
   }
