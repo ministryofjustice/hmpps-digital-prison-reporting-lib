@@ -27,3 +27,5 @@ dpr:
       host: http://localhost:9999
     user:
       role: ROLE_PRISONS_REPORTING_USER
+    definition:
+      location: productDefinition.json
