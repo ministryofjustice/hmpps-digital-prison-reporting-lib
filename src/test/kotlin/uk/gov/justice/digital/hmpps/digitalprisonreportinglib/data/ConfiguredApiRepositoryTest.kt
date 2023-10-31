@@ -474,7 +474,7 @@ class ConfiguredApiRepositoryTest {
       4,
       7849,
       LocalDateTime.of(2023, 5, 1, 0, 0, 0),
-      LocalDateTime.of(2023, 5, 1, 1, 15, 19, 0),
+      LocalDateTime.of(2023, 5, 1, 1, 15, 19),
       "Lowestoft (North East Suffolk) Magistrat",
       "LWSTMC",
       "WANDSWORTH (HMP)",
