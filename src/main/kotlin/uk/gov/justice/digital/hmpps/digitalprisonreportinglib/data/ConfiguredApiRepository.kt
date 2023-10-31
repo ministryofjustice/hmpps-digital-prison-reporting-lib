@@ -105,7 +105,7 @@ class ConfiguredApiRepository {
       if (k.endsWith(RANGE_FILTER_START_SUFFIX)) {
         "${k.removeSuffix(RANGE_FILTER_START_SUFFIX)} >= :$k"
       } else if (k.endsWith(RANGE_FILTER_END_SUFFIX)) {
-        "${k.removeSuffix(RANGE_FILTER_END_SUFFIX)} <= :$k"
+        "${k.removeSuffix(RANGE_FILTER_END_SUFFIX)} < DATEADD(day, 1, CAST(:$k AS timestamp))"
       } else {
         throw ValidationException("Range filter does not have a .start or .end suffix: $k")
       }
