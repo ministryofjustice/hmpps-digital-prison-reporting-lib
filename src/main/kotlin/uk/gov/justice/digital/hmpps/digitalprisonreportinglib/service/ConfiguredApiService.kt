@@ -8,9 +8,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.C
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -38,25 +40,22 @@ class ConfiguredApiService(
     sortedAsc: Boolean,
     caseloads: List<String>,
   ): List<Map<String, Any>> {
-    val dataSet = getDataSet(reportId, reportVariantId)
-    validateFilters(reportId, reportVariantId, filters, dataSet)
-    val (rangeFilters, filtersExcludingRange) = filters.entries.partition { (k, _) -> k.endsWith(RANGE_FILTER_START_SUFFIX) || k.endsWith(RANGE_FILTER_END_SUFFIX) }
-    val validatedSortColumn = validateSortColumnOrGetDefault(sortColumn, reportId, dataSet, reportVariantId)
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
+    val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
 
     return formatToSchemaFieldsCasing(
       configuredApiRepository
         .executeQuery(
-          dataSet.query,
-          rangeFilters.associate(transformMapEntryToPair()),
-          filtersExcludingRange.associate(transformMapEntryToPair()),
+          productDefinition.dataSet.query,
+          validateAndMapFilters(productDefinition, filters),
           selectedPage,
           pageSize,
           validatedSortColumn,
           sortedAsc,
           caseloads,
-          getCaseloadFields(dataSet),
+          getCaseloadFields(productDefinition.dataSet),
         ),
-      dataSet.schema.field,
+      productDefinition.dataSet.schema.field,
     )
   }
 
@@ -69,147 +68,111 @@ class ConfiguredApiService(
     filters: Map<String, String>,
     caseloads: List<String>,
   ): Count {
-    val dataSet = getDataSet(reportId, reportVariantId)
-    validateFilters(reportId, reportVariantId, filters, dataSet)
-    val (rangeFilters, filtersExcludingRange) = filters.entries.partition { (k, _) -> k.endsWith(RANGE_FILTER_START_SUFFIX) || k.endsWith(RANGE_FILTER_END_SUFFIX) }
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
+
     return Count(
       configuredApiRepository.count(
-        rangeFilters.associate(transformMapEntryToPair()),
-        filtersExcludingRange.associate(transformMapEntryToPair()),
-        dataSet.query,
+        validateAndMapFilters(productDefinition, filters),
+        productDefinition.dataSet.query,
         caseloads,
-        getCaseloadFields(dataSet),
+        getCaseloadFields(productDefinition.dataSet),
       ),
     )
   }
 
-  private fun getDataSet(reportId: String, reportVariantId: String) =
-    productDefinitionRepository.getProductDefinitions()
-      .filter { it.id == reportId }
-      .flatMap { pd -> pd.dataSet.filter { it.id == getDataSetId(reportId, reportVariantId) } }
-      .ifEmpty { throw ValidationException("Invalid dataSetId provided: ${getDataSetId(reportId, reportVariantId)}") }
-      .first()
-
-  private fun getDataSetId(reportId: String, reportVariantId: String) =
-    getReportVariant(reportId, reportVariantId)
-      .dataset
-      .removePrefix(schemaRefPrefix)
-
-  fun calculateDefaultSortColumn(reportId: String, dataSetId: String, reportVariantId: String): String {
-    return getReportVariantSpecFields(reportId, reportVariantId)
+  fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String {
+    return definition.report.specification
+      ?.field
       ?.first { it.defaultSortColumn }
       ?.schemaField
       ?.removePrefix(schemaRefPrefix)
-      ?: throw ValidationException("Could not find default sort column for reportId: $reportId, dataSetId: $dataSetId, reportVariantId: $reportVariantId")
+      ?: throw ValidationException("Could not find default sort column for reportId: ${definition.id}, reportVariantId: ${definition.report.id}")
   }
 
-  private fun validateSortColumnOrGetDefault(sortColumn: String?, reportId: String, dataSet: DataSet, reportVariantId: String): String {
+  private fun validateSortColumnOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String {
     return sortColumn?.let {
-      dataSet.schema.field.filter { schemaField -> schemaField.name == sortColumn }
+      productDefinition.dataSet.schema.field.filter { schemaField -> schemaField.name == sortColumn }
         .ifEmpty { throw ValidationException("Invalid sortColumn provided: $sortColumn") }
         .first().name
-    } ?: calculateDefaultSortColumn(reportId, dataSet.id, reportVariantId)
+    } ?: calculateDefaultSortColumn(productDefinition)
   }
 
-  private fun validateFilters(reportId: String, reportVariantId: String, filters: Map<String, String>, dataSet: DataSet) {
-    filters.ifEmpty { return }
-    val reportFieldsWithFiltersOnly = getReportFieldsWithFiltersOnly(reportId, reportVariantId)
-    validateFiltersMatchSchemaName(reportFieldsWithFiltersOnly, filters)
-    validateFilterTypes(filters, dataSet)
-    val filtersWithStaticOptionsOnly = getFiltersWithStaticOptionsOnly(filters, reportFieldsWithFiltersOnly)
-    filtersWithStaticOptionsOnly.ifEmpty { return }
-    validateStaticOptions(filtersWithStaticOptionsOnly, reportFieldsWithFiltersOnly)
-  }
+  private fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>): List<ConfiguredApiRepository.Filter> {
+    filters.ifEmpty { return emptyList() }
 
-  private fun getReportFieldsWithFiltersOnly(reportId: String, reportVariantId: String) =
-    getReportVariantSpecFields(reportId, reportVariantId)
-      ?.filter { it.filter?.let { true } ?: false }.orEmpty()
+    return filters.map {
+      val truncatedKey = truncateBasedOnSuffix(it.key)
 
-  private fun getFiltersWithStaticOptionsOnly(filters: Map<String, String>, reportFieldsWithFiltersOnly: List<ReportField>) =
-    filters.entries.filter { filterEntry ->
-      reportFieldsWithFiltersOnly.any { reportField ->
-        reportField.schemaField.removePrefix(schemaRefPrefix) == filterEntry.key
-      }
-    }
+      val filterDefinition = findFilterDefinition(definition, truncatedKey)
 
-  private fun validateFiltersMatchSchemaName(reportFieldsWithFilters: List<ReportField>?, filters: Map<String, String>) {
-    (
-      reportFieldsWithFilters
-        ?.filter { truncateRangeFilters(filters).containsKey(it.schemaField.removePrefix(schemaRefPrefix)) }
-        ?.takeIf { it.size == truncateRangeFilters(filters).size }
-        ?.ifEmpty { throw ValidationException(INVALID_FILTERS_MESSAGE) }
-        ?: throw ValidationException(INVALID_FILTERS_MESSAGE)
+      validateValue(definition.dataSet, filterDefinition, truncatedKey, it.value)
+
+      ConfiguredApiRepository.Filter(
+        field = truncatedKey,
+        value = it.value,
+        type = mapFilterType(filterDefinition, it.key),
       )
-  }
-
-  private fun validateStaticOptions(filtersWithStaticOptionsOnly: List<Map.Entry<String, String>>, reportFieldsWithFiltersOnly: List<ReportField>) {
-    filtersWithStaticOptionsOnly.forEach { filterWithStaticOptionsOnlyEntry ->
-      reportFieldsWithFiltersOnly.first { reportField ->
-        filterWithStaticOptionsOnlyEntry.key == reportField.schemaField.removePrefix(schemaRefPrefix)
-      }
-        .filter
-        ?.staticOptions
-        ?.filter { staticOption ->
-          // Case Insensitive comparison for static option filter values. This is in line with the same lenience in the ConfiguredApiRepository.
-          staticOption.name.lowercase() == filterWithStaticOptionsOnlyEntry.value.lowercase()
-        }
-        .orEmpty()
-        .ifEmpty {
-          throw ValidationException(INVALID_STATIC_OPTIONS_MESSAGE)
-        }
     }
   }
 
-  private fun validateFilterTypes(filters: Map<String, String>, dataSet: DataSet) {
-    truncateRangeFilters(filters)
-      .forEach { filter ->
-        val schemaField = dataSet.schema.field.first { it.name == filter.key }
-        if (schemaField.type == ParameterType.Long) {
-          try {
-            filter.value.toLong()
-          } catch (e: NumberFormatException) {
-            throw ValidationException("Invalid value ${filter.value} for filter ${filter.key}. Cannot be parsed as a number.")
-          }
-        } else if (schemaField.type == ParameterType.Date) {
-          try {
-            LocalDate.parse(filter.value)
-          } catch (e: DateTimeParseException) {
-            throw ValidationException("Invalid value ${filter.value} for filter ${filter.key}. Cannot be parsed as a date.")
-          }
-        }
+  private fun mapFilterType(filterDefinition: FilterDefinition, key: String): ConfiguredApiRepository.FilterType {
+    if (filterDefinition.type == FilterType.DateRange) {
+      if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
+        return ConfiguredApiRepository.FilterType.DATE_RANGE_START
+      } else if (key.endsWith(RANGE_FILTER_END_SUFFIX)) {
+        return ConfiguredApiRepository.FilterType.DATE_RANGE_END
       }
+    }
+
+    if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
+      return ConfiguredApiRepository.FilterType.RANGE_START
+    } else if (key.endsWith(RANGE_FILTER_END_SUFFIX)) {
+      return ConfiguredApiRepository.FilterType.RANGE_END
+    }
+
+    return ConfiguredApiRepository.FilterType.STANDARD
   }
 
-  private fun getReportVariantSpecFields(reportId: String, reportVariantId: String) =
-    getReportVariant(reportId, reportVariantId)
-      .specification
-      ?.field
+  fun findFilterDefinition(definition: SingleReportProductDefinition, key: String): FilterDefinition {
+    val field =
+      definition.report.specification?.field
+        ?.firstOrNull { it.filter != null && key == it.schemaField.removePrefix(schemaRefPrefix) }
 
-  private fun getReportVariant(reportId: String, reportVariantId: String) =
-    productDefinitionRepository.getProductDefinitions()
-      .filter { it.id == reportId }
-      .ifEmpty { throw ValidationException("$INVALID_REPORT_ID_MESSAGE $reportId") }
-      .flatMap { it.report.filter { report -> report.id == reportVariantId } }
-      .ifEmpty { throw ValidationException("$INVALID_REPORT_VARIANT_ID_MESSAGE $reportVariantId") }
-      .first()
-
-  private fun truncateRangeFilters(filters: Map<String, String>): Map<String, String> {
-    return filters.entries
-      .associate { (k, v) -> truncateBasedOnSuffix(k, v) }
+    return field?.filter ?: throw ValidationException(INVALID_FILTERS_MESSAGE)
   }
 
-  private fun truncateBasedOnSuffix(k: String, v: String): Pair<String, String> {
+  private fun validateValue(dataSet: DataSet, filterDefinition: FilterDefinition, key: String, value: String) {
+    validateFilterType(dataSet, key, value)
+    if (filterDefinition.staticOptions != null && filterDefinition.staticOptions.none { it.name.lowercase() == value.lowercase() }) {
+      throw ValidationException(INVALID_STATIC_OPTIONS_MESSAGE)
+    }
+  }
+
+  private fun validateFilterType(dataSet: DataSet, key: String, value: String) {
+    val schemaField = dataSet.schema.field.first { it.name == key }
+    if (schemaField.type == ParameterType.Long) {
+      try {
+        value.toLong()
+      } catch (e: NumberFormatException) {
+        throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a number.")
+      }
+    } else if (schemaField.type == ParameterType.Date) {
+      try {
+        LocalDate.parse(value)
+      } catch (e: DateTimeParseException) {
+        throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a date.")
+      }
+    }
+  }
+
+  private fun truncateBasedOnSuffix(k: String): String {
     return if (k.endsWith(RANGE_FILTER_START_SUFFIX)) {
-      k.substring(0, k.length - RANGE_FILTER_START_SUFFIX.length) to v
+      k.removeSuffix(RANGE_FILTER_START_SUFFIX)
     } else if (k.endsWith(RANGE_FILTER_END_SUFFIX)) {
-      k.substring(0, k.length - RANGE_FILTER_END_SUFFIX.length) to v
+      k.removeSuffix(RANGE_FILTER_END_SUFFIX)
     } else {
-      k to v
+      k
     }
-  }
-
-  private fun transformMapEntryToPair(): (Map.Entry<String, String>) -> Pair<String, String> {
-    return { (k, v) -> k to v }
   }
 
   private fun formatToSchemaFieldsCasing(resultRows: List<Map<String, Any>>, schemaFields: List<SchemaField>): List<Map<String, Any>> {

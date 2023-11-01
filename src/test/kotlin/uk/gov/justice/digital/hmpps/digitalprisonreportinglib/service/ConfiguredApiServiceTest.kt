@@ -12,6 +12,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
@@ -51,19 +54,18 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val filtersExcludingRange = mapOf("direction" to "in")
-    val rangeFilters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.executeQuery(dataSet.query, rangeFilters, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
+    whenever(configuredApiRepository.executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
 
-    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, rangeFilters, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
     assertEquals(expectedServiceResult, actual)
   }
 
@@ -72,15 +74,14 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val filtersExcludingRange = mapOf("direction" to "in")
-    val rangeFilters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.count(rangeFilters, filtersExcludingRange, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
+    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
 
-    verify(configuredApiRepository, times(1)).count(rangeFilters, filtersExcludingRange, dataSet.query, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).count(repositoryFilters, dataSet.query, caseloads, caseloadFields)
     assertEquals(Count(4), actual)
   }
 
@@ -89,18 +90,18 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val rangeFilters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.executeQuery(dataSet.query, rangeFilters, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
+    whenever(configuredApiRepository.executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
 
-    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, rangeFilters, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
     assertEquals(expectedServiceResult, actual)
   }
 
@@ -109,14 +110,14 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val rangeFilters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.count(rangeFilters, emptyMap(), dataSet.query, caseloads, caseloadFields)).thenReturn(4)
+    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
 
-    verify(configuredApiRepository, times(1)).count(rangeFilters, emptyMap(), dataSet.query, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).count(repositoryFilters, dataSet.query, caseloads, caseloadFields)
     assertEquals(Count(4), actual)
   }
 
@@ -125,17 +126,19 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filtersExcludingRange = mapOf("direction" to "in")
+    val repositoryFilters = listOf(Filter("direction", "in"))
+
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.executeQuery(dataSet.query, emptyMap(), filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
+    whenever(configuredApiRepository.executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
 
-    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, emptyMap(), filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
     assertEquals(expectedServiceResult, actual)
   }
 
@@ -144,14 +147,14 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "in")
-    val filtersExcludingRange = mapOf("direction" to "in")
+    val repositoryFilters = listOf(Filter("direction", "in"))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.count(emptyMap(), filtersExcludingRange, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
+    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
 
-    verify(configuredApiRepository, times(1)).count(emptyMap(), filtersExcludingRange, dataSet.query, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).count(repositoryFilters, dataSet.query, caseloads, caseloadFields)
     assertEquals(Count(4), actual)
   }
 
@@ -160,19 +163,18 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val filtersExcludingRange = mapOf("direction" to "In")
-    val rangeFilters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.executeQuery(dataSet.query, rangeFilters, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
+    whenever(configuredApiRepository.executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
 
-    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, rangeFilters, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
     assertEquals(expectedServiceResult, actual)
   }
 
@@ -181,15 +183,14 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val filtersExcludingRange = mapOf("direction" to "In")
-    val rangeFilters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.count(rangeFilters, filtersExcludingRange, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
+    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
 
-    verify(configuredApiRepository, times(1)).count(rangeFilters, filtersExcludingRange, dataSet.query, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).count(repositoryFilters, dataSet.query, caseloads, caseloadFields)
     assertEquals(Count(4), actual)
   }
 
@@ -203,7 +204,7 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
 
-    whenever(configuredApiRepository.executeQuery(dataSet.query, emptyMap(), emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(
+    whenever(configuredApiRepository.executeQuery(dataSet.query, emptyList(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(
       listOf(
         mapOf("PRISONNUMBER" to "1"),
       ),
@@ -211,7 +212,7 @@ class ConfiguredApiServiceTest {
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
 
-    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, emptyMap(), emptyMap(), 1, 10, "date", true, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, emptyList(), 1, 10, "date", true, caseloads, caseloadFields)
     assertEquals(
       listOf(
         mapOf("prisonNumber" to "1"),
@@ -226,11 +227,11 @@ class ConfiguredApiServiceTest {
     val reportVariantId = "last-month"
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.count(emptyMap(), emptyMap(), dataSet.query, caseloads, caseloadFields)).thenReturn(4)
+    whenever(configuredApiRepository.count(emptyList(), dataSet.query, caseloads, caseloadFields)).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, emptyMap(), caseloads)
 
-    verify(configuredApiRepository, times(1)).count(emptyMap(), emptyMap(), dataSet.query, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).count(emptyList(), dataSet.query, caseloads, caseloadFields)
     assertEquals(Count(4), actual)
   }
 
@@ -248,7 +249,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_ID_MESSAGE} $reportId", e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -261,7 +262,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_ID_MESSAGE} $reportId", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
   }
 
   @Test
@@ -278,7 +279,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -291,7 +292,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
   }
 
   @Test
@@ -308,7 +309,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals("Invalid sortColumn provided: abc", e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -325,7 +326,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -338,7 +339,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
   }
 
   @Test
@@ -355,7 +356,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -368,7 +369,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
   }
 
   @Test
@@ -385,7 +386,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -398,7 +399,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
   }
 
   @Test
@@ -415,7 +416,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -428,7 +429,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
   }
 
   @Test
@@ -445,7 +446,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).executeQuery(any(), any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -458,7 +459,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, caseloads)
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
   }
 
   @Test
@@ -466,19 +467,18 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val filtersExcludingRange = mapOf("direction" to "in")
-    val rangeFilters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
-    whenever(configuredApiRepository.executeQuery(dataSet.query, rangeFilters, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
+    whenever(configuredApiRepository.executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, null, sortedAsc, caseloads)
 
-    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, rangeFilters, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
+    verify(configuredApiRepository, times(1)).executeQuery(dataSet.query, repositoryFilters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads, caseloadFields)
     assertEquals(expectedServiceResult, actual)
   }
 }
