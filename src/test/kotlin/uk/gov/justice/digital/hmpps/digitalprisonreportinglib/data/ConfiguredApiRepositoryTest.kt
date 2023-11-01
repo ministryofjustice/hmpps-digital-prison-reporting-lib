@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import jakarta.validation.ValidationException
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest
@@ -9,8 +8,9 @@ import org.junit.jupiter.api.TestFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner2
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner3
@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.allExternalMovements
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners
 import java.time.LocalDateTime
-import java.util.Collections
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -64,34 +63,34 @@ class ConfiguredApiRepositoryTest {
 
   @Test
   fun `should return 2 external movements for the selected page 2 and pageSize 2 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 2, 2, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, emptyList(), 2, 2, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(listOf(movementPrisoner3, movementPrisoner4), actual)
     Assertions.assertEquals(2, actual.size)
   }
 
   @Test
   fun `should return 1 row for the selected page 3 and pageSize 2 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 3, 2, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, emptyList(), 3, 2, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(listOf(movementPrisoner5), actual)
     Assertions.assertEquals(1, actual.size)
   }
 
   @Test
   fun `should return 5 rows for the selected page 1 and pageSize 5 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 1, 5, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 5, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(listOf(movementPrisoner1, movementPrisoner2, movementPrisoner3, movementPrisoner4, movementPrisoner5), actual)
     Assertions.assertEquals(5, actual.size)
   }
 
   @Test
   fun `should return an empty list for the selected page 2 and pageSize 5 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 2, 5, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, emptyList(), 2, 5, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should return an empty list for the selected page 6 and pageSize 1 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 6, 1, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, emptyList(), 6, 1, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
@@ -137,82 +136,74 @@ class ConfiguredApiRepositoryTest {
 
   @Test
   fun `should return a list of all results with no filters`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 20, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(5, actual.size)
   }
 
   @Test
   fun `should return a list of rows filtered by an in direction filter`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), Collections.singletonMap("direction", "In"), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "In")), 1, 20, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(4, actual.size)
   }
 
   @Test
   fun `should return a list of inwards movements with an in direction filter regardless of the casing`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), Collections.singletonMap("direction", "in"), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "in")), 1, 20, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(4, actual.size)
   }
 
   @Test
   fun `should return a list of rows filtered by out direction filter`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), Collections.singletonMap("direction", "Out"), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "Out")), 1, 20, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(1, actual.size)
   }
 
   @Test
   fun `should return a list of outwards movements with an out direction filter regardless of the casing`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), Collections.singletonMap("direction", "out"), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "out")), 1, 20, "date", true, caseloads, caseloadFields)
     Assertions.assertEquals(1, actual.size)
   }
 
   @Test
   fun `should return all the rows on or after the provided start date`() {
-    val actual = configuredApiRepository.executeQuery(query, Collections.singletonMap("date$RANGE_FILTER_START_SUFFIX", "2023-04-30"), emptyMap(), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-30", DATE_RANGE_START)), 1, 10, "date", false, caseloads, caseloadFields)
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3), actual)
   }
 
   @Test
   fun `should return all the rows on or before the provided end date`() {
-    val actual = configuredApiRepository.executeQuery(query, Collections.singletonMap("date$RANGE_FILTER_END_SUFFIX", "2023-04-25"), emptyMap(), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-25", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
     Assertions.assertEquals(listOf(movementPrisoner2, movementPrisoner1), actual)
   }
 
   @Test
   fun `should return all the rows between the provided start and end dates`() {
-    val actual = configuredApiRepository.executeQuery(query, mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-05-20"), emptyMap(), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3, movementPrisoner2), actual)
   }
 
   @Test
   fun `should return all the rows between the provided start and end dates matching the direction filter`() {
-    val actual = configuredApiRepository.executeQuery(query, mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-05-20"), mapOf("direction" to "in"), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END), Filter("direction", "in")), 1, 10, "date", false, caseloads, caseloadFields)
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner3, movementPrisoner2), actual)
   }
 
   @Test
   fun `should return no rows if the start date is after the latest table date`() {
-    val actual = configuredApiRepository.executeQuery(query, mapOf("date$RANGE_FILTER_START_SUFFIX" to "2025-01-01"), emptyMap(), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2025-01-01", DATE_RANGE_START)), 1, 10, "date", false, caseloads, caseloadFields)
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should return no rows if the end date is before the earliest table date`() {
-    val actual = configuredApiRepository.executeQuery(query, mapOf("date$RANGE_FILTER_END_SUFFIX" to "2015-01-01"), emptyMap(), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2015-01-01", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should return no rows if the start date is after the end date`() {
-    val actual = configuredApiRepository.executeQuery(query, mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-05-01", "date$RANGE_FILTER_END_SUFFIX" to "2023-04-25"), emptyMap(), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-05-01", DATE_RANGE_START), Filter("date", "2023-04-25", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
-  }
-
-  @Test
-  fun `should throw an exception if a range filter does not have a start or end suffix`() {
-    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiRepository.executeQuery(query, mapOf("date" to "2023-05-01"), emptyMap(), 1, 10, "date", false, caseloads, caseloadFields)
-    }
-    Assertions.assertEquals("Range filter does not have a .start or .end suffix: date", e.message)
   }
 
   @Test
@@ -249,8 +240,7 @@ class ConfiguredApiRepositoryTest {
       prisonerRepository.save(prisoner9846)
       val actual = configuredApiRepository.executeQuery(
         query,
-        mapOf("date$RANGE_FILTER_START_SUFFIX" to "2050-06-01", "date$RANGE_FILTER_END_SUFFIX" to "2050-06-01"),
-        emptyMap(),
+        listOf(Filter("date", "2050-06-01", DATE_RANGE_START), Filter("date", "2050-06-01", DATE_RANGE_END)),
         1,
         1,
         "date",
@@ -334,8 +324,7 @@ class ConfiguredApiRepositoryTest {
       prisonerRepository.save(prisoner9848)
       val actual = configuredApiRepository.executeQuery(
         query,
-        mapOf("date$RANGE_FILTER_START_SUFFIX" to "2022-06-01", "date$RANGE_FILTER_END_SUFFIX" to "2024-06-01"),
-        emptyMap(),
+        listOf(Filter("date", "2022-06-01", DATE_RANGE_START), Filter("date", "2024-06-01", DATE_RANGE_END)),
         1,
         10,
         "date",
@@ -357,62 +346,62 @@ class ConfiguredApiRepositoryTest {
 
   @Test
   fun `should return no rows for an empty caseloads list`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 1, 5, "date", true, emptyList(), caseloadFields)
+    val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 5, "date", true, emptyList(), caseloadFields)
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
   }
 
   @Test
   fun `should return a count of all rows with no filters`() {
-    val actual = configuredApiRepository.count(emptyMap(), emptyMap(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(emptyList(), query, caseloads, caseloadFields)
     Assertions.assertEquals(5L, actual)
   }
 
   @Test
   fun `should return a count of rows with an in direction filter`() {
-    val actual = configuredApiRepository.count(emptyMap(), Collections.singletonMap("direction", "in"), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("direction", "in")), query, caseloads, caseloadFields)
     Assertions.assertEquals(4L, actual)
   }
 
   @Test
   fun `should return a count of rows with an out direction filter`() {
-    val actual = configuredApiRepository.count(emptyMap(), Collections.singletonMap("direction", "out"), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("direction", "out")), query, caseloads, caseloadFields)
     Assertions.assertEquals(1L, actual)
   }
 
   @Test
   fun `should return a count of rows with a startDate filter`() {
-    val actual = configuredApiRepository.count(Collections.singletonMap("date$RANGE_FILTER_START_SUFFIX", "2023-05-01"), emptyMap(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-05-01", DATE_RANGE_START)), query, caseloads, caseloadFields)
     Assertions.assertEquals(2, actual)
   }
 
   @Test
   fun `should return a count of rows with an endDate filter`() {
-    val actual = configuredApiRepository.count(Collections.singletonMap("date$RANGE_FILTER_END_SUFFIX", "2023-01-31"), emptyMap(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-01-31", DATE_RANGE_END)), query, caseloads, caseloadFields)
     Assertions.assertEquals(1, actual)
   }
 
   @Test
   fun `should return a count of movements with a startDate and an endDate filter`() {
-    val actual = configuredApiRepository.count(mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-30", "date$RANGE_FILTER_END_SUFFIX" to "2023-05-01"), emptyMap(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2023-05-01", DATE_RANGE_END)), query, caseloads, caseloadFields)
     Assertions.assertEquals(2, actual)
   }
 
   @Test
   fun `should return a count of zero with a date start greater than the latest movement date`() {
-    val actual = configuredApiRepository.count(Collections.singletonMap("date$RANGE_FILTER_START_SUFFIX", "2025-04-30"), emptyMap(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("date", "2025-04-30", DATE_RANGE_START)), query, caseloads, caseloadFields)
     Assertions.assertEquals(0, actual)
   }
 
   @Test
   fun `should return a count of zero with a date end less than the earliest movement date`() {
-    val actual = configuredApiRepository.count(Collections.singletonMap("date$RANGE_FILTER_END_SUFFIX", "2019-04-30"), emptyMap(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("date", "2019-04-30", DATE_RANGE_END)), query, caseloads, caseloadFields)
     Assertions.assertEquals(0, actual)
   }
 
   @Test
   fun `should return a count of zero if the start date is after the end date`() {
-    val actual = configuredApiRepository.count(mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-30", "date$RANGE_FILTER_END_SUFFIX" to "2019-05-01"), emptyMap(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2019-05-01", DATE_RANGE_END)), query, caseloads, caseloadFields)
     Assertions.assertEquals(0, actual)
   }
 
@@ -423,7 +412,7 @@ class ConfiguredApiRepositoryTest {
     )
       .map { (sortedAsc, expected) ->
         DynamicTest.dynamicTest("When sorting by $sortColumn and sortedAsc is $sortedAsc the result is $expected") {
-          val actual = configuredApiRepository.executeQuery(query, emptyMap(), emptyMap(), 1, 1, sortColumn, sortedAsc, caseloads, caseloadFields)
+          val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 1, sortColumn, sortedAsc, caseloads, caseloadFields)
           Assertions.assertEquals(expected, actual)
           Assertions.assertEquals(1, actual.size)
         }

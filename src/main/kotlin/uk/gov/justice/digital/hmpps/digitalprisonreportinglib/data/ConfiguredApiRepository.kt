@@ -1,14 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import jakarta.validation.ValidationException
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import java.sql.Timestamp
 
 @Service
@@ -22,8 +19,7 @@ class ConfiguredApiRepository {
   lateinit var jdbcTemplate: NamedParameterJdbcTemplate
   fun executeQuery(
     query: String,
-    rangeFilters: Map<String, String>,
-    filtersExcludingRange: Map<String, String>,
+    filters: List<Filter>,
     selectedPage: Long,
     pageSize: Long,
     sortColumn: String,
@@ -35,7 +31,7 @@ class ConfiguredApiRepository {
       log.warn("Zero records returned as the user has no active caseloads.")
       return emptyList()
     }
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads, caseloadFields)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, caseloads, caseloadFields)
     val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
@@ -58,13 +54,12 @@ class ConfiguredApiRepository {
                       limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
 
   fun count(
-    rangeFilters: Map<String, String>,
-    filtersExcludingRange: Map<String, String>,
+    filters: List<Filter>,
     query: String,
     caseloads: List<String>,
     caseloadFields: List<String>,
   ): Long {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filtersExcludingRange, rangeFilters, caseloads, caseloadFields)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, caseloads, caseloadFields)
     return jdbcTemplate.queryForList(
       "SELECT count(*) as total FROM ($query) Q $whereClause",
       preparedStatementNamedParams,
@@ -79,17 +74,26 @@ class ConfiguredApiRepository {
     }
   }
 
-  private fun buildWhereClause(filtersExcludingRange: Map<String, String>, rangeFilters: Map<String, String>, caseloads: List<String>, caseloadFields: List<String>): Pair<MapSqlParameterSource, String> {
+  private fun buildWhereClause(filters: List<Filter>, caseloads: List<String>, caseloadFields: List<String>): Pair<MapSqlParameterSource, String> {
     val preparedStatementNamedParams = MapSqlParameterSource()
-    filtersExcludingRange.forEach { preparedStatementNamedParams.addValue(it.key, it.value.lowercase()) }
-    rangeFilters.forEach { preparedStatementNamedParams.addValue(it.key, it.value) }
-    val whereNoRange = filtersExcludingRange.keys.joinToString(" AND ") { k -> "lower($k) = :$k" }.ifEmpty { null }
-    val whereRange = buildWhereRangeCondition(rangeFilters)
-    val allFilters = whereNoRange?.plus(whereRange?.let { " AND $it" } ?: "") ?: whereRange
-    val caseloadsStringArray = "(${caseloads.map { "\'$it\'" }.joinToString()})"
+    filters.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
+    val allFilters = filters.joinToString(" AND ", transform = this::buildCondition)
+    val caseloadsStringArray = "(${caseloads.joinToString { "\'$it\'" }})"
     val caseloadsWhereClause = "(origin_code IN $caseloadsStringArray AND lower(direction)='out') OR (destination_code IN $caseloadsStringArray AND lower(direction)='in')"
-    val whereClause = allFilters?.let { "WHERE $it AND ($caseloadsWhereClause)" } ?: "WHERE $caseloadsWhereClause"
+    val whereClause = if (allFilters.isEmpty()) { "WHERE $caseloadsWhereClause" } else allFilters.let { "WHERE $it AND ($caseloadsWhereClause)" }
     return Pair(preparedStatementNamedParams, whereClause)
+  }
+
+  private fun buildCondition(filter: Filter): String {
+    val field = "lower(${filter.field})"
+    val key = filter.getKey()
+
+    return when(filter.type) {
+      FilterType.STANDARD -> "$field = :$key"
+      FilterType.RANGE_START, FilterType.DATE_RANGE_START -> "$field >= :$key"
+      FilterType.RANGE_END -> "$field <= :$key"
+      FilterType.DATE_RANGE_END -> "$field < DATEADD(day, 1, CAST(:$key AS timestamp))"
+    }
   }
 
   private fun buildCaseloadsWhereClause(caseloads: List<String>, caseloadFields: List<String>): String {
@@ -100,15 +104,19 @@ class ConfiguredApiRepository {
     return caseloadFields.joinToString(" OR ") { "$it IN $caseloadsStringArray" }
   }
 
-  private fun buildWhereRangeCondition(rangeFilters: Map<String, String>) =
-    rangeFilters.keys.joinToString(" AND ") { k ->
-      if (k.endsWith(RANGE_FILTER_START_SUFFIX)) {
-        "${k.removeSuffix(RANGE_FILTER_START_SUFFIX)} >= :$k"
-      } else if (k.endsWith(RANGE_FILTER_END_SUFFIX)) {
-        "${k.removeSuffix(RANGE_FILTER_END_SUFFIX)} < DATEADD(day, 1, CAST(:$k AS timestamp))"
-      } else {
-        throw ValidationException("Range filter does not have a .start or .end suffix: $k")
-      }
-    }
-      .ifEmpty { null }
+  data class Filter (
+    val field: String,
+    val value: String,
+    val type: FilterType = FilterType.STANDARD
+  ) {
+    fun getKey(): String = "${this.field}${this.type.suffix}".lowercase()
+  }
+
+  enum class FilterType (val suffix: String) {
+    STANDARD(""),
+    RANGE_START(".start"),
+    RANGE_END(".end"),
+    DATE_RANGE_START(".start"),
+    DATE_RANGE_END(".end"),
+  }
 }
