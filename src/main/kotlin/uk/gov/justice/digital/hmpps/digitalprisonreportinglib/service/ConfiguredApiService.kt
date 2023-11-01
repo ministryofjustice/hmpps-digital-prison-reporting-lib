@@ -7,7 +7,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -103,10 +108,11 @@ class ConfiguredApiService(
       validateValue(definition.dataSet, filterDefinition, truncatedKey, it.value)
 
       ConfiguredApiRepository.Filter(
-      field = truncatedKey,
-      value = it.value,
-      type = mapFilterType(filterDefinition, it.key)
-    ) }
+        field = truncatedKey,
+        value = it.value,
+        type = mapFilterType(filterDefinition, it.key),
+      )
+    }
   }
 
   private fun mapFilterType(filterDefinition: FilterDefinition, key: String): ConfiguredApiRepository.FilterType {
@@ -143,20 +149,20 @@ class ConfiguredApiService(
   }
 
   private fun validateFilterType(dataSet: DataSet, key: String, value: String) {
-        val schemaField = dataSet.schema.field.first { it.name == key }
-        if (schemaField.type == ParameterType.Long) {
-          try {
-            value.toLong()
-          } catch (e: NumberFormatException) {
-            throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a number.")
-          }
-        } else if (schemaField.type == ParameterType.Date) {
-          try {
-            LocalDate.parse(value)
-          } catch (e: DateTimeParseException) {
-            throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a date.")
-          }
-        }
+    val schemaField = dataSet.schema.field.first { it.name == key }
+    if (schemaField.type == ParameterType.Long) {
+      try {
+        value.toLong()
+      } catch (e: NumberFormatException) {
+        throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a number.")
+      }
+    } else if (schemaField.type == ParameterType.Date) {
+      try {
+        LocalDate.parse(value)
+      } catch (e: DateTimeParseException) {
+        throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a date.")
+      }
+    }
   }
 
   private fun truncateBasedOnSuffix(k: String): String {

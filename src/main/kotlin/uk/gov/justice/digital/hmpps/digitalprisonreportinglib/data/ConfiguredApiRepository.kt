@@ -88,7 +88,7 @@ class ConfiguredApiRepository {
     val field = "lower(${filter.field})"
     val key = filter.getKey()
 
-    return when(filter.type) {
+    return when (filter.type) {
       FilterType.STANDARD -> "$field = :$key"
       FilterType.RANGE_START, FilterType.DATE_RANGE_START -> "$field >= :$key"
       FilterType.RANGE_END -> "$field <= :$key"
@@ -104,15 +104,15 @@ class ConfiguredApiRepository {
     return caseloadFields.joinToString(" OR ") { "$it IN $caseloadsStringArray" }
   }
 
-  data class Filter (
+  data class Filter(
     val field: String,
     val value: String,
-    val type: FilterType = FilterType.STANDARD
+    val type: FilterType = FilterType.STANDARD,
   ) {
     fun getKey(): String = "${this.field}${this.type.suffix}".lowercase()
   }
 
-  enum class FilterType (val suffix: String) {
+  enum class FilterType(val suffix: String) {
     STANDARD(""),
     RANGE_START(".start"),
     RANGE_END(".end"),

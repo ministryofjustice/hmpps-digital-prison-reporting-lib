@@ -163,7 +163,7 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10",DATE_RANGE_END))
+    val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -183,7 +183,7 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10",DATE_RANGE_END))
+    val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
 
     whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields)).thenReturn(4)
@@ -467,7 +467,7 @@ class ConfiguredApiServiceTest {
     val reportId = "external-movements"
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
-    val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10",DATE_RANGE_END))
+    val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
