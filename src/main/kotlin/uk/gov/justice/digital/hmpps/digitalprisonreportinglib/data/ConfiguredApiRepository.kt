@@ -86,7 +86,8 @@ class ConfiguredApiRepository {
     val whereNoRange = filtersExcludingRange.keys.joinToString(" AND ") { k -> "lower($k) = :$k" }.ifEmpty { null }
     val whereRange = buildWhereRangeCondition(rangeFilters)
     val allFilters = whereNoRange?.plus(whereRange?.let { " AND $it" } ?: "") ?: whereRange
-    val caseloadsWhereClause = buildCaseloadsWhereClause(caseloads, caseloadFields)
+    val caseloadsStringArray = "(${caseloads.map { "\'$it\'" }.joinToString()})"
+    val caseloadsWhereClause = "(origin_code IN $caseloadsStringArray AND lower(direction)='out') OR (destination_code IN $caseloadsStringArray AND lower(direction)='in')"
     val whereClause = allFilters?.let { "WHERE $it AND ($caseloadsWhereClause)" } ?: "WHERE $caseloadsWhereClause"
     return Pair(preparedStatementNamedParams, whereClause)
   }
