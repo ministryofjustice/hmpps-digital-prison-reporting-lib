@@ -38,7 +38,7 @@ class ConfiguredApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean,
-    caseloads: List<String>,
+    userCaseloads: List<String>,
   ): List<Map<String, Any>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
@@ -52,8 +52,9 @@ class ConfiguredApiService(
           pageSize,
           validatedSortColumn,
           sortedAsc,
-          caseloads,
+          userCaseloads,
           getCaseloadFields(productDefinition.dataSet),
+          reportId,
         ),
       productDefinition.dataSet.schema.field,
     )
@@ -66,7 +67,7 @@ class ConfiguredApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
-    caseloads: List<String>,
+    userCaseloads: List<String>,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
 
@@ -74,8 +75,9 @@ class ConfiguredApiService(
       configuredApiRepository.count(
         validateAndMapFilters(productDefinition, filters),
         productDefinition.dataSet.query,
-        caseloads,
+        userCaseloads,
         getCaseloadFields(productDefinition.dataSet),
+        reportId,
       ),
     )
   }
