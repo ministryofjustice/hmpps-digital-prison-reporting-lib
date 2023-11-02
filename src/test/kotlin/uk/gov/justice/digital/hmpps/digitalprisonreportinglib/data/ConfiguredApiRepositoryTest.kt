@@ -8,6 +8,7 @@ import org.junit.jupiter.api.TestFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
@@ -16,13 +17,22 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner3
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner5
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionIn
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionOut
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.allExternalMovements
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement2
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement3
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement4
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement5
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionOut
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9846
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9847
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848
 import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -68,34 +78,84 @@ class ConfiguredApiRepositoryTest {
 
   @Test
   fun `should return 2 external movements for the selected page 2 and pageSize 2 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyList(), 2, 2, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      emptyList(),
+      2,
+      2,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(listOf(movementPrisoner3, movementPrisoner4), actual)
     Assertions.assertEquals(2, actual.size)
   }
 
   @Test
   fun `should return 1 row for the selected page 3 and pageSize 2 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyList(), 3, 2, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      emptyList(),
+      3,
+      2,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(listOf(movementPrisoner5), actual)
     Assertions.assertEquals(1, actual.size)
   }
 
   @Test
   fun `should return 5 rows for the selected page 1 and pageSize 5 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 5, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      emptyList(),
+      1,
+      5,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(listOf(movementPrisoner1, movementPrisoner2, movementPrisoner3, movementPrisoner4, movementPrisoner5), actual)
     Assertions.assertEquals(5, actual.size)
   }
 
   @Test
   fun `should return an empty list for the selected page 2 and pageSize 5 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyList(), 2, 5, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      emptyList(),
+      2,
+      5,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should return an empty list for the selected page 6 and pageSize 1 sorted by date in ascending order`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyList(), 6, 1, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      emptyList(),
+      6,
+      1,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
@@ -141,73 +201,193 @@ class ConfiguredApiRepositoryTest {
 
   @Test
   fun `should return a list of all results with no filters`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      emptyList(),
+      1,
+      20,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(5, actual.size)
   }
 
   @Test
   fun `should return a list of rows filtered by an in direction filter`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "In")), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("direction", "In")),
+      1,
+      20,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(4, actual.size)
   }
 
   @Test
   fun `should return a list of inwards movements with an in direction filter regardless of the casing`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "in")), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("direction", "in")),
+      1,
+      20,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(4, actual.size)
   }
 
   @Test
   fun `should return a list of rows filtered by out direction filter`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "Out")), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("direction", "Out")),
+      1,
+      20,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(1, actual.size)
   }
 
   @Test
   fun `should return a list of outwards movements with an out direction filter regardless of the casing`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("direction", "out")), 1, 20, "date", true, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("direction", "out")),
+      1,
+      20,
+      "date",
+      true,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(1, actual.size)
   }
 
   @Test
   fun `should return all the rows on or after the provided start date`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-30", DATE_RANGE_START)), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("date", "2023-04-30", DATE_RANGE_START)),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3), actual)
   }
 
   @Test
   fun `should return all the rows on or before the provided end date`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-25", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("date", "2023-04-25", DATE_RANGE_END)),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(listOf(movementPrisoner2, movementPrisoner1), actual)
   }
 
   @Test
   fun `should return all the rows between the provided start and end dates`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END)),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3, movementPrisoner2), actual)
   }
 
   @Test
   fun `should return all the rows between the provided start and end dates matching the direction filter`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END), Filter("direction", "in")), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END), Filter("direction", "in")),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner3, movementPrisoner2), actual)
   }
 
   @Test
   fun `should return no rows if the start date is after the latest table date`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2025-01-01", DATE_RANGE_START)), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("date", "2025-01-01", DATE_RANGE_START)),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should return no rows if the end date is before the earliest table date`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2015-01-01", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("date", "2015-01-01", DATE_RANGE_END)),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should return no rows if the start date is after the end date`() {
-    val actual = configuredApiRepository.executeQuery(query, listOf(Filter("date", "2023-05-01", DATE_RANGE_START), Filter("date", "2023-04-25", DATE_RANGE_END)), 1, 10, "date", false, caseloads, caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("date", "2023-05-01", DATE_RANGE_START), Filter("date", "2023-04-25", DATE_RANGE_END)),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
@@ -252,6 +432,7 @@ class ConfiguredApiRepositoryTest {
         true,
         listOf("BOLTCC"),
         caseloadFields,
+        EXTERNAL_MOVEMENTS_PRODUCT_ID,
       )
       Assertions.assertEquals(listOf(movementPrisonerNullValues), actual)
       Assertions.assertEquals(1, actual.size)
@@ -262,64 +443,7 @@ class ConfiguredApiRepositoryTest {
   }
 
   @Test
-  fun `should return only the rows whose origin code is in the caseloads list and its direction is "Out" or the destination code is in the caseloads list and its direction is "IN"`() {
-    val externalMovementOriginCaseloadDirectionIn = ExternalMovementEntity(
-      6,
-      9846,
-      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
-      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
-      "Lowestoft (North East Suffolk) Magistrat",
-      "LWSTMC",
-      "Manchester",
-      "MNCH",
-      "In",
-      "Transfer",
-      "Transfer In from Other Establishment",
-    )
-    val prisoner9846 = PrisonerEntity(9846, "W2505GF", "FirstName6", "LastName6", null)
-
-    val externalMovementDestinationCaseloadDirectionOut = ExternalMovementEntity(
-      7,
-      9847,
-      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
-      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
-      "Manchester",
-      "MNCH",
-      "Lowestoft (North East Suffolk) Magistrat",
-      "LWSTMC",
-      "Out",
-      "Transfer",
-      "Transfer In from Other Establishment",
-    )
-    val prisoner9847 = PrisonerEntity(9847, "AB905GF", "FirstName6", "LastName6", null)
-
-    val externalMovementDestinationCaseloadDirectionIn = ExternalMovementEntity(
-      8,
-      9848,
-      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
-      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
-      "Manchester",
-      "MNCH",
-      "Lowestoft (North East Suffolk) Magistrat",
-      "LWSTMC",
-      "In",
-      "Transfer",
-      "Transfer In from Other Establishment",
-    )
-    val prisoner9848 = PrisonerEntity(9848, "DD105GF", "FirstName6", "LastName6", null)
-    val movementPrisonerDestinationCaseloadDirectionIn = mapOf(
-      AllMovementPrisoners.PRISON_NUMBER to "DD105GF",
-      AllMovementPrisoners.NAME to "LastName6, F",
-      AllMovementPrisoners.DATE to externalMovementDestinationCaseloadDirectionIn.time,
-      AllMovementPrisoners.DIRECTION to "In",
-      AllMovementPrisoners.TYPE to "Transfer",
-      AllMovementPrisoners.ORIGIN to "Manchester",
-      AllMovementPrisoners.ORIGIN_CODE to "MNCH",
-      AllMovementPrisoners.DESTINATION to "Lowestoft (North East Suffolk) Magistrat",
-      AllMovementPrisoners.DESTINATION_CODE to "LWSTMC",
-      AllMovementPrisoners.REASON to "Transfer In from Other Establishment",
-    )
-
+  fun `should return only the rows whose origin code is in the caseloads list and its direction is "Out" or the destination code is in the caseloads list and its direction is "IN" for external-movements`() {
     try {
       externalMovementRepository.save(externalMovementOriginCaseloadDirectionIn)
       externalMovementRepository.save(externalMovementDestinationCaseloadDirectionOut)
@@ -336,6 +460,7 @@ class ConfiguredApiRepositoryTest {
         true,
         listOf("LWSTMC"),
         caseloadFields,
+        EXTERNAL_MOVEMENTS_PRODUCT_ID,
       )
       Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerDestinationCaseloadDirectionIn), actual)
       Assertions.assertEquals(2, actual.size)
@@ -350,63 +475,153 @@ class ConfiguredApiRepositoryTest {
   }
 
   @Test
+  fun `should return all the rows whose origin code or destination code is in the caseloads list for all other products apart from external-movements`() {
+    try {
+      externalMovementRepository.save(externalMovementOriginCaseloadDirectionIn)
+      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionOut)
+      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.save(prisoner9846)
+      prisonerRepository.save(prisoner9847)
+      prisonerRepository.save(prisoner9848)
+      val actual = configuredApiRepository.executeQuery(
+        query,
+        listOf(Filter("date", "2022-06-01", DATE_RANGE_START), Filter("date", "2024-06-01", DATE_RANGE_END)),
+        1,
+        10,
+        "date",
+        true,
+        listOf("LWSTMC"),
+        caseloadFields,
+        "product2-id",
+      )
+      Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerOriginCaseloadDirectionIn, movementPrisonerDestinationCaseloadDirectionOut, movementPrisonerDestinationCaseloadDirectionIn), actual)
+      Assertions.assertEquals(4, actual.size)
+    } finally {
+      externalMovementRepository.delete(externalMovementOriginCaseloadDirectionIn)
+      externalMovementRepository.delete(externalMovementDestinationCaseloadDirectionOut)
+      externalMovementRepository.delete(externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.delete(prisoner9846)
+      prisonerRepository.delete(prisoner9847)
+      prisonerRepository.delete(prisoner9848)
+    }
+  }
+
+  @Test
   fun `should return no rows for an empty caseloads list`() {
-    val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 5, "date", true, emptyList(), caseloadFields)
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      emptyList(),
+      1,
+      5,
+      "date",
+      true,
+      emptyList(),
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
   }
 
   @Test
   fun `should return a count of all rows with no filters`() {
-    val actual = configuredApiRepository.count(emptyList(), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(emptyList(), query, caseloads, caseloadFields, EXTERNAL_MOVEMENTS_PRODUCT_ID)
     Assertions.assertEquals(5L, actual)
   }
 
   @Test
   fun `should return a count of rows with an in direction filter`() {
-    val actual = configuredApiRepository.count(listOf(Filter("direction", "in")), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("direction", "in")),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(4L, actual)
   }
 
   @Test
   fun `should return a count of rows with an out direction filter`() {
-    val actual = configuredApiRepository.count(listOf(Filter("direction", "out")), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("direction", "out")),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(1L, actual)
   }
 
   @Test
   fun `should return a count of rows with a startDate filter`() {
-    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-05-01", DATE_RANGE_START)), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("date", "2023-05-01", DATE_RANGE_START)),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(2, actual)
   }
 
   @Test
   fun `should return a count of rows with an endDate filter`() {
-    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-01-31", DATE_RANGE_END)), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("date", "2023-01-31", DATE_RANGE_END)),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(1, actual)
   }
 
   @Test
   fun `should return a count of movements with a startDate and an endDate filter`() {
-    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2023-05-01", DATE_RANGE_END)), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2023-05-01", DATE_RANGE_END)),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(2, actual)
   }
 
   @Test
   fun `should return a count of zero with a date start greater than the latest movement date`() {
-    val actual = configuredApiRepository.count(listOf(Filter("date", "2025-04-30", DATE_RANGE_START)), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("date", "2025-04-30", DATE_RANGE_START)),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(0, actual)
   }
 
   @Test
   fun `should return a count of zero with a date end less than the earliest movement date`() {
-    val actual = configuredApiRepository.count(listOf(Filter("date", "2019-04-30", DATE_RANGE_END)), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("date", "2019-04-30", DATE_RANGE_END)),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(0, actual)
   }
 
   @Test
   fun `should return a count of zero if the start date is after the end date`() {
-    val actual = configuredApiRepository.count(listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2019-05-01", DATE_RANGE_END)), query, caseloads, caseloadFields)
+    val actual = configuredApiRepository.count(
+      listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2019-05-01", DATE_RANGE_END)),
+      query,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
     Assertions.assertEquals(0, actual)
   }
 
@@ -417,7 +632,17 @@ class ConfiguredApiRepositoryTest {
     )
       .map { (sortedAsc, expected) ->
         DynamicTest.dynamicTest("When sorting by $sortColumn and sortedAsc is $sortedAsc the result is $expected") {
-          val actual = configuredApiRepository.executeQuery(query, emptyList(), 1, 1, sortColumn, sortedAsc, caseloads, caseloadFields)
+          val actual = configuredApiRepository.executeQuery(
+            query,
+            emptyList(),
+            1,
+            1,
+            sortColumn,
+            sortedAsc,
+            caseloads,
+            caseloadFields,
+            EXTERNAL_MOVEMENTS_PRODUCT_ID,
+          )
           Assertions.assertEquals(expected, actual)
           Assertions.assertEquals(1, actual.size)
         }
@@ -490,6 +715,45 @@ class ConfiguredApiRepositoryTest {
       "Transfer",
       "Transfer In from Other Establishment",
     )
+    val externalMovementOriginCaseloadDirectionIn = ExternalMovementEntity(
+      6,
+      9846,
+      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
+      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
+      "Lowestoft (North East Suffolk) Magistrat",
+      "LWSTMC",
+      "Manchester",
+      "MNCH",
+      "In",
+      "Transfer",
+      "Transfer In from Other Establishment",
+    )
+    val externalMovementDestinationCaseloadDirectionOut = ExternalMovementEntity(
+      7,
+      9847,
+      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
+      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
+      "Manchester",
+      "MNCH",
+      "Lowestoft (North East Suffolk) Magistrat",
+      "LWSTMC",
+      "Out",
+      "Transfer",
+      "Transfer In from Other Establishment",
+    )
+    val externalMovementDestinationCaseloadDirectionIn = ExternalMovementEntity(
+      8,
+      9848,
+      LocalDateTime.of(2023, 6, 1, 0, 0, 0),
+      LocalDateTime.of(2023, 6, 1, 12, 0, 0),
+      "Manchester",
+      "MNCH",
+      "Lowestoft (North East Suffolk) Magistrat",
+      "LWSTMC",
+      "In",
+      "Transfer",
+      "Transfer In from Other Establishment",
+    )
     val allExternalMovements = listOf(
       externalMovement1,
       externalMovement2,
@@ -499,6 +763,10 @@ class ConfiguredApiRepositoryTest {
     )
   }
   object AllPrisoners {
+    val prisoner9846 = PrisonerEntity(9846, "W2505GF", "FirstName6", "LastName6", null)
+    val prisoner9847 = PrisonerEntity(9847, "AB905GF", "FirstName6", "LastName6", null)
+    val prisoner9848 = PrisonerEntity(9848, "DD105GF", "FirstName6", "LastName6", null)
+
     val allPrisoners = listOf(
       PrisonerEntity(8894, "G2504UV", "FirstName2", "LastName1", null),
       PrisonerEntity(5207, "G2927UV", "FirstName1", "LastName1", null),
@@ -529,5 +797,42 @@ class ConfiguredApiRepositoryTest {
     val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to externalMovement4.time, DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "Lowestoft (North East Suffolk) Magistrat", ORIGIN_CODE to "LWSTMC", DESTINATION to "WANDSWORTH (HMP)", DESTINATION_CODE to "WWI", REASON to "Transfer Out to Other Establishment")
 
     val movementPrisoner5 = mapOf(PRISON_NUMBER to "G3154UG", NAME to "LastName5, F", DATE to externalMovement5.time, DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Bolton Crown Court", ORIGIN_CODE to "BOLTCC", DESTINATION to "HMP HEWELL", DESTINATION_CODE to "HEI", REASON to "Transfer In from Other Establishment")
+
+    val movementPrisonerOriginCaseloadDirectionIn = mapOf(
+      PRISON_NUMBER to "W2505GF",
+      NAME to "LastName6, F",
+      DATE to externalMovementOriginCaseloadDirectionIn.time,
+      DIRECTION to "In",
+      TYPE to "Transfer",
+      ORIGIN to "Lowestoft (North East Suffolk) Magistrat",
+      ORIGIN_CODE to "LWSTMC",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+      REASON to "Transfer In from Other Establishment",
+    )
+    val movementPrisonerDestinationCaseloadDirectionOut = mapOf(
+      PRISON_NUMBER to "AB905GF",
+      NAME to "LastName6, F",
+      DATE to externalMovementDestinationCaseloadDirectionOut.time,
+      DIRECTION to "Out",
+      TYPE to "Transfer",
+      ORIGIN to "Manchester",
+      ORIGIN_CODE to "MNCH",
+      DESTINATION to "Lowestoft (North East Suffolk) Magistrat",
+      DESTINATION_CODE to "LWSTMC",
+      REASON to "Transfer In from Other Establishment",
+    )
+    val movementPrisonerDestinationCaseloadDirectionIn = mapOf(
+      PRISON_NUMBER to "DD105GF",
+      NAME to "LastName6, F",
+      DATE to externalMovementDestinationCaseloadDirectionIn.time,
+      DIRECTION to "In",
+      TYPE to "Transfer",
+      ORIGIN to "Manchester",
+      ORIGIN_CODE to "MNCH",
+      DESTINATION to "Lowestoft (North East Suffolk) Magistrat",
+      DESTINATION_CODE to "LWSTMC",
+      REASON to "Transfer In from Other Establishment",
+    )
   }
 }

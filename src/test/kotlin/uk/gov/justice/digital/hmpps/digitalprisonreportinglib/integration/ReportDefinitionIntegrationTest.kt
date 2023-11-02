@@ -20,7 +20,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .returnResult()
 
     assertThat(result.responseBody).isNotNull
-    assertThat(result.responseBody).hasSize(1)
+    assertThat(result.responseBody).hasSize(2)
     assertThat(result.responseBody).first().isNotNull
 
     val definition = result.responseBody!!.first()
@@ -66,7 +66,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .returnResult()
 
     assertThat(result.responseBody).isNotNull
-    assertThat(result.responseBody).hasSize(1)
+    assertThat(result.responseBody).hasSize(2)
     assertThat(result.responseBody).first().isNotNull
 
     val definition = result.responseBody!!.first()

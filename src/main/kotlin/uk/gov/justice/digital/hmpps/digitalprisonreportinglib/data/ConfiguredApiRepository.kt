@@ -13,6 +13,7 @@ class ConfiguredApiRepository {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
+    const val EXTERNAL_MOVEMENTS_PRODUCT_ID = "external-movements"
   }
 
   @Autowired
@@ -24,14 +25,15 @@ class ConfiguredApiRepository {
     pageSize: Long,
     sortColumn: String,
     sortedAsc: Boolean,
-    caseloads: List<String>,
+    userCaseloads: List<String>,
     caseloadFields: List<String>,
+    reportId: String,
   ): List<Map<String, Any>> {
-    if (caseloads.isEmpty()) {
+    if (userCaseloads.isEmpty()) {
       log.warn("Zero records returned as the user has no active caseloads.")
       return emptyList()
     }
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, caseloads, caseloadFields)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, userCaseloads, caseloadFields, reportId)
     val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
@@ -56,10 +58,11 @@ class ConfiguredApiRepository {
   fun count(
     filters: List<Filter>,
     query: String,
-    caseloads: List<String>,
+    userCaseloads: List<String>,
     caseloadFields: List<String>,
+    reportId: String,
   ): Long {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, caseloads, caseloadFields)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, userCaseloads, caseloadFields, reportId)
     return jdbcTemplate.queryForList(
       "SELECT count(*) as total FROM ($query) Q $whereClause",
       preparedStatementNamedParams,
@@ -74,12 +77,20 @@ class ConfiguredApiRepository {
     }
   }
 
-  private fun buildWhereClause(filters: List<Filter>, caseloads: List<String>, caseloadFields: List<String>): Pair<MapSqlParameterSource, String> {
+  private fun buildWhereClause(
+    filters: List<Filter>,
+    userCaseloads: List<String>,
+    caseloadFields: List<String>,
+    reportId: String,
+  ): Pair<MapSqlParameterSource, String> {
     val preparedStatementNamedParams = MapSqlParameterSource()
     filters.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
     val allFilters = filters.joinToString(" AND ", transform = this::buildCondition)
-    val caseloadsStringArray = "(${caseloads.joinToString { "\'$it\'" }})"
-    val caseloadsWhereClause = "(origin_code IN $caseloadsStringArray AND lower(direction)='out') OR (destination_code IN $caseloadsStringArray AND lower(direction)='in')"
+    val caseloadsStringArray = "(${userCaseloads.joinToString { "\'$it\'" }})"
+    val caseloadsWhereClause = when (reportId) {
+      EXTERNAL_MOVEMENTS_PRODUCT_ID -> "(origin_code IN $caseloadsStringArray AND lower(direction)='out') OR (destination_code IN $caseloadsStringArray AND lower(direction)='in')"
+      else -> buildCaseloadsWhereClause(userCaseloads, caseloadFields)
+    }
     val whereClause = if (allFilters.isEmpty()) { "WHERE $caseloadsWhereClause" } else allFilters.let { "WHERE $it AND ($caseloadsWhereClause)" }
     return Pair(preparedStatementNamedParams, whereClause)
   }
