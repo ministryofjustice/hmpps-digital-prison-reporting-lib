@@ -17,6 +17,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner5
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.allExternalMovements
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement1
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement2
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement3
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement4
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement5
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners
 import java.time.LocalDateTime
 
@@ -226,7 +231,7 @@ class ConfiguredApiRepositoryTest {
     val movementPrisonerNullValues = mapOf(
       AllMovementPrisoners.PRISON_NUMBER to "W2505GF",
       AllMovementPrisoners.NAME to "LastName6, F",
-      AllMovementPrisoners.DATE to "2050-06-01",
+      AllMovementPrisoners.DATE to externalMovementNullValues.time,
       AllMovementPrisoners.DIRECTION to "Out",
       AllMovementPrisoners.TYPE to "Transfer",
       AllMovementPrisoners.ORIGIN to "Bolton Crown Court",
@@ -305,7 +310,7 @@ class ConfiguredApiRepositoryTest {
     val movementPrisonerDestinationCaseloadDirectionIn = mapOf(
       AllMovementPrisoners.PRISON_NUMBER to "DD105GF",
       AllMovementPrisoners.NAME to "LastName6, F",
-      AllMovementPrisoners.DATE to "2023-06-01",
+      AllMovementPrisoners.DATE to externalMovementDestinationCaseloadDirectionIn.time,
       AllMovementPrisoners.DIRECTION to "In",
       AllMovementPrisoners.TYPE to "Transfer",
       AllMovementPrisoners.ORIGIN to "Manchester",
@@ -405,7 +410,7 @@ class ConfiguredApiRepositoryTest {
     Assertions.assertEquals(0, actual)
   }
 
-  private fun assertExternalMovements(sortColumn: String, expectedForAscending: Map<String, String>, expectedForDescending: Map<String, String>): List<DynamicTest> {
+  private fun assertExternalMovements(sortColumn: String, expectedForAscending: Map<String, Any>, expectedForDescending: Map<String, Any>): List<DynamicTest> {
     return listOf(
       true to listOf(expectedForAscending),
       false to listOf(expectedForDescending),
@@ -515,14 +520,14 @@ class ConfiguredApiRepositoryTest {
     const val DESTINATION_CODE = "DESTINATION_CODE"
     const val REASON = "REASON"
 
-    val movementPrisoner1 = mapOf(PRISON_NUMBER to "G2504UV", NAME to "LastName1, F", DATE to "2023-01-31", DIRECTION to "In", TYPE to "Admission", ORIGIN to "KINGSTON (HMP)", ORIGIN_CODE to "PTI", DESTINATION to "THORN CROSS (HMPYOI)", DESTINATION_CODE to "TCI", REASON to "Unconvicted Remand")
+    val movementPrisoner1 = mapOf(PRISON_NUMBER to "G2504UV", NAME to "LastName1, F", DATE to externalMovement1.time, DIRECTION to "In", TYPE to "Admission", ORIGIN to "KINGSTON (HMP)", ORIGIN_CODE to "PTI", DESTINATION to "THORN CROSS (HMPYOI)", DESTINATION_CODE to "TCI", REASON to "Unconvicted Remand")
 
-    val movementPrisoner2 = mapOf(PRISON_NUMBER to "G2927UV", NAME to "LastName1, F", DATE to "2023-04-25", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Leicester Crown Court", ORIGIN_CODE to "LEICCC", DESTINATION to "LEICESTER (HMP)", DESTINATION_CODE to "LCI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner2 = mapOf(PRISON_NUMBER to "G2927UV", NAME to "LastName1, F", DATE to externalMovement2.time, DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Leicester Crown Court", ORIGIN_CODE to "LEICCC", DESTINATION to "LEICESTER (HMP)", DESTINATION_CODE to "LCI", REASON to "Transfer In from Other Establishment")
 
-    val movementPrisoner3 = mapOf(PRISON_NUMBER to "G3418VR", NAME to "LastName3, F", DATE to "2023-04-30", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BEDFORD (HMP)", ORIGIN_CODE to "BFI", DESTINATION to "NORTH SEA CAMP (HMP)", DESTINATION_CODE to "NSI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner3 = mapOf(PRISON_NUMBER to "G3418VR", NAME to "LastName3, F", DATE to externalMovement3.time, DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BEDFORD (HMP)", ORIGIN_CODE to "BFI", DESTINATION to "NORTH SEA CAMP (HMP)", DESTINATION_CODE to "NSI", REASON to "Transfer In from Other Establishment")
 
-    val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to "2023-05-01", DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "Lowestoft (North East Suffolk) Magistrat", ORIGIN_CODE to "LWSTMC", DESTINATION to "WANDSWORTH (HMP)", DESTINATION_CODE to "WWI", REASON to "Transfer Out to Other Establishment")
+    val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to externalMovement4.time, DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "Lowestoft (North East Suffolk) Magistrat", ORIGIN_CODE to "LWSTMC", DESTINATION to "WANDSWORTH (HMP)", DESTINATION_CODE to "WWI", REASON to "Transfer Out to Other Establishment")
 
-    val movementPrisoner5 = mapOf(PRISON_NUMBER to "G3154UG", NAME to "LastName5, F", DATE to "2023-05-20", DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Bolton Crown Court", ORIGIN_CODE to "BOLTCC", DESTINATION to "HMP HEWELL", DESTINATION_CODE to "HEI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner5 = mapOf(PRISON_NUMBER to "G3154UG", NAME to "LastName5, F", DATE to externalMovement5.time, DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Bolton Crown Court", ORIGIN_CODE to "BOLTCC", DESTINATION to "HMP HEWELL", DESTINATION_CODE to "HEI", REASON to "Transfer In from Other Establishment")
   }
 }

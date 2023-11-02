@@ -39,7 +39,7 @@ class ConfiguredApiRepository {
       preparedStatementNamedParams,
     )
       .map {
-        transformTimestampToString(it)
+        transformTimestampToLocalDateTime(it)
       }
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
@@ -66,9 +66,9 @@ class ConfiguredApiRepository {
     ).first()?.get("total") as Long
   }
 
-  private fun transformTimestampToString(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->
+  private fun transformTimestampToLocalDateTime(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->
     if (v is Timestamp) {
-      k to v.toLocalDateTime().toLocalDate().toString()
+      k to v.toLocalDateTime()
     } else {
       k to v
     }
