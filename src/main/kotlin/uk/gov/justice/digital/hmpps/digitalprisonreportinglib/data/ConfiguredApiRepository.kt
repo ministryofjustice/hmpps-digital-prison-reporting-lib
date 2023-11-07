@@ -101,7 +101,8 @@ class ConfiguredApiRepository {
 
     return when (filter.type) {
       FilterType.STANDARD -> "$field = :$key"
-      FilterType.RANGE_START, FilterType.DATE_RANGE_START -> "$field >= :$key"
+      FilterType.RANGE_START -> "$field >= :$key"
+      FilterType.DATE_RANGE_START -> "$field >= CAST(:$key AS timestamp)"
       FilterType.RANGE_END -> "$field <= :$key"
       FilterType.DATE_RANGE_END -> "$field < DATEADD(day, 1, CAST(:$key AS timestamp))"
     }
