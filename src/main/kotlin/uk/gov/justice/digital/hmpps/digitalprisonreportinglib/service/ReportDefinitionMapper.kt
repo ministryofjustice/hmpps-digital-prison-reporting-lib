@@ -1,21 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
@@ -40,13 +33,21 @@ class ReportDefinitionMapper {
     val dataSet = dataSets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
 
+    return map(report, dataSet, productDefinitionId)
+  }
+
+  private fun map(
+    report: Report,
+    dataSet: DataSet,
+    productDefinitionId: String,
+  ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
       name = report.name,
       description = report.description,
       specification = map(report.specification, dataSet.schema.field),
       resourceName = "reports/$productDefinitionId/${report.id}",
-    )
+      )
   }
 
   private fun map(
@@ -109,4 +110,13 @@ class ReportDefinitionMapper {
     name = definition.name,
     displayName = definition.displayName,
   )
+
+  fun map(definition: SingleReportProductDefinition): SingleVariantReportDefinition {
+    return SingleVariantReportDefinition(
+      id = definition.id,
+      name = definition.name,
+      description = definition.description,
+      variant = map(definition.report, definition.dataSet, definition.id)
+    )
+  }
 }

@@ -8,10 +8,12 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.then
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod.HTML
+import java.time.LocalDate
 
 class ReportDefinitionServiceTest {
 
@@ -24,6 +26,35 @@ class ReportDefinitionServiceTest {
       version = "5",
     ),
     report = emptyList(),
+  )
+
+  val minimalSingleDefinition = SingleReportProductDefinition(
+    id = "1",
+    name = "2",
+    report = Report(
+      id = "3",
+      name = "4",
+      created = LocalDate.now(),
+      dataset = "\$ref:10",
+      render = HTML,
+      version = "5"
+    ),
+    dataSet = DataSet(
+      id = "10",
+      name = "11",
+      query = "12",
+      schema = Schema(emptyList())
+    ),
+    dataSource = DataSource(
+      id = "20",
+      name = "21",
+      connection = "22"
+    ),
+    metaData = MetaData(
+      author = "30",
+      version = "31",
+      owner = "32"
+    )
   )
 
   @Test
@@ -56,6 +87,35 @@ class ReportDefinitionServiceTest {
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
     assertThat(actualResult[0]).isEqualTo(expectedResult)
+  }
+
+  @Test
+  fun `Getting single report for user maps correctly`() {
+    val expectedResult = SingleVariantReportDefinition(
+      id = "1",
+      name = "2",
+      variant = VariantDefinition(
+        id = "1",
+        name = "2",
+        resourceName = "3",
+      ),
+    )
+
+    val repository = mock<ProductDefinitionRepository> {
+      on { getSingleReportProductDefinition(any(), any()) } doReturn minimalSingleDefinition
+    }
+    val mapper = mock<ReportDefinitionMapper> {
+      on { map(any()) } doReturn expectedResult
+    }
+    val service = ReportDefinitionService(repository, mapper)
+
+    val actualResult = service.getDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
+
+    then(repository).should().getSingleReportProductDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
+    then(mapper).should().map(minimalSingleDefinition)
+
+    assertThat(actualResult).isNotNull
+    assertThat(actualResult).isEqualTo(expectedResult)
   }
 
   @Test

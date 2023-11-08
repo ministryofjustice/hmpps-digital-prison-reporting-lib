@@ -6,27 +6,67 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Collections.singletonMap
 
 class ReportDefinitionMapperTest {
+
+  private val fullDataSet = DataSet(
+    id = "10",
+    name = "11",
+    query = "12",
+    schema = Schema(
+      field = listOf(
+        SchemaField(
+          name = "13",
+          type = ParameterType.Long,
+        ),
+      ),
+    ),
+  )
+
+  private val fullDataSource = DataSource(
+    id = "18",
+    name = "19",
+    connection = "20",
+  )
+
+  private val fullReport = Report(
+    id = "21",
+    name = "22",
+    description = "23",
+    created = LocalDate.MAX,
+    version = "24",
+    dataset = "\$ref:10",
+    policy = listOf("25"),
+    render = RenderMethod.PDF,
+    schedule = "26",
+    specification = Specification(
+      template = "27",
+      field = listOf(
+        ReportField(
+          schemaField = "\$ref:13",
+          displayName = "14",
+          wordWrap = WordWrap.None,
+          filter = FilterDefinition(
+            type = FilterType.Radio,
+            staticOptions = listOf(
+              FilterOption(
+                name = "16",
+                displayName = "17",
+              ),
+            ),
+          ),
+          sortable = true,
+          defaultSortColumn = true,
+        ),
+      ),
+    ),
+    destination = listOf(singletonMap("28", "29")),
+  )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(
     id = "1",
@@ -40,63 +80,26 @@ class ReportDefinitionMapperTest {
       profile = "8",
       dqri = "9",
     ),
-    dataSet = listOf(
-      DataSet(
-        id = "10",
-        name = "11",
-        query = "12",
-        schema = Schema(
-          field = listOf(
-            SchemaField(
-              name = "13",
-              type = ParameterType.Long,
-            ),
-          ),
-        ),
-      ),
+    dataSet = listOf(fullDataSet),
+    dataSource = listOf(fullDataSource),
+    report = listOf(fullReport),
+  )
+
+  private val fullSingleReportProductDefinition: SingleReportProductDefinition = SingleReportProductDefinition(
+    id = "1",
+    name = "2",
+    description = "3",
+    metaData = MetaData(
+      author = "4",
+      version = "5",
+      owner = "6",
+      purpose = "7",
+      profile = "8",
+      dqri = "9",
     ),
-    dataSource = listOf(
-      DataSource(
-        id = "18",
-        name = "19",
-        connection = "20",
-      ),
-    ),
-    report = listOf(
-      Report(
-        id = "21",
-        name = "22",
-        description = "23",
-        created = LocalDate.MAX,
-        version = "24",
-        dataset = "\$ref:10",
-        policy = listOf("25"),
-        render = RenderMethod.PDF,
-        schedule = "26",
-        specification = Specification(
-          template = "27",
-          field = listOf(
-            ReportField(
-              schemaField = "\$ref:13",
-              displayName = "14",
-              wordWrap = WordWrap.None,
-              filter = FilterDefinition(
-                type = FilterType.Radio,
-                staticOptions = listOf(
-                  FilterOption(
-                    name = "16",
-                    displayName = "17",
-                  ),
-                ),
-              ),
-              sortable = true,
-              defaultSortColumn = true,
-            ),
-          ),
-        ),
-        destination = listOf(singletonMap("28", "29")),
-      ),
-    ),
+    dataSet = fullDataSet,
+    dataSource = fullDataSource,
+    report = fullReport,
   )
 
   @Test
@@ -283,6 +286,50 @@ class ReportDefinitionMapperTest {
     val result = ReportDefinitionMapper().map(defaultValue, HTML)
 
     assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
+  }
+
+  @Test
+  fun `Getting single report for user maps full data correctly`() {
+    val mapper = ReportDefinitionMapper()
+
+    val result = mapper.map(fullSingleReportProductDefinition)
+
+    assertThat(result).isNotNull
+    assertThat(result.id).isEqualTo(fullSingleReportProductDefinition.id)
+    assertThat(result.name).isEqualTo(fullSingleReportProductDefinition.name)
+    assertThat(result.description).isEqualTo(fullSingleReportProductDefinition.description)
+
+    val variant = result.variant
+
+    assertThat(variant.id).isEqualTo(fullSingleReportProductDefinition.report.id)
+    assertThat(variant.name).isEqualTo(fullSingleReportProductDefinition.report.name)
+    assertThat(variant.resourceName).isEqualTo("reports/${fullSingleReportProductDefinition.id}/${fullSingleReportProductDefinition.report.id}")
+    assertThat(variant.description).isEqualTo(fullSingleReportProductDefinition.report.description)
+    assertThat(variant.specification).isNotNull
+    assertThat(variant.specification?.template).isEqualTo(fullSingleReportProductDefinition.report.specification?.template)
+    assertThat(variant.specification?.fields).isNotEmpty
+    assertThat(variant.specification?.fields).hasSize(1)
+
+    val field = variant.specification!!.fields.first()
+    val sourceSchemaField = fullSingleReportProductDefinition.dataSet.schema.field.first()
+    val sourceReportField = fullSingleReportProductDefinition.report.specification!!.field.first()
+
+    assertThat(field.name).isEqualTo(sourceSchemaField.name)
+    assertThat(field.displayName).isEqualTo(sourceReportField.displayName)
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.defaultSortColumn).isEqualTo(sourceReportField.defaultSortColumn)
+    assertThat(field.filter).isNotNull
+    assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
+    assertThat(field.filter?.staticOptions).isNotEmpty
+    assertThat(field.filter?.staticOptions).hasSize(1)
+    assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
+
+    val filterOption = field.filter?.staticOptions?.first()
+    val sourceFilterOption = sourceReportField.filter?.staticOptions?.first()
+
+    assertThat(filterOption?.name).isEqualTo(sourceFilterOption?.name)
+    assertThat(filterOption?.displayName).isEqualTo(sourceFilterOption?.displayName)
   }
 
   private fun getExpectedDate(offset: Long, magnitude: ChronoUnit): String? {
