@@ -11,8 +11,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod.HTML
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDate
 
 class ReportDefinitionServiceTest {
@@ -37,24 +43,24 @@ class ReportDefinitionServiceTest {
       created = LocalDate.now(),
       dataset = "\$ref:10",
       render = HTML,
-      version = "5"
+      version = "5",
     ),
     dataSet = DataSet(
       id = "10",
       name = "11",
       query = "12",
-      schema = Schema(emptyList())
+      schema = Schema(emptyList()),
     ),
     dataSource = DataSource(
       id = "20",
       name = "21",
-      connection = "22"
+      connection = "22",
     ),
     metaData = MetaData(
       author = "30",
       version = "31",
-      owner = "32"
-    )
+      owner = "32",
+    ),
   )
 
   @Test
