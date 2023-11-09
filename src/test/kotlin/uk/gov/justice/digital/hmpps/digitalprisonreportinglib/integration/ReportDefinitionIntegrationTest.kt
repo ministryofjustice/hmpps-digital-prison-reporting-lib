@@ -2,14 +2,16 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 
 class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
   @Test
-  fun `Stubbed definition is returned as expected`() {
+  fun `Definition list is returned as expected`() {
     val result = webTestClient.get()
       .uri("/definitions")
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -112,5 +114,34 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
     assertThat(result.responseBody).isNotNull
     assertThat(result.responseBody).doesNotContain(": null")
+  }
+
+  @Test
+  fun `Single definition is returned as expected`() {
+    val result = webTestClient.get()
+      .uri("/definitions/external-movements/last-month")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody<SingleVariantReportDefinition>()
+      .returnResult()
+
+    assertThat(result.responseBody).isNotNull
+
+    val definition = result.responseBody!!
+
+    assertThat(definition.name).isEqualTo("External Movements")
+    assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
+    assertThat(definition.variant).isNotNull
+
+    val lastMonthVariant = definition.variant
+
+    assertThat(lastMonthVariant.id).isEqualTo("last-month")
+    assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
+    assertThat(lastMonthVariant.name).isEqualTo("Last month")
+    assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+    assertThat(lastMonthVariant.specification).isNotNull
+    assertThat(lastMonthVariant.specification?.fields).hasSize(8)
   }
 }
