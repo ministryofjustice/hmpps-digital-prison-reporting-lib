@@ -17,6 +17,7 @@ jobs:
     executor:
       name: hmpps/java
       tag: "19.0"
+      machine: true
     steps:
       - checkout
       - restore_cache:
