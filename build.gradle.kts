@@ -32,8 +32,10 @@ dependencies {
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.12.3")
-  // https://mvnrepository.com/artifact/com.github.tomakehurst/wiremock
   testImplementation("com.github.tomakehurst:wiremock:3.0.1")
+  testImplementation("org.postgresql:postgresql:42.2.27")
+  testImplementation("org.testcontainers:junit-jupiter:1.19.1")
+  testImplementation("org.testcontainers:postgresql:1.19.1")
 }
 
 java {
