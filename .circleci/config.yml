@@ -17,8 +17,9 @@ jobs:
     executor:
       name: hmpps/java
       tag: "19.0"
-      machine: true
     steps:
+      - setup_remote_docker:
+          version: 20.10.14
       - checkout
       - restore_cache:
           keys:
