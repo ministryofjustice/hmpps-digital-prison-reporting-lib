@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Product
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
@@ -40,6 +42,14 @@ class ReportDefinitionMapper {
     val dataSet = dataSets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
 
+    return map(report, dataSet, productDefinitionId)
+  }
+
+  private fun map(
+    report: Report,
+    dataSet: DataSet,
+    productDefinitionId: String,
+  ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
       name = report.name,
@@ -109,4 +119,13 @@ class ReportDefinitionMapper {
     name = definition.name,
     displayName = definition.displayName,
   )
+
+  fun map(definition: SingleReportProductDefinition): SingleVariantReportDefinition {
+    return SingleVariantReportDefinition(
+      id = definition.id,
+      name = definition.name,
+      description = definition.description,
+      variant = map(definition.report, definition.dataSet, definition.id),
+    )
+  }
 }

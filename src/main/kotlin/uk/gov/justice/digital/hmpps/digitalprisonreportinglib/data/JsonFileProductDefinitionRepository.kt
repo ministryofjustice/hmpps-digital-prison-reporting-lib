@@ -44,7 +44,7 @@ class JsonFileProductDefinitionRepository(
 
     return SingleReportProductDefinition(
       id = definitionId,
-      name = productDefinition.id,
+      name = productDefinition.name,
       description = productDefinition.description,
       metaData = productDefinition.metaData,
       dataSource = productDefinition.dataSource.first(),
