@@ -96,15 +96,15 @@ class ConfiguredApiRepository {
   }
 
   private fun buildCondition(filter: Filter): String {
-    val field = "lower(${filter.field})"
+    val lowerCaseField = "lower(${filter.field})"
     val key = filter.getKey()
 
     return when (filter.type) {
-      FilterType.STANDARD -> "$field = :$key"
-      FilterType.RANGE_START -> "$field >= :$key"
-      FilterType.DATE_RANGE_START -> "$field >= CAST(:$key AS timestamp)"
-      FilterType.RANGE_END -> "$field <= :$key"
-      FilterType.DATE_RANGE_END -> "$field < DATEADD(day, 1, CAST(:$key AS timestamp))"
+      FilterType.STANDARD -> "$lowerCaseField = :$key"
+      FilterType.RANGE_START -> "$lowerCaseField >= :$key"
+      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:$key AS timestamp)"
+      FilterType.RANGE_END -> "$lowerCaseField <= :$key"
+      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
     }
   }
 

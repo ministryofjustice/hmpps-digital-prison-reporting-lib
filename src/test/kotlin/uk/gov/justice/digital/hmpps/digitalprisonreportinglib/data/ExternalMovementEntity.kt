@@ -6,7 +6,7 @@ import jakarta.persistence.Table
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "movements_movements", schema = "domain")
+@Table(name = "movements_movements")
 data class ExternalMovementEntity(
   @Id val id: Long,
   val prisoner: Long,
