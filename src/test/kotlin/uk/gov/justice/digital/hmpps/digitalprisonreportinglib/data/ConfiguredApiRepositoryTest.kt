@@ -69,8 +69,8 @@ class ConfiguredApiRepositoryTest {
     "movements.destination," +
     "movements.destination_code," +
     "movements.reason\n" +
-    "FROM datamart.domain.movements_movements as movements\n" +
-    "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
+    "FROM movements_movements as movements\n" +
+    "JOIN prisoner_prisoner as prisoners\n" +
     "ON movements.prisoner = prisoners.id"
 
   private val caseloads = listOf("HEI", "LWSTMC", "NSI", "LCI", "TCI")

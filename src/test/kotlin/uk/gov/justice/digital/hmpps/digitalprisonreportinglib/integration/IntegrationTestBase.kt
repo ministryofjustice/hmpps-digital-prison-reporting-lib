@@ -59,14 +59,13 @@ abstract class IntegrationTestBase {
     @Container
     private val postgreSQLContainer = PostgreSQLContainer<Nothing>("postgres:latest")
 
-
     @DynamicPropertySource
     @JvmStatic
     fun registerDynamicProperties(registry: DynamicPropertyRegistry) {
       registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl)
       registry.add("spring.datasource.username", postgreSQLContainer::getUsername)
       registry.add("spring.datasource.password", postgreSQLContainer::getPassword)
-      registry.add("spring.datasource.driver-class-name", "org.postgresql.Driver"::toString)
+      registry.add("spring.datasource.driver-class-name", postgreSQLContainer::getDriverClassName)
       registry.add("spring.jpa.database-platform", "org.hibernate.dialect.PostgreSQLDialect"::toString)
     }
   }

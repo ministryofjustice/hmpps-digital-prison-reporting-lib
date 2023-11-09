@@ -32,6 +32,15 @@ of
 > **Note** - test coverage reports are enabled by default and after running the
 > tests the report will be written to build/reports/jacoco/test/html
 
+### First time set up
+
+Before running tests for the first time, if you use Colima then you will need to run:
+
+```shell
+sudo rm /var/run/docker.sock
+sudo ln -s $HOME/.colima/docker.sock /var/run/docker.sock
+```
+
 ### Unit Tests
 
 The unit tests use JUnit5 and Mockito where appropriate. Use the following to
