@@ -11,13 +11,14 @@ class AuthAwareAuthenticationToken(
   private val caseloadProvider: CaseloadProvider,
 ) : JwtAuthenticationToken(jwt, authorities) {
 
+  private val lock = Any()
   private var caseloads: List<String>? = null
 
   override fun getPrincipal(): String {
     return aPrincipal
   }
 
-  fun getCaseLoads(): List<String> {
+  fun getCaseLoads(): List<String> = synchronized(lock) {
     if (this.caseloads == null) {
       this.caseloads = caseloadProvider.getActiveCaseloadIds(this.jwt)
     }
