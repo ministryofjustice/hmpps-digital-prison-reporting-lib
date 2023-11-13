@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
@@ -49,6 +50,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     assertThat(lastWeekVariant.name).isEqualTo("Last week")
     assertThat(lastWeekVariant.specification).isNotNull
     assertThat(lastWeekVariant.specification?.fields).hasSize(8)
+
+    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(0)
   }
 
   @Test

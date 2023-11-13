@@ -39,7 +39,7 @@ abstract class IntegrationTestBase {
 
   companion object {
 
-    private lateinit var wireMockServer: WireMockServer
+    lateinit var wireMockServer: WireMockServer
 
     @BeforeAll
     @JvmStatic
@@ -72,6 +72,7 @@ abstract class IntegrationTestBase {
 
   @BeforeEach
   fun setup() {
+    wireMockServer.resetAll()
     stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
   }
 
