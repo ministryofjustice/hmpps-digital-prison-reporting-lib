@@ -66,7 +66,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       pageSize,
       sortColumn,
       sortedAsc,
-      authentication.caseloads,
+      authentication.getCaseLoads(),
     )
   }
 
@@ -86,7 +86,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @PathVariable("reportVariantId") reportVariantId: String,
     authentication: AuthAwareAuthenticationToken,
   ): Count {
-    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.caseloads)
+    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.getCaseLoads())
   }
 
   private fun filtersOnly(filters: Map<String, String>): Map<String, String> {

@@ -15,7 +15,7 @@ class DefaultAuthAwareTokenConverter(private val caseloadProvider: CaseloadProvi
     val principal = findPrincipal(claims)
     val authorities = extractAuthorities(jwt)
 
-    return AuthAwareAuthenticationToken(jwt, principal, authorities, caseloadProvider.getActiveCaseloadIds(jwt))
+    return AuthAwareAuthenticationToken(jwt, principal, authorities, caseloadProvider)
   }
 
   private fun findPrincipal(claims: Map<String, Any?>): String {
