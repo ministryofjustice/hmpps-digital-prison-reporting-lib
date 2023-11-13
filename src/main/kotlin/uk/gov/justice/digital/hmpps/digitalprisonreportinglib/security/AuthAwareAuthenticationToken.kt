@@ -5,12 +5,23 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 
 class AuthAwareAuthenticationToken(
-  jwt: Jwt,
+  val jwt: Jwt,
   private val aPrincipal: String,
   authorities: Collection<GrantedAuthority>,
-  val caseloads: List<String>,
+  private val caseloadProvider: CaseloadProvider,
 ) : JwtAuthenticationToken(jwt, authorities) {
+
+  private var caseloads: List<String>? = null
+
   override fun getPrincipal(): String {
     return aPrincipal
+  }
+
+  fun getCaseLoads(): List<String> {
+    if (this.caseloads == null) {
+      this.caseloads = caseloadProvider.getActiveCaseloadIds(this.jwt)
+    }
+
+    return this.caseloads!!
   }
 }
