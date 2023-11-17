@@ -35,7 +35,7 @@ dependencies {
   testImplementation("com.github.tomakehurst:wiremock:3.0.1")
   testImplementation("org.postgresql:postgresql:42.6.0")
   testImplementation("org.testcontainers:junit-jupiter:1.19.2")
-  testImplementation("org.testcontainers:postgresql:1.19.1")
+  testImplementation("org.testcontainers:postgresql:1.19.2")
 }
 
 java {
