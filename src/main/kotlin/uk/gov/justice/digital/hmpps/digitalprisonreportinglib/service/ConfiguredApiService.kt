@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
@@ -46,21 +46,21 @@ class ConfiguredApiService(
     return formatToSchemaFieldsCasing(
       configuredApiRepository
         .executeQuery(
-          productDefinition.dataSet.query,
+          productDefinition.dataset.query,
           validateAndMapFilters(productDefinition, filters),
           selectedPage,
           pageSize,
           validatedSortColumn,
           sortedAsc,
           userCaseloads,
-          getCaseloadFields(productDefinition.dataSet),
+          getCaseloadFields(productDefinition.dataset),
           reportId,
         ),
-      productDefinition.dataSet.schema.field,
+      productDefinition.dataset.schema.field,
     )
   }
 
-  private fun getCaseloadFields(dataSet: DataSet) =
+  private fun getCaseloadFields(dataSet: Dataset) =
     dataSet.schema.field.filter { it.caseload }.map { it.name }
 
   fun validateAndCount(
@@ -74,9 +74,9 @@ class ConfiguredApiService(
     return Count(
       configuredApiRepository.count(
         validateAndMapFilters(productDefinition, filters),
-        productDefinition.dataSet.query,
+        productDefinition.dataset.query,
         userCaseloads,
-        getCaseloadFields(productDefinition.dataSet),
+        getCaseloadFields(productDefinition.dataset),
         reportId,
       ),
     )
@@ -85,15 +85,15 @@ class ConfiguredApiService(
   fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String {
     return definition.report.specification
       ?.field
-      ?.first { it.defaultSortColumn }
-      ?.schemaField
+      ?.first { it.`default-sort` }
+      ?.name
       ?.removePrefix(schemaRefPrefix)
       ?: throw ValidationException("Could not find default sort column for reportId: ${definition.id}, reportVariantId: ${definition.report.id}")
   }
 
   private fun validateSortColumnOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String {
     return sortColumn?.let {
-      productDefinition.dataSet.schema.field.filter { schemaField -> schemaField.name == sortColumn }
+      productDefinition.dataset.schema.field.filter { schemaField -> schemaField.name == sortColumn }
         .ifEmpty { throw ValidationException("Invalid sortColumn provided: $sortColumn") }
         .first().name
     } ?: calculateDefaultSortColumn(productDefinition)
@@ -107,7 +107,7 @@ class ConfiguredApiService(
 
       val filterDefinition = findFilterDefinition(definition, truncatedKey)
 
-      validateValue(definition.dataSet, filterDefinition, truncatedKey, it.value)
+      validateValue(definition.dataset, filterDefinition, truncatedKey, it.value)
 
       ConfiguredApiRepository.Filter(
         field = truncatedKey,
@@ -118,7 +118,7 @@ class ConfiguredApiService(
   }
 
   private fun mapFilterType(filterDefinition: FilterDefinition, key: String): ConfiguredApiRepository.FilterType {
-    if (filterDefinition.type == FilterType.DateRange) {
+    if (filterDefinition.type == FilterType.DATE_RANGE) {
       if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
         return ConfiguredApiRepository.FilterType.DATE_RANGE_START
       } else if (key.endsWith(RANGE_FILTER_END_SUFFIX)) {
@@ -138,19 +138,19 @@ class ConfiguredApiService(
   fun findFilterDefinition(definition: SingleReportProductDefinition, key: String): FilterDefinition {
     val field =
       definition.report.specification?.field
-        ?.firstOrNull { it.filter != null && key == it.schemaField.removePrefix(schemaRefPrefix) }
+        ?.firstOrNull { it.filter != null && key == it.name.removePrefix(schemaRefPrefix) }
 
     return field?.filter ?: throw ValidationException(INVALID_FILTERS_MESSAGE)
   }
 
-  private fun validateValue(dataSet: DataSet, filterDefinition: FilterDefinition, key: String, value: String) {
+  private fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, key: String, value: String) {
     validateFilterType(dataSet, key, value)
     if (filterDefinition.staticOptions != null && filterDefinition.staticOptions.none { it.name.lowercase() == value.lowercase() }) {
       throw ValidationException(INVALID_STATIC_OPTIONS_MESSAGE)
     }
   }
 
-  private fun validateFilterType(dataSet: DataSet, key: String, value: String) {
+  private fun validateFilterType(dataSet: Dataset, key: String, value: String) {
     val schemaField = dataSet.schema.field.first { it.name == key }
     if (schemaField.type == ParameterType.Long) {
       try {

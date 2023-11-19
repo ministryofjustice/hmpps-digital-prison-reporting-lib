@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.S
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
@@ -34,12 +34,12 @@ class ReportDefinitionMapper {
     description = productDefinition.description,
     variants = productDefinition.report
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(productDefinition.id, it, productDefinition.dataSet) },
+      .map { map(productDefinition.id, it, productDefinition.dataset) },
   )
 
-  private fun map(productDefinitionId: String, report: Report, dataSets: List<DataSet>): VariantDefinition {
+  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>): VariantDefinition {
     val dataSetRef = report.dataset.removePrefix("\$ref:")
-    val dataSet = dataSets.find { it.id == dataSetRef }
+    val dataSet = datasets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
 
     return map(report, dataSet, productDefinitionId)
@@ -47,7 +47,7 @@ class ReportDefinitionMapper {
 
   private fun map(
     report: Report,
-    dataSet: DataSet,
+    dataSet: Dataset,
     productDefinitionId: String,
   ): VariantDefinition {
     return VariantDefinition(
@@ -75,17 +75,17 @@ class ReportDefinitionMapper {
   }
 
   private fun map(field: ReportField, schemaFields: List<SchemaField>): FieldDefinition {
-    val schemaFieldRef = field.schemaField.removePrefix("\$ref:")
+    val schemaFieldRef = field.name.removePrefix("\$ref:")
     val schemaField = schemaFields.find { it.name == schemaFieldRef }
       ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRef'")
 
     return FieldDefinition(
       name = schemaField.name,
-      displayName = field.displayName,
+      display = field.display,
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
       filter = field.filter?.let(this::map),
       sortable = field.sortable,
-      defaultSortColumn = field.defaultSortColumn,
+      defaultSortColumn = field.`default-sort`,
       type = schemaField.type.toString().let(FieldType::valueOf),
     )
   }
@@ -117,7 +117,7 @@ class ReportDefinitionMapper {
 
   private fun map(definition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterOption): FilterOption = FilterOption(
     name = definition.name,
-    displayName = definition.displayName,
+    display = definition.display,
   )
 
   fun map(definition: SingleReportProductDefinition): SingleVariantReportDefinition {
@@ -125,7 +125,7 @@ class ReportDefinitionMapper {
       id = definition.id,
       name = definition.name,
       description = definition.description,
-      variant = map(definition.report, definition.dataSet, definition.id),
+      variant = map(definition.report, definition.dataset, definition.id),
     )
   }
 }

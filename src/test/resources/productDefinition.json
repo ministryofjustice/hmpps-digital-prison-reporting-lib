@@ -2,17 +2,17 @@
   "id" : "external-movements",
   "name" : "External Movements",
   "description" : "Reports about prisoner external movements",
-  "metaData" : {
+  "metadata" : {
     "author" : "Adam",
     "version" : "1.2.3",
     "owner" : "Eve"
   },
-  "dataSource" : [ {
-    "id" : "redshift",
-    "name" : "RedShift",
-    "connection" : "redshift"
-  } ],
-  "dataSet" : [ {
+  "dataSource" : [
+    {
+      "id": "datamart",
+      "name": "datamart"
+    }],
+  "dataset" : [ {
     "id" : "external-movements",
     "name" : "All movements",
     "query" : "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM movements_movements as movements\nJOIN prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id",
@@ -52,11 +52,30 @@
       } ]
     }
   } ],
+  "policy": [
+    {
+      "id": "case",
+      "type": "row-level",
+      "rule": [
+        {
+          "effect": "permit",
+          "condition": [
+            {
+              "match": {
+                "caseload": "$caseload"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "report" : [ {
     "id" : "last-month",
     "name" : "Last month",
     "description" : "All movements in the past month",
     "created" : "2023-09-20",
+    "classification": "report classification",
     "version" : "1.2.3",
     "dataset" : "$ref:external-movements",
     "policy" : [ ],
@@ -64,70 +83,73 @@
     "specification" : {
       "template" : "list",
       "field" : [ {
-        "schemaField" : "$ref:prisonNumber",
-        "displayName" : "Prison Number",
+        "name" : "$ref:prisonNumber",
+        "display" : "Prison Number",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:name",
-        "displayName" : "Name",
+        "name" : "$ref:name",
+        "display" : "Name",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:date",
-        "displayName" : "Date",
+        "name" : "$ref:date",
+        "display" : "Date",
         "filter" : {
-          "type" : "DateRange",
+          "type" : "date-range",
           "defaultValue" : "today(-1,months) - today()"
         },
         "sortable" : true,
-        "defaultSortColumn" : true
+        "default-sort" : true
       }, {
-        "schemaField" : "$ref:origin",
-        "displayName" : "From",
+        "name" : "$ref:origin",
+        "display" : "From",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:destination",
-        "displayName" : "To",
+        "name" : "$ref:destination",
+        "display" : "To",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:direction",
-        "displayName" : "Direction",
+        "name" : "$ref:direction",
+        "display" : "Direction",
         "filter" : {
           "type" : "Radio",
           "staticOptions" : [ {
             "name" : "in",
-            "displayName" : "In"
+            "display" : "In"
           }, {
             "name" : "out",
-            "displayName" : "Out"
+            "display" : "Out"
           } ]
         },
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:type",
-        "displayName" : "Type",
+        "name" : "$ref:type",
+        "display" : "Type",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:reason",
-        "displayName" : "Reason",
+        "name" : "$ref:reason",
+        "display" : "Reason",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       } ]
     },
-    "destination" : [ ]
+    "destination" : [ ],
+    "visible": "report visibility",
+    "formula": "formula placeholder"
   }, {
     "id" : "last-week",
     "name" : "Last week",
     "description" : "All movements in the past week",
     "created" : "2023-09-20",
+    "classification": "report classification",
     "version" : "1.2.3",
     "dataset" : "$ref:external-movements",
     "policy" : [ ],
@@ -135,263 +157,65 @@
     "specification" : {
       "template" : "list",
       "field" : [ {
-        "schemaField" : "$ref:prisonNumber",
-        "displayName" : "Prison Number",
+        "name" : "$ref:prisonNumber",
+        "display" : "Prison Number",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:name",
-        "displayName" : "Name",
+        "name" : "$ref:name",
+        "display" : "Name",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:date",
-        "displayName" : "Date",
+        "name" : "$ref:date",
+        "display" : "Date",
         "filter" : {
-          "type" : "DateRange",
+          "type" : "date-range",
           "defaultValue" : "today(-1,weeks) - today()"
         },
         "sortable" : true,
-        "defaultSortColumn" : true
+        "default-sort" : true
       }, {
-        "schemaField" : "$ref:origin",
-        "displayName" : "From",
+        "name" : "$ref:origin",
+        "display" : "From",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:destination",
-        "displayName" : "To",
+        "name" : "$ref:destination",
+        "display" : "To",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:direction",
-        "displayName" : "Direction",
+        "name" : "$ref:direction",
+        "display" : "Direction",
         "filter" : {
           "type" : "Radio",
           "staticOptions" : [ {
             "name" : "in",
-            "displayName" : "In"
+            "display" : "In"
           }, {
             "name" : "out",
-            "displayName" : "Out"
+            "display" : "Out"
           } ]
         },
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:type",
-        "displayName" : "Type",
+        "name" : "$ref:type",
+        "display" : "Type",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       }, {
-        "schemaField" : "$ref:reason",
-        "displayName" : "Reason",
+        "name" : "$ref:reason",
+        "display" : "Reason",
         "sortable" : true,
-        "defaultSortColumn" : false
+        "default-sort" : false
       } ]
     },
     "destination" : [ ]
   } ]
-},
-  {
-    "id" : "product2-id",
-    "name" : "External Movements",
-    "description" : "Reports about prisoner external movements",
-    "metaData" : {
-      "author" : "Adam",
-      "version" : "1.2.3",
-      "owner" : "Eve"
-    },
-    "dataSource" : [ {
-      "id" : "redshift",
-      "name" : "RedShift",
-      "connection" : "redshift"
-    } ],
-    "dataSet" : [ {
-      "id" : "external-movements",
-      "name" : "All movements",
-      "query" : "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM movements_movements as movements\nJOIN prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id",
-      "schema" : {
-        "field" : [ {
-          "name" : "prisonNumber",
-          "type" : "String"
-        }, {
-          "name" : "name",
-          "type" : "String"
-        }, {
-          "name" : "date",
-          "type" : "Date"
-        }, {
-          "name" : "origin",
-          "type" : "String"
-        }, {
-          "name" : "origin_code",
-          "type" : "String",
-          "caseload" : true
-        }, {
-          "name" : "destination",
-          "type" : "String"
-        },{
-          "name" : "destination_code",
-          "type" : "String",
-          "caseload" : true
-        }, {
-          "name" : "direction",
-          "type" : "String"
-        }, {
-          "name" : "type",
-          "type" : "String"
-        }, {
-          "name" : "reason",
-          "type" : "String"
-        } ]
-      }
-    } ],
-    "report" : [ {
-      "id" : "last-month",
-      "name" : "Last month",
-      "description" : "All movements in the past month",
-      "created" : "2023-09-20",
-      "version" : "1.2.3",
-      "dataset" : "$ref:external-movements",
-      "policy" : [ ],
-      "render" : "HTML",
-      "specification" : {
-        "template" : "list",
-        "field" : [ {
-          "schemaField" : "$ref:prisonNumber",
-          "displayName" : "Prison Number",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:name",
-          "displayName" : "Name",
-          "wordWrap" : "None",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:date",
-          "displayName" : "Date",
-          "filter" : {
-            "type" : "DateRange",
-            "defaultValue" : "today(-1,months) - today()"
-          },
-          "sortable" : true,
-          "defaultSortColumn" : true
-        }, {
-          "schemaField" : "$ref:origin",
-          "displayName" : "From",
-          "wordWrap" : "None",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:destination",
-          "displayName" : "To",
-          "wordWrap" : "None",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:direction",
-          "displayName" : "Direction",
-          "filter" : {
-            "type" : "Radio",
-            "staticOptions" : [ {
-              "name" : "in",
-              "displayName" : "In"
-            }, {
-              "name" : "out",
-              "displayName" : "Out"
-            } ]
-          },
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:type",
-          "displayName" : "Type",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:reason",
-          "displayName" : "Reason",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        } ]
-      },
-      "destination" : [ ]
-    }, {
-      "id" : "last-week",
-      "name" : "Last week",
-      "description" : "All movements in the past week",
-      "created" : "2023-09-20",
-      "version" : "1.2.3",
-      "dataset" : "$ref:external-movements",
-      "policy" : [ ],
-      "render" : "HTML",
-      "specification" : {
-        "template" : "list",
-        "field" : [ {
-          "schemaField" : "$ref:prisonNumber",
-          "displayName" : "Prison Number",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:name",
-          "displayName" : "Name",
-          "wordWrap" : "None",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:date",
-          "displayName" : "Date",
-          "filter" : {
-            "type" : "DateRange",
-            "defaultValue" : "today(-1,weeks) - today()"
-          },
-          "sortable" : true,
-          "defaultSortColumn" : true
-        }, {
-          "schemaField" : "$ref:origin",
-          "displayName" : "From",
-          "wordWrap" : "None",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:destination",
-          "displayName" : "To",
-          "wordWrap" : "None",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:direction",
-          "displayName" : "Direction",
-          "filter" : {
-            "type" : "Radio",
-            "staticOptions" : [ {
-              "name" : "in",
-              "displayName" : "In"
-            }, {
-              "name" : "out",
-              "displayName" : "Out"
-            } ]
-          },
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:type",
-          "displayName" : "Type",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        }, {
-          "schemaField" : "$ref:reason",
-          "displayName" : "Reason",
-          "sortable" : true,
-          "defaultSortColumn" : false
-        } ]
-      },
-      "destination" : [ ]
-    } ]
-  }
+}
 ]

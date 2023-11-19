@@ -61,7 +61,7 @@ class ConfiguredApiServiceTest {
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(
       configuredApiRepository.executeQuery(
@@ -98,7 +98,7 @@ class ConfiguredApiServiceTest {
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields, reportId)).thenReturn(4)
 
@@ -123,7 +123,7 @@ class ConfiguredApiServiceTest {
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(
       configuredApiRepository.executeQuery(
@@ -160,7 +160,7 @@ class ConfiguredApiServiceTest {
     val reportVariantId = "last-month"
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields, reportId)).thenReturn(4)
 
@@ -186,7 +186,7 @@ class ConfiguredApiServiceTest {
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(
       configuredApiRepository.executeQuery(
@@ -223,7 +223,7 @@ class ConfiguredApiServiceTest {
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "in")
     val repositoryFilters = listOf(Filter("direction", "in"))
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields, reportId)).thenReturn(4)
 
@@ -248,7 +248,7 @@ class ConfiguredApiServiceTest {
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(
       configuredApiRepository.executeQuery(
@@ -285,7 +285,7 @@ class ConfiguredApiServiceTest {
     val reportVariantId = "last-month"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, caseloads, caseloadFields, reportId)).thenReturn(4)
 
@@ -304,7 +304,7 @@ class ConfiguredApiServiceTest {
   @Test
   fun `the service calls the repository without filters if no filters are provided`() {
     val reportVariantId = "last-month"
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -352,7 +352,7 @@ class ConfiguredApiServiceTest {
   @Test
   fun `the service count method calls the repository without filters if no filters are provided`() {
     val reportVariantId = "last-month"
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(configuredApiRepository.count(emptyList(), dataSet.query, caseloads, caseloadFields, reportId)).thenReturn(4)
 
@@ -665,7 +665,7 @@ class ConfiguredApiServiceTest {
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
-    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataSet.first()
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
 
     whenever(
       configuredApiRepository.executeQuery(

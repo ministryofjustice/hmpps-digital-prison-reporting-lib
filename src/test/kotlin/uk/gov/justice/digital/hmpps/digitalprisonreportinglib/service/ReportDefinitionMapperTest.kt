@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
@@ -29,7 +29,7 @@ import java.util.Collections.singletonMap
 
 class ReportDefinitionMapperTest {
 
-  private val fullDataSet = DataSet(
+  private val fullDataset = Dataset(
     id = "10",
     name = "11",
     query = "12",
@@ -46,7 +46,6 @@ class ReportDefinitionMapperTest {
   private val fullDataSource = DataSource(
     id = "18",
     name = "19",
-    connection = "20",
   )
 
   private val fullReport = Report(
@@ -63,31 +62,33 @@ class ReportDefinitionMapperTest {
       template = "27",
       field = listOf(
         ReportField(
-          schemaField = "\$ref:13",
-          displayName = "14",
+          name = "\$ref:13",
+          display = "14",
           wordWrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.Radio,
             staticOptions = listOf(
               FilterOption(
                 name = "16",
-                displayName = "17",
+                display = "17",
               ),
             ),
           ),
           sortable = true,
-          defaultSortColumn = true,
+          `default-sort` = true,
+          formula = null,
+          visible = true,
         ),
       ),
     ),
-    destination = listOf(singletonMap("28", "29")),
+    destination = listOf(singletonMap("28", "29")), classification = "someClassification",
   )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(
     id = "1",
     name = "2",
     description = "3",
-    metaData = MetaData(
+    metadata = MetaData(
       author = "4",
       version = "5",
       owner = "6",
@@ -95,7 +96,7 @@ class ReportDefinitionMapperTest {
       profile = "8",
       dqri = "9",
     ),
-    dataSet = listOf(fullDataSet),
+    dataset = listOf(fullDataset),
     dataSource = listOf(fullDataSource),
     report = listOf(fullReport),
   )
@@ -104,7 +105,7 @@ class ReportDefinitionMapperTest {
     id = "1",
     name = "2",
     description = "3",
-    metaData = MetaData(
+    metadata = MetaData(
       author = "4",
       version = "5",
       owner = "6",
@@ -112,7 +113,7 @@ class ReportDefinitionMapperTest {
       profile = "8",
       dqri = "9",
     ),
-    dataSet = fullDataSet,
+    dataset = fullDataset,
     dataSource = fullDataSource,
     report = fullReport,
   )
@@ -142,14 +143,14 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification?.fields).hasSize(1)
 
     val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullProductDefinition.dataSet.first().schema.field.first()
+    val sourceSchemaField = fullProductDefinition.dataset.first().schema.field.first()
     val sourceReportField = fullProductDefinition.report.first().specification!!.field.first()
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
-    assertThat(field.displayName).isEqualTo(sourceReportField.displayName)
+    assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
-    assertThat(field.defaultSortColumn).isEqualTo(sourceReportField.defaultSortColumn)
+    assertThat(field.defaultSortColumn).isEqualTo(sourceReportField.`default-sort`)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
@@ -160,7 +161,7 @@ class ReportDefinitionMapperTest {
     val sourceFilterOption = sourceReportField.filter?.staticOptions?.first()
 
     assertThat(filterOption?.name).isEqualTo(sourceFilterOption?.name)
-    assertThat(filterOption?.displayName).isEqualTo(sourceFilterOption?.displayName)
+    assertThat(filterOption?.display).isEqualTo(sourceFilterOption?.display)
   }
 
   @Test
@@ -168,7 +169,7 @@ class ReportDefinitionMapperTest {
     val productDefinition = ProductDefinition(
       id = "1",
       name = "2",
-      metaData = MetaData(
+      metadata = MetaData(
         author = "3",
         owner = "4",
         version = "5",
@@ -187,7 +188,7 @@ class ReportDefinitionMapperTest {
     val productDefinition = ProductDefinition(
       id = "1",
       name = "2",
-      metaData = MetaData(
+      metadata = MetaData(
         author = "3",
         owner = "4",
         version = "5",
@@ -200,6 +201,7 @@ class ReportDefinitionMapperTest {
           version = "8",
           dataset = "\$ref:9",
           render = RenderMethod.SVG,
+          classification = "someClassification",
         ),
       ),
     )
@@ -217,13 +219,13 @@ class ReportDefinitionMapperTest {
     val productDefinition = ProductDefinition(
       id = "1",
       name = "2",
-      metaData = MetaData(
+      metadata = MetaData(
         author = "3",
         owner = "4",
         version = "5",
       ),
-      dataSet = listOf(
-        DataSet(
+      dataset = listOf(
+        Dataset(
           id = "10",
           name = "11",
           query = "12",
@@ -240,6 +242,7 @@ class ReportDefinitionMapperTest {
           version = "15",
           dataset = "\$ref:10",
           render = RenderMethod.SVG,
+          classification = "someClassification",
         ),
         Report(
           id = "16",
@@ -248,6 +251,7 @@ class ReportDefinitionMapperTest {
           version = "18",
           dataset = "\$ref:10",
           render = RenderMethod.HTML,
+          classification = "someClassification",
         ),
       ),
     )
@@ -326,14 +330,14 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification?.fields).hasSize(1)
 
     val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullSingleReportProductDefinition.dataSet.schema.field.first()
+    val sourceSchemaField = fullSingleReportProductDefinition.dataset.schema.field.first()
     val sourceReportField = fullSingleReportProductDefinition.report.specification!!.field.first()
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
-    assertThat(field.displayName).isEqualTo(sourceReportField.displayName)
+    assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
-    assertThat(field.defaultSortColumn).isEqualTo(sourceReportField.defaultSortColumn)
+    assertThat(field.defaultSortColumn).isEqualTo(sourceReportField.`default-sort`)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
@@ -344,7 +348,7 @@ class ReportDefinitionMapperTest {
     val sourceFilterOption = sourceReportField.filter?.staticOptions?.first()
 
     assertThat(filterOption?.name).isEqualTo(sourceFilterOption?.name)
-    assertThat(filterOption?.displayName).isEqualTo(sourceFilterOption?.displayName)
+    assertThat(filterOption?.display).isEqualTo(sourceFilterOption?.display)
   }
 
   private fun getExpectedDate(offset: Long, magnitude: ChronoUnit): String? {
@@ -362,13 +366,13 @@ class ReportDefinitionMapperTest {
     return ProductDefinition(
       id = "1",
       name = "2",
-      metaData = MetaData(
+      metadata = MetaData(
         author = "3",
         owner = "4",
         version = "5",
       ),
-      dataSet = listOf(
-        DataSet(
+      dataset = listOf(
+        Dataset(
           id = "10",
           name = "11",
           query = "12",
@@ -394,15 +398,18 @@ class ReportDefinitionMapperTest {
             template = "19",
             field = listOf(
               ReportField(
-                schemaField = "\$ref:13",
-                displayName = "20",
+                name = "\$ref:13",
+                display = "20",
                 filter = FilterDefinition(
-                  type = FilterType.DateRange,
+                  type = FilterType.DATE_RANGE,
                   defaultValue = defaultFilterValue,
                 ),
+                formula = null,
+                visible = true,
               ),
             ),
           ),
+          classification = "someClassification",
         ),
       ),
     )
