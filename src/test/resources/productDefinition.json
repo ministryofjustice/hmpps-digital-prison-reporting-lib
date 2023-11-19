@@ -1,4 +1,4 @@
-[ {
+{
   "id" : "external-movements",
   "name" : "External Movements",
   "description" : "Reports about prisoner external movements",
@@ -218,4 +218,3 @@
     "destination" : [ ]
   } ]
 }
-]

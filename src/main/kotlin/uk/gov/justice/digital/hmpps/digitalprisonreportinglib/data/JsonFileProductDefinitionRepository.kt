@@ -27,7 +27,7 @@ class JsonFileProductDefinitionRepository(
       .registerTypeAdapter(LocalDate::class.java, localDateTypeAdaptor)
       .registerTypeAdapter(FilterType::class.java, FilterTypeDeserializer())
       .create()
-    return gson.fromJson(this::class.java.classLoader.getResource(resourceLocation)?.readText(), object : TypeToken<List<ProductDefinition>>() {}.type)
+    return listOf(gson.fromJson(this::class.java.classLoader.getResource(resourceLocation)?.readText(), object : TypeToken<ProductDefinition>() {}.type))
   }
 
   override fun getProductDefinition(definitionId: String): ProductDefinition = getProductDefinitions()
