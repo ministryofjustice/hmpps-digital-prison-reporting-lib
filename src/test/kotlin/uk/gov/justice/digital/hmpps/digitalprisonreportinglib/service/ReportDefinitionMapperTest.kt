@@ -401,7 +401,7 @@ class ReportDefinitionMapperTest {
                 name = "\$ref:13",
                 display = "20",
                 filter = FilterDefinition(
-                  type = FilterType.DATE_RANGE,
+                  type = FilterType.DateRange,
                   defaultValue = defaultFilterValue,
                 ),
                 formula = null,

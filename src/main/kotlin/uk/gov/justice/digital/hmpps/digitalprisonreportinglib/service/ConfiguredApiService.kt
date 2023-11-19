@@ -118,7 +118,7 @@ class ConfiguredApiService(
   }
 
   private fun mapFilterType(filterDefinition: FilterDefinition, key: String): ConfiguredApiRepository.FilterType {
-    if (filterDefinition.type == FilterType.DATE_RANGE) {
+    if (filterDefinition.type == FilterType.DateRange) {
       if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
         return ConfiguredApiRepository.FilterType.DATE_RANGE_START
       } else if (key.endsWith(RANGE_FILTER_END_SUFFIX)) {
