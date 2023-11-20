@@ -6,7 +6,7 @@ data class ReportField(
   val wordWrap: WordWrap? = null,
   val filter: FilterDefinition? = null,
   val sortable: Boolean = true,
-  val `default-sort`: Boolean = false,
+  val defaultsort: Boolean = false,
   val formula: String? = null,
   val visible: Boolean?,
 )

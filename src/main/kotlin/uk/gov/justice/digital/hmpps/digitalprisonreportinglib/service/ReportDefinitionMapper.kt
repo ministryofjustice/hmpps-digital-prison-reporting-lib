@@ -85,7 +85,7 @@ class ReportDefinitionMapper {
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
       filter = field.filter?.let(this::map),
       sortable = field.sortable,
-      defaultSortColumn = field.`default-sort`,
+      defaultsort = field.defaultsort,
       type = schemaField.type.toString().let(FieldType::valueOf),
     )
   }

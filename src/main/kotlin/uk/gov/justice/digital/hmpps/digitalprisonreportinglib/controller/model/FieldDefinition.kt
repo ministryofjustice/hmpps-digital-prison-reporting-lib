@@ -6,6 +6,6 @@ data class FieldDefinition(
   val wordWrap: WordWrap? = null,
   val filter: FilterDefinition? = null,
   val sortable: Boolean = true,
-  val defaultSortColumn: Boolean = false,
+  val defaultsort: Boolean = false,
   val type: FieldType,
 )

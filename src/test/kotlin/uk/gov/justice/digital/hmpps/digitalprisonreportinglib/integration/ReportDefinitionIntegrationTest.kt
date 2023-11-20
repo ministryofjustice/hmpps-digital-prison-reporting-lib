@@ -147,4 +147,228 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     assertThat(lastMonthVariant.specification).isNotNull
     assertThat(lastMonthVariant.specification?.fields).hasSize(8)
   }
+
+  @Test
+  fun `the json response from the definitions endpoint is returned with the expected format`() {
+    webTestClient.get()
+      .uri("/definitions")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(
+        """
+        [
+    {
+        "description": "Reports about prisoner external movements",
+        "id": "external-movements",
+        "name": "External Movements",
+        "variants": [
+            {
+                "description": "All movements in the past month",
+                "id": "last-month",
+                "name": "Last month",
+                "resourceName": "reports/external-movements/last-month",
+                "specification": {
+                    "fields": [
+                        {
+                            "defaultsort": false,
+                            "display": "Prison Number",
+                            "filter": null,
+                            "name": "prisonNumber",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Name",
+                            "filter": null,
+                            "name": "name",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": "None"
+                        },
+                        {
+                            "defaultsort": true,
+                            "display": "Date",
+                            "filter": {
+                                "defaultValue": "2023-10-20 - 2023-11-20",
+                                "staticOptions": null,
+                                "type": "daterange"
+                            },
+                            "name": "date",
+                            "sortable": true,
+                            "type": "Date",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "From",
+                            "filter": null,
+                            "name": "origin",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": "None"
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "To",
+                            "filter": null,
+                            "name": "destination",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": "None"
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Direction",
+                            "filter": {
+                                "defaultValue": null,
+                                "staticOptions": [
+                                    {
+                                        "display": "In",
+                                        "name": "in"
+                                    },
+                                    {
+                                        "display": "Out",
+                                        "name": "out"
+                                    }
+                                ],
+                                "type": "Radio"
+                            },
+                            "name": "direction",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Type",
+                            "filter": null,
+                            "name": "type",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Reason",
+                            "filter": null,
+                            "name": "reason",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        }
+                    ],
+                    "template": "list"
+                }
+            },
+            {
+                "description": "All movements in the past week",
+                "id": "last-week",
+                "name": "Last week",
+                "resourceName": "reports/external-movements/last-week",
+                "specification": {
+                    "fields": [
+                        {
+                            "defaultsort": false,
+                            "display": "Prison Number",
+                            "filter": null,
+                            "name": "prisonNumber",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Name",
+                            "filter": null,
+                            "name": "name",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": "None"
+                        },
+                        {
+                            "defaultsort": true,
+                            "display": "Date",
+                            "filter": {
+                                "defaultValue": "2023-11-13 - 2023-11-20",
+                                "staticOptions": null,
+                                "type": "daterange"
+                            },
+                            "name": "date",
+                            "sortable": true,
+                            "type": "Date",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "From",
+                            "filter": null,
+                            "name": "origin",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": "None"
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "To",
+                            "filter": null,
+                            "name": "destination",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": "None"
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Direction",
+                            "filter": {
+                                "defaultValue": null,
+                                "staticOptions": [
+                                    {
+                                        "display": "In",
+                                        "name": "in"
+                                    },
+                                    {
+                                        "display": "Out",
+                                        "name": "out"
+                                    }
+                                ],
+                                "type": "Radio"
+                            },
+                            "name": "direction",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Type",
+                            "filter": null,
+                            "name": "type",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        },
+                        {
+                            "defaultsort": false,
+                            "display": "Reason",
+                            "filter": null,
+                            "name": "reason",
+                            "sortable": true,
+                            "type": "String",
+                            "wordWrap": null
+                        }
+                    ],
+                    "template": "list"
+                }
+            }
+        ]
+    }
+]
+    """,
+      )
+  }
 }

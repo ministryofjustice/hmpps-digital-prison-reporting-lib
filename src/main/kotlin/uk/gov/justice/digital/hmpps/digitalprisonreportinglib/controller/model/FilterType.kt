@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model
 
-enum class FilterType {
-  Radio,
-  Select,
-  DateRange,
+import com.fasterxml.jackson.annotation.JsonValue
+
+enum class FilterType(@JsonValue val type: String) {
+  Radio("Radio"),
+  Select("Select"),
+  DateRange("daterange"),
 }

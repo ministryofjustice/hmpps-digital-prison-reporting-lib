@@ -86,34 +86,34 @@
         "name" : "$ref:prisonNumber",
         "display" : "Prison Number",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:name",
         "display" : "Name",
         "wordWrap" : "None",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:date",
         "display" : "Date",
         "filter" : {
-          "type" : "date-range",
+          "type" : "daterange",
           "defaultValue" : "today(-1,months) - today()"
         },
         "sortable" : true,
-        "default-sort" : true
+        "defaultsort" : true
       }, {
         "name" : "$ref:origin",
         "display" : "From",
         "wordWrap" : "None",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:destination",
         "display" : "To",
         "wordWrap" : "None",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:direction",
         "display" : "Direction",
@@ -128,17 +128,17 @@
           } ]
         },
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:type",
         "display" : "Type",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:reason",
         "display" : "Reason",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       } ]
     },
     "destination" : [ ],
@@ -160,34 +160,34 @@
         "name" : "$ref:prisonNumber",
         "display" : "Prison Number",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:name",
         "display" : "Name",
         "wordWrap" : "None",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:date",
         "display" : "Date",
         "filter" : {
-          "type" : "date-range",
+          "type" : "daterange",
           "defaultValue" : "today(-1,weeks) - today()"
         },
         "sortable" : true,
-        "default-sort" : true
+        "defaultsort" : true
       }, {
         "name" : "$ref:origin",
         "display" : "From",
         "wordWrap" : "None",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:destination",
         "display" : "To",
         "wordWrap" : "None",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:direction",
         "display" : "Direction",
@@ -202,17 +202,17 @@
           } ]
         },
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:type",
         "display" : "Type",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       }, {
         "name" : "$ref:reason",
         "display" : "Reason",
         "sortable" : true,
-        "default-sort" : false
+        "defaultsort" : false
       } ]
     },
     "destination" : [ ]
