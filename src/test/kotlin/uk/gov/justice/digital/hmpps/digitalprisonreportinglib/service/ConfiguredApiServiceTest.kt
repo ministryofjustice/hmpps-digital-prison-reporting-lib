@@ -20,12 +20,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.FilterTypeDes
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.SchemaFieldTypeDeserializer
 
 class ConfiguredApiServiceTest {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     IsoLocalDateTypeAdaptor(),
     "productDefinition.json",
     FilterTypeDeserializer(),
+    SchemaFieldTypeDeserializer(),
   )
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
   private val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository)

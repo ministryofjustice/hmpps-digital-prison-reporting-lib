@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDate
@@ -13,6 +14,7 @@ class JsonFileProductDefinitionRepository(
   private val localDateTypeAdaptor: LocalDateTypeAdaptor,
   private val resourceLocation: String,
   private val filterTypeDeserializer: FilterTypeDeserializer,
+  private val schemaFieldTypeDeserializer: SchemaFieldTypeDeserializer,
 ) : ProductDefinitionRepository {
 
   companion object {
@@ -23,6 +25,7 @@ class JsonFileProductDefinitionRepository(
     val gson: Gson = GsonBuilder()
       .registerTypeAdapter(LocalDate::class.java, localDateTypeAdaptor)
       .registerTypeAdapter(FilterType::class.java, filterTypeDeserializer)
+      .registerTypeAdapter(ParameterType::class.java, schemaFieldTypeDeserializer)
       .create()
     return listOf(gson.fromJson(this::class.java.classLoader.getResource(resourceLocation)?.readText(), object : TypeToken<ProductDefinition>() {}.type))
   }

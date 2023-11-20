@@ -19,6 +19,7 @@ class ProductDefinitionRepositoryAutoConfig(
       localDateTypeAdaptor,
       definitionResourceLocation,
       FilterTypeDeserializer(),
+      SchemaFieldTypeDeserializer(),
     )
   }
 

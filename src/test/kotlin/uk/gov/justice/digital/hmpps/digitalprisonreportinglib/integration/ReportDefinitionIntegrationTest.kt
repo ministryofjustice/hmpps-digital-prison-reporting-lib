@@ -178,7 +178,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "prisonNumber",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         },
                         {
@@ -187,7 +187,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "name",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": "None"
                         },
                         {
@@ -200,7 +200,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             },
                             "name": "date",
                             "sortable": true,
-                            "type": "Date",
+                            "type": "date",
                             "wordWrap": null
                         },
                         {
@@ -209,7 +209,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "origin",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": "None"
                         },
                         {
@@ -218,7 +218,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "destination",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": "None"
                         },
                         {
@@ -240,7 +240,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             },
                             "name": "direction",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         },
                         {
@@ -249,7 +249,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "type",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         },
                         {
@@ -258,7 +258,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "reason",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         }
                     ],
@@ -278,7 +278,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "prisonNumber",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         },
                         {
@@ -287,7 +287,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "name",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": "None"
                         },
                         {
@@ -300,7 +300,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             },
                             "name": "date",
                             "sortable": true,
-                            "type": "Date",
+                            "type": "date",
                             "wordWrap": null
                         },
                         {
@@ -309,7 +309,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "origin",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": "None"
                         },
                         {
@@ -318,7 +318,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "destination",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": "None"
                         },
                         {
@@ -340,7 +340,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             },
                             "name": "direction",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         },
                         {
@@ -349,7 +349,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "type",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         },
                         {
@@ -358,7 +358,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "filter": null,
                             "name": "reason",
                             "sortable": true,
-                            "type": "String",
+                            "type": "string",
                             "wordWrap": null
                         }
                     ],
