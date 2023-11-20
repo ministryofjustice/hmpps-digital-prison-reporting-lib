@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod.HTML
@@ -26,7 +26,7 @@ class ReportDefinitionServiceTest {
   val minimalDefinition = ProductDefinition(
     id = "1",
     name = "2",
-    metaData = MetaData(
+    metadata = MetaData(
       author = "3",
       owner = "4",
       version = "5",
@@ -41,11 +41,11 @@ class ReportDefinitionServiceTest {
       id = "3",
       name = "4",
       created = LocalDate.now(),
+      version = "5",
       dataset = "\$ref:10",
       render = HTML,
-      version = "5",
     ),
-    dataSet = DataSet(
+    dataset = Dataset(
       id = "10",
       name = "11",
       query = "12",
@@ -54,9 +54,8 @@ class ReportDefinitionServiceTest {
     dataSource = DataSource(
       id = "20",
       name = "21",
-      connection = "22",
     ),
-    metaData = MetaData(
+    metadata = MetaData(
       author = "30",
       version = "31",
       owner = "32",

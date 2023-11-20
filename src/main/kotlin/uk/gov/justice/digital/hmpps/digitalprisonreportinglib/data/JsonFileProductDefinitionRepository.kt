@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import jakarta.validation.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDate
@@ -11,6 +12,7 @@ import java.time.LocalDate
 class JsonFileProductDefinitionRepository(
   private val localDateTypeAdaptor: LocalDateTypeAdaptor,
   private val resourceLocation: String,
+  private val filterTypeDeserializer: FilterTypeDeserializer,
 ) : ProductDefinitionRepository {
 
   companion object {
@@ -20,8 +22,9 @@ class JsonFileProductDefinitionRepository(
   override fun getProductDefinitions(): List<ProductDefinition> {
     val gson: Gson = GsonBuilder()
       .registerTypeAdapter(LocalDate::class.java, localDateTypeAdaptor)
+      .registerTypeAdapter(FilterType::class.java, filterTypeDeserializer)
       .create()
-    return gson.fromJson(this::class.java.classLoader.getResource(resourceLocation)?.readText(), object : TypeToken<List<ProductDefinition>>() {}.type)
+    return listOf(gson.fromJson(this::class.java.classLoader.getResource(resourceLocation)?.readText(), object : TypeToken<ProductDefinition>() {}.type))
   }
 
   override fun getProductDefinition(definitionId: String): ProductDefinition = getProductDefinitions()
@@ -37,7 +40,7 @@ class JsonFileProductDefinitionRepository(
       .first()
 
     val dataSetId = reportDefinition.dataset.removePrefix(schemaRefPrefix)
-    val dataSet = productDefinition.dataSet
+    val dataSet = productDefinition.dataset
       .filter { it.id == dataSetId }
       .ifEmpty { throw ValidationException("Invalid dataSetId in report: $dataSetId") }
       .first()
@@ -46,9 +49,9 @@ class JsonFileProductDefinitionRepository(
       id = definitionId,
       name = productDefinition.name,
       description = productDefinition.description,
-      metaData = productDefinition.metaData,
+      metadata = productDefinition.metadata,
       dataSource = productDefinition.dataSource.first(),
-      dataSet = dataSet,
+      dataset = dataSet,
       report = reportDefinition,
     )
   }

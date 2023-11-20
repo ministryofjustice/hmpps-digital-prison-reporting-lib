@@ -4,8 +4,9 @@ data class ProductDefinition(
   val id: String,
   val name: String,
   val description: String? = null,
-  val metaData: MetaData,
+  val metadata: MetaData,
   val dataSource: List<DataSource> = emptyList(),
-  val dataSet: List<DataSet> = emptyList(),
+  val dataset: List<Dataset> = emptyList(),
   val report: List<Report> = emptyList(),
+  val policy: List<Policy> = emptyList(),
 )

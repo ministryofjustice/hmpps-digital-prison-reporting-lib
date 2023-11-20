@@ -15,7 +15,11 @@ class ProductDefinitionRepositoryAutoConfig(
   fun productDefinitionRepository(
     localDateTypeAdaptor: LocalDateTypeAdaptor,
   ): ProductDefinitionRepository {
-    return JsonFileProductDefinitionRepository(localDateTypeAdaptor, definitionResourceLocation)
+    return JsonFileProductDefinitionRepository(
+      localDateTypeAdaptor,
+      definitionResourceLocation,
+      FilterTypeDeserializer(),
+    )
   }
 
   @Bean
