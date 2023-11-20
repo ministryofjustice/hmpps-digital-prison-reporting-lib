@@ -50,7 +50,7 @@ class JsonFileProductDefinitionRepository(
       name = productDefinition.name,
       description = productDefinition.description,
       metadata = productDefinition.metadata,
-      dataSource = productDefinition.dataSource.first(),
+      datasource = productDefinition.datasource.first(),
       dataset = dataSet,
       report = reportDefinition,
     )

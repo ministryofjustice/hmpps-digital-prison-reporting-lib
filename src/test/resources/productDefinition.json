@@ -7,7 +7,7 @@
     "version" : "1.2.3",
     "owner" : "Eve"
   },
-  "dataSource" : [
+  "datasource" : [
     {
       "id": "datamart",
       "name": "datamart"
@@ -19,36 +19,36 @@
     "schema" : {
       "field" : [ {
         "name" : "prisonNumber",
-        "type" : "String"
+        "type" : "string"
       }, {
         "name" : "name",
-        "type" : "String"
+        "type" : "string"
       }, {
         "name" : "date",
         "type" : "Date"
       }, {
         "name" : "origin",
-        "type" : "String"
+        "type" : "string"
       }, {
         "name" : "origin_code",
-        "type" : "String",
+        "type" : "string",
         "caseload" : true
       }, {
         "name" : "destination",
-        "type" : "String"
+        "type" : "string"
       },{
         "name" : "destination_code",
-        "type" : "String",
+        "type" : "string",
         "caseload" : true
       }, {
         "name" : "direction",
-        "type" : "String"
+        "type" : "string"
       }, {
         "name" : "type",
-        "type" : "String"
+        "type" : "string"
       }, {
         "name" : "reason",
-        "type" : "String"
+        "type" : "string"
       } ]
     }
   } ],
