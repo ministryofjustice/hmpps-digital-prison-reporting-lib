@@ -16,11 +16,7 @@ class FilterTypeDeserializer : JsonDeserializer<FilterType?> {
     context: JsonDeserializationContext?,
   ): FilterType {
     val stringValue = json.asString
-    for (enum in FilterType.entries) {
-      if (enum.type == stringValue) {
-        return enum
-      }
-    }
-    throw IllegalArgumentException("Unknown tsp $stringValue!")
+    return FilterType.entries.firstOrNull { enum -> enum.type == stringValue }
+      ?: throw IllegalArgumentException("Unknown FilterType $stringValue!")
   }
 }
