@@ -263,7 +263,7 @@
         "visible": { "type":  "boolean" },
         "sortable": { "type":  "boolean" },
         "defaultsort" : { "type":  "boolean" },
-        "word-wrap": { "enum":  [ "on", "off", "none" ] },
+        "wordwrap": { "enum":  [ "on", "off", "none" ] },
         "alias": { "$ref": "#/definitions/alias" },
         "filter": { "$ref": "#/definitions/filter" },
         "type": { "enum":  [ "null", "boolean", "int", "long", "float", "double", "bytes", "string", "date", "time", "datetime", "timestamp" ] }
