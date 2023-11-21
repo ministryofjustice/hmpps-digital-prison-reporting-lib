@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
-enum class ParameterType {
-  String,
-  Date,
-  Long,
+enum class ParameterType(val type: kotlin.String) {
+  String("string"),
+  Date("date"),
+  Long("long"),
   ;
 }

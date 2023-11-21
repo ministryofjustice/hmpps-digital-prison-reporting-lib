@@ -5,7 +5,7 @@ data class SingleReportProductDefinition(
   val name: String,
   val description: String? = null,
   val metadata: MetaData,
-  val dataSource: DataSource,
+  val datasource: Datasource,
   val dataset: Dataset,
   val report: Report,
 )

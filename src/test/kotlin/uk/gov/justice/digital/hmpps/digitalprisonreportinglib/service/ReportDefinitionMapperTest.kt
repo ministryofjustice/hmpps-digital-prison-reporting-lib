@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DataSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
@@ -43,7 +43,7 @@ class ReportDefinitionMapperTest {
     ),
   )
 
-  private val fullDataSource = DataSource(
+  private val fullDatasource = Datasource(
     id = "18",
     name = "19",
   )
@@ -97,7 +97,7 @@ class ReportDefinitionMapperTest {
       dqri = "9",
     ),
     dataset = listOf(fullDataset),
-    dataSource = listOf(fullDataSource),
+    datasource = listOf(fullDatasource),
     report = listOf(fullReport),
   )
 
@@ -114,7 +114,7 @@ class ReportDefinitionMapperTest {
       dqri = "9",
     ),
     dataset = fullDataset,
-    dataSource = fullDataSource,
+    datasource = fullDatasource,
     report = fullReport,
   )
 
