@@ -194,7 +194,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "defaultsort": true,
                             "display": "Date",
                             "filter": {
-                                "defaultValue": "2023-10-20 - 2023-11-20",
                                 "staticOptions": null,
                                 "type": "daterange"
                             },
@@ -294,7 +293,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                             "defaultsort": true,
                             "display": "Date",
                             "filter": {
-                                "defaultValue": "2023-11-13 - 2023-11-20",
                                 "staticOptions": null,
                                 "type": "daterange"
                             },
