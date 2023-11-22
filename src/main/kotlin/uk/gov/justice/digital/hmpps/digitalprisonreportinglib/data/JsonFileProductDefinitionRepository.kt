@@ -12,7 +12,7 @@ import java.time.LocalDate
 
 class JsonFileProductDefinitionRepository(
   private val localDateTypeAdaptor: LocalDateTypeAdaptor,
-  private val resourceLocation: String,
+  private val resourceLocations: List<String>,
   private val filterTypeDeserializer: FilterTypeDeserializer,
   private val schemaFieldTypeDeserializer: SchemaFieldTypeDeserializer,
 ) : ProductDefinitionRepository {
@@ -27,7 +27,7 @@ class JsonFileProductDefinitionRepository(
       .registerTypeAdapter(FilterType::class.java, filterTypeDeserializer)
       .registerTypeAdapter(ParameterType::class.java, schemaFieldTypeDeserializer)
       .create()
-    return listOf(gson.fromJson(this::class.java.classLoader.getResource(resourceLocation)?.readText(), object : TypeToken<ProductDefinition>() {}.type))
+    return resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinition>() {}.type) }
   }
 
   override fun getProductDefinition(definitionId: String): ProductDefinition = getProductDefinitions()

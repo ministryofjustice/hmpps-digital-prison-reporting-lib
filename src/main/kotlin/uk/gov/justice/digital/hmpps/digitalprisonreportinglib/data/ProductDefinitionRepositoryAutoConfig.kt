@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class ProductDefinitionRepositoryAutoConfig(
-  @Value("\${dpr.lib.definition.location:productDefinition.json}") private val definitionResourceLocation: String,
+  @Value("\${dpr.lib.definition.locations}") private val definitionResourceLocations: List<String>,
 ) {
 
   @Bean
@@ -17,7 +17,7 @@ class ProductDefinitionRepositoryAutoConfig(
   ): ProductDefinitionRepository {
     return JsonFileProductDefinitionRepository(
       localDateTypeAdaptor,
-      definitionResourceLocation,
+      definitionResourceLocations,
       FilterTypeDeserializer(),
       SchemaFieldTypeDeserializer(),
     )

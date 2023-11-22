@@ -1,0 +1,220 @@
+{
+  "id" : "external-movements-duplicate",
+  "name" : "External Movements Duplicate",
+  "description" : "Reports about prisoner external movements",
+  "metadata" : {
+    "author" : "Adam",
+    "version" : "1.2.3",
+    "owner" : "Eve"
+  },
+  "datasource" : [
+    {
+      "id": "datamart",
+      "name": "datamart"
+    }],
+  "dataset" : [ {
+    "id" : "external-movements",
+    "name" : "All movements",
+    "query" : "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM movements_movements as movements\nJOIN prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id",
+    "schema" : {
+      "field" : [ {
+        "name" : "prisonNumber",
+        "type" : "string"
+      }, {
+        "name" : "name",
+        "type" : "string"
+      }, {
+        "name" : "date",
+        "type" : "date"
+      }, {
+        "name" : "origin",
+        "type" : "string"
+      }, {
+        "name" : "origin_code",
+        "type" : "string",
+        "caseload" : true
+      }, {
+        "name" : "destination",
+        "type" : "string"
+      },{
+        "name" : "destination_code",
+        "type" : "string",
+        "caseload" : true
+      }, {
+        "name" : "direction",
+        "type" : "string"
+      }, {
+        "name" : "type",
+        "type" : "string"
+      }, {
+        "name" : "reason",
+        "type" : "string"
+      } ]
+    }
+  } ],
+  "policy": [
+    {
+      "id": "case",
+      "type": "row-level",
+      "rule": [
+        {
+          "effect": "permit",
+          "condition": [
+            {
+              "match": {
+                "caseload": "$caseload"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "report" : [ {
+    "id" : "last-month",
+    "name" : "Last month",
+    "description" : "All movements in the past month",
+    "created" : "2023-09-20",
+    "classification": "report classification",
+    "version" : "1.2.3",
+    "dataset" : "$ref:external-movements",
+    "policy" : [ ],
+    "render" : "HTML",
+    "specification" : {
+      "template" : "list",
+      "field" : [ {
+        "name" : "$ref:prisonNumber",
+        "display" : "Prison Number",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:name",
+        "display" : "Name",
+        "wordWrap" : "None",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:date",
+        "display" : "Date",
+        "filter" : {
+          "type" : "daterange",
+          "defaultValue" : "today(-1,months) - today()"
+        },
+        "sortable" : true,
+        "defaultsort" : true
+      }, {
+        "name" : "$ref:origin",
+        "display" : "From",
+        "wordWrap" : "None",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:destination",
+        "display" : "To",
+        "wordWrap" : "None",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:direction",
+        "display" : "Direction",
+        "filter" : {
+          "type" : "Radio",
+          "staticOptions" : [ {
+            "name" : "in",
+            "display" : "In"
+          }, {
+            "name" : "out",
+            "display" : "Out"
+          } ]
+        },
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:type",
+        "display" : "Type",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:reason",
+        "display" : "Reason",
+        "sortable" : true,
+        "defaultsort" : false
+      } ]
+    },
+    "destination" : [ ],
+    "visible": "report visibility",
+    "formula": "formula placeholder"
+  }, {
+    "id" : "last-week",
+    "name" : "Last week",
+    "description" : "All movements in the past week",
+    "created" : "2023-09-20",
+    "classification": "report classification",
+    "version" : "1.2.3",
+    "dataset" : "$ref:external-movements",
+    "policy" : [ ],
+    "render" : "HTML",
+    "specification" : {
+      "template" : "list",
+      "field" : [ {
+        "name" : "$ref:prisonNumber",
+        "display" : "Prison Number",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:name",
+        "display" : "Name",
+        "wordWrap" : "None",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:date",
+        "display" : "Date",
+        "filter" : {
+          "type" : "daterange",
+          "defaultValue" : "today(-1,weeks) - today()"
+        },
+        "sortable" : true,
+        "defaultsort" : true
+      }, {
+        "name" : "$ref:origin",
+        "display" : "From",
+        "wordWrap" : "None",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:destination",
+        "display" : "To",
+        "wordWrap" : "None",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:direction",
+        "display" : "Direction",
+        "filter" : {
+          "type" : "Radio",
+          "staticOptions" : [ {
+            "name" : "in",
+            "display" : "In"
+          }, {
+            "name" : "out",
+            "display" : "Out"
+          } ]
+        },
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:type",
+        "display" : "Type",
+        "sortable" : true,
+        "defaultsort" : false
+      }, {
+        "name" : "$ref:reason",
+        "display" : "Reason",
+        "sortable" : true,
+        "defaultsort" : false
+      } ]
+    },
+    "destination" : [ ]
+  } ]
+}

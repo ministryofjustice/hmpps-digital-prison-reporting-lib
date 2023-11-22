@@ -25,7 +25,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.SchemaFieldTy
 class ConfiguredApiServiceTest {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     IsoLocalDateTypeAdaptor(),
-    "productDefinition.json",
+    listOf("productDefinition.json"),
     FilterTypeDeserializer(),
     SchemaFieldTypeDeserializer(),
   )
