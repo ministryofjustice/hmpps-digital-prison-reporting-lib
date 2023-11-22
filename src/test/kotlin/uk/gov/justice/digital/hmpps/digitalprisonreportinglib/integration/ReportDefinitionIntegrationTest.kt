@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
@@ -11,47 +13,61 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.S
 
 class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
-  @Test
-  fun `Definition list is returned as expected`() {
-    val result = webTestClient.get()
-      .uri("/definitions")
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBodyList<ReportDefinition>()
-      .returnResult()
+  class ReportDefinitionListTest : IntegrationTestBase() {
 
-    assertThat(result.responseBody).isNotNull
-    assertThat(result.responseBody).hasSize(1)
-    assertThat(result.responseBody).first().isNotNull
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinition.json, productDefinition2.json" }
+      }
+    }
 
-    val definition = result.responseBody!!.first()
+    @Test
+    fun `Definition list is returned as expected`() {
+      val result = webTestClient.get()
+        .uri("/definitions")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<ReportDefinition>()
+        .returnResult()
 
-    assertThat(definition.name).isEqualTo("External Movements")
-    assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-    assertThat(definition.variants).hasSize(2)
-    assertThat(definition.variants[0]).isNotNull
-    assertThat(definition.variants[1]).isNotNull
+      assertThat(result.responseBody).isNotNull
+      assertThat(result.responseBody).hasSize(2)
+      assertThat(result.responseBody).first().isNotNull
+      val reportDefinition2 = result.responseBody[1]
+      assertThat(reportDefinition2).isNotNull
 
-    val lastMonthVariant = definition.variants[0]
+      val definition = result.responseBody!!.first()
 
-    assertThat(lastMonthVariant.id).isEqualTo("last-month")
-    assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
-    assertThat(lastMonthVariant.name).isEqualTo("Last month")
-    assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
-    assertThat(lastMonthVariant.specification).isNotNull
-    assertThat(lastMonthVariant.specification?.fields).hasSize(8)
+      assertThat(definition.name).isEqualTo("External Movements")
+      assertThat(reportDefinition2.name).isEqualTo("External Movements Duplicate")
+      assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
+      assertThat(definition.variants).hasSize(2)
+      assertThat(definition.variants[0]).isNotNull
+      assertThat(definition.variants[1]).isNotNull
 
-    val lastWeekVariant = definition.variants[1]
-    assertThat(lastWeekVariant.id).isEqualTo("last-week")
-    assertThat(lastWeekVariant.resourceName).isEqualTo("reports/external-movements/last-week")
-    assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
-    assertThat(lastWeekVariant.name).isEqualTo("Last week")
-    assertThat(lastWeekVariant.specification).isNotNull
-    assertThat(lastWeekVariant.specification?.fields).hasSize(8)
+      val lastMonthVariant = definition.variants[0]
 
-    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(0)
+      assertThat(lastMonthVariant.id).isEqualTo("last-month")
+      assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
+      assertThat(lastMonthVariant.name).isEqualTo("Last month")
+      assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+      assertThat(lastMonthVariant.specification).isNotNull
+      assertThat(lastMonthVariant.specification?.fields).hasSize(8)
+
+      val lastWeekVariant = definition.variants[1]
+      assertThat(lastWeekVariant.id).isEqualTo("last-week")
+      assertThat(lastWeekVariant.resourceName).isEqualTo("reports/external-movements/last-week")
+      assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
+      assertThat(lastWeekVariant.name).isEqualTo("Last week")
+      assertThat(lastWeekVariant.specification).isNotNull
+      assertThat(lastWeekVariant.specification?.fields).hasSize(8)
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(0)
+    }
   }
 
   @Test
