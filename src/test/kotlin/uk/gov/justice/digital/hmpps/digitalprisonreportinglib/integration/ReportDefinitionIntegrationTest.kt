@@ -183,7 +183,9 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     assertThat(dateField).isNotNull
     assertThat(dateField!!.filter).isNotNull
     assertThat(dateField.filter!!.type).isEqualTo(FilterType.DateRange)
-    assertThat(directionField.filter!!.defaultValue).isEqualTo(now().minusMonths(1).format(DateTimeFormatter.ISO_DATE))
+    val lastMonth = now().minusMonths(1).format(DateTimeFormatter.ISO_DATE)
+    val thisMonth = now().format(DateTimeFormatter.ISO_DATE)
+    assertThat(dateField.filter!!.defaultValue).isEqualTo("$lastMonth - $thisMonth")
   }
 
   @Test

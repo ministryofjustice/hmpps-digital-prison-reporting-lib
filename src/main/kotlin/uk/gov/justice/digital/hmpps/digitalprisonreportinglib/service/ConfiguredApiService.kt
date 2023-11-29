@@ -85,7 +85,7 @@ class ConfiguredApiService(
   fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String {
     return definition.report.specification
       ?.field
-      ?.first { it.defaultsort }
+      ?.first { it.defaultSort }
       ?.name
       ?.removePrefix(schemaRefPrefix)
       ?: throw ValidationException("Could not find default sort column for reportId: ${definition.id}, reportVariantId: ${definition.report.id}")

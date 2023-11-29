@@ -85,7 +85,7 @@ class ReportDefinitionMapper {
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
       filter = field.filter?.let(this::map),
       sortable = field.sortable,
-      defaultsort = field.defaultsort,
+      defaultsort = field.defaultSort,
       type = schemaField.type.toString().let(FieldType::valueOf),
     )
   }
@@ -93,7 +93,7 @@ class ReportDefinitionMapper {
   private fun map(definition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition): FilterDefinition = FilterDefinition(
     type = FilterType.valueOf(definition.type.toString()),
     staticOptions = definition.staticOptions?.map(this::map),
-    defaultValue = replaceTokens(definition.defaultValue),
+    defaultValue = replaceTokens(definition.default),
   )
 
   private fun replaceTokens(defaultValue: String?): String? {

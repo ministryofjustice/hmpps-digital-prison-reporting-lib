@@ -75,7 +75,7 @@ class ReportDefinitionMapperTest {
             ),
           ),
           sortable = true,
-          defaultsort = true,
+          defaultSort = true,
           formula = null,
           visible = true,
         ),
@@ -150,7 +150,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
-    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultsort)
+    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
@@ -337,7 +337,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
-    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultsort)
+    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
@@ -402,7 +402,7 @@ class ReportDefinitionMapperTest {
                 display = "20",
                 filter = FilterDefinition(
                   type = FilterType.DateRange,
-                  defaultValue = defaultFilterValue,
+                  default = defaultFilterValue,
                 ),
                 formula = null,
                 visible = true,
