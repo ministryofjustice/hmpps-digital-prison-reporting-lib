@@ -8,8 +8,11 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
+import java.time.LocalDate.now
+import java.time.format.DateTimeFormatter
 
 class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
@@ -37,7 +40,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(result.responseBody).isNotNull
       assertThat(result.responseBody).hasSize(2)
       assertThat(result.responseBody).first().isNotNull
-      val reportDefinition2 = result.responseBody[1]
+      val reportDefinition2 = result.responseBody!![1]
       assertThat(reportDefinition2).isNotNull
 
       val definition = result.responseBody!!.first()
@@ -162,6 +165,27 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
     assertThat(lastMonthVariant.specification).isNotNull
     assertThat(lastMonthVariant.specification?.fields).hasSize(8)
+
+    val directionField = lastMonthVariant.specification?.fields?.find { it.name == "direction" }
+
+    assertThat(directionField).isNotNull
+    assertThat(directionField!!.filter).isNotNull
+    assertThat(directionField.filter!!.type).isEqualTo(FilterType.Radio)
+    assertThat(directionField.filter!!.staticOptions).isNotNull
+    assertThat(directionField.filter!!.staticOptions).hasSize(2)
+    assertThat(directionField.filter!!.staticOptions!![0].name).isEqualTo("in")
+    assertThat(directionField.filter!!.staticOptions!![0].display).isEqualTo("In")
+    assertThat(directionField.filter!!.staticOptions!![1].name).isEqualTo("out")
+    assertThat(directionField.filter!!.staticOptions!![1].display).isEqualTo("Out")
+
+    val dateField = lastMonthVariant.specification?.fields?.find { it.name == "date" }
+
+    assertThat(dateField).isNotNull
+    assertThat(dateField!!.filter).isNotNull
+    assertThat(dateField.filter!!.type).isEqualTo(FilterType.DateRange)
+    val lastMonth = now().minusMonths(1).format(DateTimeFormatter.ISO_DATE)
+    val thisMonth = now().format(DateTimeFormatter.ISO_DATE)
+    assertThat(dateField.filter!!.defaultValue).isEqualTo("$lastMonth - $thisMonth")
   }
 
   @Test

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
@@ -76,18 +74,18 @@ abstract class IntegrationTestBase {
     stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
   }
 
-  protected fun stubMeCaseloadsResponse(jsonNode: JsonNode) {
+  protected fun stubMeCaseloadsResponse(body: String) {
     wireMockServer.stubFor(
       WireMock.get("/me/caseloads").willReturn(
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withJsonBody(jsonNode),
+          .withBody(body),
       ),
     )
   }
 
-  protected fun createCaseloadJsonResponse(activeCaseloadId: String): JsonNode = ObjectMapper().readTree(
+  protected fun createCaseloadJsonResponse(activeCaseloadId: String) =
     """
           {
             "username": "TESTUSER1",
@@ -104,8 +102,7 @@ abstract class IntegrationTestBase {
               }
             ]
           }
-    """.trimIndent(),
-  )
+    """.trimIndent()
 
   internal fun setAuthorisation(
     user: String = "AUTH_ADM",
