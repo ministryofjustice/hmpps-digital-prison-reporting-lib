@@ -104,7 +104,6 @@ abstract class IntegrationTestBase {
           }
     """.trimIndent()
 
-
   internal fun setAuthorisation(
     user: String = "AUTH_ADM",
     roles: List<String> = listOf(),
