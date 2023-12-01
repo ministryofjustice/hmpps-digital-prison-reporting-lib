@@ -6,4 +6,5 @@ enum class FilterType(@JsonValue val type: String) {
   Radio("Radio"),
   Select("Select"),
   DateRange("daterange"),
+  AutoComplete("autocomplete"),
 }

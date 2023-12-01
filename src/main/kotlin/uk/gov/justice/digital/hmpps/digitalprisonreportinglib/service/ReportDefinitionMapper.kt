@@ -93,6 +93,7 @@ class ReportDefinitionMapper {
   private fun map(definition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition): FilterDefinition = FilterDefinition(
     type = FilterType.valueOf(definition.type.toString()),
     staticOptions = definition.staticOptions?.map(this::map),
+    dynamicOptions = definition.dynamicOptions,
     defaultValue = replaceTokens(definition.default),
   )
 
@@ -115,7 +116,7 @@ class ReportDefinitionMapper {
     return result
   }
 
-  private fun map(definition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterOption): FilterOption = FilterOption(
+  private fun map(definition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption): FilterOption = FilterOption(
     name = definition.name,
     display = definition.display,
   )

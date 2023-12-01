@@ -136,6 +136,33 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Configured API returns value matching the dynamic filters provided`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-week/name")
+          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX", "2023-04-25")
+          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX", "2023-05-20")
+          .queryParam("${FILTERS_PREFIX}direction", "out")
+          .queryParam("prefix", "La")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """[
+         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}",
+          "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
+          "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
+      ]       
+      """,
+      )
+  }
+
+  @Test
   fun `Configured API call without query params defaults to preset query params`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -228,12 +255,12 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
 
   @Test
   fun `Configured API returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}name", "some name", "/reports/external-movements/last-month")
+    requestWithQueryAndAssert400("${FILTERS_PREFIX}prisonNumber", "some name", "/reports/external-movements/last-month")
   }
 
   @Test
   fun `Configured API count returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}name", "some name", "/reports/external-movements/last-month/count")
+    requestWithQueryAndAssert400("${FILTERS_PREFIX}prisonNumber", "some name", "/reports/external-movements/last-month/count")
   }
 
   @Test

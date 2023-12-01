@@ -105,6 +105,7 @@ class ConfiguredApiRepository {
       FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:$key AS timestamp)"
       FilterType.RANGE_END -> "$lowerCaseField <= :$key"
       FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
+      FilterType.DYNAMIC -> "${filter.field} LIKE '${filter.value}%'"
     }
   }
 
@@ -124,11 +125,12 @@ class ConfiguredApiRepository {
     fun getKey(): String = "${this.field}${this.type.suffix}".lowercase()
   }
 
-  enum class FilterType(val suffix: String) {
-    STANDARD(""),
+  enum class FilterType(val suffix: String = "") {
+    STANDARD,
     RANGE_START(".start"),
     RANGE_END(".end"),
     DATE_RANGE_START(".start"),
     DATE_RANGE_END(".end"),
+    DYNAMIC,
   }
 }

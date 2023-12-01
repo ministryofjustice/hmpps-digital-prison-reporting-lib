@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DYNAMIC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.FilterTypeDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -82,6 +83,68 @@ class ConfiguredApiServiceTest {
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      dataSet.query,
+      repositoryFilters,
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      caseloads,
+      caseloadFields,
+      reportId,
+    )
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `should call the repository with the corresponding arguments and get a list of rows when a dynamic filter is provided`() {
+    val reportVariantId = "last-month"
+    val filters = mapOf(
+      "direction" to "in",
+      "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25",
+      "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10",
+    )
+    val repositoryFilters = listOf(
+      Filter("direction", "in"),
+      Filter("date", "2023-04-25", DATE_RANGE_START),
+      Filter("date", "2023-09-10", DATE_RANGE_END),
+      Filter("name", "Ab", DYNAMIC),
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val reportFieldId = "name"
+    val prefix = "Ab"
+    whenever(
+      configuredApiRepository.executeQuery(
+        dataSet.query,
+        repositoryFilters,
+        selectedPage,
+        pageSize,
+        sortColumn,
+        sortedAsc,
+        caseloads,
+        caseloadFields,
+        reportId,
+      ),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.validateAndFetchData(
+      reportId,
+      reportVariantId,
+      filters,
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      caseloads,
+      reportFieldId,
+      prefix,
+    )
 
     verify(configuredApiRepository, times(1)).executeQuery(
       dataSet.query,
@@ -597,6 +660,42 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, caseloads)
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+    )
+  }
+
+  @Test
+  fun `validateAndFetchData should throw an exception when having a prefix with more characters than the minimum length`() {
+    val reportVariantId = "last-month"
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(
+        reportId,
+        reportVariantId,
+        mapOf(),
+        selectedPage,
+        pageSize,
+        sortColumn,
+        sortedAsc,
+        caseloads,
+        "name",
+        "A",
+      )
+    }
+    assertEquals(ConfiguredApiService.INVALID_DYNAMIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
       any(),
       any(),

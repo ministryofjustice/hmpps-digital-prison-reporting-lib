@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotNull
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -67,6 +69,50 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       sortColumn,
       sortedAsc,
       authentication.getCaseLoads(),
+    )
+  }
+
+  @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
+  @Operation(
+    description = "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun configuredApiDynamicFilter(
+    @RequestParam(defaultValue = "1")
+    @Min(1)
+    selectedPage: Long,
+    @RequestParam(defaultValue = "10")
+    @Min(1)
+    pageSize: Long,
+    @RequestParam sortColumn: String?,
+    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @RequestParam
+    prefix: String,
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @PathVariable("fieldId")
+    @NotNull
+    @NotEmpty
+    fieldId: String,
+    authentication: AuthAwareAuthenticationToken,
+  ): List<Map<String, Any>> {
+    return configuredApiService.validateAndFetchData(
+      reportId,
+      reportVariantId,
+      filtersOnly(filters),
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      authentication.getCaseLoads(),
+      fieldId,
+      prefix,
     )
   }
 

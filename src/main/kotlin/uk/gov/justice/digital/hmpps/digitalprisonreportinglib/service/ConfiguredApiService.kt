@@ -27,6 +27,7 @@ class ConfiguredApiService(
     const val INVALID_REPORT_VARIANT_ID_MESSAGE = "Invalid report variant id provided:"
     const val INVALID_FILTERS_MESSAGE = "Invalid filters provided."
     const val INVALID_STATIC_OPTIONS_MESSAGE = "Invalid static options provided."
+    const val INVALID_DYNAMIC_OPTIONS_MESSAGE = "Invalid dynamic options length provided."
     private const val schemaRefPrefix = "\$ref:"
   }
 
@@ -48,6 +49,39 @@ class ConfiguredApiService(
         .executeQuery(
           productDefinition.dataset.query,
           validateAndMapFilters(productDefinition, filters),
+          selectedPage,
+          pageSize,
+          validatedSortColumn,
+          sortedAsc,
+          userCaseloads,
+          getCaseloadFields(productDefinition.dataset),
+          reportId,
+        ),
+      productDefinition.dataset.schema.field,
+    )
+  }
+
+  fun validateAndFetchData(
+    reportId: String,
+    reportVariantId: String,
+    filters: Map<String, String>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    userCaseloads: List<String>,
+    reportFieldId: String,
+    prefix: String,
+  ): List<Map<String, Any>> {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
+    val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
+
+    return formatToSchemaFieldsCasing(
+      configuredApiRepository
+        .executeQuery(
+          productDefinition.dataset.query,
+          validateAndMapFilters(productDefinition, filters) +
+            validateAndMapFieldIdDynamicFilter(productDefinition, reportFieldId, prefix),
           selectedPage,
           pageSize,
           validatedSortColumn,
@@ -117,6 +151,18 @@ class ConfiguredApiService(
     }
   }
 
+  private fun validateAndMapFieldIdDynamicFilter(definition: SingleReportProductDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
+    val filterDefinition = findFilterDefinition(definition, fieldId)
+    if (filterDefinition.dynamicOptions == null || filterDefinition.dynamicOptions.minimumLength > prefix.length) {
+      throw ValidationException(INVALID_DYNAMIC_OPTIONS_MESSAGE)
+    }
+    return ConfiguredApiRepository.Filter(
+      field = fieldId,
+      value = prefix,
+      type = ConfiguredApiRepository.FilterType.DYNAMIC,
+    )
+  }
+
   private fun mapFilterType(filterDefinition: FilterDefinition, key: String): ConfiguredApiRepository.FilterType {
     if (filterDefinition.type == FilterType.DateRange) {
       if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
@@ -143,14 +189,14 @@ class ConfiguredApiService(
     return field?.filter ?: throw ValidationException(INVALID_FILTERS_MESSAGE)
   }
 
-  private fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, key: String, value: String) {
-    validateFilterType(dataSet, key, value)
-    if (filterDefinition.staticOptions != null && filterDefinition.staticOptions.none { it.name.lowercase() == value.lowercase() }) {
+  private fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, filterName: String, filterValue: String) {
+    validateFilterSchemaFieldType(dataSet, filterName, filterValue)
+    if (filterDefinition.staticOptions != null && filterDefinition.staticOptions.none { it.name.lowercase() == filterValue.lowercase() }) {
       throw ValidationException(INVALID_STATIC_OPTIONS_MESSAGE)
     }
   }
 
-  private fun validateFilterType(dataSet: Dataset, key: String, value: String) {
+  private fun validateFilterSchemaFieldType(dataSet: Dataset, key: String, value: String) {
     val schemaField = dataSet.schema.field.first { it.name == key }
     if (schemaField.type == ParameterType.Long) {
       try {
