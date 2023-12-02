@@ -28,6 +28,7 @@ class ConfiguredApiRepository {
     userCaseloads: List<String>,
     caseloadFields: List<String>,
     reportId: String,
+    dynamicFilterFieldId: String? = null,
   ): List<Map<String, Any>> {
     if (userCaseloads.isEmpty()) {
       log.warn("Zero records returned as the user has no active caseloads.")
@@ -37,7 +38,7 @@ class ConfiguredApiRepository {
     val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
-      buildQuery(query, whereClause, sortColumn, sortingDirection, pageSize, selectedPage),
+      buildQuery(query, whereClause, sortColumn, sortingDirection, pageSize, selectedPage, dynamicFilterFieldId),
       preparedStatementNamedParams,
     )
       .map {
@@ -48,12 +49,22 @@ class ConfiguredApiRepository {
     return result
   }
 
-  private fun buildQuery(query: String, whereClause: String, sortColumn: String, sortingDirection: String, pageSize: Long, selectedPage: Long) =
-    """SELECT *
+  private fun buildQuery(
+    query: String,
+    whereClause: String,
+    sortColumn: String,
+    sortingDirection: String,
+    pageSize: Long,
+    selectedPage: Long,
+    dynamicFilterFieldId: String?,
+  ): String {
+    val projectedColumns = dynamicFilterFieldId?.let { "DISTINCT $dynamicFilterFieldId" } ?: "*"
+    return """SELECT $projectedColumns
         FROM ($query) Q
         $whereClause
         ORDER BY $sortColumn $sortingDirection 
                       limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+  }
 
   fun count(
     filters: List<Filter>,

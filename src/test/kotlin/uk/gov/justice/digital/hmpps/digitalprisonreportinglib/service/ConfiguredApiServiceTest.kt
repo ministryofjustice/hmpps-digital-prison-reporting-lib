@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import jakarta.validation.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -130,6 +132,7 @@ class ConfiguredApiServiceTest {
         caseloads,
         caseloadFields,
         reportId,
+        reportFieldId,
       ),
     ).thenReturn(expectedRepositoryResult)
 
@@ -156,6 +159,7 @@ class ConfiguredApiServiceTest {
       caseloads,
       caseloadFields,
       reportId,
+      reportFieldId,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -453,6 +457,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -483,6 +488,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -530,6 +536,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -547,6 +554,61 @@ class ConfiguredApiServiceTest {
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+    )
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["origin", "invalid field name"])
+  fun `validateAndFetchData should throw an exception for invalid dynamic filter`(fieldId: String) {
+    val reportVariantId = "last-month"
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, fieldId, "ab")
+    }
+    assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+    )
+  }
+
+  @Test
+  fun `validateAndFetchData should throw an exception for a fieldId which is a filter but not a dynamic one`() {
+    val reportVariantId = "last-month"
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val fieldId = "direction"
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, fieldId, "ab")
+    }
+    assertEquals(ConfiguredApiService.INVALID_DYNAMIC_FILTER_MESSAGE, e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -594,6 +656,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -623,6 +686,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -670,6 +734,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -697,6 +762,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals(ConfiguredApiService.INVALID_DYNAMIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -735,6 +801,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),

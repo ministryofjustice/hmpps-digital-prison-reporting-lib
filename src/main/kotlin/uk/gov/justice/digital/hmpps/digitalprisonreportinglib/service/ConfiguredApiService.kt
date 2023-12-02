@@ -28,6 +28,7 @@ class ConfiguredApiService(
     const val INVALID_FILTERS_MESSAGE = "Invalid filters provided."
     const val INVALID_STATIC_OPTIONS_MESSAGE = "Invalid static options provided."
     const val INVALID_DYNAMIC_OPTIONS_MESSAGE = "Invalid dynamic options length provided."
+    const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
     private const val schemaRefPrefix = "\$ref:"
   }
 
@@ -40,15 +41,18 @@ class ConfiguredApiService(
     sortColumn: String?,
     sortedAsc: Boolean,
     userCaseloads: List<String>,
+    reportFieldId: String? = null,
+    prefix: String? = null,
   ): List<Map<String, Any>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
+    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
 
     return formatToSchemaFieldsCasing(
       configuredApiRepository
         .executeQuery(
           productDefinition.dataset.query,
-          validateAndMapFilters(productDefinition, filters),
+          validateAndMapFilters(productDefinition, filters) + dynamicFilter,
           selectedPage,
           pageSize,
           validatedSortColumn,
@@ -56,43 +60,21 @@ class ConfiguredApiService(
           userCaseloads,
           getCaseloadFields(productDefinition.dataset),
           reportId,
+          reportFieldId,
         ),
       productDefinition.dataset.schema.field,
     )
   }
 
-  fun validateAndFetchData(
-    reportId: String,
-    reportVariantId: String,
-    filters: Map<String, String>,
-    selectedPage: Long,
-    pageSize: Long,
-    sortColumn: String?,
-    sortedAsc: Boolean,
-    userCaseloads: List<String>,
-    reportFieldId: String,
-    prefix: String,
-  ): List<Map<String, Any>> {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
-    val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
-
-    return formatToSchemaFieldsCasing(
-      configuredApiRepository
-        .executeQuery(
-          productDefinition.dataset.query,
-          validateAndMapFilters(productDefinition, filters) +
-            validateAndMapFieldIdDynamicFilter(productDefinition, reportFieldId, prefix),
-          selectedPage,
-          pageSize,
-          validatedSortColumn,
-          sortedAsc,
-          userCaseloads,
-          getCaseloadFields(productDefinition.dataset),
-          reportId,
-        ),
-      productDefinition.dataset.schema.field,
-    )
-  }
+  private fun buildAndValidateDynamicFilter(
+    reportFieldId: String?,
+    prefix: String?,
+    productDefinition: SingleReportProductDefinition,
+  ) = reportFieldId
+    ?.let {
+      prefix
+        ?.let { listOf(validateAndMapFieldIdDynamicFilter(productDefinition, reportFieldId, prefix)) }
+    } ?: emptyList()
 
   private fun getCaseloadFields(dataSet: Dataset) =
     dataSet.schema.field.filter { it.caseload }.map { it.name }
@@ -153,7 +135,10 @@ class ConfiguredApiService(
 
   private fun validateAndMapFieldIdDynamicFilter(definition: SingleReportProductDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
     val filterDefinition = findFilterDefinition(definition, fieldId)
-    if (filterDefinition.dynamicOptions == null || filterDefinition.dynamicOptions.minimumLength > prefix.length) {
+    if (filterDefinition.dynamicOptions == null) {
+      throw ValidationException(INVALID_DYNAMIC_FILTER_MESSAGE)
+    }
+    if (filterDefinition.dynamicOptions.minimumLength > prefix.length) {
       throw ValidationException(INVALID_DYNAMIC_OPTIONS_MESSAGE)
     }
     return ConfiguredApiRepository.Filter(
@@ -181,10 +166,10 @@ class ConfiguredApiService(
     return ConfiguredApiRepository.FilterType.STANDARD
   }
 
-  fun findFilterDefinition(definition: SingleReportProductDefinition, key: String): FilterDefinition {
+  fun findFilterDefinition(definition: SingleReportProductDefinition, filterName: String): FilterDefinition {
     val field =
       definition.report.specification?.field
-        ?.firstOrNull { it.filter != null && key == it.name.removePrefix(schemaRefPrefix) }
+        ?.firstOrNull { it.filter != null && filterName == it.name.removePrefix(schemaRefPrefix) }
 
     return field?.filter ?: throw ValidationException(INVALID_FILTERS_MESSAGE)
   }

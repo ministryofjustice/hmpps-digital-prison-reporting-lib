@@ -78,13 +78,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun configuredApiDynamicFilter(
-    @RequestParam(defaultValue = "1")
-    @Min(1)
-    selectedPage: Long,
     @RequestParam(defaultValue = "10")
     @Min(1)
     pageSize: Long,
-    @RequestParam sortColumn: String?,
     @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
@@ -106,9 +102,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       reportId,
       reportVariantId,
       filtersOnly(filters),
-      selectedPage,
+      1,
       pageSize,
-      sortColumn,
+      fieldId,
       sortedAsc,
       authentication.getCaseLoads(),
       fieldId,
