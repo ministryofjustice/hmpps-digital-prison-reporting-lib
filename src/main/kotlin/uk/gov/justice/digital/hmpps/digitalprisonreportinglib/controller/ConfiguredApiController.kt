@@ -97,7 +97,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @NotEmpty
     fieldId: String,
     authentication: AuthAwareAuthenticationToken,
-  ): List<Map<String, Any>> {
+  ): List<String> {
     return configuredApiService.validateAndFetchData(
       reportId,
       reportVariantId,
@@ -109,7 +109,11 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       authentication.getCaseLoads(),
       fieldId,
       prefix,
-    )
+    ).asSequence()
+      .flatMap {
+        it.asSequence()
+      }.groupBy({ it.key }, { it.value })
+      .values.flatten().map { it.toString() }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")

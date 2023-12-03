@@ -153,9 +153,10 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       .isOk()
       .expectBody()
       .json(
-        """[
-         {"name": "${movementPrisoner4[NAME]}"}
-      ]       
+        """
+        [
+          "${movementPrisoner4[NAME]}"
+        ]
       """,
       )
   }
