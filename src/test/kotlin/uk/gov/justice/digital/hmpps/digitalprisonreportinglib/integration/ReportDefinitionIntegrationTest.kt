@@ -224,7 +224,13 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         {
                             "defaultsort": false,
                             "display": "Name",
-                            "filter": null,
+                            "filter": {   
+                               "dynamicOptions": {
+                                  "minimumLength": 2,
+                                  "returnAsStaticOptions": false
+                              },
+                               "type": "autocomplete"
+                            },
                             "name": "name",
                             "sortable": true,
                             "type": "string",
@@ -323,7 +329,13 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         {
                             "defaultsort": false,
                             "display": "Name",
-                            "filter": null,
+                            "filter": {   
+                               "dynamicOptions": {
+                                  "minimumLength": 2,
+                                  "returnAsStaticOptions": false
+                              },
+                               "type": "autocomplete"
+                            },
                             "name": "name",
                             "sortable": true,
                             "type": "string",

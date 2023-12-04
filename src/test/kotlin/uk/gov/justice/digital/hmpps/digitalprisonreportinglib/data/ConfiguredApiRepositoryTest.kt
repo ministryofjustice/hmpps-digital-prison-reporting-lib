@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DYNAMIC
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner2
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner3
@@ -341,6 +343,56 @@ class ConfiguredApiRepositoryTest {
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner3, movementPrisoner2), actual)
+  }
+
+  @Test
+  fun `should return all the rows matching the dynamic filter between the provided start and end dates and given direction `() {
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(
+        Filter("date", "2023-04-25", DATE_RANGE_START),
+        Filter("date", "2023-05-20", DATE_RANGE_END),
+        Filter("direction", "in"),
+        Filter("name", "La", DYNAMIC),
+      ),
+      1,
+      10,
+      NAME,
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      NAME,
+    )
+    Assertions.assertEquals(
+      listOf(
+        mapOf(NAME to "LastName5, F"),
+        mapOf(NAME to "LastName3, F"),
+        mapOf(NAME to "LastName1, F"),
+      ),
+      actual,
+    )
+  }
+
+  @Test
+  fun `should return no the rows if the dynamic filter does not match anything`() {
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(
+        Filter("date", "2023-04-25", DATE_RANGE_START),
+        Filter("date", "2023-05-20", DATE_RANGE_END),
+        Filter("direction", "in"),
+        Filter("name", "Ab", DYNAMIC),
+      ),
+      1,
+      10,
+      "date",
+      false,
+      caseloads,
+      caseloadFields,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+    )
+    Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test

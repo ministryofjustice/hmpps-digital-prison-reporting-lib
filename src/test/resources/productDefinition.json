@@ -92,7 +92,14 @@
         "display" : "Name",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultsort" : false
+        "defaultsort" : false,
+        "filter" : {
+          "type" : "autocomplete",
+          "dynamicoptions":{
+            "minimumLength": 2,
+            "returnAsStaticOptions": false
+          }
+        }
       }, {
         "name" : "$ref:date",
         "display" : "Date",
@@ -166,7 +173,14 @@
         "display" : "Name",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultsort" : false
+        "defaultsort" : false,
+        "filter" : {
+          "type" : "autocomplete",
+          "dynamicoptions":{
+            "minimumLength": 2,
+            "returnAsStaticOptions": false
+          }
+        }
       }, {
         "name" : "$ref:date",
         "display" : "Date",

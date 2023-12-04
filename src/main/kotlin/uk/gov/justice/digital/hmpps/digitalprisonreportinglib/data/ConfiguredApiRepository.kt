@@ -28,6 +28,7 @@ class ConfiguredApiRepository {
     userCaseloads: List<String>,
     caseloadFields: List<String>,
     reportId: String,
+    dynamicFilterFieldId: String? = null,
   ): List<Map<String, Any>> {
     if (userCaseloads.isEmpty()) {
       log.warn("Zero records returned as the user has no active caseloads.")
@@ -37,7 +38,7 @@ class ConfiguredApiRepository {
     val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
-      buildQuery(query, whereClause, sortColumn, sortingDirection, pageSize, selectedPage),
+      buildQuery(query, whereClause, sortColumn, sortingDirection, pageSize, selectedPage, dynamicFilterFieldId),
       preparedStatementNamedParams,
     )
       .map {
@@ -48,12 +49,22 @@ class ConfiguredApiRepository {
     return result
   }
 
-  private fun buildQuery(query: String, whereClause: String, sortColumn: String, sortingDirection: String, pageSize: Long, selectedPage: Long) =
-    """SELECT *
+  private fun buildQuery(
+    query: String,
+    whereClause: String,
+    sortColumn: String,
+    sortingDirection: String,
+    pageSize: Long,
+    selectedPage: Long,
+    dynamicFilterFieldId: String?,
+  ): String {
+    val projectedColumns = dynamicFilterFieldId?.let { "DISTINCT $dynamicFilterFieldId" } ?: "*"
+    return """SELECT $projectedColumns
         FROM ($query) Q
         $whereClause
         ORDER BY $sortColumn $sortingDirection 
                       limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+  }
 
   fun count(
     filters: List<Filter>,
@@ -105,6 +116,7 @@ class ConfiguredApiRepository {
       FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:$key AS timestamp)"
       FilterType.RANGE_END -> "$lowerCaseField <= :$key"
       FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
+      FilterType.DYNAMIC -> "${filter.field} LIKE '${filter.value}%'"
     }
   }
 
@@ -124,11 +136,12 @@ class ConfiguredApiRepository {
     fun getKey(): String = "${this.field}${this.type.suffix}".lowercase()
   }
 
-  enum class FilterType(val suffix: String) {
-    STANDARD(""),
+  enum class FilterType(val suffix: String = "") {
+    STANDARD,
     RANGE_START(".start"),
     RANGE_END(".end"),
     DATE_RANGE_START(".start"),
     DATE_RANGE_END(".end"),
+    DYNAMIC,
   }
 }

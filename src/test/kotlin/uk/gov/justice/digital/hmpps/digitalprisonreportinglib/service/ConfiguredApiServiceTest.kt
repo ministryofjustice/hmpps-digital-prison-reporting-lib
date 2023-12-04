@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import jakarta.validation.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -16,6 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DYNAMIC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.FilterTypeDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -93,6 +96,70 @@ class ConfiguredApiServiceTest {
       caseloads,
       caseloadFields,
       reportId,
+    )
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `should call the repository with the corresponding arguments and get a list of rows when a dynamic filter is provided`() {
+    val reportVariantId = "last-month"
+    val filters = mapOf(
+      "direction" to "in",
+      "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25",
+      "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10",
+    )
+    val repositoryFilters = listOf(
+      Filter("direction", "in"),
+      Filter("date", "2023-04-25", DATE_RANGE_START),
+      Filter("date", "2023-09-10", DATE_RANGE_END),
+      Filter("name", "Ab", DYNAMIC),
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val reportFieldId = "name"
+    val prefix = "Ab"
+    whenever(
+      configuredApiRepository.executeQuery(
+        dataSet.query,
+        repositoryFilters,
+        selectedPage,
+        pageSize,
+        sortColumn,
+        sortedAsc,
+        caseloads,
+        caseloadFields,
+        reportId,
+        reportFieldId,
+      ),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.validateAndFetchData(
+      reportId,
+      reportVariantId,
+      filters,
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      caseloads,
+      reportFieldId,
+      prefix,
+    )
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      dataSet.query,
+      repositoryFilters,
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      caseloads,
+      caseloadFields,
+      reportId,
+      reportFieldId,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -390,6 +457,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -420,6 +488,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -467,6 +536,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -484,6 +554,61 @@ class ConfiguredApiServiceTest {
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+    )
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["origin", "invalid field name"])
+  fun `validateAndFetchData should throw an exception for invalid dynamic filter`(fieldId: String) {
+    val reportVariantId = "last-month"
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, fieldId, "ab")
+    }
+    assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+    )
+  }
+
+  @Test
+  fun `validateAndFetchData should throw an exception for a fieldId which is a filter but not a dynamic one`() {
+    val reportVariantId = "last-month"
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val fieldId = "direction"
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, caseloads, fieldId, "ab")
+    }
+    assertEquals(ConfiguredApiService.INVALID_DYNAMIC_FILTER_MESSAGE, e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -531,6 +656,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -560,6 +686,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -607,6 +734,44 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
+    )
+  }
+
+  @Test
+  fun `validateAndFetchData should throw an exception when having a prefix with more characters than the minimum length`() {
+    val reportVariantId = "last-month"
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(
+        reportId,
+        reportVariantId,
+        mapOf(),
+        selectedPage,
+        pageSize,
+        sortColumn,
+        sortedAsc,
+        caseloads,
+        "name",
+        "A",
+      )
+    }
+    assertEquals(ConfiguredApiService.INVALID_DYNAMIC_OPTIONS_MESSAGE, e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
     )
   }
 
@@ -636,6 +801,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
