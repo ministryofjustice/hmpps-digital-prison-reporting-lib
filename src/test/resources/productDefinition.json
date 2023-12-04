@@ -62,7 +62,7 @@
           "condition": [
             {
               "match": {
-                "caseload": "$caseload"
+                "fragment": "$caseload"
               }
             }
           ]
