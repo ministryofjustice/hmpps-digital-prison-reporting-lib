@@ -20,6 +20,9 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
@@ -34,6 +37,12 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var jwtAuthHelper: JwtAuthHelper
+
+  @Autowired
+  lateinit var externalMovementRepository: ExternalMovementRepository
+
+  @Autowired
+  lateinit var prisonerRepository: PrisonerRepository
 
   companion object {
 
@@ -72,6 +81,12 @@ abstract class IntegrationTestBase {
   fun setup() {
     wireMockServer.resetAll()
     stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
+    ConfiguredApiRepositoryTest.AllMovements.allExternalMovements.forEach {
+      externalMovementRepository.save(it)
+    }
+    ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners.forEach {
+      prisonerRepository.save(it)
+    }
   }
 
   protected fun stubMeCaseloadsResponse(body: String) {

@@ -145,7 +145,14 @@
         "name" : "$ref:reason",
         "display" : "Reason",
         "sortable" : true,
-        "defaultsort" : false
+        "defaultsort" : false,
+        "filter" : {
+          "type" : "autocomplete",
+          "dynamicoptions":{
+            "minimumLength": 2,
+            "returnAsStaticOptions": true
+          }
+        }
       } ]
     },
     "destination" : [ ],
@@ -226,7 +233,14 @@
         "name" : "$ref:reason",
         "display" : "Reason",
         "sortable" : true,
-        "defaultsort" : false
+        "defaultsort" : false,
+        "filter" : {
+          "type" : "autocomplete",
+          "dynamicoptions":{
+            "minimumLength": 2,
+            "returnAsStaticOptions": true
+          }
+        }
       } ]
     },
     "destination" : [ ]

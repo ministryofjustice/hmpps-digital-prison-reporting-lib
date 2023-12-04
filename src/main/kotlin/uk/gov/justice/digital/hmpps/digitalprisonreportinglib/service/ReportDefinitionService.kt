@@ -12,13 +12,13 @@ class ReportDefinitionService(
   val mapper: ReportDefinitionMapper,
 ) {
 
-  fun getListForUser(renderMethod: RenderMethod?): List<ReportDefinition> {
+  fun getListForUser(renderMethod: RenderMethod?, caseLoads: List<String>): List<ReportDefinition> {
     return productDefinitionRepository.getProductDefinitions()
-      .map { mapper.map(it, renderMethod) }
+      .map { mapper.map(it, renderMethod, caseLoads) }
       .filter { it.variants.isNotEmpty() }
   }
 
-  fun getDefinition(reportId: String, variantId: String): SingleVariantReportDefinition {
-    return mapper.map(productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId))
+  fun getDefinition(reportId: String, variantId: String, caseLoads: List<String>): SingleVariantReportDefinition {
+    return mapper.map(productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId), caseLoads)
   }
 }

@@ -69,7 +69,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastWeekVariant.specification).isNotNull
       assertThat(lastWeekVariant.specification?.fields).hasSize(8)
 
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(0)
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
     }
   }
 
@@ -186,6 +186,15 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     val lastMonth = now().minusMonths(1).format(DateTimeFormatter.ISO_DATE)
     val thisMonth = now().format(DateTimeFormatter.ISO_DATE)
     assertThat(dateField.filter!!.defaultValue).isEqualTo("$lastMonth - $thisMonth")
+
+    val reasonField = lastMonthVariant.specification?.fields?.find { it.name == "reason" }
+    assertThat(reasonField).isNotNull
+    assertThat(reasonField!!.filter).isNotNull
+    assertThat(reasonField.filter!!.type).isEqualTo(FilterType.AutoComplete)
+    assertThat(reasonField.filter!!.staticOptions).isNotNull
+    assertThat(reasonField.filter!!.staticOptions).hasSize(1)
+    assertThat(reasonField.filter!!.staticOptions!![0].name).isEqualTo("Transfer Out to Other Establishment")
+    assertThat(reasonField.filter!!.staticOptions!![0].display).isEqualTo("Transfer Out to Other Establishment")
   }
 
   @Test
@@ -300,7 +309,20 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         {
                             "defaultsort": false,
                             "display": "Reason",
-                            "filter": null,
+                            "filter": {
+                                "type": "autocomplete",
+                                "dynamicOptions": {
+                                    "minimumLength": 2,
+                                    "returnAsStaticOptions": true
+                                },
+                                "staticOptions": [
+                                {
+                                    "display": "Transfer Out to Other Establishment",
+                                    "name": "Transfer Out to Other Establishment"
+                                }
+                              ],
+                              "defaultValue": null
+                            },
                             "name": "reason",
                             "sortable": true,
                             "type": "string",
@@ -405,7 +427,20 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         {
                             "defaultsort": false,
                             "display": "Reason",
-                            "filter": null,
+                            "filter": {
+                                "type": "autocomplete",
+                                "dynamicOptions": {
+                                    "minimumLength": 2,
+                                    "returnAsStaticOptions": true
+                                },
+                                "staticOptions": [
+                                {
+                                    "display": "Transfer Out to Other Establishment",
+                                    "name": "Transfer Out to Other Establishment"
+                                }
+                              ],
+                              "defaultValue": null
+                            },
                             "name": "reason",
                             "sortable": true,
                             "type": "string",

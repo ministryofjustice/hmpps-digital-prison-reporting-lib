@@ -5,9 +5,14 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
@@ -118,11 +123,15 @@ class ReportDefinitionMapperTest {
     report = fullReport,
   )
 
+  private val configuredApiService: ConfiguredApiService = mock<ConfiguredApiService>()
+
+  private val caseLoads: List<String> = listOf("caseLoad")
+
   @Test
   fun `Getting report list for user maps full data correctly`() {
-    val mapper = ReportDefinitionMapper()
+    val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(fullProductDefinition, null)
+    val result = mapper.map(fullProductDefinition, null, emptyList())
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullProductDefinition.id)
@@ -162,6 +171,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(filterOption?.name).isEqualTo(sourceFilterOption?.name)
     assertThat(filterOption?.display).isEqualTo(sourceFilterOption?.display)
+    verifyNoInteractions(configuredApiService)
   }
 
   @Test
@@ -175,12 +185,13 @@ class ReportDefinitionMapperTest {
         version = "5",
       ),
     )
-    val mapper = ReportDefinitionMapper()
+    val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(productDefinition, null)
+    val result = mapper.map(productDefinition, null, emptyList())
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(0)
+    verifyNoInteractions(configuredApiService)
   }
 
   @Test
@@ -205,12 +216,12 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionMapper()
+    val mapper = ReportDefinitionMapper(configuredApiService)
 
     val exception = assertThrows(IllegalArgumentException::class.java) {
-      mapper.map(productDefinition, null)
+      mapper.map(productDefinition, null, emptyList())
     }
-
+    verifyNoInteractions(configuredApiService)
     assertThat(exception).message().isEqualTo("Could not find matching DataSet '9'")
   }
 
@@ -255,13 +266,14 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionMapper()
+    val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(productDefinition, HTML)
+    val result = mapper.map(productDefinition, HTML, emptyList())
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(1)
     assertThat(result.variants.first().id).isEqualTo("16")
+    verifyNoInteractions(configuredApiService)
   }
 
   @ParameterizedTest
@@ -279,9 +291,11 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinitionWithDefaultFilter("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = ReportDefinitionMapper().map(defaultValue, HTML)
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, emptyList())
 
     assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
+
+    verifyNoInteractions(configuredApiService)
   }
 
   @Test
@@ -289,9 +303,11 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinitionWithDefaultFilter("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-    val result = ReportDefinitionMapper().map(defaultValue, HTML)
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, emptyList())
 
     assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
+
+    verifyNoInteractions(configuredApiService)
   }
 
   @Test
@@ -302,16 +318,18 @@ class ReportDefinitionMapperTest {
     val expectedDate3 = getExpectedDate(7, ChronoUnit.DAYS)
     val expectedResult = "$expectedDate1, $expectedDate2, $expectedDate3"
 
-    val result = ReportDefinitionMapper().map(defaultValue, HTML)
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, emptyList())
 
     assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
+
+    verifyNoInteractions(configuredApiService)
   }
 
   @Test
   fun `Getting single report for user maps full data correctly`() {
-    val mapper = ReportDefinitionMapper()
+    val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(fullSingleReportProductDefinition)
+    val result = mapper.map(fullSingleReportProductDefinition, emptyList())
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleReportProductDefinition.id)
@@ -349,6 +367,174 @@ class ReportDefinitionMapperTest {
 
     assertThat(filterOption?.name).isEqualTo(sourceFilterOption?.name)
     assertThat(filterOption?.display).isEqualTo(sourceFilterOption?.display)
+
+    verifyNoInteractions(configuredApiService)
+  }
+
+  @Test
+  fun `getting single report with dynamic options maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
+    val reportWithDynamicFilter = Report(
+      id = "21",
+      name = "22",
+      description = "23",
+      created = LocalDate.MAX,
+      version = "24",
+      dataset = "\$ref:10",
+      policy = listOf("25"),
+      render = RenderMethod.PDF,
+      schedule = "26",
+      specification = Specification(
+        template = "27",
+        field = listOf(
+          ReportField(
+            name = "\$ref:13",
+            display = "14",
+            wordWrap = WordWrap.None,
+            filter = FilterDefinition(
+              type = FilterType.AutoComplete,
+              // Minimum length is not really used here as there is no prefix parameter.
+              dynamicOptions = DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = true),
+            ),
+            sortable = true,
+            defaultSort = true,
+            formula = null,
+            visible = true,
+          ),
+        ),
+      ),
+      destination = listOf(singletonMap("28", "29")), classification = "someClassification",
+    )
+
+    val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
+
+    val mapper = ReportDefinitionMapper(configuredApiService)
+
+    whenever(
+      configuredApiService.validateAndFetchData(
+        fullSingleProductDefinition.id,
+        reportWithDynamicFilter.id, emptyMap(), 1, 10, "13", true, caseLoads, "13",
+      ),
+    ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
+
+    val result = mapper.map(fullSingleProductDefinition, caseLoads)
+
+    assertThat(result).isNotNull
+    assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
+    assertThat(result.name).isEqualTo(fullSingleProductDefinition.name)
+    assertThat(result.description).isEqualTo(fullSingleProductDefinition.description)
+
+    val variant = result.variant
+
+    assertThat(variant.id).isEqualTo(fullSingleProductDefinition.report.id)
+    assertThat(variant.name).isEqualTo(fullSingleProductDefinition.report.name)
+    assertThat(variant.resourceName).isEqualTo("reports/${fullSingleProductDefinition.id}/${fullSingleProductDefinition.report.id}")
+    assertThat(variant.description).isEqualTo(fullSingleProductDefinition.report.description)
+    assertThat(variant.specification).isNotNull
+    assertThat(variant.specification?.template).isEqualTo(fullSingleProductDefinition.report.specification?.template)
+    assertThat(variant.specification?.fields).isNotEmpty
+    assertThat(variant.specification?.fields).hasSize(1)
+
+    val field = variant.specification!!.fields.first()
+    val sourceSchemaField = fullSingleProductDefinition.dataset.schema.field.first()
+    val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
+
+    assertThat(field.name).isEqualTo(sourceSchemaField.name)
+    assertThat(field.display).isEqualTo(sourceReportField.display)
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
+    assertThat(field.filter).isNotNull
+    assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
+    assertThat(field.filter?.staticOptions).isNotEmpty
+    assertThat(field.filter?.staticOptions).hasSize(2)
+    assertThat(field.filter?.staticOptions).isEqualTo(
+      listOf(
+        FilterOption("static1", "static1"),
+        FilterOption("static2", "static2"),
+      ),
+    )
+    assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
+  }
+
+  @Test
+  fun `getting single report with dynamic options maps full data correctly and generates dynamic options in the result when returnAsStaticOptions is false`() {
+    val reportWithDynamicFilter = Report(
+      id = "21",
+      name = "22",
+      description = "23",
+      created = LocalDate.MAX,
+      version = "24",
+      dataset = "\$ref:10",
+      policy = listOf("25"),
+      render = RenderMethod.PDF,
+      schedule = "26",
+      specification = Specification(
+        template = "27",
+        field = listOf(
+          ReportField(
+            name = "\$ref:13",
+            display = "14",
+            wordWrap = WordWrap.None,
+            filter = FilterDefinition(
+              type = FilterType.AutoComplete,
+              // Minimum length is not really used here as there is no prefix parameter.
+              dynamicOptions = DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = false),
+            ),
+            sortable = true,
+            defaultSort = true,
+            formula = null,
+            visible = true,
+          ),
+        ),
+      ),
+      destination = listOf(singletonMap("28", "29")), classification = "someClassification",
+    )
+
+    val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
+
+    val mapper = ReportDefinitionMapper(configuredApiService)
+
+    whenever(
+      configuredApiService.validateAndFetchData(
+        fullSingleProductDefinition.id,
+        reportWithDynamicFilter.id, emptyMap(), 1, 10, "13", true, caseLoads, "13",
+      ),
+    ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
+
+    val result = mapper.map(fullSingleProductDefinition, caseLoads)
+
+    assertThat(result).isNotNull
+    assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
+    assertThat(result.name).isEqualTo(fullSingleProductDefinition.name)
+    assertThat(result.description).isEqualTo(fullSingleProductDefinition.description)
+
+    val variant = result.variant
+
+    assertThat(variant.id).isEqualTo(fullSingleProductDefinition.report.id)
+    assertThat(variant.name).isEqualTo(fullSingleProductDefinition.report.name)
+    assertThat(variant.resourceName).isEqualTo("reports/${fullSingleProductDefinition.id}/${fullSingleProductDefinition.report.id}")
+    assertThat(variant.description).isEqualTo(fullSingleProductDefinition.report.description)
+    assertThat(variant.specification).isNotNull
+    assertThat(variant.specification?.template).isEqualTo(fullSingleProductDefinition.report.specification?.template)
+    assertThat(variant.specification?.fields).isNotEmpty
+    assertThat(variant.specification?.fields).hasSize(1)
+
+    val field = variant.specification!!.fields.first()
+    val sourceSchemaField = fullSingleProductDefinition.dataset.schema.field.first()
+    val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
+
+    assertThat(field.name).isEqualTo(sourceSchemaField.name)
+    assertThat(field.display).isEqualTo(sourceReportField.display)
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
+    assertThat(field.filter).isNotNull
+    assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
+
+    assertThat(field.filter?.staticOptions).isNull()
+    assertThat(field.filter?.dynamicOptions).isEqualTo(DynamicFilterOption(2, false))
+    assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
+    verifyNoInteractions(configuredApiService)
   }
 
   private fun getExpectedDate(offset: Long, magnitude: ChronoUnit): String? {

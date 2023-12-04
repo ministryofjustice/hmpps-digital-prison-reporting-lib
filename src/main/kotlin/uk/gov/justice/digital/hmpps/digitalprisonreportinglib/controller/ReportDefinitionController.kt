@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
 
 @Validated
@@ -31,8 +32,9 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     )
     @RequestParam("renderMethod")
     renderMethod: RenderMethod?,
+    authentication: AuthAwareAuthenticationToken,
   ): List<ReportDefinition> {
-    return reportDefinitionService.getListForUser(renderMethod)
+    return reportDefinitionService.getListForUser(renderMethod, authentication.getCaseLoads())
   }
 
   @GetMapping("/definitions/{reportId}/{variantId}")
@@ -53,7 +55,8 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     )
     @PathVariable("variantId")
     variantId: String,
+    authentication: AuthAwareAuthenticationToken,
   ): SingleVariantReportDefinition {
-    return reportDefinitionService.getDefinition(reportId, variantId)
+    return reportDefinitionService.getDefinition(reportId, variantId, authentication.getCaseLoads())
   }
 }
