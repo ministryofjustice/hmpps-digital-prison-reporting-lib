@@ -29,34 +29,40 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
   val todayRegex: Regex = Regex("today\\(\\)")
   val dateRegex: Regex = Regex("today\\((-?\\d+), ?([a-z]+)\\)", RegexOption.IGNORE_CASE)
 
-  fun map(productDefinition: ProductDefinition, renderMethod: RenderMethod?, caseLoads: List<String>): ReportDefinition = ReportDefinition(
+  fun map(
+    productDefinition: ProductDefinition,
+    renderMethod: RenderMethod?,
+    maxStaticOptions: Long,
+    caseLoads: List<String>,
+  ): ReportDefinition = ReportDefinition(
     id = productDefinition.id,
     name = productDefinition.name,
     description = productDefinition.description,
     variants = productDefinition.report
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(productDefinition.id, it, productDefinition.dataset, caseLoads) },
+      .map { map(productDefinition.id, it, productDefinition.dataset, maxStaticOptions, caseLoads) },
   )
 
-  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, caseloads: List<String>): VariantDefinition {
+  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, caseloads: List<String>): VariantDefinition {
     val dataSetRef = report.dataset.removePrefix("\$ref:")
     val dataSet = datasets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
 
-    return map(report, dataSet, productDefinitionId, caseloads)
+    return map(report, dataSet, productDefinitionId, maxStaticOptions, caseloads)
   }
 
   private fun map(
     report: Report,
     dataSet: Dataset,
     productDefinitionId: String,
+    maxStaticOptions: Long,
     caseLoads: List<String>,
   ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
       name = report.name,
       description = report.description,
-      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, caseLoads),
+      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, maxStaticOptions, caseLoads),
       resourceName = "reports/$productDefinitionId/${report.id}",
     )
   }
@@ -66,6 +72,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     schemaFields: List<SchemaField>,
     productDefinitionId: String,
     reportVariantId: String,
+    maxStaticOptions: Long,
     caseLoads: List<String>,
   ): Specification? {
     if (specification == null) {
@@ -74,7 +81,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
     return Specification(
       template = specification.template,
-      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, caseLoads) },
+      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, maxStaticOptions, caseLoads) },
     )
   }
 
@@ -83,6 +90,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     schemaFields: List<SchemaField>,
     productDefinitionId: String,
     reportVariantId: String,
+    maxStaticOptions: Long,
     caseLoads: List<String>,
   ): FieldDefinition {
     val schemaFieldRef = field.name.removePrefix("\$ref:")
@@ -93,7 +101,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       name = schemaField.name,
       display = field.display,
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
-      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, caseLoads) },
+      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, maxStaticOptions, caseLoads) },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
       type = schemaField.type.toString().let(FieldType::valueOf),
@@ -105,11 +113,12 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     reportVariantId: String,
     schemaFieldName: String,
+    maxStaticOptions: Long,
     caseLoads: List<String>,
   ): FilterDefinition {
     return FilterDefinition(
       type = FilterType.valueOf(filterDefinition.type.toString()),
-      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, caseLoads),
+      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, maxStaticOptions, caseLoads),
       dynamicOptions = filterDefinition.dynamicOptions,
       defaultValue = replaceTokens(filterDefinition.default),
     )
@@ -120,12 +129,13 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     reportVariantId: String,
     schemaFieldName: String,
+    maxStaticOptions: Long,
     caseLoads: List<String>,
   ): List<FilterOption>? {
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let {
       configuredApiService.validateAndFetchData(
         productDefinitionId,
-        reportVariantId, emptyMap(), 1, 10, schemaFieldName, true, caseLoads, schemaFieldName,
+        reportVariantId, emptyMap(), 1, maxStaticOptions, schemaFieldName, true, caseLoads, schemaFieldName,
       ).flatMap { it.entries }.map { FilterOption(it.value as String, it.value as String) }
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
@@ -154,12 +164,12 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     display = definition.display,
   )
 
-  fun map(definition: SingleReportProductDefinition, caseLoads: List<String>): SingleVariantReportDefinition {
+  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, caseLoads: List<String>): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
       id = definition.id,
       name = definition.name,
       description = definition.description,
-      variant = map(definition.report, definition.dataset, definition.id, caseLoads),
+      variant = map(definition.report, definition.dataset, definition.id, maxStaticOptions, caseLoads),
     )
   }
 }

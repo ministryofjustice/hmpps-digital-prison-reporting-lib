@@ -141,7 +141,12 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Single definition is returned as expected`() {
     val result = webTestClient.get()
-      .uri("/definitions/external-movements/last-month")
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/external-movements/last-month")
+          .queryParam("maxStaticOptions", "15")
+          .build()
+      }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
@@ -238,6 +243,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                                   "minimumLength": 2,
                                   "returnAsStaticOptions": false
                               },
+                              "staticOptions": null,
                                "type": "autocomplete"
                             },
                             "name": "name",
@@ -356,6 +362,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                                   "minimumLength": 2,
                                   "returnAsStaticOptions": false
                               },
+                              "staticOptions": null,
                                "type": "autocomplete"
                             },
                             "name": "name",

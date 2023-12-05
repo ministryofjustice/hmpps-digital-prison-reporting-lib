@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.constraints.Min
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -32,9 +33,16 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     )
     @RequestParam("renderMethod")
     renderMethod: RenderMethod?,
+    @Parameter(
+      description = "This optional parameter sets the maximum number of static options returned when there is a dynamic filter and returnAsStaticOptions is true.",
+      example = "30",
+    )
+    @RequestParam("maxStaticOptions", defaultValue = "20")
+    @Min(1)
+    maxStaticOptions: Long,
     authentication: AuthAwareAuthenticationToken,
   ): List<ReportDefinition> {
-    return reportDefinitionService.getListForUser(renderMethod, authentication.getCaseLoads())
+    return reportDefinitionService.getListForUser(renderMethod, maxStaticOptions, authentication.getCaseLoads())
   }
 
   @GetMapping("/definitions/{reportId}/{variantId}")
@@ -55,8 +63,15 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     )
     @PathVariable("variantId")
     variantId: String,
+    @Parameter(
+      description = "This optional parameter sets the maximum number of static options returned when there is a dynamic filter and returnAsStaticOptions is true.",
+      example = "30",
+    )
+    @RequestParam("maxStaticOptions", defaultValue = "20")
+    @Min(1)
+    maxStaticOptions: Long,
     authentication: AuthAwareAuthenticationToken,
   ): SingleVariantReportDefinition {
-    return reportDefinitionService.getDefinition(reportId, variantId, authentication.getCaseLoads())
+    return reportDefinitionService.getDefinition(reportId, variantId, maxStaticOptions, authentication.getCaseLoads())
   }
 }

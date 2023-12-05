@@ -81,14 +81,14 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any()) } doReturn expectedResult
+      on { map(any(), any(), any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, caseLoads)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, caseLoads)
 
     then(repository).should().getProductDefinitions()
-    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, caseLoads)
+    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, 20, caseLoads)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -112,18 +112,19 @@ class ReportDefinitionServiceTest {
       on { getSingleReportProductDefinition(any(), any()) } doReturn minimalSingleDefinition
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any()) } doReturn expectedResult
+      on { map(any(), any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
     val actualResult = service.getDefinition(
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
+      20,
       caseLoads,
     )
 
     then(repository).should().getSingleReportProductDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
-    then(mapper).should().map(minimalSingleDefinition, caseLoads)
+    then(mapper).should().map(minimalSingleDefinition, 20, caseLoads)
 
     assertThat(actualResult).isNotNull
     assertThat(actualResult).isEqualTo(expectedResult)
@@ -141,11 +142,11 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any()) } doReturn definitionWithNoVariants
+      on { map(any(), any(), any(), any()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, caseLoads)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, caseLoads)
 
     assertThat(actualResult).hasSize(0)
   }
