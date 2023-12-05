@@ -11,6 +11,7 @@ import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import java.time.LocalDate.now
 import java.time.format.DateTimeFormatter
 
@@ -139,328 +140,352 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Single definition is returned as expected`() {
-    val result = webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/definitions/external-movements/last-month")
-          .queryParam("maxStaticOptions", "15")
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody<SingleVariantReportDefinition>()
-      .returnResult()
+  fun `Single definition is returned as expected limiting the static options results to maxStaticOptions`() {
+    try {
+      prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+      externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
 
-    assertThat(result.responseBody).isNotNull
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements/last-month")
+            .queryParam("maxStaticOptions", "1")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<SingleVariantReportDefinition>()
+        .returnResult()
 
-    val definition = result.responseBody!!
+      assertThat(result.responseBody).isNotNull
 
-    assertThat(definition.name).isEqualTo("External Movements")
-    assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-    assertThat(definition.variant).isNotNull
+      val definition = result.responseBody!!
 
-    val lastMonthVariant = definition.variant
+      assertThat(definition.name).isEqualTo("External Movements")
+      assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
+      assertThat(definition.variant).isNotNull
 
-    assertThat(lastMonthVariant.id).isEqualTo("last-month")
-    assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
-    assertThat(lastMonthVariant.name).isEqualTo("Last month")
-    assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
-    assertThat(lastMonthVariant.specification).isNotNull
-    assertThat(lastMonthVariant.specification?.fields).hasSize(8)
+      val lastMonthVariant = definition.variant
 
-    val directionField = lastMonthVariant.specification?.fields?.find { it.name == "direction" }
+      assertThat(lastMonthVariant.id).isEqualTo("last-month")
+      assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
+      assertThat(lastMonthVariant.name).isEqualTo("Last month")
+      assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+      assertThat(lastMonthVariant.specification).isNotNull
+      assertThat(lastMonthVariant.specification?.fields).hasSize(8)
 
-    assertThat(directionField).isNotNull
-    assertThat(directionField!!.filter).isNotNull
-    assertThat(directionField.filter!!.type).isEqualTo(FilterType.Radio)
-    assertThat(directionField.filter!!.staticOptions).isNotNull
-    assertThat(directionField.filter!!.staticOptions).hasSize(2)
-    assertThat(directionField.filter!!.staticOptions!![0].name).isEqualTo("in")
-    assertThat(directionField.filter!!.staticOptions!![0].display).isEqualTo("In")
-    assertThat(directionField.filter!!.staticOptions!![1].name).isEqualTo("out")
-    assertThat(directionField.filter!!.staticOptions!![1].display).isEqualTo("Out")
+      val directionField = lastMonthVariant.specification?.fields?.find { it.name == "direction" }
 
-    val dateField = lastMonthVariant.specification?.fields?.find { it.name == "date" }
+      assertThat(directionField).isNotNull
+      assertThat(directionField!!.filter).isNotNull
+      assertThat(directionField.filter!!.type).isEqualTo(FilterType.Radio)
+      assertThat(directionField.filter!!.staticOptions).isNotNull
+      assertThat(directionField.filter!!.staticOptions).hasSize(2)
+      assertThat(directionField.filter!!.staticOptions!![0].name).isEqualTo("in")
+      assertThat(directionField.filter!!.staticOptions!![0].display).isEqualTo("In")
+      assertThat(directionField.filter!!.staticOptions!![1].name).isEqualTo("out")
+      assertThat(directionField.filter!!.staticOptions!![1].display).isEqualTo("Out")
 
-    assertThat(dateField).isNotNull
-    assertThat(dateField!!.filter).isNotNull
-    assertThat(dateField.filter!!.type).isEqualTo(FilterType.DateRange)
-    val lastMonth = now().minusMonths(1).format(DateTimeFormatter.ISO_DATE)
-    val thisMonth = now().format(DateTimeFormatter.ISO_DATE)
-    assertThat(dateField.filter!!.defaultValue).isEqualTo("$lastMonth - $thisMonth")
+      val dateField = lastMonthVariant.specification?.fields?.find { it.name == "date" }
 
-    val reasonField = lastMonthVariant.specification?.fields?.find { it.name == "reason" }
-    assertThat(reasonField).isNotNull
-    assertThat(reasonField!!.filter).isNotNull
-    assertThat(reasonField.filter!!.type).isEqualTo(FilterType.AutoComplete)
-    assertThat(reasonField.filter!!.staticOptions).isNotNull
-    assertThat(reasonField.filter!!.staticOptions).hasSize(1)
-    assertThat(reasonField.filter!!.staticOptions!![0].name).isEqualTo("Transfer Out to Other Establishment")
-    assertThat(reasonField.filter!!.staticOptions!![0].display).isEqualTo("Transfer Out to Other Establishment")
+      assertThat(dateField).isNotNull
+      assertThat(dateField!!.filter).isNotNull
+      assertThat(dateField.filter!!.type).isEqualTo(FilterType.DateRange)
+      val lastMonth = now().minusMonths(1).format(DateTimeFormatter.ISO_DATE)
+      val thisMonth = now().format(DateTimeFormatter.ISO_DATE)
+      assertThat(dateField.filter!!.defaultValue).isEqualTo("$lastMonth - $thisMonth")
+
+      val reasonField = lastMonthVariant.specification?.fields?.find { it.name == "reason" }
+      assertThat(reasonField).isNotNull
+      assertThat(reasonField!!.filter).isNotNull
+      assertThat(reasonField.filter!!.type).isEqualTo(FilterType.AutoComplete)
+      assertThat(reasonField.filter!!.staticOptions).isNotNull
+      assertThat(reasonField.filter!!.staticOptions).hasSize(1)
+      assertThat(reasonField.filter!!.staticOptions!![0].name).isEqualTo("Transfer In from Other Establishment")
+      assertThat(reasonField.filter!!.staticOptions!![0].display).isEqualTo("Transfer In from Other Establishment")
+    } finally {
+      externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+    }
   }
 
   @Test
   fun `the json response from the definitions endpoint is returned with the expected format`() {
-    webTestClient.get()
-      .uri("/definitions")
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        """
-        [
-    {
-        "description": "Reports about prisoner external movements",
-        "id": "external-movements",
-        "name": "External Movements",
-        "variants": [
-            {
-                "description": "All movements in the past month",
-                "id": "last-month",
-                "name": "Last month",
-                "resourceName": "reports/external-movements/last-month",
-                "specification": {
-                    "fields": [
-                        {
-                            "defaultsort": false,
-                            "display": "Prison Number",
-                            "filter": null,
-                            "name": "prisonNumber",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Name",
-                            "filter": {   
-                               "dynamicOptions": {
-                                  "minimumLength": 2,
-                                  "returnAsStaticOptions": false
-                              },
-                              "staticOptions": null,
-                               "type": "autocomplete"
-                            },
-                            "name": "name",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": "None"
-                        },
-                        {
-                            "defaultsort": true,
-                            "display": "Date",
-                            "filter": {
-                                "staticOptions": null,
-                                "type": "daterange"
-                            },
-                            "name": "date",
-                            "sortable": true,
-                            "type": "date",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "From",
-                            "filter": null,
-                            "name": "origin",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": "None"
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "To",
-                            "filter": null,
-                            "name": "destination",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": "None"
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Direction",
-                            "filter": {
-                                "defaultValue": null,
-                                "staticOptions": [
-                                    {
-                                        "display": "In",
-                                        "name": "in"
-                                    },
-                                    {
-                                        "display": "Out",
-                                        "name": "out"
-                                    }
-                                ],
-                                "type": "Radio"
-                            },
-                            "name": "direction",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Type",
-                            "filter": null,
-                            "name": "type",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Reason",
-                            "filter": {
-                                "type": "autocomplete",
-                                "dynamicOptions": {
+    try {
+      prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+      externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+
+      webTestClient.get()
+        .uri("/definitions")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          """
+          [
+      {
+          "description": "Reports about prisoner external movements",
+          "id": "external-movements",
+          "name": "External Movements",
+          "variants": [
+              {
+                  "description": "All movements in the past month",
+                  "id": "last-month",
+                  "name": "Last month",
+                  "resourceName": "reports/external-movements/last-month",
+                  "specification": {
+                      "fields": [
+                          {
+                              "defaultsort": false,
+                              "display": "Prison Number",
+                              "filter": null,
+                              "name": "prisonNumber",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Name",
+                              "filter": {   
+                                 "dynamicOptions": {
                                     "minimumLength": 2,
-                                    "returnAsStaticOptions": true
+                                    "returnAsStaticOptions": false
                                 },
-                                "staticOptions": [
-                                {
-                                    "display": "Transfer Out to Other Establishment",
-                                    "name": "Transfer Out to Other Establishment"
-                                }
-                              ],
-                              "defaultValue": null
-                            },
-                            "name": "reason",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        }
-                    ],
-                    "template": "list"
-                }
-            },
-            {
-                "description": "All movements in the past week",
-                "id": "last-week",
-                "name": "Last week",
-                "resourceName": "reports/external-movements/last-week",
-                "specification": {
-                    "fields": [
-                        {
-                            "defaultsort": false,
-                            "display": "Prison Number",
-                            "filter": null,
-                            "name": "prisonNumber",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Name",
-                            "filter": {   
-                               "dynamicOptions": {
-                                  "minimumLength": 2,
-                                  "returnAsStaticOptions": false
-                              },
-                              "staticOptions": null,
-                               "type": "autocomplete"
-                            },
-                            "name": "name",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": "None"
-                        },
-                        {
-                            "defaultsort": true,
-                            "display": "Date",
-                            "filter": {
                                 "staticOptions": null,
-                                "type": "daterange"
-                            },
-                            "name": "date",
-                            "sortable": true,
-                            "type": "date",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "From",
-                            "filter": null,
-                            "name": "origin",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": "None"
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "To",
-                            "filter": null,
-                            "name": "destination",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": "None"
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Direction",
-                            "filter": {
-                                "defaultValue": null,
-                                "staticOptions": [
-                                    {
-                                        "display": "In",
-                                        "name": "in"
-                                    },
-                                    {
-                                        "display": "Out",
-                                        "name": "out"
-                                    }
+                                 "type": "autocomplete"
+                              },
+                              "name": "name",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": "None"
+                          },
+                          {
+                              "defaultsort": true,
+                              "display": "Date",
+                              "filter": {
+                                  "staticOptions": null,
+                                  "type": "daterange"
+                              },
+                              "name": "date",
+                              "sortable": true,
+                              "type": "date",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "From",
+                              "filter": null,
+                              "name": "origin",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": "None"
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "To",
+                              "filter": null,
+                              "name": "destination",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": "None"
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Direction",
+                              "filter": {
+                                  "defaultValue": null,
+                                  "staticOptions": [
+                                      {
+                                          "display": "In",
+                                          "name": "in"
+                                      },
+                                      {
+                                          "display": "Out",
+                                          "name": "out"
+                                      }
+                                  ],
+                                  "type": "Radio"
+                              },
+                              "name": "direction",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Type",
+                              "filter": null,
+                              "name": "type",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Reason",
+                              "filter": {
+                                  "type": "autocomplete",
+                                  "dynamicOptions": {
+                                      "minimumLength": 2,
+                                      "returnAsStaticOptions": true
+                                  },
+                                  "staticOptions": [
+                                  {
+                                        "name": "Transfer In from Other Establishment",
+                                        "display": "Transfer In from Other Establishment"
+                                  },
+                                  {
+                                      "display": "Transfer Out to Other Establishment",
+                                      "name": "Transfer Out to Other Establishment"
+                                  }
                                 ],
-                                "type": "Radio"
-                            },
-                            "name": "direction",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Type",
-                            "filter": null,
-                            "name": "type",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        },
-                        {
-                            "defaultsort": false,
-                            "display": "Reason",
-                            "filter": {
-                                "type": "autocomplete",
-                                "dynamicOptions": {
+                                "defaultValue": null
+                              },
+                              "name": "reason",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          }
+                      ],
+                      "template": "list"
+                  }
+              },
+              {
+                  "description": "All movements in the past week",
+                  "id": "last-week",
+                  "name": "Last week",
+                  "resourceName": "reports/external-movements/last-week",
+                  "specification": {
+                      "fields": [
+                          {
+                              "defaultsort": false,
+                              "display": "Prison Number",
+                              "filter": null,
+                              "name": "prisonNumber",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Name",
+                              "filter": {   
+                                 "dynamicOptions": {
                                     "minimumLength": 2,
-                                    "returnAsStaticOptions": true
+                                    "returnAsStaticOptions": false
                                 },
-                                "staticOptions": [
-                                {
-                                    "display": "Transfer Out to Other Establishment",
-                                    "name": "Transfer Out to Other Establishment"
-                                }
-                              ],
-                              "defaultValue": null
-                            },
-                            "name": "reason",
-                            "sortable": true,
-                            "type": "string",
-                            "wordWrap": null
-                        }
-                    ],
-                    "template": "list"
-                }
-            }
-        ]
+                                "staticOptions": null,
+                                 "type": "autocomplete"
+                              },
+                              "name": "name",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": "None"
+                          },
+                          {
+                              "defaultsort": true,
+                              "display": "Date",
+                              "filter": {
+                                  "staticOptions": null,
+                                  "type": "daterange"
+                              },
+                              "name": "date",
+                              "sortable": true,
+                              "type": "date",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "From",
+                              "filter": null,
+                              "name": "origin",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": "None"
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "To",
+                              "filter": null,
+                              "name": "destination",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": "None"
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Direction",
+                              "filter": {
+                                  "defaultValue": null,
+                                  "staticOptions": [
+                                      {
+                                          "display": "In",
+                                          "name": "in"
+                                      },
+                                      {
+                                          "display": "Out",
+                                          "name": "out"
+                                      }
+                                  ],
+                                  "type": "Radio"
+                              },
+                              "name": "direction",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Type",
+                              "filter": null,
+                              "name": "type",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          },
+                          {
+                              "defaultsort": false,
+                              "display": "Reason",
+                              "filter": {
+                                  "type": "autocomplete",
+                                  "dynamicOptions": {
+                                      "minimumLength": 2,
+                                      "returnAsStaticOptions": true
+                                  },
+                                  "staticOptions": [
+                                  {
+                                        "name": "Transfer In from Other Establishment",
+                                        "display": "Transfer In from Other Establishment"
+                                  },
+                                  {
+                                      "display": "Transfer Out to Other Establishment",
+                                      "name": "Transfer Out to Other Establishment"
+                                  }
+                                ],
+                                "defaultValue": null
+                              },
+                              "name": "reason",
+                              "sortable": true,
+                              "type": "string",
+                              "wordWrap": null
+                          }
+                      ],
+                      "template": "list"
+                  }
+              }
+          ]
+      }
+  ]
+      """,
+        )
+    } finally {
+      externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
     }
-]
-    """,
-      )
   }
 }
