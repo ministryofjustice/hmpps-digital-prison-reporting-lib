@@ -67,7 +67,6 @@ abstract class IntegrationTestBase {
     private val postgreSQLContainer = PostgreSQLContainer<Nothing>("postgres:latest")
 
     @DynamicPropertySource
-    @JvmStatic
     fun registerDynamicProperties(registry: DynamicPropertyRegistry) {
       registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl)
       registry.add("spring.datasource.username", postgreSQLContainer::getUsername)
