@@ -75,19 +75,20 @@ class ReportDefinitionServiceTest {
         ),
       ),
     )
+    val caseLoads = listOf("caseLoad")
 
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any()) } doReturn expectedResult
+      on { map(any(), any(), any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, caseLoads)
 
     then(repository).should().getProductDefinitions()
-    then(mapper).should().map(minimalDefinition, RenderMethod.HTML)
+    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, 20, caseLoads)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -105,19 +106,25 @@ class ReportDefinitionServiceTest {
         resourceName = "3",
       ),
     )
+    val caseLoads = listOf("caseLoad")
 
     val repository = mock<ProductDefinitionRepository> {
       on { getSingleReportProductDefinition(any(), any()) } doReturn minimalSingleDefinition
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any()) } doReturn expectedResult
+      on { map(any(), any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
+    val actualResult = service.getDefinition(
+      minimalSingleDefinition.id,
+      minimalSingleDefinition.report.id,
+      20,
+      caseLoads,
+    )
 
     then(repository).should().getSingleReportProductDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
-    then(mapper).should().map(minimalSingleDefinition)
+    then(mapper).should().map(minimalSingleDefinition, 20, caseLoads)
 
     assertThat(actualResult).isNotNull
     assertThat(actualResult).isEqualTo(expectedResult)
@@ -130,15 +137,16 @@ class ReportDefinitionServiceTest {
       name = "2",
       variants = emptyList(),
     )
+    val caseLoads = listOf("caseLoad")
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any()) } doReturn definitionWithNoVariants
+      on { map(any(), any(), any(), any()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, caseLoads)
 
     assertThat(actualResult).hasSize(0)
   }

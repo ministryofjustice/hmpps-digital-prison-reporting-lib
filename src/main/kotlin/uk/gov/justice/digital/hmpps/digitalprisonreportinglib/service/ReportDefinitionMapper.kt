@@ -18,43 +18,51 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
 
 @Component
-class ReportDefinitionMapper {
+class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
   val todayRegex: Regex = Regex("today\\(\\)")
   val dateRegex: Regex = Regex("today\\((-?\\d+), ?([a-z]+)\\)", RegexOption.IGNORE_CASE)
 
-  fun map(productDefinition: ProductDefinition, renderMethod: RenderMethod?): ReportDefinition = ReportDefinition(
+  fun map(
+    productDefinition: ProductDefinition,
+    renderMethod: RenderMethod?,
+    maxStaticOptions: Long,
+    caseLoads: List<String>,
+  ): ReportDefinition = ReportDefinition(
     id = productDefinition.id,
     name = productDefinition.name,
     description = productDefinition.description,
     variants = productDefinition.report
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(productDefinition.id, it, productDefinition.dataset) },
+      .map { map(productDefinition.id, it, productDefinition.dataset, maxStaticOptions, caseLoads) },
   )
 
-  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>): VariantDefinition {
+  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, caseloads: List<String>): VariantDefinition {
     val dataSetRef = report.dataset.removePrefix("\$ref:")
     val dataSet = datasets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
 
-    return map(report, dataSet, productDefinitionId)
+    return map(report, dataSet, productDefinitionId, maxStaticOptions, caseloads)
   }
 
   private fun map(
     report: Report,
     dataSet: Dataset,
     productDefinitionId: String,
+    maxStaticOptions: Long,
+    caseLoads: List<String>,
   ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
       name = report.name,
       description = report.description,
-      specification = map(report.specification, dataSet.schema.field),
+      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, maxStaticOptions, caseLoads),
       resourceName = "reports/$productDefinitionId/${report.id}",
     )
   }
@@ -62,7 +70,10 @@ class ReportDefinitionMapper {
   private fun map(
     specification: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification?,
     schemaFields: List<SchemaField>,
-
+    productDefinitionId: String,
+    reportVariantId: String,
+    maxStaticOptions: Long,
+    caseLoads: List<String>,
   ): Specification? {
     if (specification == null) {
       return null
@@ -70,11 +81,18 @@ class ReportDefinitionMapper {
 
     return Specification(
       template = specification.template,
-      fields = specification.field.map { map(it, schemaFields) },
+      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, maxStaticOptions, caseLoads) },
     )
   }
 
-  private fun map(field: ReportField, schemaFields: List<SchemaField>): FieldDefinition {
+  private fun map(
+    field: ReportField,
+    schemaFields: List<SchemaField>,
+    productDefinitionId: String,
+    reportVariantId: String,
+    maxStaticOptions: Long,
+    caseLoads: List<String>,
+  ): FieldDefinition {
     val schemaFieldRef = field.name.removePrefix("\$ref:")
     val schemaField = schemaFields.find { it.name == schemaFieldRef }
       ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRef'")
@@ -83,19 +101,44 @@ class ReportDefinitionMapper {
       name = schemaField.name,
       display = field.display,
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
-      filter = field.filter?.let(this::map),
+      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, maxStaticOptions, caseLoads) },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
       type = schemaField.type.toString().let(FieldType::valueOf),
     )
   }
 
-  private fun map(definition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition): FilterDefinition = FilterDefinition(
-    type = FilterType.valueOf(definition.type.toString()),
-    staticOptions = definition.staticOptions?.map(this::map),
-    dynamicOptions = definition.dynamicOptions,
-    defaultValue = replaceTokens(definition.default),
-  )
+  private fun map(
+    filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
+    productDefinitionId: String,
+    reportVariantId: String,
+    schemaFieldName: String,
+    maxStaticOptions: Long,
+    caseLoads: List<String>,
+  ): FilterDefinition {
+    return FilterDefinition(
+      type = FilterType.valueOf(filterDefinition.type.toString()),
+      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, maxStaticOptions, caseLoads),
+      dynamicOptions = filterDefinition.dynamicOptions,
+      defaultValue = replaceTokens(filterDefinition.default),
+    )
+  }
+
+  private fun populateStaticOptions(
+    filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
+    productDefinitionId: String,
+    reportVariantId: String,
+    schemaFieldName: String,
+    maxStaticOptions: Long,
+    caseLoads: List<String>,
+  ): List<FilterOption>? {
+    return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let {
+      configuredApiService.validateAndFetchData(
+        productDefinitionId,
+        reportVariantId, emptyMap(), 1, maxStaticOptions, schemaFieldName, true, caseLoads, schemaFieldName,
+      ).flatMap { it.entries }.map { FilterOption(it.value as String, it.value as String) }
+    } ?: filterDefinition.staticOptions?.map(this::map)
+  }
 
   private fun replaceTokens(defaultValue: String?): String? {
     if (defaultValue == null) {
@@ -116,17 +159,17 @@ class ReportDefinitionMapper {
     return result
   }
 
-  private fun map(definition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption): FilterOption = FilterOption(
+  private fun map(definition: StaticFilterOption): FilterOption = FilterOption(
     name = definition.name,
     display = definition.display,
   )
 
-  fun map(definition: SingleReportProductDefinition): SingleVariantReportDefinition {
+  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, caseLoads: List<String>): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
       id = definition.id,
       name = definition.name,
       description = definition.description,
-      variant = map(definition.report, definition.dataset, definition.id),
+      variant = map(definition.report, definition.dataset, definition.id, maxStaticOptions, caseLoads),
     )
   }
 }

@@ -2,17 +2,14 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DATE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DESTINATION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DESTINATION_CODE
@@ -24,27 +21,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.REASON
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.TYPE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var externalMovementRepository: ExternalMovementRepository
-
-  @Autowired
-  lateinit var prisonerRepository: PrisonerRepository
-
-  @BeforeEach
-  override fun setup() {
-    super.setup()
-    ConfiguredApiRepositoryTest.AllMovements.allExternalMovements.forEach {
-      externalMovementRepository.save(it)
-    }
-    ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners.forEach {
-      prisonerRepository.save(it)
-    }
-  }
 
   @Test
   fun `Configured API returns value from the repository`() {

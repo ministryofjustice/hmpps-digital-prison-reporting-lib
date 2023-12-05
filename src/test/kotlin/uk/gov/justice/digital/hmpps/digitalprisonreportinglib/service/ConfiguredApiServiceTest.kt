@@ -739,7 +739,7 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception when having a prefix with more characters than the minimum length`() {
+  fun `validateAndFetchData should throw an exception when having a prefix with fewer characters than the minimum length`() {
     val reportVariantId = "last-month"
     val selectedPage = 1L
     val pageSize = 10L
