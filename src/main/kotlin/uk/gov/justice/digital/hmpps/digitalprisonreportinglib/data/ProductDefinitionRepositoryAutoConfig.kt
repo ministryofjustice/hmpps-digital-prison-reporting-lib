@@ -13,10 +13,10 @@ class ProductDefinitionRepositoryAutoConfig(
   @Bean
   @ConditionalOnMissingBean(ProductDefinitionRepository::class)
   fun productDefinitionRepository(
-    localDateTypeAdaptor: LocalDateTypeAdaptor,
+    localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
   ): ProductDefinitionRepository {
     return JsonFileProductDefinitionRepository(
-      localDateTypeAdaptor,
+      localDateTimeTypeAdaptor,
       definitionResourceLocations,
       FilterTypeDeserializer(),
       SchemaFieldTypeDeserializer(),
@@ -24,8 +24,8 @@ class ProductDefinitionRepositoryAutoConfig(
   }
 
   @Bean
-  @ConditionalOnMissingBean(LocalDateTypeAdaptor::class)
-  fun localDateTypeAdaptor(): LocalDateTypeAdaptor {
-    return IsoLocalDateTypeAdaptor()
+  @ConditionalOnMissingBean(LocalDateTimeTypeAdaptor::class)
+  fun localDateTimeTypeAdaptor(): LocalDateTimeTypeAdaptor {
+    return IsoLocalDateTimeTypeAdaptor()
   }
 }

@@ -7,10 +7,10 @@ import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 class JsonFileProductDefinitionRepository(
-  private val localDateTypeAdaptor: LocalDateTypeAdaptor,
+  private val localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
   private val resourceLocations: List<String>,
   private val filterTypeDeserializer: FilterTypeDeserializer,
   private val schemaFieldTypeDeserializer: SchemaFieldTypeDeserializer,
@@ -18,7 +18,7 @@ class JsonFileProductDefinitionRepository(
 
   override fun getProductDefinitions(): List<ProductDefinition> {
     val gson: Gson = GsonBuilder()
-      .registerTypeAdapter(LocalDate::class.java, localDateTypeAdaptor)
+      .registerTypeAdapter(LocalDateTime::class.java, localDateTimeTypeAdaptor)
       .registerTypeAdapter(FilterType::class.java, filterTypeDeserializer)
       .registerTypeAdapter(ParameterType::class.java, schemaFieldTypeDeserializer)
       .create()
