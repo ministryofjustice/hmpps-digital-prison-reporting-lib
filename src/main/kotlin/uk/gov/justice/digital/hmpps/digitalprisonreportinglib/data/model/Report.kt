@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class Report(
   val id: String,
   val name: String,
   val description: String? = null,
-  val created: LocalDate,
+  val created: LocalDateTime,
   val version: String,
   val dataset: String,
   val policy: List<String> = emptyList(),

@@ -6,17 +6,16 @@ import com.google.gson.JsonParseException
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import java.lang.reflect.Type
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class IsoLocalDateTypeAdaptor : LocalDateTypeAdaptor {
-  private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+class IsoLocalDateTimeTypeAdaptor : LocalDateTimeTypeAdaptor {
   override fun serialize(
-    date: LocalDate?,
+    date: LocalDateTime?,
     typeOfSrc: Type?,
     context: JsonSerializationContext?,
   ): JsonElement {
-    return JsonPrimitive(date?.format(formatter))
+    return JsonPrimitive(date?.format(DateTimeFormatter.ISO_DATE_TIME))
   }
 
   @Throws(JsonParseException::class)
@@ -24,7 +23,7 @@ class IsoLocalDateTypeAdaptor : LocalDateTypeAdaptor {
     json: JsonElement,
     typeOfT: Type?,
     context: JsonDeserializationContext?,
-  ): LocalDate {
-    return LocalDate.parse(json.asString, formatter)
+  ): LocalDateTime {
+    return LocalDateTime.parse(json.asString, DateTimeFormatter.ISO_DATE_TIME)
   }
 }

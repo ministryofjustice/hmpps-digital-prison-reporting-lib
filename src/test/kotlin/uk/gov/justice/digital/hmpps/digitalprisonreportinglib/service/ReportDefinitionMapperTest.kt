@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specifi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.Collections.singletonMap
@@ -57,7 +58,7 @@ class ReportDefinitionMapperTest {
     id = "21",
     name = "22",
     description = "23",
-    created = LocalDate.MAX,
+    created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
     policy = listOf("25"),
@@ -208,7 +209,7 @@ class ReportDefinitionMapperTest {
         Report(
           id = "6",
           name = "7",
-          created = LocalDate.MAX,
+          created = LocalDateTime.MAX,
           version = "8",
           dataset = "\$ref:9",
           render = RenderMethod.SVG,
@@ -249,7 +250,7 @@ class ReportDefinitionMapperTest {
         Report(
           id = "13",
           name = "14",
-          created = LocalDate.MAX,
+          created = LocalDateTime.MAX,
           version = "15",
           dataset = "\$ref:10",
           render = RenderMethod.SVG,
@@ -258,7 +259,7 @@ class ReportDefinitionMapperTest {
         Report(
           id = "16",
           name = "17",
-          created = LocalDate.MAX,
+          created = LocalDateTime.MAX,
           version = "18",
           dataset = "\$ref:10",
           render = RenderMethod.HTML,
@@ -377,7 +378,7 @@ class ReportDefinitionMapperTest {
       id = "21",
       name = "22",
       description = "23",
-      created = LocalDate.MAX,
+      created = LocalDateTime.MAX,
       version = "24",
       dataset = "\$ref:10",
       policy = listOf("25"),
@@ -461,7 +462,7 @@ class ReportDefinitionMapperTest {
       id = "21",
       name = "22",
       description = "23",
-      created = LocalDate.MAX,
+      created = LocalDateTime.MAX,
       version = "24",
       dataset = "\$ref:10",
       policy = listOf("25"),
@@ -574,7 +575,7 @@ class ReportDefinitionMapperTest {
         Report(
           id = "16",
           name = "17",
-          created = LocalDate.MAX,
+          created = LocalDateTime.MAX,
           version = "18",
           dataset = "\$ref:10",
           render = RenderMethod.HTML,

@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderM
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
 
@@ -40,7 +40,7 @@ class ReportDefinitionServiceTest {
     report = Report(
       id = "3",
       name = "4",
-      created = LocalDate.now(),
+      created = LocalDateTime.now(),
       version = "5",
       dataset = "\$ref:10",
       render = HTML,
