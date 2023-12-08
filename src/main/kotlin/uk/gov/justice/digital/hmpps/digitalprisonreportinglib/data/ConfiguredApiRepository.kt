@@ -75,7 +75,7 @@ class ConfiguredApiRepository {
   ): Long {
     val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, userCaseloads, caseloadFields, reportId)
     return jdbcTemplate.queryForList(
-      "SELECT count(*) as total FROM ($query) Q $whereClause",
+      "SELECT count(1) as total FROM ($query) Q $whereClause",
       preparedStatementNamedParams,
     ).first()?.get("total") as Long
   }
