@@ -162,7 +162,6 @@
     "id" : "last-week",
     "name" : "Last week",
     "description" : "All movements in the past week",
-    "created" : "2023-09-20T14:41:00.000Z",
     "classification": "report classification",
     "version" : "1.2.3",
     "dataset" : "$ref:external-movements",

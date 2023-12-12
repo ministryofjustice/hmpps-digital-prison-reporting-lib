@@ -6,7 +6,7 @@ data class Report(
   val id: String,
   val name: String,
   val description: String? = null,
-  val created: LocalDateTime,
+  val created: LocalDateTime?,
   val version: String,
   val dataset: String,
   val policy: List<String> = emptyList(),
