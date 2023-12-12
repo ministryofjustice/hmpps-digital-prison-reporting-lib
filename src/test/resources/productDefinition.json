@@ -54,18 +54,13 @@
   } ],
   "policy": [
     {
-      "id": "case",
+      "id": "caseload",
       "type": "row-level",
+      "action": ["(origin_code=${caseload} AND direction='OUT') OR (destination_code=${caseload} AND direction='IN')"],
       "rule": [
         {
           "effect": "permit",
-          "condition": [
-            {
-              "match": {
-                "fragment": "$caseload"
-              }
-            }
-          ]
+          "condition": []
         }
       ]
     }

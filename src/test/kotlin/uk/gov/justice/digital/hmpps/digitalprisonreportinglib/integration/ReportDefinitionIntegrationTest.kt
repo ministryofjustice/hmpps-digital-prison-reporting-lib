@@ -23,7 +23,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       @JvmStatic
       @DynamicPropertySource
       fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinition.json, productDefinition2.json" }
+        registry.add("dpr.lib.definition.locations") { "productDefinition.json, dpd001-court-hospital-movements.json" }
       }
     }
 
@@ -41,13 +41,13 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(result.responseBody).isNotNull
       assertThat(result.responseBody).hasSize(2)
       assertThat(result.responseBody).first().isNotNull
-      val reportDefinition2 = result.responseBody!![1]
-      assertThat(reportDefinition2).isNotNull
+      val courtAndHospitalMovementsReport = result.responseBody!![1]
+      assertThat(courtAndHospitalMovementsReport).isNotNull
 
       val definition = result.responseBody!!.first()
 
       assertThat(definition.name).isEqualTo("External Movements")
-      assertThat(reportDefinition2.name).isEqualTo("External Movements Duplicate")
+      assertThat(courtAndHospitalMovementsReport.name).isEqualTo("Court & Hospital Movement DPD")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
       assertThat(definition.variants).hasSize(2)
       assertThat(definition.variants[0]).isNotNull
