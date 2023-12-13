@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 
@@ -59,17 +61,23 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     authentication: AuthAwareAuthenticationToken,
+    response: HttpServletResponse,
   ): List<Map<String, Any>> {
-    return configuredApiService.validateAndFetchData(
-      reportId,
-      reportVariantId,
-      filtersOnly(filters),
-      selectedPage,
-      pageSize,
-      sortColumn,
-      sortedAsc,
-      authentication.getCaseLoads(),
-    )
+    return try {
+      configuredApiService.validateAndFetchData(
+        reportId,
+        reportVariantId,
+        filtersOnly(filters),
+        selectedPage,
+        pageSize,
+        sortColumn,
+        sortedAsc,
+        authentication.getCaseLoads(),
+      )
+    } catch (exception: NoDataAvailableException) {
+      response.setHeader("x-no-data-warning", exception.reason)
+      emptyList()
+    }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
@@ -97,23 +105,29 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @NotEmpty
     fieldId: String,
     authentication: AuthAwareAuthenticationToken,
+    response: HttpServletResponse,
   ): List<String> {
-    return configuredApiService.validateAndFetchData(
-      reportId,
-      reportVariantId,
-      filtersOnly(filters),
-      1,
-      pageSize,
-      fieldId,
-      sortedAsc,
-      authentication.getCaseLoads(),
-      fieldId,
-      prefix,
-    ).asSequence()
-      .flatMap {
-        it.asSequence()
-      }.groupBy({ it.key }, { it.value })
-      .values.flatten().map { it.toString() }
+    return try {
+      configuredApiService.validateAndFetchData(
+        reportId,
+        reportVariantId,
+        filtersOnly(filters),
+        1,
+        pageSize,
+        fieldId,
+        sortedAsc,
+        authentication.getCaseLoads(),
+        fieldId,
+        prefix,
+      ).asSequence()
+        .flatMap {
+          it.asSequence()
+        }.groupBy({ it.key }, { it.value })
+        .values.flatten().map { it.toString() }
+    } catch (exception: NoDataAvailableException) {
+      response.setHeader("x-no-data-warning", exception.reason)
+      emptyList()
+    }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")
@@ -131,8 +145,14 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     authentication: AuthAwareAuthenticationToken,
+    response: HttpServletResponse,
   ): Count {
-    return configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.getCaseLoads())
+    return try {
+      configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.getCaseLoads())
+    } catch (exception: NoDataAvailableException) {
+      response.setHeader("x-no-data-warning", exception.reason)
+      Count(0)
+    }
   }
 
   private fun filtersOnly(filters: Map<String, String>): Map<String, String> {
