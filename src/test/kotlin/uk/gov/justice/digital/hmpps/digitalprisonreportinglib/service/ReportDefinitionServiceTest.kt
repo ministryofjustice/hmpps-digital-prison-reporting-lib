@@ -19,6 +19,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderM
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
@@ -32,6 +36,13 @@ class ReportDefinitionServiceTest {
       version = "5",
     ),
     report = emptyList(),
+  )
+
+  private val policy: Policy = Policy(
+    "caseload",
+    ROW_LEVEL,
+    listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
+    listOf(Rule(Effect.PERMIT, emptyList())),
   )
 
   val minimalSingleDefinition = SingleReportProductDefinition(
@@ -60,6 +71,7 @@ class ReportDefinitionServiceTest {
       version = "31",
       owner = "32",
     ),
+    policy = listOf(policy),
   )
 
   @Test

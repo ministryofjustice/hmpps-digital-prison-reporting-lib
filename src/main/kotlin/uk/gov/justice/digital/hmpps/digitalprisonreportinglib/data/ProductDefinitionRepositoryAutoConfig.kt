@@ -20,6 +20,8 @@ class ProductDefinitionRepositoryAutoConfig(
       definitionResourceLocations,
       FilterTypeDeserializer(),
       SchemaFieldTypeDeserializer(),
+      RuleEffectTypeDeserializer(),
+      PolicyTypeDeserializer(),
     )
   }
 

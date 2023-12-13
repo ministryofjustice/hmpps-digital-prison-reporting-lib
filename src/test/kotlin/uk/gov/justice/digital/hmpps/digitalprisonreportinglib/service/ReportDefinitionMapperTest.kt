@@ -27,6 +27,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -61,7 +65,6 @@ class ReportDefinitionMapperTest {
     created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
-    policy = listOf("25"),
     render = RenderMethod.PDF,
     schedule = "26",
     specification = Specification(
@@ -87,7 +90,8 @@ class ReportDefinitionMapperTest {
         ),
       ),
     ),
-    destination = listOf(singletonMap("28", "29")), classification = "someClassification",
+    destination = listOf(singletonMap("28", "29")),
+    classification = "someClassification",
   )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(
@@ -107,6 +111,13 @@ class ReportDefinitionMapperTest {
     report = listOf(fullReport),
   )
 
+  private val policy: Policy = Policy(
+    "caseload",
+    ROW_LEVEL,
+    listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
+    listOf(Rule(Effect.PERMIT, emptyList())),
+  )
+
   private val fullSingleReportProductDefinition: SingleReportProductDefinition = SingleReportProductDefinition(
     id = "1",
     name = "2",
@@ -119,9 +130,10 @@ class ReportDefinitionMapperTest {
       profile = "8",
       dqri = "9",
     ),
-    dataset = fullDataset,
     datasource = fullDatasource,
+    dataset = fullDataset,
     report = fullReport,
+    policy = listOf(policy),
   )
 
   private val configuredApiService: ConfiguredApiService = mock<ConfiguredApiService>()
@@ -381,7 +393,6 @@ class ReportDefinitionMapperTest {
       created = LocalDateTime.MAX,
       version = "24",
       dataset = "\$ref:10",
-      policy = listOf("25"),
       render = RenderMethod.PDF,
       schedule = "26",
       specification = Specification(
@@ -402,7 +413,8 @@ class ReportDefinitionMapperTest {
           ),
         ),
       ),
-      destination = listOf(singletonMap("28", "29")), classification = "someClassification",
+      destination = listOf(singletonMap("28", "29")),
+      classification = "someClassification",
     )
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
@@ -465,7 +477,6 @@ class ReportDefinitionMapperTest {
       created = LocalDateTime.MAX,
       version = "24",
       dataset = "\$ref:10",
-      policy = listOf("25"),
       render = RenderMethod.PDF,
       schedule = "26",
       specification = Specification(
@@ -486,7 +497,8 @@ class ReportDefinitionMapperTest {
           ),
         ),
       ),
-      destination = listOf(singletonMap("28", "29")), classification = "someClassification",
+      destination = listOf(singletonMap("28", "29")),
+      classification = "someClassification",
     )
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
