@@ -48,7 +48,6 @@ class ConfiguredApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
-    // Need to support a list of policies
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return formatToSchemaFieldsCasing(
       configuredApiRepository
