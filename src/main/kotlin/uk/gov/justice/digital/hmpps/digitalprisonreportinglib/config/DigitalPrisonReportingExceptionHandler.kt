@@ -39,6 +39,7 @@ class DigitalPrisonReportingExceptionHandler {
         ),
       )
   }
+
   private fun respondWithBadRequest(e: Exception): ResponseEntity<ErrorResponse> {
     log.info("Validation exception: {}", e.message)
     return ResponseEntity
