@@ -42,7 +42,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
               }
             ]
           }
-    """.trimIndent()
+  """.trimIndent()
 
   @Test
   fun `Configured API returns value from the repository`() {

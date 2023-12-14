@@ -54,10 +54,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         headers = [
           Header(
             name = NO_DATA_WARNING_HEADER_NAME,
-            description = "Provides additional information about why no data has been returned."
-          )
-        ]
-      )
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
     ],
   )
   fun configuredApiDataset(
@@ -92,7 +92,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             sortColumn,
             sortedAsc,
             authentication.getCaseLoads(),
-          )
+          ),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
@@ -114,10 +114,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         headers = [
           Header(
             name = NO_DATA_WARNING_HEADER_NAME,
-            description = "Provides additional information about why no data has been returned."
-          )
-        ]
-      )
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
     ],
   )
   fun configuredApiDynamicFilter(
@@ -145,22 +145,22 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-      configuredApiService.validateAndFetchData(
-        reportId,
-        reportVariantId,
-        filtersOnly(filters),
-        1,
-        pageSize,
-        fieldId,
-        sortedAsc,
-        authentication.getCaseLoads(),
-        fieldId,
-        prefix,
-      ).asSequence()
-        .flatMap {
-          it.asSequence()
-        }.groupBy({ it.key }, { it.value })
-        .values.flatten().map { it.toString() }
+          configuredApiService.validateAndFetchData(
+            reportId,
+            reportVariantId,
+            filtersOnly(filters),
+            1,
+            pageSize,
+            fieldId,
+            sortedAsc,
+            authentication.getCaseLoads(),
+            fieldId,
+            prefix,
+          ).asSequence()
+            .flatMap {
+              it.asSequence()
+            }.groupBy({ it.key }, { it.value })
+            .values.flatten().map { it.toString() },
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
@@ -182,10 +182,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         headers = [
           Header(
             name = NO_DATA_WARNING_HEADER_NAME,
-            description = "Provides additional information about why no data has been returned."
-          )
-        ]
-      )
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
     ],
   )
   fun configuredApiCount(
@@ -203,7 +203,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.getCaseLoads())
+          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.getCaseLoads()),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
