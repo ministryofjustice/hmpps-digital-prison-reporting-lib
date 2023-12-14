@@ -83,25 +83,26 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-      configuredApiService.validateAndFetchData(
-        reportId,
-        reportVariantId,
-        filtersOnly(filters),
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        authentication,
-      ))
-    }catch (exception: NoDataAvailableException) {
-        val headers = HttpHeaders()
-        headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+          configuredApiService.validateAndFetchData(
+            reportId,
+            reportVariantId,
+            filtersOnly(filters),
+            selectedPage,
+            pageSize,
+            sortColumn,
+            sortedAsc,
+            authentication,
+          ),
+        )
+    } catch (exception: NoDataAvailableException) {
+      val headers = HttpHeaders()
+      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-        ResponseEntity
-          .status(HttpStatus.OK)
-          .headers(headers)
-          .body(emptyList())
-      }
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .headers(headers)
+        .body(emptyList())
+    }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
@@ -202,7 +203,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-     configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication)
+          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
