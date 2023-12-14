@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
@@ -33,22 +34,22 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinition: ProductDefinition,
     renderMethod: RenderMethod?,
     maxStaticOptions: Long,
-    caseLoads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
   ): ReportDefinition = ReportDefinition(
     id = productDefinition.id,
     name = productDefinition.name,
     description = productDefinition.description,
     variants = productDefinition.report
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(productDefinition.id, it, productDefinition.dataset, maxStaticOptions, caseLoads) },
+      .map { map(productDefinition.id, it, productDefinition.dataset, maxStaticOptions, userToken) },
   )
 
-  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, caseloads: List<String>): VariantDefinition {
+  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, userToken: AuthAwareAuthenticationToken): VariantDefinition {
     val dataSetRef = report.dataset.removePrefix("\$ref:")
     val dataSet = datasets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
 
-    return map(report, dataSet, productDefinitionId, maxStaticOptions, caseloads)
+    return map(report, dataSet, productDefinitionId, maxStaticOptions, userToken)
   }
 
   private fun map(
@@ -56,13 +57,13 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     dataSet: Dataset,
     productDefinitionId: String,
     maxStaticOptions: Long,
-    caseLoads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
   ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
       name = report.name,
       description = report.description,
-      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, maxStaticOptions, caseLoads),
+      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, maxStaticOptions, userToken),
       resourceName = "reports/$productDefinitionId/${report.id}",
     )
   }
@@ -73,7 +74,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     reportVariantId: String,
     maxStaticOptions: Long,
-    caseLoads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
   ): Specification? {
     if (specification == null) {
       return null
@@ -81,7 +82,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
     return Specification(
       template = specification.template,
-      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, maxStaticOptions, caseLoads) },
+      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, maxStaticOptions, userToken) },
     )
   }
 
@@ -91,7 +92,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     reportVariantId: String,
     maxStaticOptions: Long,
-    caseLoads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
   ): FieldDefinition {
     val schemaFieldRef = field.name.removePrefix("\$ref:")
     val schemaField = schemaFields.find { it.name == schemaFieldRef }
@@ -101,7 +102,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       name = schemaField.name,
       display = field.display,
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
-      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, maxStaticOptions, caseLoads) },
+      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, maxStaticOptions, userToken) },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
       type = schemaField.type.toString().let(FieldType::valueOf),
@@ -114,11 +115,11 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     schemaFieldName: String,
     maxStaticOptions: Long,
-    caseLoads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
   ): FilterDefinition {
     return FilterDefinition(
       type = FilterType.valueOf(filterDefinition.type.toString()),
-      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, maxStaticOptions, caseLoads),
+      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, maxStaticOptions, userToken),
       dynamicOptions = filterDefinition.dynamicOptions,
       defaultValue = replaceTokens(filterDefinition.default),
     )
@@ -130,12 +131,12 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     schemaFieldName: String,
     maxStaticOptions: Long,
-    caseLoads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
   ): List<FilterOption>? {
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let {
       configuredApiService.validateAndFetchData(
         productDefinitionId,
-        reportVariantId, emptyMap(), 1, maxStaticOptions, schemaFieldName, true, caseLoads, schemaFieldName,
+        reportVariantId, emptyMap(), 1, maxStaticOptions, schemaFieldName, true, userToken, schemaFieldName,
       ).flatMap { it.entries }.map { FilterOption(it.value as String, it.value as String) }
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
@@ -164,12 +165,12 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     display = definition.display,
   )
 
-  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, caseLoads: List<String>): SingleVariantReportDefinition {
+  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, userToken: AuthAwareAuthenticationToken): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
       id = definition.id,
       name = definition.name,
       description = definition.description,
-      variant = map(definition.report, definition.dataset, definition.id, maxStaticOptions, caseLoads),
+      variant = map(definition.report, definition.dataset, definition.id, maxStaticOptions, userToken),
     )
   }
 }

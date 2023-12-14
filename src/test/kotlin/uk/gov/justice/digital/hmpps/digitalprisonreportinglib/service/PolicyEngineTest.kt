@@ -13,6 +13,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
 
 class PolicyEngineTest {
+
+  private val authToken = mock<AuthAwareAuthenticationToken>()
+
   @Test
   fun `policy engine permits given action for an active caseload`() {
     val policy = Policy(
@@ -21,9 +24,9 @@ class PolicyEngineTest {
       listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
-    val caseloads = listOf("ABC")
-    val policyEngine = PolicyEngine(policy, caseloads)
-    val expected = "(origin_code=ABC AND direction='OUT') OR (destination_code=ABC AND direction='IN')"
+    whenever(authToken.getCaseLoads()).thenReturn(listOf("ABC"))
+    val policyEngine = PolicyEngine(policy, authToken)
+    val expected = "(origin_code='ABC' AND direction='OUT') OR (destination_code='ABC' AND direction='IN')"
     Assertions.assertThat(policyEngine.execute()).isEqualTo(expected)
   }
 
@@ -35,7 +38,7 @@ class PolicyEngineTest {
       listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
-    val policyEngine = PolicyEngine(policy, emptyList())
+    val policyEngine = PolicyEngine(policy)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
   }
 
@@ -47,7 +50,7 @@ class PolicyEngineTest {
       listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${caseload}"))))),
     )
-    val policyEngine = PolicyEngine(policy, emptyList())
+    val policyEngine = PolicyEngine(policy)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
   }
 
@@ -59,7 +62,7 @@ class PolicyEngineTest {
       listOf("TRUE"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
-    val policyEngine = PolicyEngine(policy, emptyList())
+    val policyEngine = PolicyEngine(policy)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("TRUE")
   }
 
@@ -71,7 +74,7 @@ class PolicyEngineTest {
       listOf("FALSE"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
-    val policyEngine = PolicyEngine(policy, emptyList())
+    val policyEngine = PolicyEngine(policy)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
   }
 
@@ -83,13 +86,12 @@ class PolicyEngineTest {
       listOf("TRUE"),
       listOf(Rule(Effect.DENY, emptyList())),
     )
-    val policyEngine = PolicyEngine(policy, emptyList())
+    val policyEngine = PolicyEngine(policy)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
   }
 
   @Test
   fun `policy engine returns TRUE for a policy with a permit rule with a condition that a token exists and an action of TRUE when there is a token`() {
-    val authToken = mock<AuthAwareAuthenticationToken>()
     val policy = Policy(
       "caseload",
       ROW_LEVEL,

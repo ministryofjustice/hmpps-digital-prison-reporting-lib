@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAware
 // What if I have a list of policies
 class PolicyEngine(
   val policy: Policy,
-  val caseloads: List<String>? = null,
   val authToken: AuthAwareAuthenticationToken? = null,
 ) {
 
@@ -20,7 +19,7 @@ class PolicyEngine(
   val varMappings = mapOf(
     token to authToken,
     role to authToken?.authorities?.map { it.authority },
-    caseload to caseloads?.firstOrNull(),
+    caseload to authToken?.getCaseLoads()?.firstOrNull(),
   )
 
   fun execute(condition: Condition): Boolean {
@@ -82,7 +81,8 @@ class PolicyEngine(
         return deny()
       }
       // Note: This is currently for a single active caseload
-      interpolated = s.replace(caseload, caseloads!!.first())
+      // Addition of single quotes could be in DPD instead
+      interpolated = s.replace(caseload, "'${authToken?.getCaseLoads()!!.first()}'")
     }
     return interpolated
   }

@@ -25,16 +25,11 @@ class ConfiguredApiRepository {
     pageSize: Long,
     sortColumn: String,
     sortedAsc: Boolean,
-    userCaseloads: List<String>,
-    caseloadFields: List<String>,
     reportId: String,
+    policyEngineResult: String,
     dynamicFilterFieldId: String? = null,
   ): List<Map<String, Any>> {
-    if (userCaseloads.isEmpty()) {
-      log.warn("Zero records returned as the user has no active caseloads.")
-      return emptyList()
-    }
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, userCaseloads, caseloadFields, reportId)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, policyEngineResult)
     val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
@@ -69,11 +64,10 @@ class ConfiguredApiRepository {
   fun count(
     filters: List<Filter>,
     query: String,
-    userCaseloads: List<String>,
-    caseloadFields: List<String>,
     reportId: String,
+    policyEngineResult: String,
   ): Long {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, userCaseloads, caseloadFields, reportId)
+    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, policyEngineResult)
     return jdbcTemplate.queryForList(
       "SELECT count(1) as total FROM ($query) Q $whereClause",
       preparedStatementNamedParams,
@@ -90,19 +84,12 @@ class ConfiguredApiRepository {
 
   private fun buildWhereClause(
     filters: List<Filter>,
-    userCaseloads: List<String>,
-    caseloadFields: List<String>,
-    reportId: String,
+    policyEngineResult: String,
   ): Pair<MapSqlParameterSource, String> {
     val preparedStatementNamedParams = MapSqlParameterSource()
     filters.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
     val allFilters = filters.joinToString(" AND ", transform = this::buildCondition)
-    val caseloadsStringArray = "(${userCaseloads.joinToString { "\'$it\'" }})"
-    val caseloadsWhereClause = when (reportId) {
-      EXTERNAL_MOVEMENTS_PRODUCT_ID -> "(origin_code IN $caseloadsStringArray AND lower(direction)='out') OR (destination_code IN $caseloadsStringArray AND lower(direction)='in')"
-      else -> buildCaseloadsWhereClause(userCaseloads, caseloadFields)
-    }
-    val whereClause = if (allFilters.isEmpty()) { "WHERE $caseloadsWhereClause" } else allFilters.let { "WHERE $it AND ($caseloadsWhereClause)" }
+    val whereClause = if (allFilters.isEmpty()) { "WHERE $policyEngineResult" } else allFilters.let { "WHERE $it AND ($policyEngineResult)" }
     return Pair(preparedStatementNamedParams, whereClause)
   }
 
@@ -118,14 +105,6 @@ class ConfiguredApiRepository {
       FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
       FilterType.DYNAMIC -> "${filter.field} LIKE '${filter.value}%'"
     }
-  }
-
-  private fun buildCaseloadsWhereClause(caseloads: List<String>, caseloadFields: List<String>): String {
-    if (caseloadFields.isEmpty()) {
-      return "TRUE"
-    }
-    val caseloadsStringArray = "(${caseloads.joinToString(",") { "\'$it\'" }})"
-    return caseloadFields.joinToString(" OR ") { "$it IN $caseloadsStringArray" }
   }
 
   data class Filter(

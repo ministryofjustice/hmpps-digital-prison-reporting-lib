@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -40,14 +41,15 @@ class ConfiguredApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean,
-    userCaseloads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
     reportFieldId: String? = null,
     prefix: String? = null,
   ): List<Map<String, Any>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
-
+    // Need to support a list of policies
+    val policyEngine = PolicyEngine(productDefinition.policy.first(), userToken)
     return formatToSchemaFieldsCasing(
       configuredApiRepository
         .executeQuery(
@@ -57,9 +59,8 @@ class ConfiguredApiService(
           pageSize,
           validatedSortColumn,
           sortedAsc,
-          userCaseloads,
-          getCaseloadFields(productDefinition.dataset),
           reportId,
+          policyEngine.execute(),
           reportFieldId,
         ),
       productDefinition.dataset.schema.field,
@@ -83,17 +84,16 @@ class ConfiguredApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
-    userCaseloads: List<String>,
+    userToken: AuthAwareAuthenticationToken,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
-
+    val policyEngine = PolicyEngine(productDefinition.policy.first(), userToken)
     return Count(
       configuredApiRepository.count(
         validateAndMapFilters(productDefinition, filters),
         productDefinition.dataset.query,
-        userCaseloads,
-        getCaseloadFields(productDefinition.dataset),
         reportId,
+        policyEngine.execute(),
       ),
     )
   }
