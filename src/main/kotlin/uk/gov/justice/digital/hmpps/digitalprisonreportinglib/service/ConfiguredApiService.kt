@@ -77,9 +77,6 @@ class ConfiguredApiService(
         ?.let { listOf(validateAndMapFieldIdDynamicFilter(productDefinition, reportFieldId, prefix)) }
     } ?: emptyList()
 
-  private fun getCaseloadFields(dataSet: Dataset) =
-    dataSet.schema.field.filter { it.caseload }.map { it.name }
-
   fun validateAndCount(
     reportId: String,
     reportVariantId: String,
