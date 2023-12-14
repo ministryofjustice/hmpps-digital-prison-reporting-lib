@@ -5,6 +5,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 
+const val WARNING_NO_ACTIVE_CASELOAD = "User has not set an active caseload."
+
 class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvider {
 
   override fun getActiveCaseloadIds(jwt: Jwt): List<String> {
@@ -20,7 +22,7 @@ class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvid
     }
 
     if (caseloadResponse.activeCaseload == null) {
-      throw NoDataAvailableException("User has not set an active caseload.")
+      throw NoDataAvailableException(WARNING_NO_ACTIVE_CASELOAD)
     }
 
     return listOf(caseloadResponse.activeCaseload.id)

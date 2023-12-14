@@ -1,15 +1,20 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.NO_DATA_WARNING_HEADER_NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DATE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DESTINATION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DESTINATION_CODE
@@ -21,8 +26,23 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.REASON
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.TYPE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
+
+  val CASELOADS_WITH_NONE_ACTIVE: String = """
+          {
+            "username": "TESTUSER1",
+            "active": true,
+            "accountType": "GENERAL",
+            "caseloads": [
+              {
+                "id": "WWI",
+                "name": "WANDSWORTH (HMP)"
+              }
+            ]
+          }
+    """.trimIndent()
 
   @Test
   fun `Configured API returns value from the repository`() {
@@ -193,6 +213,62 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         assertThat(it["direction"].toString().lowercase()).isEqualTo(direction.lowercase())
       }
     }
+  }
+
+  @Test
+  fun `Configured API returns empty list and warning header if no active caseloads`() {
+    wireMockServer.resetAll()
+    wireMockServer.stubFor(
+      WireMock.get("/me/caseloads").willReturn(
+        WireMock.aResponse()
+          .withStatus(HttpStatus.OK.value())
+          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+          .withBody(CASELOADS_WITH_NONE_ACTIVE),
+      ),
+    )
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month")
+          .queryParam("selectedPage", 1)
+          .queryParam("pageSize", 3)
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectHeader()
+      .valueEquals(NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .expectBody()
+      .json("[]")
+  }
+
+  @Test
+  fun `Configured API count returns zero and warning header if no active caseloads`() {
+    wireMockServer.resetAll()
+    wireMockServer.stubFor(
+      WireMock.get("/me/caseloads").willReturn(
+        WireMock.aResponse()
+          .withStatus(HttpStatus.OK.value())
+          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+          .withBody(CASELOADS_WITH_NONE_ACTIVE),
+      ),
+    )
+
+    webTestClient.get()
+      .uri("/reports/external-movements/last-month/count")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectHeader()
+      .valueEquals(NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .expectBody()
+      .jsonPath("count").isEqualTo("0")
   }
 
   @Test
