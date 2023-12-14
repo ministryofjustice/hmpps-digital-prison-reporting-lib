@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAware
 
 // What if I have a list of policies
 class PolicyEngine(
-  val policy: Policy,
+  val policy: List<Policy>,
   val authToken: AuthAwareAuthenticationToken? = null,
 ) {
 
@@ -48,7 +48,8 @@ class PolicyEngine(
       null
     }
   }
-  private fun apply(): String {
+
+  private fun apply(policy: Policy): String {
     if (policy.action.isEmpty()) {
       return "TRUE"
     } else {
@@ -59,7 +60,19 @@ class PolicyEngine(
   private fun deny(): String {
     return "FALSE"
   }
+
   fun execute(): String {
+    return if (anyPolicyIsDenied(policy)) {
+      deny()
+    } else {
+      policy.joinToString(" AND ", transform = this::apply)
+    }
+  }
+
+  private fun anyPolicyIsDenied(policies: List<Policy>) =
+    policies.map { execute(it) }.any { it == "FALSE" }
+
+  private fun execute(policy: Policy): String {
     var effect = Effect.PERMIT
     for (rule in policy.rule) {
       if (execute(rule) != Effect.PERMIT) {
@@ -68,13 +81,13 @@ class PolicyEngine(
       break
     }
     return if (effect == Effect.PERMIT) {
-      apply()
+      apply(policy)
     } else {
       deny()
     }
   }
 
-  fun interpolateVariables(s: String): String {
+  private fun interpolateVariables(s: String): String {
     var interpolated = s
     if (s.contains(caseload)) {
       if (varMappings[caseload] == null) {

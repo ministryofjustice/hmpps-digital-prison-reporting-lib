@@ -49,7 +49,7 @@ class ConfiguredApiService(
     val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     // Need to support a list of policies
-    val policyEngine = PolicyEngine(productDefinition.policy.first(), userToken)
+    val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return formatToSchemaFieldsCasing(
       configuredApiRepository
         .executeQuery(
@@ -87,7 +87,7 @@ class ConfiguredApiService(
     userToken: AuthAwareAuthenticationToken,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
-    val policyEngine = PolicyEngine(productDefinition.policy.first(), userToken)
+    val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(
       configuredApiRepository.count(
         validateAndMapFilters(productDefinition, filters),
