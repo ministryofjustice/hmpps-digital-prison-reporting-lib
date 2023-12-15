@@ -58,7 +58,7 @@
       "rule": [
         {
           "effect": "permit",
-          "condition": []
+          "condition": [{ "exists": ["${caseload}"] }]
         }
       ]
     }

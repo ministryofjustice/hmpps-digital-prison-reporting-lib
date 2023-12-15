@@ -21,13 +21,6 @@ class JsonFileProductDefinitionRepositoryTest {
 
   @Test
   fun `returns the correct product definition`() {
-//    val policy = Policy(
-//      "caseload",
-//      "row-level",
-//      listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
-//      listOf(Rule(Effect.PERMIT, emptyList())),
-//    )
-
     val policy = Policy(
       "caseload",
       ROW_LEVEL,
