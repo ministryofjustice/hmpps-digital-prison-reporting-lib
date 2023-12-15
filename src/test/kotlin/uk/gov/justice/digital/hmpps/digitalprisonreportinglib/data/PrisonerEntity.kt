@@ -6,7 +6,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 
 @Entity
-@Table(name = "prisoner_prisoner")
+@Table(name = "prisoner_prisoner", schema = "domain")
 class PrisonerEntity(
   @Id
   val id: Long,

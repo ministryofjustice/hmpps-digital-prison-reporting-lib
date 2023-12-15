@@ -47,7 +47,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       val definition = result.responseBody!!.first()
 
       assertThat(definition.name).isEqualTo("External Movements")
-      assertThat(courtAndHospitalMovementsReport.name).isEqualTo("Court & Hospital Movement DPD")
+      assertThat(courtAndHospitalMovementsReport.name).isEqualTo("Court And Hospital Movement DPD")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
       assertThat(definition.variants).hasSize(2)
       assertThat(definition.variants[0]).isNotNull

@@ -35,7 +35,7 @@ class PolicyEngine(
       }
       // Note: This is currently for a single active caseload
       // Addition of single quotes could be in DPD instead
-      interpolated = s.replace(CASELOAD, "'${authToken.getCaseLoads().first()}'")
+      interpolated = s.replace(CASELOAD, "${authToken.getCaseLoads().first()}")
     }
     return interpolated
   }
