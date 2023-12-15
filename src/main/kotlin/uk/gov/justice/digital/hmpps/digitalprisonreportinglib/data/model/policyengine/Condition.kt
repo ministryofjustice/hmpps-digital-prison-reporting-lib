@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.ROLE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.TOKEN
 
 data class Condition(
   val match: List<String>? = null,
@@ -48,13 +49,13 @@ data class Condition(
 
   private fun isNotNull(
     authToken: AuthAwareAuthenticationToken?,
-    it: String,
+    varPlaceholder: String,
   ): Boolean {
     val varMappings = mapOf(
-      PolicyEngine.VariableNames.TOKEN to authToken,
+      TOKEN to authToken,
       ROLE to authToken?.authorities?.map { it.authority },
-      PolicyEngine.VariableNames.CASELOAD to authToken?.getCaseLoads()?.firstOrNull(),
+      CASELOAD to authToken?.getCaseLoads()?.firstOrNull(),
     )
-    return varMappings[it] != null
+    return varMappings[varPlaceholder] != null
   }
 }

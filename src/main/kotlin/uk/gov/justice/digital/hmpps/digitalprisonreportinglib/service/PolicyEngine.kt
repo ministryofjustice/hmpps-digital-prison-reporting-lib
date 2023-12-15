@@ -17,7 +17,7 @@ class PolicyEngine(
   }
 
   fun execute(): String {
-    return if (isAnyPolicyDenied(policy)) {
+    return if (policy.isEmpty() || isAnyPolicyDenied(policy)) {
       POLICY_DENY
     } else {
       policy.joinToString(" AND ") { it.apply(this::interpolateVariables) }
@@ -30,7 +30,7 @@ class PolicyEngine(
   private fun interpolateVariables(s: String): String {
     var interpolated = s
     if (s.contains(CASELOAD)) {
-      if (authToken?.getCaseLoads() == null) {
+      if (authToken == null || authToken.getCaseLoads().isEmpty()) {
         return POLICY_DENY
       }
       // Note: This is currently for a single active caseload

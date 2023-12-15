@@ -31,7 +31,13 @@ class PolicyEngineTest {
   }
 
   @Test
-  fun `policy engine denies given action for no caseload with no conditions`() {
+  fun `policy engine denies given action for no policies`() {
+    val policyEngine = PolicyEngine(emptyList())
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
+  }
+
+  @Test
+  fun `policy engine denies given action for no auth token`() {
     val policy = Policy(
       "caseload",
       ROW_LEVEL,
@@ -43,6 +49,19 @@ class PolicyEngineTest {
   }
 
   @Test
+  fun `policy engine denies given action for no caseload with no conditions`() {
+    val policy = Policy(
+      "caseload",
+      ROW_LEVEL,
+      listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
+      listOf(Rule(Effect.PERMIT, emptyList())),
+    )
+    whenever(authToken.getCaseLoads()).thenReturn(emptyList())
+    val policyEngine = PolicyEngine(listOf(policy), authToken)
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
+  }
+
+  @Test
   fun `policy engine denies given action for no caseload with exists conditions`() {
     val policy = Policy(
       "caseload",
@@ -50,7 +69,8 @@ class PolicyEngineTest {
       listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${caseload}"))))),
     )
-    val policyEngine = PolicyEngine(listOf(policy))
+    whenever(authToken.getCaseLoads()).thenReturn(emptyList())
+    val policyEngine = PolicyEngine(listOf(policy), authToken)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
   }
 
