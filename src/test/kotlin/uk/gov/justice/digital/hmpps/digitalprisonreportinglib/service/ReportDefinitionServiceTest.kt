@@ -19,6 +19,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderM
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
 import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
@@ -32,6 +37,13 @@ class ReportDefinitionServiceTest {
       version = "5",
     ),
     report = emptyList(),
+  )
+
+  private val policy: Policy = Policy(
+    "caseload",
+    ROW_LEVEL,
+    listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
+    listOf(Rule(Effect.PERMIT, emptyList())),
   )
 
   val minimalSingleDefinition = SingleReportProductDefinition(
@@ -60,6 +72,7 @@ class ReportDefinitionServiceTest {
       version = "31",
       owner = "32",
     ),
+    policy = listOf(policy),
   )
 
   @Test
@@ -75,7 +88,7 @@ class ReportDefinitionServiceTest {
         ),
       ),
     )
-    val caseLoads = listOf("caseLoad")
+    val authToken = mock<AuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
@@ -85,10 +98,10 @@ class ReportDefinitionServiceTest {
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, caseLoads)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
 
     then(repository).should().getProductDefinitions()
-    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, 20, caseLoads)
+    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, 20, authToken)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -106,7 +119,7 @@ class ReportDefinitionServiceTest {
         resourceName = "3",
       ),
     )
-    val caseLoads = listOf("caseLoad")
+    val authToken = mock<AuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository> {
       on { getSingleReportProductDefinition(any(), any()) } doReturn minimalSingleDefinition
@@ -120,11 +133,11 @@ class ReportDefinitionServiceTest {
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
       20,
-      caseLoads,
+      authToken,
     )
 
     then(repository).should().getSingleReportProductDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
-    then(mapper).should().map(minimalSingleDefinition, 20, caseLoads)
+    then(mapper).should().map(minimalSingleDefinition, 20, authToken)
 
     assertThat(actualResult).isNotNull
     assertThat(actualResult).isEqualTo(expectedResult)
@@ -132,6 +145,7 @@ class ReportDefinitionServiceTest {
 
   @Test
   fun `Getting HTML report list with no matches returns no domains`() {
+    val authToken = mock<AuthAwareAuthenticationToken>()
     val definitionWithNoVariants = ReportDefinition(
       id = "1",
       name = "2",
@@ -146,7 +160,7 @@ class ReportDefinitionServiceTest {
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, caseLoads)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
 
     assertThat(actualResult).hasSize(0)
   }

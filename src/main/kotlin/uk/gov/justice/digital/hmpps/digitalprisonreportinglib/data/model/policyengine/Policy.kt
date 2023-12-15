@@ -1,0 +1,34 @@
+package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
+
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+
+data class Policy(val id: String, val type: PolicyType, val action: List<String>, val rule: List<Rule>) {
+
+  object PolicyResult {
+    const val POLICY_PERMIT = "TRUE"
+    const val POLICY_DENY = "FALSE"
+  }
+  fun execute(userToken: AuthAwareAuthenticationToken?, transformFun: (String) -> String): String {
+    var effect = Effect.PERMIT
+    for (r in rule) {
+      if (r.execute(userToken, transformFun) != Effect.PERMIT) {
+        effect = Effect.DENY
+      }
+      break
+    }
+    return if (effect == Effect.PERMIT) {
+      apply(transformFun)
+    } else {
+      POLICY_DENY
+    }
+  }
+  fun apply(transformFunction: (String) -> String): String {
+    return if (action.isEmpty()) {
+      POLICY_PERMIT
+    } else {
+      action.joinToString(" AND ", transform = transformFunction)
+    }
+  }
+}

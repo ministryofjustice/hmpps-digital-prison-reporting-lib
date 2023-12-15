@@ -27,6 +27,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
       datasource = productDefinition.datasource.first(),
       dataset = dataSet,
       report = reportDefinition,
+      policy = productDefinition.policy,
     )
   }
 }

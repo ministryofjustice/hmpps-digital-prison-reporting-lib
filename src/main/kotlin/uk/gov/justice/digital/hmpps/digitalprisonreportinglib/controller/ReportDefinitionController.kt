@@ -42,7 +42,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     maxStaticOptions: Long,
     authentication: AuthAwareAuthenticationToken,
   ): List<ReportDefinition> {
-    return reportDefinitionService.getListForUser(renderMethod, maxStaticOptions, authentication.getCaseLoads())
+    return reportDefinitionService.getListForUser(renderMethod, maxStaticOptions, authentication)
   }
 
   @GetMapping("/definitions/{reportId}/{variantId}")
@@ -72,6 +72,6 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     maxStaticOptions: Long,
     authentication: AuthAwareAuthenticationToken,
   ): SingleVariantReportDefinition {
-    return reportDefinitionService.getDefinition(reportId, variantId, maxStaticOptions, authentication.getCaseLoads())
+    return reportDefinitionService.getDefinition(reportId, variantId, maxStaticOptions, authentication)
   }
 }

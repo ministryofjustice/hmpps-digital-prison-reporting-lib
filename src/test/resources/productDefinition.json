@@ -31,15 +31,13 @@
         "type" : "string"
       }, {
         "name" : "origin_code",
-        "type" : "string",
-        "caseload" : true
+        "type" : "string"
       }, {
         "name" : "destination",
         "type" : "string"
       },{
         "name" : "destination_code",
-        "type" : "string",
-        "caseload" : true
+        "type" : "string"
       }, {
         "name" : "direction",
         "type" : "string"
@@ -56,11 +54,11 @@
     {
       "id": "caseload",
       "type": "row-level",
-      "action": ["(origin_code=${caseload} AND direction='OUT') OR (destination_code=${caseload} AND direction='IN')"],
+      "action": ["(origin_code=${caseload} AND lower(direction)='out') OR (destination_code=${caseload} AND lower(direction)='in')"],
       "rule": [
         {
           "effect": "permit",
-          "condition": []
+          "condition": [{ "exists": ["${caseload}"] }]
         }
       ]
     }

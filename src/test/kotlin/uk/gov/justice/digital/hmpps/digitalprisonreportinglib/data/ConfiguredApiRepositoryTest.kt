@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -20,8 +22,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner5
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionIn
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionOut
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.allExternalMovements
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement2
@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9846
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9847
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine
 import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -58,6 +59,11 @@ class ConfiguredApiRepositoryTest {
     allPrisoners.forEach {
       prisonerRepository.save(it)
     }
+    whenever(
+      policyEngine
+        .execute(),
+    )
+      .thenReturn("(origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')")
   }
 
   val query = "SELECT " +
@@ -75,8 +81,7 @@ class ConfiguredApiRepositoryTest {
     "JOIN prisoner_prisoner as prisoners\n" +
     "ON movements.prisoner = prisoners.id"
 
-  private val caseloads = listOf("HEI", "LWSTMC", "NSI", "LCI", "TCI")
-  private val caseloadFields = listOf("origin_code", "destination_code")
+  private val policyEngine = mock<PolicyEngine>()
 
   @Test
   fun `should return 2 external movements for the selected page 2 and pageSize 2 sorted by date in ascending order`() {
@@ -87,9 +92,8 @@ class ConfiguredApiRepositoryTest {
       2,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(listOf(movementPrisoner3, movementPrisoner4), actual)
     Assertions.assertEquals(2, actual.size)
@@ -104,9 +108,8 @@ class ConfiguredApiRepositoryTest {
       2,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(listOf(movementPrisoner5), actual)
     Assertions.assertEquals(1, actual.size)
@@ -121,9 +124,8 @@ class ConfiguredApiRepositoryTest {
       5,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(listOf(movementPrisoner1, movementPrisoner2, movementPrisoner3, movementPrisoner4, movementPrisoner5), actual)
     Assertions.assertEquals(5, actual.size)
@@ -138,9 +140,8 @@ class ConfiguredApiRepositoryTest {
       5,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -154,9 +155,8 @@ class ConfiguredApiRepositoryTest {
       1,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -210,9 +210,8 @@ class ConfiguredApiRepositoryTest {
       20,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(5, actual.size)
   }
@@ -226,9 +225,8 @@ class ConfiguredApiRepositoryTest {
       20,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -242,9 +240,8 @@ class ConfiguredApiRepositoryTest {
       20,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -258,9 +255,8 @@ class ConfiguredApiRepositoryTest {
       20,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -274,9 +270,8 @@ class ConfiguredApiRepositoryTest {
       20,
       "date",
       true,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -290,9 +285,8 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3), actual)
   }
@@ -306,9 +300,8 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(listOf(movementPrisoner2, movementPrisoner1), actual)
   }
@@ -322,9 +315,8 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -338,9 +330,8 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -359,9 +350,8 @@ class ConfiguredApiRepositoryTest {
       10,
       NAME,
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
       NAME,
     )
     Assertions.assertEquals(
@@ -388,9 +378,8 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -404,9 +393,8 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -420,9 +408,8 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -436,15 +423,19 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should not throw an error when some columns are null`() {
+    whenever(
+      policyEngine
+        .execute(),
+    )
+      .thenReturn("(origin_code IN ('BOLTCC') AND lower(direction)='out') OR (destination_code IN ('BOLTCC') AND lower(direction)='in')")
     val externalMovementNullValues = ExternalMovementEntity(
       6,
       9846,
@@ -482,9 +473,8 @@ class ConfiguredApiRepositoryTest {
         1,
         "date",
         true,
-        listOf("BOLTCC"),
-        caseloadFields,
         EXTERNAL_MOVEMENTS_PRODUCT_ID,
+        policyEngineResult = policyEngine.execute(),
       )
       Assertions.assertEquals(listOf(movementPrisonerNullValues), actual)
       Assertions.assertEquals(1, actual.size)
@@ -497,6 +487,11 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return only the rows whose origin code is in the caseloads list and its direction is "Out" or the destination code is in the caseloads list and its direction is "IN" for external-movements`() {
     try {
+      whenever(
+        policyEngine
+          .execute(),
+      )
+        .thenReturn("(origin_code IN ('LWSTMC') AND lower(direction)='out') OR (destination_code IN ('LWSTMC') AND lower(direction)='in')")
       externalMovementRepository.save(externalMovementOriginCaseloadDirectionIn)
       externalMovementRepository.save(externalMovementDestinationCaseloadDirectionOut)
       externalMovementRepository.save(externalMovementDestinationCaseloadDirectionIn)
@@ -510,9 +505,8 @@ class ConfiguredApiRepositoryTest {
         10,
         "date",
         true,
-        listOf("LWSTMC"),
-        caseloadFields,
         EXTERNAL_MOVEMENTS_PRODUCT_ID,
+        policyEngineResult = policyEngine.execute(),
       )
       Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerDestinationCaseloadDirectionIn), actual)
       Assertions.assertEquals(2, actual.size)
@@ -527,39 +521,12 @@ class ConfiguredApiRepositoryTest {
   }
 
   @Test
-  fun `should return all the rows whose origin code or destination code is in the caseloads list for all other products apart from external-movements`() {
-    try {
-      externalMovementRepository.save(externalMovementOriginCaseloadDirectionIn)
-      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionOut)
-      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionIn)
-      prisonerRepository.save(prisoner9846)
-      prisonerRepository.save(prisoner9847)
-      prisonerRepository.save(prisoner9848)
-      val actual = configuredApiRepository.executeQuery(
-        query,
-        listOf(Filter("date", "2022-06-01", DATE_RANGE_START), Filter("date", "2024-06-01", DATE_RANGE_END)),
-        1,
-        10,
-        "date",
-        true,
-        listOf("LWSTMC"),
-        caseloadFields,
-        "product2-id",
-      )
-      Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerOriginCaseloadDirectionIn, movementPrisonerDestinationCaseloadDirectionOut, movementPrisonerDestinationCaseloadDirectionIn), actual)
-      Assertions.assertEquals(4, actual.size)
-    } finally {
-      externalMovementRepository.delete(externalMovementOriginCaseloadDirectionIn)
-      externalMovementRepository.delete(externalMovementDestinationCaseloadDirectionOut)
-      externalMovementRepository.delete(externalMovementDestinationCaseloadDirectionIn)
-      prisonerRepository.delete(prisoner9846)
-      prisonerRepository.delete(prisoner9847)
-      prisonerRepository.delete(prisoner9848)
-    }
-  }
-
-  @Test
-  fun `should return no rows for an empty caseloads list`() {
+  fun `should return no rows for a policy deny`() {
+    whenever(
+      policyEngine
+        .execute(),
+    )
+      .thenReturn("FALSE")
     val actual = configuredApiRepository.executeQuery(
       query,
       emptyList(),
@@ -567,9 +534,29 @@ class ConfiguredApiRepositoryTest {
       5,
       "date",
       true,
-      emptyList(),
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
+    )
+    Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
+    Assertions.assertEquals(0, actual.size)
+  }
+
+  @Test
+  fun `should return no rows for a policy deny even if some filters match`() {
+    whenever(
+      policyEngine
+        .execute(),
+    )
+      .thenReturn("FALSE")
+    val actual = configuredApiRepository.executeQuery(
+      query,
+      listOf(Filter("direction", "in")),
+      1,
+      5,
+      "date",
+      true,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngine.execute(),
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
@@ -577,7 +564,12 @@ class ConfiguredApiRepositoryTest {
 
   @Test
   fun `should return a count of all rows with no filters`() {
-    val actual = configuredApiRepository.count(emptyList(), query, caseloads, caseloadFields, EXTERNAL_MOVEMENTS_PRODUCT_ID)
+    val actual = configuredApiRepository.count(
+      emptyList(),
+      query,
+      EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
+    )
     Assertions.assertEquals(5L, actual)
   }
 
@@ -586,9 +578,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("direction", "in")),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(4L, actual)
   }
@@ -598,9 +589,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("direction", "out")),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(1L, actual)
   }
@@ -610,9 +600,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("date", "2023-05-01", DATE_RANGE_START)),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(2, actual)
   }
@@ -622,9 +611,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("date", "2023-01-31", DATE_RANGE_END)),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(1, actual)
   }
@@ -634,9 +622,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2023-05-01", DATE_RANGE_END)),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(2, actual)
   }
@@ -646,9 +633,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("date", "2025-04-30", DATE_RANGE_START)),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(0, actual)
   }
@@ -658,9 +644,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("date", "2019-04-30", DATE_RANGE_END)),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(0, actual)
   }
@@ -670,9 +655,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.count(
       listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2019-05-01", DATE_RANGE_END)),
       query,
-      caseloads,
-      caseloadFields,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngine.execute(),
     )
     Assertions.assertEquals(0, actual)
   }
@@ -691,9 +675,8 @@ class ConfiguredApiRepositoryTest {
             1,
             sortColumn,
             sortedAsc,
-            caseloads,
-            caseloadFields,
             EXTERNAL_MOVEMENTS_PRODUCT_ID,
+            policyEngineResult = policyEngine.execute(),
           )
           Assertions.assertEquals(expected, actual)
           Assertions.assertEquals(1, actual.size)

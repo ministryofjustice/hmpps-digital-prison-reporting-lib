@@ -35,7 +35,7 @@ class DefaultCaseloadProviderTest {
   }
 
   @Test
-  fun `getActiveCaseloadId should return an empty list for any account type other than GENERAL`() {
+  fun `getActiveCaseloadId should throw NoDataAvailableException for any account type other than GENERAL`() {
     val jwt = createJwtHeaders()
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
       DefaultCaseloadProvider.CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))

@@ -91,7 +91,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             pageSize,
             sortColumn,
             sortedAsc,
-            authentication.getCaseLoads(),
+            authentication,
           ),
         )
     } catch (exception: NoDataAvailableException) {
@@ -153,7 +153,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             pageSize,
             fieldId,
             sortedAsc,
-            authentication.getCaseLoads(),
+            authentication,
             fieldId,
             prefix,
           ).asSequence()
@@ -203,7 +203,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication.getCaseLoads()),
+          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
