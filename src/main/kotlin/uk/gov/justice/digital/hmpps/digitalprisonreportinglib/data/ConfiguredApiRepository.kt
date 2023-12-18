@@ -14,6 +14,9 @@ class ConfiguredApiRepository {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
     const val EXTERNAL_MOVEMENTS_PRODUCT_ID = "external-movements"
+    private const val STAGE_1 = """stage_1"""
+    private const val STAGE_2 = """stage_2"""
+    private const val STAGE_3 = """stage_3"""
   }
 
   @Autowired
@@ -29,12 +32,15 @@ class ConfiguredApiRepository {
     policyEngineResult: String,
     dynamicFilterFieldId: String? = null,
   ): List<Map<String, Any>> {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, policyEngineResult)
-    val sortingDirection = if (sortedAsc) "asc" else "desc"
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(
-      buildQuery(query, whereClause, sortColumn, sortingDirection, pageSize, selectedPage, dynamicFilterFieldId),
-      preparedStatementNamedParams,
+      buildFinalQuery(
+        buildReportQuery(query),
+        buildPolicyQuery(policyEngineResult),
+        buildFiltersQuery(filters),
+        buildPaginationQuery(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
+      ),
+      buildPreparedStatementNamedParams(filters),
     )
       .map {
         transformTimestampToLocalDateTime(it)
@@ -43,23 +49,32 @@ class ConfiguredApiRepository {
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
   }
-
-  private fun buildQuery(
-    query: String,
-    whereClause: String,
+  private fun buildReportQuery(query: String) = """WITH $STAGE_1 AS ($query)"""
+  private fun buildPolicyQuery(policyEngineResult: String) = """$STAGE_2 AS (SELECT * FROM $STAGE_1 WHERE $policyEngineResult)"""
+  private fun buildFiltersQuery(filters: List<Filter>) =
+    """$STAGE_3 AS (SELECT * FROM $STAGE_2 WHERE ${buildFiltersWhereClause(filters)})"""
+  private fun buildPaginationQuery(
+    dynamicFilterFieldId: String?,
     sortColumn: String,
-    sortingDirection: String,
+    sortedAsc: Boolean,
     pageSize: Long,
     selectedPage: Long,
-    dynamicFilterFieldId: String?,
-  ): String {
-    val projectedColumns = dynamicFilterFieldId?.let { "DISTINCT $dynamicFilterFieldId" } ?: "*"
-    return """SELECT $projectedColumns
-        FROM ($query) Q
-        $whereClause
-        ORDER BY $sortColumn $sortingDirection 
-                      limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+  ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
+        FROM stage_3 ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)} 
+        limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+  private fun buildFinalQuery(
+    reportQuery: String,
+    policiesQuery: String,
+    filtersQuery: String,
+    selectFromFinalStageQuery: String,
+  ) = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+
+  private fun calculateSortingDirection(sortedAsc: Boolean): String {
+    return if (sortedAsc) "asc" else "desc"
   }
+
+  private fun constructProjectedColumns(dynamicFilterFieldId: String?) =
+    dynamicFilterFieldId?.let { "DISTINCT $dynamicFilterFieldId" } ?: "*"
 
   fun count(
     filters: List<Filter>,
@@ -67,10 +82,14 @@ class ConfiguredApiRepository {
     reportId: String,
     policyEngineResult: String,
   ): Long {
-    val (preparedStatementNamedParams, whereClause) = buildWhereClause(filters, policyEngineResult)
     return jdbcTemplate.queryForList(
-      "SELECT count(1) as total FROM ($query) Q $whereClause",
-      preparedStatementNamedParams,
+      buildFinalQuery(
+        buildReportQuery(query),
+        buildPolicyQuery(policyEngineResult),
+        buildFiltersQuery(filters),
+        "SELECT COUNT(1) as total FROM $STAGE_3",
+      ),
+      buildPreparedStatementNamedParams(filters),
     ).first()?.get("total") as Long
   }
 
@@ -82,15 +101,16 @@ class ConfiguredApiRepository {
     }
   }
 
-  private fun buildWhereClause(
+  private fun buildFiltersWhereClause(
     filters: List<Filter>,
-    policyEngineResult: String,
-  ): Pair<MapSqlParameterSource, String> {
+  ): String {
+    return filters.joinToString(" AND ", transform = this::buildCondition).ifEmpty { "TRUE" }
+  }
+
+  fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {
     val preparedStatementNamedParams = MapSqlParameterSource()
     filters.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
-    val allFilters = filters.joinToString(" AND ", transform = this::buildCondition)
-    val whereClause = if (allFilters.isEmpty()) { "WHERE $policyEngineResult" } else allFilters.let { "WHERE $it AND ($policyEngineResult)" }
-    return Pair(preparedStatementNamedParams, whereClause)
+    return preparedStatementNamedParams
   }
 
   private fun buildCondition(filter: Filter): String {
