@@ -46,7 +46,6 @@ class ConfiguredApiService(
     prefix: String? = null,
   ): List<Map<String, Any>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
-    val validatedSortColumn = validateSortColumnOrGetDefault(productDefinition, sortColumn)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return formatToSchemaFieldsCasing(
@@ -56,7 +55,7 @@ class ConfiguredApiService(
           validateAndMapFilters(productDefinition, filters) + dynamicFilter,
           selectedPage,
           pageSize,
-          validatedSortColumn,
+          sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
           sortedAsc,
           reportId,
           policyEngine.execute(),
@@ -94,16 +93,15 @@ class ConfiguredApiService(
     )
   }
 
-  fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String {
+  fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? {
     return definition.report.specification
       ?.field
-      ?.firstOrNull() { it.defaultSort }
+      ?.firstOrNull { it.defaultSort }
       ?.name
       ?.removePrefix(schemaRefPrefix)
-      ?: throw ValidationException("Could not find default sort column for reportId: ${definition.id}, reportVariantId: ${definition.report.id}")
   }
 
-  private fun validateSortColumnOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String {
+  private fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String? {
     return sortColumn?.let {
       productDefinition.dataset.schema.field.filter { schemaField -> schemaField.name == sortColumn }
         .ifEmpty { throw ValidationException("Invalid sortColumn provided: $sortColumn") }
