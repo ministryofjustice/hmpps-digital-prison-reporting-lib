@@ -77,8 +77,8 @@ class ConfiguredApiRepositoryTest {
     "movements.destination," +
     "movements.destination_code," +
     "movements.reason\n" +
-    "FROM movements_movements as movements\n" +
-    "JOIN prisoner_prisoner as prisoners\n" +
+    "FROM datamart.domain.movement_movement as movements\n" +
+    "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
     "ON movements.prisoner = prisoners.id"
 
   private val policyEngine = mock<PolicyEngine>()
