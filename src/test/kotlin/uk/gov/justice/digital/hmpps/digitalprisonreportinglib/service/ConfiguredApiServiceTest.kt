@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PolicyTypeDes
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RuleEffectTypeDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.SchemaFieldTypeDeserializer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 class ConfiguredApiServiceTest {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
@@ -60,7 +60,7 @@ class ConfiguredApiServiceTest {
     mapOf("type" to "trn"),
     mapOf("reason" to "normal transfer"),
   )
-  private val authToken = mock<AuthAwareAuthenticationToken>()
+  private val authToken = mock<DprAuthAwareAuthenticationToken>()
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"

@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -139,7 +139,7 @@ class ReportDefinitionMapperTest {
 
   private val configuredApiService: ConfiguredApiService = mock<ConfiguredApiService>()
 
-  private val authToken = mock<AuthAwareAuthenticationToken>()
+  private val authToken = mock<DprAuthAwareAuthenticationToken>()
 
   @Test
   fun `Getting report list for user maps full data correctly`() {

@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 data class Rule(val effect: Effect, val condition: List<Condition>) {
-  fun execute(token: AuthAwareAuthenticationToken?, transformFun: (String) -> String): Effect? {
+  fun execute(token: DprAuthAwareAuthenticationToken?, transformFun: (String) -> String): Effect? {
     return if (areAllConditionsPermitted(token, transformFun)) {
       effect
     } else {
@@ -12,7 +12,7 @@ data class Rule(val effect: Effect, val condition: List<Condition>) {
   }
 
   private fun areAllConditionsPermitted(
-    token: AuthAwareAuthenticationToken?,
-    transformFun: (String) -> String,
+      token: DprAuthAwareAuthenticationToken?,
+      transformFun: (String) -> String,
   ) = condition.all { it.execute(token, transformFun) }
 }

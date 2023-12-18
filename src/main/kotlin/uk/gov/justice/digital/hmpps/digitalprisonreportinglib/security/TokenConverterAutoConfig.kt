@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Configuration
 class TokenConverterAutoConfig {
 
   @Bean
-  @ConditionalOnMissingBean(AuthAwareTokenConverter::class)
-  fun authAwareTokenConverter(
+  @ConditionalOnMissingBean(DprAuthAwareTokenConverter::class)
+  fun dprAuthAwareTokenConverter(
     caseloadProvider: CaseloadProvider,
-  ): AuthAwareTokenConverter {
-    return DefaultAuthAwareTokenConverter(caseloadProvider)
+  ): DprAuthAwareTokenConverter {
+    return DefaultDprAuthAwareTokenConverter(caseloadProvider)
   }
 }

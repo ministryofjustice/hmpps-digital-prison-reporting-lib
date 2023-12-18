@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Service
 class ReportDefinitionService(
@@ -13,13 +13,13 @@ class ReportDefinitionService(
   val mapper: ReportDefinitionMapper,
 ) {
 
-  fun getListForUser(renderMethod: RenderMethod?, maxStaticOptions: Long, userToken: AuthAwareAuthenticationToken): List<ReportDefinition> {
+  fun getListForUser(renderMethod: RenderMethod?, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken): List<ReportDefinition> {
     return productDefinitionRepository.getProductDefinitions()
       .map { mapper.map(it, renderMethod, maxStaticOptions, userToken) }
       .filter { it.variants.isNotEmpty() }
   }
 
-  fun getDefinition(reportId: String, variantId: String, maxStaticOptions: Long, userToken: AuthAwareAuthenticationToken): SingleVariantReportDefinition {
+  fun getDefinition(reportId: String, variantId: String, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken): SingleVariantReportDefinition {
     return mapper.map(
       productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId),
       maxStaticOptions,

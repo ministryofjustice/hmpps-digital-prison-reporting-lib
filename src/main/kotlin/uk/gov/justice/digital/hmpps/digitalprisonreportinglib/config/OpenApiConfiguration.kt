@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class OpenApiConfiguration {
-  @Bean
+  @Bean("dprOpenAPIConfiguration")
   @ConditionalOnMissingBean(OpenAPI::class)
   fun openAPIConfiguration(): OpenAPI {
     return OpenAPI()

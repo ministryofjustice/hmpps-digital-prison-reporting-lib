@@ -9,15 +9,15 @@ import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 
-@Configuration
+@Configuration(("dprResourceServerConfiguration"))
 @ConditionalOnProperty(name = ["dpr.lib.user.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
 class ResourceServerConfiguration(
   @Value("\${dpr.lib.user.role}") private var authorisedRole: String,
 ) {
 
-  @Bean
+  @Bean("dprFilterChain")
   @Throws(Exception::class)
-  fun filterChain(http: HttpSecurity, caseloadProvider: CaseloadProvider, tokenConverter: AuthAwareTokenConverter): SecurityFilterChain? {
+  fun filterChain(http: HttpSecurity, caseloadProvider: CaseloadProvider, tokenConverter: DprAuthAwareTokenConverter): SecurityFilterChain? {
     http {
       headers { frameOptions { sameOrigin = true } }
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }

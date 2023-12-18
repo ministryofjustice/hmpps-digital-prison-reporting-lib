@@ -6,16 +6,16 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 
-class DefaultAuthAwareTokenConverter(private val caseloadProvider: CaseloadProvider) : AuthAwareTokenConverter {
+class DefaultDprAuthAwareTokenConverter(private val caseloadProvider: CaseloadProvider) : DprAuthAwareTokenConverter {
   private val jwtGrantedAuthoritiesConverter: Converter<Jwt, Collection<GrantedAuthority>> =
     JwtGrantedAuthoritiesConverter()
 
-  override fun convert(jwt: Jwt): AuthAwareAuthenticationToken {
+  override fun convert(jwt: Jwt): DprAuthAwareAuthenticationToken {
     val claims = jwt.claims
     val principal = findPrincipal(claims)
     val authorities = extractAuthorities(jwt)
 
-    return AuthAwareAuthenticationToken(jwt, principal, authorities, caseloadProvider)
+    return DprAuthAwareAuthenticationToken(jwt, principal, authorities, caseloadProvider)
   }
 
   private fun findPrincipal(claims: Map<String, Any?>): String {

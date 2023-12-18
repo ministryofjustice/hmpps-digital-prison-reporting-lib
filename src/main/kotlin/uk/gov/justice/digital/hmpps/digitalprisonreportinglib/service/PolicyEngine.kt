@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
 
 class PolicyEngine(
   val policy: List<Policy>,
-  val authToken: AuthAwareAuthenticationToken? = null,
+  val authToken: DprAuthAwareAuthenticationToken? = null,
 ) {
 
   object VariableNames {
@@ -35,7 +35,7 @@ class PolicyEngine(
       }
       // Note: This is currently for a single active caseload
       // Addition of single quotes could be in DPD instead
-      interpolated = s.replace(CASELOAD, "${authToken.getCaseLoads().first()}")
+      interpolated = s.replace(CASELOAD, authToken.getCaseLoads().first())
     }
     return interpolated
   }
