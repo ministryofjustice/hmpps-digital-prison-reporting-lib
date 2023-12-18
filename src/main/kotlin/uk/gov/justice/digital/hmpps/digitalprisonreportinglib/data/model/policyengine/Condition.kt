@@ -21,9 +21,9 @@ data class Condition(
   }
 
   private fun executeMatch(
-      matchList: List<String>,
-      authToken: DprAuthAwareAuthenticationToken?,
-      interpolateVariables: (String) -> String,
+    matchList: List<String>,
+    authToken: DprAuthAwareAuthenticationToken?,
+    interpolateVariables: (String) -> String,
   ): Boolean {
     return if (matchList.contains(ROLE)) {
       isAnyOfTheRolesInTheList(authToken, matchList)
@@ -33,8 +33,8 @@ data class Condition(
   }
 
   private fun isAnyOfTheRolesInTheList(
-      authToken: DprAuthAwareAuthenticationToken?,
-      matchList: List<String>,
+    authToken: DprAuthAwareAuthenticationToken?,
+    matchList: List<String>,
   ): Boolean {
     val userRoles = authToken?.authorities?.map { it.authority }
     return userRoles?.any { it in matchList } ?: false
@@ -48,8 +48,8 @@ data class Condition(
   }.toSet().count() == 1
 
   private fun isNotNull(
-      authToken: DprAuthAwareAuthenticationToken?,
-      varPlaceholder: String,
+    authToken: DprAuthAwareAuthenticationToken?,
+    varPlaceholder: String,
   ): Boolean {
     val varMappings = mapOf(
       TOKEN to authToken,

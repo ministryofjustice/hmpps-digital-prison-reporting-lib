@@ -12,7 +12,7 @@ data class Rule(val effect: Effect, val condition: List<Condition>) {
   }
 
   private fun areAllConditionsPermitted(
-      token: DprAuthAwareAuthenticationToken?,
-      transformFun: (String) -> String,
+    token: DprAuthAwareAuthenticationToken?,
+    transformFun: (String) -> String,
   ) = condition.all { it.execute(token, transformFun) }
 }
