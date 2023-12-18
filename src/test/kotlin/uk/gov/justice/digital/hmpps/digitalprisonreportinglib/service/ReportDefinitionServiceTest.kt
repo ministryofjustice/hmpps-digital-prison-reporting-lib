@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
@@ -88,7 +88,7 @@ class ReportDefinitionServiceTest {
         ),
       ),
     )
-    val authToken = mock<AuthAwareAuthenticationToken>()
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
@@ -119,7 +119,7 @@ class ReportDefinitionServiceTest {
         resourceName = "3",
       ),
     )
-    val authToken = mock<AuthAwareAuthenticationToken>()
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository> {
       on { getSingleReportProductDefinition(any(), any()) } doReturn minimalSingleDefinition
@@ -145,13 +145,12 @@ class ReportDefinitionServiceTest {
 
   @Test
   fun `Getting HTML report list with no matches returns no domains`() {
-    val authToken = mock<AuthAwareAuthenticationToken>()
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
     val definitionWithNoVariants = ReportDefinition(
       id = "1",
       name = "2",
       variants = emptyList(),
     )
-    val caseLoads = listOf("caseLoad")
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }

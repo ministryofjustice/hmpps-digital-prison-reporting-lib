@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -22,7 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 import java.util.Collections.singletonList
 
@@ -77,7 +78,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    authentication: AuthAwareAuthenticationToken,
+    authentication: DprAuthAwareAuthenticationToken,
   ): ResponseEntity<List<Map<String, Any>>> {
     return try {
       ResponseEntity
@@ -139,7 +140,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @NotNull
     @NotEmpty
     fieldId: String,
-    authentication: AuthAwareAuthenticationToken,
+    authentication: Authentication,
   ): ResponseEntity<List<String>> {
     return try {
       ResponseEntity
@@ -153,7 +154,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             pageSize,
             fieldId,
             sortedAsc,
-            authentication,
+            if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
             fieldId,
             prefix,
           ).asSequence()
@@ -197,7 +198,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    authentication: AuthAwareAuthenticationToken,
+    authentication: DprAuthAwareAuthenticationToken,
   ): ResponseEntity<Count> {
     return try {
       ResponseEntity

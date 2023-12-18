@@ -4,7 +4,7 @@ import org.springframework.core.convert.converter.Converter
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.oauth2.jwt.Jwt
 
-interface AuthAwareTokenConverter : Converter<Jwt, AbstractAuthenticationToken> {
+interface DprAuthAwareTokenConverter : Converter<Jwt, AbstractAuthenticationToken> {
 
-  override fun convert(jwt: Jwt): AuthAwareAuthenticationToken
+  override fun convert(jwt: Jwt): DprAuthAwareAuthenticationToken
 }

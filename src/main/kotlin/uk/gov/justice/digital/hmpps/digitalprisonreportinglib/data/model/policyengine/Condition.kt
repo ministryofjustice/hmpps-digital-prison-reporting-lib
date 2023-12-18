@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.ROLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.TOKEN
@@ -10,7 +10,7 @@ data class Condition(
   val exists: List<String>? = null,
 ) {
 
-  fun execute(authToken: AuthAwareAuthenticationToken?, interpolateVariables: (String) -> String): Boolean {
+  fun execute(authToken: DprAuthAwareAuthenticationToken?, interpolateVariables: (String) -> String): Boolean {
     match?.let { matchList ->
       return executeMatch(matchList, authToken, interpolateVariables)
     }
@@ -22,7 +22,7 @@ data class Condition(
 
   private fun executeMatch(
     matchList: List<String>,
-    authToken: AuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     interpolateVariables: (String) -> String,
   ): Boolean {
     return if (matchList.contains(ROLE)) {
@@ -33,7 +33,7 @@ data class Condition(
   }
 
   private fun isAnyOfTheRolesInTheList(
-    authToken: AuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     matchList: List<String>,
   ): Boolean {
     val userRoles = authToken?.authorities?.map { it.authority }
@@ -48,7 +48,7 @@ data class Condition(
   }.toSet().count() == 1
 
   private fun isNotNull(
-    authToken: AuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     varPlaceholder: String,
   ): Boolean {
     val varMappings = mapOf(

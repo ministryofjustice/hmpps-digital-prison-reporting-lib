@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -41,7 +41,7 @@ class ConfiguredApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: String? = null,
     prefix: String? = null,
   ): List<Map<String, Any>> {
@@ -80,7 +80,7 @@ class ConfiguredApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)

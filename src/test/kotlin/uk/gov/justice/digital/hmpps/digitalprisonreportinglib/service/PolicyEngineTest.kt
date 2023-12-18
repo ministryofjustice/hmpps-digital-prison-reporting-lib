@@ -10,11 +10,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 class PolicyEngineTest {
 
-  private val authToken = mock<AuthAwareAuthenticationToken>()
+  private val authToken = mock<DprAuthAwareAuthenticationToken>()
 
   @Test
   fun `policy engine permits given action for an active caseload`() {
@@ -137,7 +137,7 @@ class PolicyEngineTest {
   @Test
   fun `policy engine returns TRUE for a policy with a permit rule with a condition of matching a role and an action of TRUE when there is a matching role`() {
     val userRole = "A_ROLE"
-    val authToken = mock<AuthAwareAuthenticationToken>()
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority(userRole)))
     val policy = Policy(
       "caseload",
@@ -151,7 +151,7 @@ class PolicyEngineTest {
 
   @Test
   fun `policy engine returns FALSE for a policy with a permit rule with a condition of matching a role and an action of TRUE when there is no matching role`() {
-    val authToken = mock<AuthAwareAuthenticationToken>()
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("A_ROLE")))
     val policy = Policy(
       "caseload",
@@ -165,7 +165,7 @@ class PolicyEngineTest {
 
   @Test
   fun `policy engine returns FALSE when one of the policies is denied`() {
-    val authToken = mock<AuthAwareAuthenticationToken>()
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("A_ROLE")))
     val policy1 = Policy(
       "caseload",

@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
@@ -34,7 +34,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinition: ProductDefinition,
     renderMethod: RenderMethod?,
     maxStaticOptions: Long,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken,
   ): ReportDefinition = ReportDefinition(
     id = productDefinition.id,
     name = productDefinition.name,
@@ -44,7 +44,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       .map { map(productDefinition.id, it, productDefinition.dataset, maxStaticOptions, userToken) },
   )
 
-  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, userToken: AuthAwareAuthenticationToken): VariantDefinition {
+  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken): VariantDefinition {
     val dataSetRef = report.dataset.removePrefix("\$ref:")
     val dataSet = datasets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
@@ -57,7 +57,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     dataSet: Dataset,
     productDefinitionId: String,
     maxStaticOptions: Long,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken,
   ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
@@ -74,7 +74,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     reportVariantId: String,
     maxStaticOptions: Long,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken,
   ): Specification? {
     if (specification == null) {
       return null
@@ -92,7 +92,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     reportVariantId: String,
     maxStaticOptions: Long,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken,
   ): FieldDefinition {
     val schemaFieldRef = field.name.removePrefix("\$ref:")
     val schemaField = schemaFields.find { it.name == schemaFieldRef }
@@ -115,7 +115,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     schemaFieldName: String,
     maxStaticOptions: Long,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken,
   ): FilterDefinition {
     return FilterDefinition(
       type = FilterType.valueOf(filterDefinition.type.toString()),
@@ -131,7 +131,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     schemaFieldName: String,
     maxStaticOptions: Long,
-    userToken: AuthAwareAuthenticationToken,
+    userToken: DprAuthAwareAuthenticationToken,
   ): List<FilterOption>? {
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let {
       configuredApiService.validateAndFetchData(
@@ -165,7 +165,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     display = definition.display,
   )
 
-  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, userToken: AuthAwareAuthenticationToken): SingleVariantReportDefinition {
+  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
       id = definition.id,
       name = definition.name,

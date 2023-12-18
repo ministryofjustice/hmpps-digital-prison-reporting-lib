@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
 
 @Validated
@@ -40,7 +40,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
-    authentication: AuthAwareAuthenticationToken,
+    authentication: DprAuthAwareAuthenticationToken,
   ): List<ReportDefinition> {
     return reportDefinitionService.getListForUser(renderMethod, maxStaticOptions, authentication)
   }
@@ -70,7 +70,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
-    authentication: AuthAwareAuthenticationToken,
+    authentication: DprAuthAwareAuthenticationToken,
   ): SingleVariantReportDefinition {
     return reportDefinitionService.getDefinition(reportId, variantId, maxStaticOptions, authentication)
   }
