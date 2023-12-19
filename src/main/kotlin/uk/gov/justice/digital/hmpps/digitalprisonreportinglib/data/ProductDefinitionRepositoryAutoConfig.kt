@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import com.google.gson.Gson
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
@@ -14,16 +15,11 @@ class ProductDefinitionRepositoryAutoConfig(
   @ConditionalOnMissingBean(ProductDefinitionRepository::class)
   fun productDefinitionRepository(
     localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
-  ): ProductDefinitionRepository {
-    return JsonFileProductDefinitionRepository(
-      localDateTimeTypeAdaptor,
-      definitionResourceLocations,
-      FilterTypeDeserializer(),
-      SchemaFieldTypeDeserializer(),
-      RuleEffectTypeDeserializer(),
-      PolicyTypeDeserializer(),
-    )
-  }
+    dprDefinitionGson: Gson,
+  ): ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+    definitionResourceLocations,
+    dprDefinitionGson,
+  )
 
   @Bean
   @ConditionalOnMissingBean(LocalDateTimeTypeAdaptor::class)

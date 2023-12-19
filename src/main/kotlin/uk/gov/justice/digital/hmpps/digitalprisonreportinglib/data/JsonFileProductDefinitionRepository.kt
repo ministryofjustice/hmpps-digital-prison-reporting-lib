@@ -1,33 +1,16 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import jakarta.validation.ValidationException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
-import java.time.LocalDateTime
 
 class JsonFileProductDefinitionRepository(
-  private val localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
   private val resourceLocations: List<String>,
-  private val filterTypeDeserializer: FilterTypeDeserializer,
-  private val schemaFieldTypeDeserializer: SchemaFieldTypeDeserializer,
-  private val ruleEffectTypeDeserializer: RuleEffectTypeDeserializer,
-  private val policyTypeDeserializer: PolicyTypeDeserializer,
+  private val gson: Gson,
 ) : AbstractProductDefinitionRepository() {
 
   override fun getProductDefinitions(): List<ProductDefinition> {
-    val gson: Gson = GsonBuilder()
-      .registerTypeAdapter(LocalDateTime::class.java, localDateTimeTypeAdaptor)
-      .registerTypeAdapter(FilterType::class.java, filterTypeDeserializer)
-      .registerTypeAdapter(ParameterType::class.java, schemaFieldTypeDeserializer)
-      .registerTypeAdapter(Effect::class.java, ruleEffectTypeDeserializer)
-      .registerTypeAdapter(PolicyType::class.java, policyTypeDeserializer)
-      .create()
     return resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinition>() {}.type) }
   }
 

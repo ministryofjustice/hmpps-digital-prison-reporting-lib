@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -11,12 +12,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 class JsonFileProductDefinitionRepositoryTest {
 
   val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
-    IsoLocalDateTimeTypeAdaptor(),
     listOf("productDefinition.json", "dpd001-court-hospital-movements.json"),
-    FilterTypeDeserializer(),
-    SchemaFieldTypeDeserializer(),
-    RuleEffectTypeDeserializer(),
-    PolicyTypeDeserializer(),
+    DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
   )
 
   @Test
