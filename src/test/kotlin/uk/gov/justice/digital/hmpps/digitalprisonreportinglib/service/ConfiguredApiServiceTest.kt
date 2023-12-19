@@ -27,7 +27,25 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PolicyTypeDes
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RuleEffectTypeDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.SchemaFieldTypeDeserializer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import java.time.LocalDateTime
 
 class ConfiguredApiServiceTest {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
@@ -819,6 +837,113 @@ class ConfiguredApiServiceTest {
       sortedAsc,
       reportId,
       policyEngineResult,
+    )
+    assertEquals(expectedServiceResult, actual)
+  }
+  companion object {
+  }
+
+  @Test
+  fun `should call the configuredApiRepository with no sort column if none is provided and there is no default`() {
+    val dataSet =
+      Dataset("datasetId", "datasetname", "select *", Schema(listOf(SchemaField("9", ParameterType.String))))
+    val report = Report(
+      id = "6",
+      name = "7",
+      created = LocalDateTime.MAX,
+      version = "8",
+      dataset = "\$ref:datasetId",
+      render = RenderMethod.SVG,
+      classification = "someClassification",
+      specification = Specification(
+        "list",
+        listOf(
+          ReportField(
+            name = "\$ref:9",
+            display = "Number 9",
+            formula = "",
+            visible = true,
+            sortable = true,
+            defaultSort = false,
+          ),
+        ),
+      ),
+    )
+    val policy = Policy(
+      "caseload",
+      PolicyType.ROW_LEVEL,
+      listOf("TRUE"),
+      listOf(Rule(Effect.PERMIT, emptyList())),
+    )
+    val productDefinition = ProductDefinition(
+      id = "1",
+      name = "2",
+      metadata = MetaData(
+        author = "3",
+        owner = "4",
+        version = "5",
+      ),
+      policy = listOf(policy),
+      dataset = listOf(dataSet),
+      report = listOf(
+        report,
+      ),
+    )
+    val expectedRepositoryResult = listOf(
+      mapOf("9" to "1"),
+    )
+    val expectedServiceResult = listOf(
+      mapOf("9" to "1"),
+    )
+    val productDefRepo = mock<ProductDefinitionRepository>()
+    val configuredApiService = ConfiguredApiService(productDefRepo, configuredApiRepository)
+    whenever(productDefRepo.getProductDefinitions())
+      .thenReturn(listOf(productDefinition))
+    whenever(productDefRepo.getSingleReportProductDefinition(reportId, reportVariantId))
+      .thenReturn(
+        SingleReportProductDefinition(
+          id = "1",
+          name = "2",
+          metadata = MetaData(
+            author = "3",
+            owner = "4",
+            version = "5",
+          ),
+          policy = listOf(policy),
+          dataset = dataSet,
+          report = report,
+          datasource = Datasource("id", "name"),
+        ),
+      )
+
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortedAsc = true
+
+    whenever(
+      configuredApiRepository.executeQuery(
+        dataSet.query,
+        emptyList(),
+        selectedPage,
+        pageSize,
+        null,
+        sortedAsc,
+        reportId,
+        POLICY_PERMIT,
+      ),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, null, sortedAsc, authToken)
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      dataSet.query,
+      emptyList(),
+      selectedPage,
+      pageSize,
+      null,
+      sortedAsc,
+      reportId,
+      POLICY_PERMIT,
     )
     assertEquals(expectedServiceResult, actual)
   }

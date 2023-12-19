@@ -26,7 +26,7 @@ class ConfiguredApiRepository {
     filters: List<Filter>,
     selectedPage: Long,
     pageSize: Long,
-    sortColumn: String,
+    sortColumn: String?,
     sortedAsc: Boolean,
     reportId: String,
     policyEngineResult: String,
@@ -55,13 +55,17 @@ class ConfiguredApiRepository {
     """$STAGE_3 AS (SELECT * FROM $STAGE_2 WHERE ${buildFiltersWhereClause(filters)})"""
   private fun buildPaginationQuery(
     dynamicFilterFieldId: String?,
-    sortColumn: String,
+    sortColumn: String?,
     sortedAsc: Boolean,
     pageSize: Long,
     selectedPage: Long,
   ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
-        FROM stage_3 ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)} 
+        FROM stage_3 ${buildOrderByClause(sortColumn, sortedAsc)} 
         limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+
+  private fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
+    sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
+
   private fun buildFinalQuery(
     reportQuery: String,
     policiesQuery: String,
