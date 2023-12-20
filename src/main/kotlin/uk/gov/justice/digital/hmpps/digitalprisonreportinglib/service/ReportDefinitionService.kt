@@ -13,13 +13,13 @@ class ReportDefinitionService(
   val mapper: ReportDefinitionMapper,
 ) {
 
-  fun getListForUser(renderMethod: RenderMethod?, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?): List<ReportDefinition> {
+  fun getListForUser(renderMethod: RenderMethod?, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken): List<ReportDefinition> {
     return productDefinitionRepository.getProductDefinitions()
       .map { mapper.map(it, renderMethod, maxStaticOptions, userToken) }
       .filter { it.variants.isNotEmpty() }
   }
 
-  fun getDefinition(reportId: String, variantId: String, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?): SingleVariantReportDefinition {
+  fun getDefinition(reportId: String, variantId: String, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken): SingleVariantReportDefinition {
     return mapper.map(
       productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId),
       maxStaticOptions,
