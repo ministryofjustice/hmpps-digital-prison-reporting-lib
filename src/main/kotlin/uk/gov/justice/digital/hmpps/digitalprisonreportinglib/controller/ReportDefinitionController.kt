@@ -81,7 +81,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
       reportId,
       variantId,
       maxStaticOptions,
-      if (authentication is DprAuthAwareAuthenticationToken) authentication else null
+      if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     )
   }
 }

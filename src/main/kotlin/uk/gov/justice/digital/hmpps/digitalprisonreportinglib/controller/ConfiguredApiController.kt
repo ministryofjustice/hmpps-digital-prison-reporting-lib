@@ -92,7 +92,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             pageSize,
             sortColumn,
             sortedAsc,
-            if (authentication is DprAuthAwareAuthenticationToken) authentication else null
+            if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           ),
         )
     } catch (exception: NoDataAvailableException) {
