@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Min
+import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -40,9 +41,13 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
-    authentication: DprAuthAwareAuthenticationToken,
+    authentication: Authentication,
   ): List<ReportDefinition> {
-    return reportDefinitionService.getListForUser(renderMethod, maxStaticOptions, authentication)
+    return reportDefinitionService.getListForUser(
+      renderMethod,
+      maxStaticOptions,
+      if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    )
   }
 
   @GetMapping("/definitions/{reportId}/{variantId}")
@@ -70,8 +75,13 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
-    authentication: DprAuthAwareAuthenticationToken,
+    authentication: Authentication,
   ): SingleVariantReportDefinition {
-    return reportDefinitionService.getDefinition(reportId, variantId, maxStaticOptions, authentication)
+    return reportDefinitionService.getDefinition(
+      reportId,
+      variantId,
+      maxStaticOptions,
+      if (authentication is DprAuthAwareAuthenticationToken) authentication else null
+    )
   }
 }
