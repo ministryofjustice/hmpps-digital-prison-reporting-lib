@@ -78,7 +78,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    authentication: DprAuthAwareAuthenticationToken,
+    authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any>>> {
     return try {
       ResponseEntity
@@ -92,7 +92,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             pageSize,
             sortColumn,
             sortedAsc,
-            authentication,
+            if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           ),
         )
     } catch (exception: NoDataAvailableException) {
@@ -198,13 +198,13 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    authentication: DprAuthAwareAuthenticationToken,
+    authentication: Authentication,
   ): ResponseEntity<Count> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), authentication),
+          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), if (authentication is DprAuthAwareAuthenticationToken) authentication else null),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
