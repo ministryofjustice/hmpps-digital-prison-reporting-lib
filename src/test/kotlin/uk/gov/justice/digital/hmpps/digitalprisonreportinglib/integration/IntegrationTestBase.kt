@@ -80,7 +80,7 @@ abstract class IntegrationTestBase {
   fun setup() {
     wireMockServer.resetAll()
     stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
-    stubMeDefinitionsResponse()
+    stubDefinitionsResponse()
     ConfiguredApiRepositoryTest.AllMovements.allExternalMovements.forEach {
       externalMovementRepository.save(it)
     }
@@ -89,7 +89,7 @@ abstract class IntegrationTestBase {
     }
   }
 
-  protected fun stubMeDefinitionsResponse() {
+  protected fun stubDefinitionsResponse() {
     val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")?.readText()
     wireMockServer.stubFor(
       WireMock.get("/definitions/prisons/orphanage").willReturn(
