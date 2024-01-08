@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.gson.Gson
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.converter.json.GsonHttpMessageConverter
 import org.springframework.web.client.RestTemplate
 
 @Configuration
@@ -29,9 +29,11 @@ class ProductDefinitionRepositoryAutoConfig(
   @Bean
   @ConditionalOnProperty(prefix = "dpr.lib.definition", name = ["locations"], matchIfMissing = true)
   fun dataProductDefinitionsRepository(
-    @Qualifier("definitionsWebClient") definitionsWebClient: RestTemplate,
+    dprDefinitionGson: Gson,
   ): ProductDefinitionRepository = ClientDataProductDefinitionsRepository(
-    definitionsWebClient,
+    RestTemplate(
+      listOf(GsonHttpMessageConverter(dprDefinitionGson)),
+    ),
     definitionsHost,
   )
 

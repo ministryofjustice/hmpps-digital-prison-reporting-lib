@@ -12,18 +12,12 @@ class ClientDataProductDefinitionsRepository(
 ) : AbstractProductDefinitionRepository() {
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
-//    return path?.let {
-//      dataProductDefinitionsClient
-//        .get()
-//        .uri(it)
-//        .retrieve()
-//        .bodyToMono(object : ParameterizedTypeReference<List<ProductDefinition>>() {})
-//        .block()
-//    } ?: emptyList()
-    val host = definitionsHost ?: ""
+    if (definitionsHost == null) {
+      return emptyList()
+    }
     val respEntity: ResponseEntity<List<ProductDefinition>>? = path?.let {
       dataProductDefinitionsClient
-        .exchange("$host/$path", HttpMethod.GET, null, object : ParameterizedTypeReference<List<ProductDefinition>>() {})
+        .exchange("$definitionsHost/$path", HttpMethod.GET, null, object : ParameterizedTypeReference<List<ProductDefinition>>() {})
     }
     return respEntity?.body ?: emptyList()
   }
