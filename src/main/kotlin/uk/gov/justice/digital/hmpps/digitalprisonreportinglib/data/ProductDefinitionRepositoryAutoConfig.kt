@@ -12,7 +12,8 @@ import org.springframework.web.client.RestTemplate
 @Configuration
 class ProductDefinitionRepositoryAutoConfig(
   @Value("\${dpr.lib.definition.locations:#{null}}") private val definitionResourceLocations: List<String>?,
-  @Value("\${dpr.lib.dataProductDefinitions.host:#{null}}") private val definitionsHost: String?,) {
+  @Value("\${dpr.lib.dataProductDefinitions.host:#{null}}") private val definitionsHost: String?,
+) {
 
   @Bean
   @ConditionalOnMissingBean(ProductDefinitionRepository::class)
@@ -28,10 +29,10 @@ class ProductDefinitionRepositoryAutoConfig(
   @Bean
   @ConditionalOnProperty(prefix = "dpr.lib.definition", name = ["locations"], matchIfMissing = true)
   fun dataProductDefinitionsRepository(
-    @Qualifier("definitionsWebClient") definitionsWebClient: RestTemplate
+    @Qualifier("definitionsWebClient") definitionsWebClient: RestTemplate,
   ): ProductDefinitionRepository = ClientDataProductDefinitionsRepository(
     definitionsWebClient,
-    definitionsHost
+    definitionsHost,
   )
 
   @Bean

@@ -90,13 +90,13 @@ abstract class IntegrationTestBase {
   }
 
   protected fun stubMeDefinitionsResponse() {
-    val courtsJson = this::class.java.classLoader.getResource("productDefinition.json")?.readText()
+    val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")?.readText()
     wireMockServer.stubFor(
       WireMock.get("/definitions/prisons/orphanage").willReturn(
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody("""[$courtsJson]"""),
+          .withBody("""[$productDefinitionJson]"""),
       ),
     )
   }

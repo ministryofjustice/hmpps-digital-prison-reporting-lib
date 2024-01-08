@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 
 class JsonFileProductDefinitionRepository(

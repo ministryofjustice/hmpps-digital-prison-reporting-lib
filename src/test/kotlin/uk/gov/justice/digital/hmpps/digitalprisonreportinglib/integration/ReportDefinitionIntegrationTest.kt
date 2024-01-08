@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -17,6 +16,14 @@ import java.time.LocalDate.now
 import java.time.format.DateTimeFormatter
 
 class ReportDefinitionIntegrationTest : IntegrationTestBase() {
+
+  companion object {
+    @JvmStatic
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
+      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+    }
+  }
 
   class ReportDefinitionListTest : IntegrationTestBase() {
 
@@ -54,6 +61,65 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
       assertThat(definition.name).isEqualTo("External Movements")
       assertThat(courtAndHospitalMovementsReport.name).isEqualTo("Court And Hospital Movement DPD")
+      assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
+      assertThat(definition.variants).hasSize(2)
+      assertThat(definition.variants[0]).isNotNull
+      assertThat(definition.variants[1]).isNotNull
+
+      val lastMonthVariant = definition.variants[0]
+
+      assertThat(lastMonthVariant.id).isEqualTo("last-month")
+      assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
+      assertThat(lastMonthVariant.name).isEqualTo("Last month")
+      assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+      assertThat(lastMonthVariant.specification).isNotNull
+      assertThat(lastMonthVariant.specification?.fields).hasSize(8)
+
+      val lastWeekVariant = definition.variants[1]
+      assertThat(lastWeekVariant.id).isEqualTo("last-week")
+      assertThat(lastWeekVariant.resourceName).isEqualTo("reports/external-movements/last-week")
+      assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
+      assertThat(lastWeekVariant.name).isEqualTo("Last week")
+      assertThat(lastWeekVariant.specification).isNotNull
+      assertThat(lastWeekVariant.specification?.fields).hasSize(8)
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
+    }
+  }
+
+  class ClientReportDefinitionListTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.dataProductDefinitions.host") { "http://localhost:9999" }
+      }
+    }
+
+    @Test
+    fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions")
+            .queryParam("dataProductDefinitionsPath", "definitions/prisons/orphanage")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<ReportDefinition>()
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+      assertThat(result.responseBody).hasSize(1)
+      assertThat(result.responseBody).first().isNotNull
+
+      val definition = result.responseBody!!.first()
+
+      assertThat(definition.name).isEqualTo("External Movements")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
       assertThat(definition.variants).hasSize(2)
       assertThat(definition.variants[0]).isNotNull

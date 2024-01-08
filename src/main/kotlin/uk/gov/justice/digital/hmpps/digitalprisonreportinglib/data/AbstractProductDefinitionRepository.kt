@@ -9,7 +9,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
   override fun getSingleReportProductDefinition(
     definitionId: String,
     reportId: String,
-    dataProductDefinitionsPath: String?
+    dataProductDefinitionsPath: String?,
   ): SingleReportProductDefinition {
     val schemaRefPrefix = "\$ref:"
     val productDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)

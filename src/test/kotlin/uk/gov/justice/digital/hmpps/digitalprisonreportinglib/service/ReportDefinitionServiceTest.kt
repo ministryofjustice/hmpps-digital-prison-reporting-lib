@@ -98,7 +98,7 @@ class ReportDefinitionServiceTest {
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken,)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
 
     then(repository).should().getProductDefinitions()
     then(mapper).should().map(minimalDefinition, RenderMethod.HTML, 20, authToken)
@@ -162,7 +162,7 @@ class ReportDefinitionServiceTest {
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken,)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
 
     assertThat(actualResult).hasSize(0)
   }

@@ -17,7 +17,7 @@ class ReportDefinitionService(
     renderMethod: RenderMethod?,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String? = null
+    dataProductDefinitionsPath: String? = null,
   ): List<ReportDefinition> {
     return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
       .map { mapper.map(it, renderMethod, maxStaticOptions, userToken, dataProductDefinitionsPath) }
@@ -29,13 +29,13 @@ class ReportDefinitionService(
     variantId: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String? = null
+    dataProductDefinitionsPath: String? = null,
   ): SingleVariantReportDefinition {
     return mapper.map(
       definition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath),
       maxStaticOptions = maxStaticOptions,
       userToken = userToken,
-      dataProductDefinitionsPath = dataProductDefinitionsPath
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
   }
 }

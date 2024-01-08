@@ -25,7 +25,7 @@ class JsonFileProductDefinitionRepositoryTest {
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${caseload}"))))),
     )
     val productDefinition = jsonFileProductDefinitionRepository.getProductDefinition(
-      "dpd001-court-hospital-movements"
+      "dpd001-court-hospital-movements",
     )
     Assertions.assertThat(productDefinition).isNotNull
     Assertions.assertThat(productDefinition.id).isEqualTo("dpd001-court-hospital-movements")

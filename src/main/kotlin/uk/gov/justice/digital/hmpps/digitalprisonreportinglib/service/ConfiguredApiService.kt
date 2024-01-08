@@ -44,7 +44,7 @@ class ConfiguredApiService(
     userToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: String? = null,
     prefix: String? = null,
-    dataProductDefinitionsPath: String? = null
+    dataProductDefinitionsPath: String? = null,
   ): List<Map<String, Any>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
@@ -84,7 +84,7 @@ class ConfiguredApiService(
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
-      reportVariantId
+      reportVariantId,
     )
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(

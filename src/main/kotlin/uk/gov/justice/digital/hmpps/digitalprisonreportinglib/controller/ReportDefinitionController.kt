@@ -49,7 +49,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
       renderMethod,
       maxStaticOptions,
       if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-      dataProductDefinitionsPath
+      dataProductDefinitionsPath,
     )
   }
 
@@ -87,7 +87,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
       variantId,
       maxStaticOptions,
       if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-      dataProductDefinitionsPath
+      dataProductDefinitionsPath,
     )
   }
 }

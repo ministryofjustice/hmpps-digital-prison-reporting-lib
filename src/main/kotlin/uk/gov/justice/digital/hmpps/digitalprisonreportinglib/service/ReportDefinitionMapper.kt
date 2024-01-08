@@ -35,7 +35,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     renderMethod: RenderMethod?,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String? = null
+    dataProductDefinitionsPath: String? = null,
   ): ReportDefinition = ReportDefinition(
     id = productDefinition.id,
     name = productDefinition.name,
@@ -59,7 +59,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String? = null
+    dataProductDefinitionsPath: String? = null,
   ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
@@ -77,7 +77,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String?
+    dataProductDefinitionsPath: String?,
   ): Specification? {
     if (specification == null) {
       return null
@@ -96,7 +96,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String?
+    dataProductDefinitionsPath: String?,
   ): FieldDefinition {
     val schemaFieldRef = field.name.removePrefix("\$ref:")
     val schemaField = schemaFields.find { it.name == schemaFieldRef }
@@ -120,7 +120,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     schemaFieldName: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String?
+    dataProductDefinitionsPath: String?,
   ): FilterDefinition {
     return FilterDefinition(
       type = FilterType.valueOf(filterDefinition.type.toString()),
@@ -150,7 +150,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
         sortedAsc = true,
         userToken = userToken,
         reportFieldId = schemaFieldName,
-        dataProductDefinitionsPath = dataProductDefinitionsPath
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
       ).flatMap { it.entries }.map { FilterOption(it.value as String, it.value as String) }
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
