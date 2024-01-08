@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -30,7 +31,12 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Definition list is returned as expected`() {
       val result = webTestClient.get()
-        .uri("/definitions")
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions")
+            .queryParam("dataProductDefinitionsPath", "prisons/orphanage")
+            .build()
+        }
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()

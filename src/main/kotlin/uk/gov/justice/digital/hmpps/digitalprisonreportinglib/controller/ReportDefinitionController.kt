@@ -41,12 +41,15 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
+    @RequestParam("dataProductDefinitionsPath")
+    dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): List<ReportDefinition> {
     return reportDefinitionService.getListForUser(
       renderMethod,
       maxStaticOptions,
       if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+      dataProductDefinitionsPath
     )
   }
 
@@ -75,6 +78,8 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
+    @RequestParam("dataProductDefinitionsPath")
+    dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): SingleVariantReportDefinition {
     return reportDefinitionService.getDefinition(
@@ -82,6 +87,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
       variantId,
       maxStaticOptions,
       if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+      dataProductDefinitionsPath
     )
   }
 }

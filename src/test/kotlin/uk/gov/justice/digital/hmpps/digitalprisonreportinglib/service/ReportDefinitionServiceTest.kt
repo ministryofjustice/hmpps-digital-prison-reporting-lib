@@ -94,11 +94,11 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), any()) } doReturn expectedResult
+      on { map(any(), any(), any(), any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken,)
 
     then(repository).should().getProductDefinitions()
     then(mapper).should().map(minimalDefinition, RenderMethod.HTML, 20, authToken)
@@ -122,7 +122,7 @@ class ReportDefinitionServiceTest {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository> {
-      on { getSingleReportProductDefinition(any(), any()) } doReturn minimalSingleDefinition
+      on { getSingleReportProductDefinition(any(), any(), any()) } doReturn minimalSingleDefinition
     }
     val mapper = mock<ReportDefinitionMapper> {
       on { map(any(), any(), any()) } doReturn expectedResult
@@ -136,7 +136,10 @@ class ReportDefinitionServiceTest {
       authToken,
     )
 
-    then(repository).should().getSingleReportProductDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
+    then(repository).should().getSingleReportProductDefinition(
+      minimalSingleDefinition.id,
+      minimalSingleDefinition.report.id,
+    )
     then(mapper).should().map(minimalSingleDefinition, 20, authToken)
 
     assertThat(actualResult).isNotNull
@@ -155,11 +158,11 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), any()) } doReturn definitionWithNoVariants
+      on { map(any(), any(), any(), any(), any()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
+    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken,)
 
     assertThat(actualResult).hasSize(0)
   }
