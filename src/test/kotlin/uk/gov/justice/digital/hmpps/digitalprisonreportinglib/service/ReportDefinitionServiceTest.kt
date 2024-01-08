@@ -2,11 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.then
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.kotlin.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -123,10 +120,10 @@ class ReportDefinitionServiceTest {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository> {
-      on { getSingleReportProductDefinition(any(), any(), any()) } doReturn minimalSingleDefinition
+      on { getSingleReportProductDefinition(any(), any(), anyOrNull()) } doReturn minimalSingleDefinition
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any()) } doReturn expectedResult
+      on { map(any<SingleReportProductDefinition>(), any<Long>(), any(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
