@@ -28,8 +28,10 @@ class ProductDefinitionRepositoryAutoConfig(
   )
 
   @Bean
-  @ConditionalOnExpression("T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.definition.locations:}') " +
-    "&& !T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.dataProductDefinitions.host:}')")
+  @ConditionalOnExpression(
+    "T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.definition.locations:}') " +
+      "&& !T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.dataProductDefinitions.host:}')",
+  )
   fun dataProductDefinitionsRepository(
     dprDefinitionGson: Gson,
   ): ProductDefinitionRepository = ClientDataProductDefinitionsRepository(
