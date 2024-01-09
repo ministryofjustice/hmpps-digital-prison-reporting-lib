@@ -78,6 +78,12 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
+    @Parameter(
+      description = ReportDefinitionController.dataProductDefinitionsPathDescription,
+      example = ReportDefinitionController.dataProductDefinitionsPathExample,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.dataProductDefinitionsPathExample)
+    dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any>>> {
     return try {
@@ -85,14 +91,15 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         .status(HttpStatus.OK)
         .body(
           configuredApiService.validateAndFetchData(
-            reportId,
-            reportVariantId,
-            filtersOnly(filters),
-            selectedPage,
-            pageSize,
-            sortColumn,
-            sortedAsc,
-            if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            filters = filtersOnly(filters),
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            sortColumn = sortColumn,
+            sortedAsc = sortedAsc,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
           ),
         )
     } catch (exception: NoDataAvailableException) {
@@ -132,14 +139,28 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     )
     @RequestParam
     filters: Map<String, String>,
+    @Parameter(
+      description = "The value to match the start of the fieldId",
+      example = "Lond",
+    )
     @RequestParam
     prefix: String,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
+    @Parameter(
+      description = "The name of the schema field which will be used as a dynamic filter.",
+      example = "name",
+    )
     @PathVariable("fieldId")
     @NotNull
     @NotEmpty
     fieldId: String,
+    @Parameter(
+      description = ReportDefinitionController.dataProductDefinitionsPathDescription,
+      example = ReportDefinitionController.dataProductDefinitionsPathExample,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.dataProductDefinitionsPathExample)
+    dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<List<String>> {
     return try {
@@ -147,16 +168,17 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         .status(HttpStatus.OK)
         .body(
           configuredApiService.validateAndFetchData(
-            reportId,
-            reportVariantId,
-            filtersOnly(filters),
-            1,
-            pageSize,
-            fieldId,
-            sortedAsc,
-            if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            fieldId,
-            prefix,
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            filters = filtersOnly(filters),
+            selectedPage = 1,
+            pageSize = pageSize,
+            sortColumn = fieldId,
+            sortedAsc = sortedAsc,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            reportFieldId = fieldId,
+            prefix = prefix,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
           ).asSequence()
             .flatMap {
               it.asSequence()
@@ -198,13 +220,25 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     filters: Map<String, String>,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
+    @Parameter(
+      description = ReportDefinitionController.dataProductDefinitionsPathDescription,
+      example = ReportDefinitionController.dataProductDefinitionsPathExample,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.dataProductDefinitionsPathExample)
+    dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<Count> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndCount(reportId, reportVariantId, filtersOnly(filters), if (authentication is DprAuthAwareAuthenticationToken) authentication else null),
+          configuredApiService.validateAndCount(
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            filters = filtersOnly(filters),
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
+          ),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()

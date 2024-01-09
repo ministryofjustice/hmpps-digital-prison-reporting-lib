@@ -82,6 +82,58 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
   }
 
+  class ReportDefinitionListTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.dataProductDefinitions.host") { "http://localhost:9999" }
+      }
+    }
+
+    @Test
+    fun `Configured API returns value from the repository when the definitions are retrieved via the web client`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", false)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .json(
+          """[
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}:00", 
+        "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
+        "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
+      ]       
+      """,
+        )
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
+    }
+
+    @Test
+    fun `Configured API count returns the number of records when the definitions are retrieved via the web client`() {
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("count").isEqualTo("1")
+    }
+  }
+
   @Test
   fun `Configured API count returns the number of records`() {
     webTestClient.get()
@@ -235,6 +287,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .withBody(CASELOADS_WITH_NONE_ACTIVE),
       ),
     )
+    stubDefinitionsResponse()
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -267,6 +320,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .withBody(CASELOADS_WITH_NONE_ACTIVE),
       ),
     )
+    stubDefinitionsResponse()
 
     webTestClient.get()
       .uri("/reports/external-movements/last-month/count")

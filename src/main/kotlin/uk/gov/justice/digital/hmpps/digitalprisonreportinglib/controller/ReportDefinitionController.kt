@@ -23,9 +23,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 class ReportDefinitionController(val reportDefinitionService: ReportDefinitionService) {
 
   companion object {
-    private const val dataProductDefinitionsPathDescription = """This optional parameter sets the path of the directory of the data product definition files your application will use.
+    const val dataProductDefinitionsPathDescription = """This optional parameter sets the path of the directory of the data product definition files your application will use.
       "This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client."""
-    private const val dataProductDefinitionsPathExample = "definitions/prisons/orphanage"
+    const val dataProductDefinitionsPathExample = "definitions/prisons/orphanage"
   }
 
   @GetMapping("/definitions")
