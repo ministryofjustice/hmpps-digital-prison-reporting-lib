@@ -24,7 +24,9 @@ class JsonFileProductDefinitionRepositoryTest {
       listOf("(origin_code='\${caseload}' AND lower(direction)='out') OR (destination_code='\${caseload}' AND lower(direction)='in')"),
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${caseload}"))))),
     )
-    val productDefinition = jsonFileProductDefinitionRepository.getProductDefinition("dpd001-court-hospital-movements")
+    val productDefinition = jsonFileProductDefinitionRepository.getProductDefinition(
+      "dpd001-court-hospital-movements",
+    )
     Assertions.assertThat(productDefinition).isNotNull
     Assertions.assertThat(productDefinition.id).isEqualTo("dpd001-court-hospital-movements")
     Assertions.assertThat(productDefinition.policy).isEqualTo(listOf(policy))

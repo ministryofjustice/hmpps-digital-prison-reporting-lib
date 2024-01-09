@@ -35,21 +35,22 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     renderMethod: RenderMethod?,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
   ): ReportDefinition = ReportDefinition(
     id = productDefinition.id,
     name = productDefinition.name,
     description = productDefinition.description,
     variants = productDefinition.report
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(productDefinition.id, it, productDefinition.dataset, maxStaticOptions, userToken) },
+      .map { map(productDefinition.id, it, productDefinition.dataset, maxStaticOptions, userToken, dataProductDefinitionsPath) },
   )
 
-  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?): VariantDefinition {
+  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): VariantDefinition {
     val dataSetRef = report.dataset.removePrefix("\$ref:")
     val dataSet = datasets.find { it.id == dataSetRef }
       ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
 
-    return map(report, dataSet, productDefinitionId, maxStaticOptions, userToken)
+    return map(report, dataSet, productDefinitionId, maxStaticOptions, userToken, dataProductDefinitionsPath)
   }
 
   private fun map(
@@ -58,12 +59,13 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
   ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
       name = report.name,
       description = report.description,
-      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, maxStaticOptions, userToken),
+      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, maxStaticOptions, userToken, dataProductDefinitionsPath),
       resourceName = "reports/$productDefinitionId/${report.id}",
     )
   }
@@ -75,6 +77,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
   ): Specification? {
     if (specification == null) {
       return null
@@ -82,7 +85,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
     return Specification(
       template = specification.template,
-      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, maxStaticOptions, userToken) },
+      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, maxStaticOptions, userToken, dataProductDefinitionsPath) },
     )
   }
 
@@ -93,6 +96,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
   ): FieldDefinition {
     val schemaFieldRef = field.name.removePrefix("\$ref:")
     val schemaField = schemaFields.find { it.name == schemaFieldRef }
@@ -102,7 +106,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       name = schemaField.name,
       display = field.display,
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
-      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, maxStaticOptions, userToken) },
+      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, maxStaticOptions, userToken, dataProductDefinitionsPath) },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
       type = schemaField.type.toString().let(FieldType::valueOf),
@@ -116,10 +120,11 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     schemaFieldName: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
   ): FilterDefinition {
     return FilterDefinition(
       type = FilterType.valueOf(filterDefinition.type.toString()),
-      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, maxStaticOptions, userToken),
+      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, maxStaticOptions, userToken, dataProductDefinitionsPath),
       dynamicOptions = filterDefinition.dynamicOptions,
       defaultValue = replaceTokens(filterDefinition.default),
     )
@@ -132,11 +137,20 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     schemaFieldName: String,
     maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
   ): List<FilterOption>? {
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let {
       configuredApiService.validateAndFetchData(
-        productDefinitionId,
-        reportVariantId, emptyMap(), 1, maxStaticOptions, schemaFieldName, true, userToken, schemaFieldName,
+        reportId = productDefinitionId,
+        reportVariantId = reportVariantId,
+        filters = emptyMap(),
+        selectedPage = 1,
+        pageSize = maxStaticOptions,
+        sortColumn = schemaFieldName,
+        sortedAsc = true,
+        userToken = userToken,
+        reportFieldId = schemaFieldName,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
       ).flatMap { it.entries }.map { FilterOption(it.value as String, it.value as String) }
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
@@ -165,12 +179,12 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     display = definition.display,
   )
 
-  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?): SingleVariantReportDefinition {
+  fun map(definition: SingleReportProductDefinition, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
       id = definition.id,
       name = definition.name,
       description = definition.description,
-      variant = map(definition.report, definition.dataset, definition.id, maxStaticOptions, userToken),
+      variant = map(report = definition.report, dataSet = definition.dataset, productDefinitionId = definition.id, maxStaticOptions = maxStaticOptions, userToken = userToken, dataProductDefinitionsPath = dataProductDefinitionsPath),
     )
   }
 }

@@ -13,17 +13,29 @@ class ReportDefinitionService(
   val mapper: ReportDefinitionMapper,
 ) {
 
-  fun getListForUser(renderMethod: RenderMethod?, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?): List<ReportDefinition> {
-    return productDefinitionRepository.getProductDefinitions()
-      .map { mapper.map(it, renderMethod, maxStaticOptions, userToken) }
+  fun getListForUser(
+    renderMethod: RenderMethod?,
+    maxStaticOptions: Long,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
+  ): List<ReportDefinition> {
+    return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
+      .map { mapper.map(it, renderMethod, maxStaticOptions, userToken, dataProductDefinitionsPath) }
       .filter { it.variants.isNotEmpty() }
   }
 
-  fun getDefinition(reportId: String, variantId: String, maxStaticOptions: Long, userToken: DprAuthAwareAuthenticationToken?): SingleVariantReportDefinition {
+  fun getDefinition(
+    reportId: String,
+    variantId: String,
+    maxStaticOptions: Long,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
+  ): SingleVariantReportDefinition {
     return mapper.map(
-      productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId),
-      maxStaticOptions,
-      userToken,
+      definition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath),
+      maxStaticOptions = maxStaticOptions,
+      userToken = userToken,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
   }
 }

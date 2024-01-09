@@ -9,6 +9,8 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_PREFIX
@@ -29,6 +31,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
+  companion object {
+    @JvmStatic
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
+      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+    }
+  }
 
   val CASELOADS_WITH_NONE_ACTIVE: String = """
           {

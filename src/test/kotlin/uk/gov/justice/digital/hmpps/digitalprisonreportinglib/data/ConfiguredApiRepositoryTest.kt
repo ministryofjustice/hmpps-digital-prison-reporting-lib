@@ -9,6 +9,8 @@ import org.junit.jupiter.api.TestFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
@@ -40,6 +42,14 @@ import java.time.LocalDateTime
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class ConfiguredApiRepositoryTest {
+
+  companion object {
+    @JvmStatic
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
+      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+    }
+  }
 
   @Autowired
   lateinit var externalMovementRepository: ExternalMovementRepository

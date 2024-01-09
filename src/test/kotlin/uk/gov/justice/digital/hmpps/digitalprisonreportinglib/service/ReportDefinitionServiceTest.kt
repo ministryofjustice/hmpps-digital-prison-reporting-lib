@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.then
@@ -94,7 +95,7 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), any()) } doReturn expectedResult
+      on { map(any(), any(), any(), any(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
@@ -122,10 +123,10 @@ class ReportDefinitionServiceTest {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository> {
-      on { getSingleReportProductDefinition(any(), any()) } doReturn minimalSingleDefinition
+      on { getSingleReportProductDefinition(any(), any(), anyOrNull()) } doReturn minimalSingleDefinition
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any()) } doReturn expectedResult
+      on { map(any<SingleReportProductDefinition>(), any<Long>(), any(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
@@ -136,7 +137,10 @@ class ReportDefinitionServiceTest {
       authToken,
     )
 
-    then(repository).should().getSingleReportProductDefinition(minimalSingleDefinition.id, minimalSingleDefinition.report.id)
+    then(repository).should().getSingleReportProductDefinition(
+      minimalSingleDefinition.id,
+      minimalSingleDefinition.report.id,
+    )
     then(mapper).should().map(minimalSingleDefinition, 20, authToken)
 
     assertThat(actualResult).isNotNull
@@ -155,7 +159,7 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), any()) } doReturn definitionWithNoVariants
+      on { map(any(), any(), any(), any(), anyOrNull()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper)
 
