@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.gson.Gson
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
@@ -27,7 +28,8 @@ class ProductDefinitionRepositoryAutoConfig(
   )
 
   @Bean
-  @ConditionalOnProperty(prefix = "dpr.lib.definition", name = ["locations"], matchIfMissing = true)
+  @ConditionalOnExpression("T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.definition.locations:}') " +
+    "&& !T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.dataProductDefinitions.host:}')")
   fun dataProductDefinitionsRepository(
     dprDefinitionGson: Gson,
   ): ProductDefinitionRepository = ClientDataProductDefinitionsRepository(
