@@ -26,6 +26,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     private const val dataProductDefinitionsPathDescription = """This optional parameter sets the path of the directory of the data product definition files your application will use.
       "This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client."""
     private const val dataProductDefinitionsPathExample = "definitions/prisons/orphanage"
+    private const val dataProductDefinitionsDefaultPath = "prisons/orphanage"
   }
 
   @GetMapping("/definitions")
@@ -51,7 +52,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
       description = dataProductDefinitionsPathDescription,
       example = dataProductDefinitionsPathExample,
     )
-    @RequestParam("dataProductDefinitionsPath")
+    @RequestParam("dataProductDefinitionsPath", defaultValue = dataProductDefinitionsDefaultPath)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): List<ReportDefinition> {
@@ -92,7 +93,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
       description = dataProductDefinitionsPathDescription,
       example = dataProductDefinitionsPathExample,
     )
-    @RequestParam("dataProductDefinitionsPath")
+    @RequestParam("dataProductDefinitionsPath", defaultValue = dataProductDefinitionsDefaultPath)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): SingleVariantReportDefinition {
