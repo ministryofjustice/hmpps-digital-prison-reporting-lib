@@ -22,6 +22,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 @Tag(name = "Report Definition API")
 class ReportDefinitionController(val reportDefinitionService: ReportDefinitionService) {
 
+  companion object {
+    private const val dataProductDefinitionsPathDescription = """This optional parameter sets the path of the directory of the data product definition files your application will use.
+      "This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client."""
+    private const val dataProductDefinitionsPathExample = "definitions/prisons/orphanage"
+  }
+
   @GetMapping("/definitions")
   @Operation(
     description = "Gets all report definitions",
@@ -41,6 +47,10 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
+    @Parameter(
+      description = dataProductDefinitionsPathDescription,
+      example = dataProductDefinitionsPathExample,
+    )
     @RequestParam("dataProductDefinitionsPath")
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
@@ -78,6 +88,10 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("maxStaticOptions", defaultValue = "20")
     @Min(1)
     maxStaticOptions: Long,
+    @Parameter(
+      description = dataProductDefinitionsPathDescription,
+      example = dataProductDefinitionsPathExample,
+    )
     @RequestParam("dataProductDefinitionsPath")
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,

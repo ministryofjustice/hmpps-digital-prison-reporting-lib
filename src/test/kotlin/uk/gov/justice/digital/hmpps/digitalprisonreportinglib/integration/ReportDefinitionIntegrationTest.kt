@@ -41,7 +41,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .uri { uriBuilder: UriBuilder ->
           uriBuilder
             .path("/definitions")
-            .queryParam("dataProductDefinitionsPath", "prisons/orphanage")
             .build()
         }
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
