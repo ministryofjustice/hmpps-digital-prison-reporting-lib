@@ -81,10 +81,12 @@ class ConfiguredApiService(
     reportVariantId: String,
     filters: Map<String, String>,
     userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,
+      dataProductDefinitionsPath,
     )
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(
