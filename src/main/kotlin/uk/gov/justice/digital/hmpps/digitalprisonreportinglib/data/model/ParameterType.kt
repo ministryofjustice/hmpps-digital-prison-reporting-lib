@@ -7,5 +7,4 @@ enum class ParameterType(@JsonValue val type: kotlin.String) {
   Date("date"),
   Long("long"),
   Time("time"),
-  ;
 }

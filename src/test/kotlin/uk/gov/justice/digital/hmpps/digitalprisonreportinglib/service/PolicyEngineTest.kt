@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ACCESS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -201,5 +202,90 @@ class PolicyEngineTest {
     val policyEngine = PolicyEngine(listOf(policy1, policy2), authToken)
     val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in') AND TRUE"
     Assertions.assertThat(policyEngine.execute()).isEqualTo(expected)
+  }
+
+  @Test
+  fun `policy engine permits an access policy with a permit rule with with an empty condition`() {
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.PERMIT, emptyList())),
+    )
+    val policyEngine = PolicyEngine(listOf(policy))
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("TRUE")
+  }
+
+  @Test
+  fun `policy engine denies an access policy with a deny rule with with an empty condition`() {
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.DENY, emptyList())),
+    )
+    val policyEngine = PolicyEngine(listOf(policy))
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
+  }
+
+  @Test
+  fun `policy engine returns TRUE for an access policy with a permit rule with a condition that a token exists when there is a token`() {
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${token}"))))),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("TRUE")
+  }
+
+  @Test
+  fun `policy engine returns FALSE for an access policy with a permit rule with a condition that a token exists when the token is null`() {
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${token}"))))),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), authToken = null)
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
+  }
+
+  @Test
+  fun `policy engine returns TRUE for an access policy with a permit rule with a condition of matching a role when there is one matching role`() {
+    val userRole = "DPR-USER"
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
+    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority(userRole)))
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole))))),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("TRUE")
+  }
+
+  @Test
+  fun `policy engine returns TRUE for an access policy with a permit rule with a condition of matching a role when any role matches`() {
+    val userRole = "DPR-USER"
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
+    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority(userRole)))
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole, "RANDOM-ROLE","GLOBAL-SEARCH"))))),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("TRUE")
+  }
+
+  @Test
+  fun `policy engine returns FALSE for an access policy with a permit rule with a condition of matching a role when no role matches`() {
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
+    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("USER_ROLE")))
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", "DPR-USER", "RANDOM-ROLE","GLOBAL-SEARCH"))))),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
+    Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")
   }
 }
