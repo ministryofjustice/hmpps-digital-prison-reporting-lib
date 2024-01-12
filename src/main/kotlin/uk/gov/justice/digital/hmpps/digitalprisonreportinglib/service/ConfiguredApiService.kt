@@ -30,7 +30,7 @@ class ConfiguredApiService(
     const val INVALID_STATIC_OPTIONS_MESSAGE = "Invalid static options provided."
     const val INVALID_DYNAMIC_OPTIONS_MESSAGE = "Invalid dynamic options length provided."
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
-    private const val schemaRefPrefix = "\$ref:"
+    private const val SCHEMA_REF_PREFIX = "\$ref:"
   }
 
   fun validateAndFetchData(
@@ -104,7 +104,7 @@ class ConfiguredApiService(
       ?.field
       ?.firstOrNull { it.defaultSort }
       ?.name
-      ?.removePrefix(schemaRefPrefix)
+      ?.removePrefix(SCHEMA_REF_PREFIX)
   }
 
   private fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String? {
@@ -169,7 +169,7 @@ class ConfiguredApiService(
   fun findFilterDefinition(definition: SingleReportProductDefinition, filterName: String): FilterDefinition {
     val field =
       definition.report.specification?.field
-        ?.firstOrNull { it.filter != null && filterName == it.name.removePrefix(schemaRefPrefix) }
+        ?.firstOrNull { it.filter != null && filterName == it.name.removePrefix(SCHEMA_REF_PREFIX) }
 
     return field?.filter ?: throw ValidationException(INVALID_FILTERS_MESSAGE)
   }
