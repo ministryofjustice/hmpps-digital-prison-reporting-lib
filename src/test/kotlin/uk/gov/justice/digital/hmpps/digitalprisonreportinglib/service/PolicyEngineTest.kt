@@ -270,7 +270,7 @@ class PolicyEngineTest {
     val policy = Policy(
       id = "caseload",
       type = ACCESS,
-      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole, "RANDOM-ROLE","GLOBAL-SEARCH"))))),
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole, "RANDOM-ROLE", "GLOBAL-SEARCH"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("TRUE")
@@ -283,7 +283,7 @@ class PolicyEngineTest {
     val policy = Policy(
       id = "caseload",
       type = ACCESS,
-      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", "DPR-USER", "RANDOM-ROLE","GLOBAL-SEARCH"))))),
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", "DPR-USER", "RANDOM-ROLE", "GLOBAL-SEARCH"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
     Assertions.assertThat(policyEngine.execute()).isEqualTo("FALSE")

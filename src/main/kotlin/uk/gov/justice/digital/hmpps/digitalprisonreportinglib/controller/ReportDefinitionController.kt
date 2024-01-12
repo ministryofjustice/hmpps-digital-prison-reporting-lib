@@ -23,9 +23,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 class ReportDefinitionController(val reportDefinitionService: ReportDefinitionService) {
 
   companion object {
-    const val dataProductDefinitionsPathDescription = """This optional parameter sets the path of the directory of the data product definition files your application will use.
+    const val DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION = """This optional parameter sets the path of the directory of the data product definition files your application will use.
       "This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client."""
-    const val dataProductDefinitionsPathExample = "definitions/prisons/orphanage"
+    const val DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE = "definitions/prisons/orphanage"
   }
 
   @GetMapping("/definitions")
@@ -48,10 +48,10 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @Min(1)
     maxStaticOptions: Long,
     @Parameter(
-      description = dataProductDefinitionsPathDescription,
-      example = dataProductDefinitionsPathExample,
+      description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = dataProductDefinitionsPathExample)
+    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): List<ReportDefinition> {
@@ -89,10 +89,10 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @Min(1)
     maxStaticOptions: Long,
     @Parameter(
-      description = dataProductDefinitionsPathDescription,
-      example = dataProductDefinitionsPathExample,
+      description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = dataProductDefinitionsPathExample)
+    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): SingleVariantReportDefinition {
