@@ -39,7 +39,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  val CASELOADS_WITH_NONE_ACTIVE: String = """
+  val caseloadsWithNoneActive: String = """
           {
             "username": "TESTUSER1",
             "active": true,
@@ -284,7 +284,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody(CASELOADS_WITH_NONE_ACTIVE),
+          .withBody(caseloadsWithNoneActive),
       ),
     )
     stubDefinitionsResponse()
@@ -317,7 +317,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody(CASELOADS_WITH_NONE_ACTIVE),
+          .withBody(caseloadsWithNoneActive),
       ),
     )
     stubDefinitionsResponse()

@@ -11,6 +11,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -316,6 +317,52 @@ class ConfiguredApiServiceTest {
 
   @Test
   fun `should call the repository with the corresponding arguments and get a list of rows regardless of the casing of the values of the non range filters`() {
+    val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+
+    whenever(
+      configuredApiRepository.executeQuery(
+        dataSet.query,
+        repositoryFilters,
+        selectedPage,
+        pageSize,
+        sortColumn,
+        sortedAsc,
+        reportId,
+        policyEngineResult = policyEngineResult,
+      ),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      dataSet.query,
+      repositoryFilters,
+      selectedPage,
+      pageSize,
+      sortColumn,
+      sortedAsc,
+      reportId,
+      policyEngineResult = policyEngineResult,
+    )
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `the policy engine should parse a null action correctly and return TRUE for an access policy with a matching condition`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionPolicyNoAction.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository)
+    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("USER-ROLE-1")))
+    val policyEngineResult = "TRUE"
+    val reportId = "definition-policy-no-action"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L

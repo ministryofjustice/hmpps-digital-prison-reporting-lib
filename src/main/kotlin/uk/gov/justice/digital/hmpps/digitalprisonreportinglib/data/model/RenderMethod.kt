@@ -4,5 +4,4 @@ enum class RenderMethod {
   HTML,
   PDF,
   SVG,
-  ;
 }

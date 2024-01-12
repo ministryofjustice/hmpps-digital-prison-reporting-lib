@@ -79,10 +79,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @Parameter(
-      description = ReportDefinitionController.dataProductDefinitionsPathDescription,
-      example = ReportDefinitionController.dataProductDefinitionsPathExample,
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.dataProductDefinitionsPathExample)
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any>>> {
@@ -156,10 +156,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @NotEmpty
     fieldId: String,
     @Parameter(
-      description = ReportDefinitionController.dataProductDefinitionsPathDescription,
-      example = ReportDefinitionController.dataProductDefinitionsPathExample,
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.dataProductDefinitionsPathExample)
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<List<String>> {
@@ -221,10 +221,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @Parameter(
-      description = ReportDefinitionController.dataProductDefinitionsPathDescription,
-      example = ReportDefinitionController.dataProductDefinitionsPathExample,
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.dataProductDefinitionsPathExample)
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<Count> {
