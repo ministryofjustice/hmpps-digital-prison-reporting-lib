@@ -17,10 +17,10 @@ class ClientDataProductDefinitionsRepository(
     if (definitionsHost == null) {
       return emptyList()
     }
-    val cachedDefinition = definitionsCache?.let { cache ->
+    val cachedDefinitions = definitionsCache?.let { cache ->
       path?.let { path -> cache.getIfPresent(path) }
     }
-    cachedDefinition?.let { return it }
+    cachedDefinitions?.let { return it }
     val respEntity: ResponseEntity<List<ProductDefinition>>? = path?.let {
       dataProductDefinitionsClient
         .exchange("$definitionsHost/$path", HttpMethod.GET, null, object : ParameterizedTypeReference<List<ProductDefinition>>() {})
