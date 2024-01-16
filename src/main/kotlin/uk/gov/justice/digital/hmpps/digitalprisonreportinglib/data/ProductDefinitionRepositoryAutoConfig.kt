@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit
 class ProductDefinitionRepositoryAutoConfig(
   @Value("\${dpr.lib.definition.locations:#{null}}") private val definitionResourceLocations: List<String>?,
   @Value("\${dpr.lib.dataProductDefinitions.host:#{null}}") private val definitionsHost: String?,
-  @Value("\${dpr.lib.dataProductDefinitions.cacheEnabled:#{false}}") private val cacheEnabled: Boolean?,
+  @Value("\${dpr.lib.dataProductDefinitions.cache.enabled:#{false}}") private val cacheEnabled: Boolean,
+  @Value("\${dpr.lib.dataProductDefinitions.cache.durationMinutes:#{30}}") private val cacheDurationMinutes: Long,
 ) {
 
   @Bean
@@ -49,9 +50,9 @@ class ProductDefinitionRepositoryAutoConfig(
   )
 
   @Bean
-  @ConditionalOnProperty("dpr.lib.dataProductDefinitions.cacheEnabled", havingValue = "true")
+  @ConditionalOnProperty("dpr.lib.dataProductDefinitions.cache.enabled", havingValue = "true")
   fun definitionsCache(): Cache<String, List<ProductDefinition>> = CacheBuilder.newBuilder()
-    .expireAfterWrite(30, TimeUnit.MINUTES)
+    .expireAfterWrite(cacheDurationMinutes, TimeUnit.MINUTES)
     .concurrencyLevel(Runtime.getRuntime().availableProcessors())
     .build()
 

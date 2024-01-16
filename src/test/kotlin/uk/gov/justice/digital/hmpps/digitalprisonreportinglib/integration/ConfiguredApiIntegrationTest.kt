@@ -195,7 +195,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       @DynamicPropertySource
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.dataProductDefinitions.host") { "http://localhost:9999" }
-        registry.add("dpr.lib.dataProductDefinitions.cacheEnabled") { "true" }
+        registry.add("dpr.lib.dataProductDefinitions.cache.enabled") { "true" }
       }
     }
 
