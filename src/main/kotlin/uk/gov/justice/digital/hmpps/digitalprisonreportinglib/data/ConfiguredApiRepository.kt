@@ -3,10 +3,13 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
+import javax.sql.DataSource
 
 @Service
 class ConfiguredApiRepository {
@@ -21,6 +24,10 @@ class ConfiguredApiRepository {
 
   @Autowired
   lateinit var jdbcTemplate: NamedParameterJdbcTemplate
+
+  @Autowired
+  lateinit var context: ApplicationContext
+
   fun executeQuery(
     query: String,
     filters: List<Filter>,
@@ -33,7 +40,7 @@ class ConfiguredApiRepository {
     dynamicFilterFieldId: String? = null,
   ): List<Map<String, Any>> {
     val stopwatch = StopWatch.createStarted()
-    val result = jdbcTemplate.queryForList(
+    val result = JdbcTemplate(context.getBean("customDataSource", DataSource::class) as DataSource).queryForList(
       buildFinalQuery(
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),
