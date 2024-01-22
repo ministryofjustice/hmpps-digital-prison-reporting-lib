@@ -162,7 +162,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .isOk()
         .expectBody()
         .json(
-          """$expectedJson""",
+          expectedJson,
         )
 
       webTestClient.get()
@@ -181,7 +181,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .isOk()
         .expectBody()
         .json(
-          """$expectedJson""",
+          expectedJson,
         )
 
       wireMockServer.verify(2, RequestPatternBuilder(RequestMethod.GET, UrlPattern(EqualToPattern(definitionsServicePath), false)))
@@ -225,7 +225,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .isOk()
         .expectBody()
         .json(
-          """$expectedJson""",
+          expectedJson,
         )
 
       webTestClient.get()
@@ -244,7 +244,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .isOk()
         .expectBody()
         .json(
-          """$expectedJson""",
+          expectedJson,
         )
 
       wireMockServer.verify(1, RequestPatternBuilder(RequestMethod.GET, UrlPattern(EqualToPattern(definitionsServicePath), false)))
@@ -321,6 +321,32 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX", "2023-05-20")
           .queryParam("${FILTERS_PREFIX}direction", "out")
           .queryParam("prefix", "La")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """
+        [
+          "${movementPrisoner4[NAME]}"
+        ]
+      """,
+      )
+  }
+
+  @Test
+  fun `Configured API returns value matching the dynamic filters provided, with case insensitivity`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-week/name")
+          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX", "2023-04-25")
+          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX", "2023-05-20")
+          .queryParam("${FILTERS_PREFIX}direction", "out")
+          .queryParam("prefix", "la")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
