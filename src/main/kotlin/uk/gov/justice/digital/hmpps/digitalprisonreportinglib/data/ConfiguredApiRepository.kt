@@ -71,7 +71,11 @@ class ConfiguredApiRepository {
     policiesQuery: String,
     filtersQuery: String,
     selectFromFinalStageQuery: String,
-  ) = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+  ): String {
+    val query = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    log.debug("Database query: $query")
+    return query
+  }
 
   private fun calculateSortingDirection(sortedAsc: Boolean): String {
     return if (sortedAsc) "asc" else "desc"
@@ -127,7 +131,7 @@ class ConfiguredApiRepository {
       FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:$key AS timestamp)"
       FilterType.RANGE_END -> "$lowerCaseField <= :$key"
       FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
-      FilterType.DYNAMIC -> "${filter.field} LIKE '${filter.value}%'"
+      FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
     }
   }
 

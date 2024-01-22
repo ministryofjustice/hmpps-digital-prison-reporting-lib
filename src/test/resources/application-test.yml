@@ -27,3 +27,8 @@ dpr:
       host: http://localhost:9999
     user:
       role: ROLE_PRISONS_REPORTING_USER
+
+
+logging:
+  level:
+    uk.gov.justice.digital.hmpps.digitalprisonreportinglib: debug
