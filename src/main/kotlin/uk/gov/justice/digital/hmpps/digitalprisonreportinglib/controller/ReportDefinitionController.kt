@@ -41,13 +41,6 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("renderMethod")
     renderMethod: RenderMethod?,
     @Parameter(
-      description = "This optional parameter sets the maximum number of static options returned when there is a dynamic filter and returnAsStaticOptions is true.",
-      example = "30",
-    )
-    @RequestParam("maxStaticOptions", defaultValue = "20")
-    @Min(1)
-    maxStaticOptions: Long,
-    @Parameter(
       description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
@@ -57,7 +50,6 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
   ): List<ReportDefinition> {
     return reportDefinitionService.getListForUser(
       renderMethod,
-      maxStaticOptions,
       if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
       dataProductDefinitionsPath,
     )
@@ -82,13 +74,6 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @PathVariable("variantId")
     variantId: String,
     @Parameter(
-      description = "This optional parameter sets the maximum number of static options returned when there is a dynamic filter and returnAsStaticOptions is true.",
-      example = "30",
-    )
-    @RequestParam("maxStaticOptions", defaultValue = "20")
-    @Min(1)
-    maxStaticOptions: Long,
-    @Parameter(
       description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
@@ -99,7 +84,6 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     return reportDefinitionService.getDefinition(
       reportId,
       variantId,
-      maxStaticOptions,
       if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
       dataProductDefinitionsPath,
     )

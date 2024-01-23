@@ -147,7 +147,8 @@
           "type" : "autocomplete",
           "dynamicoptions":{
             "minimumLength": 2,
-            "returnAsStaticOptions": true
+            "returnAsStaticOptions": true,
+            "maximumOptions": 1
           }
         }
       } ]

@@ -15,25 +15,22 @@ class ReportDefinitionService(
 
   fun getListForUser(
     renderMethod: RenderMethod?,
-    maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
   ): List<ReportDefinition> {
     return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
-      .map { mapper.map(it, renderMethod, maxStaticOptions, userToken, dataProductDefinitionsPath) }
+      .map { mapper.map(it, renderMethod, userToken, dataProductDefinitionsPath) }
       .filter { it.variants.isNotEmpty() }
   }
 
   fun getDefinition(
     reportId: String,
     variantId: String,
-    maxStaticOptions: Long,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
   ): SingleVariantReportDefinition {
     return mapper.map(
       definition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath),
-      maxStaticOptions = maxStaticOptions,
       userToken = userToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
