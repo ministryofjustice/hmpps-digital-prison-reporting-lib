@@ -38,7 +38,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
-      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+      registry.add("dpr.lib.definition.locations") { "dpd002-view-diary-for-a-day.json" }
     }
   }
 
@@ -61,11 +61,12 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
-          .path("/reports/external-movements/last-month")
+          .path("/reports/dpd002-view-diary-for-a-day/temporary-absences")
           .queryParam("selectedPage", 1)
-          .queryParam("pageSize", 3)
-          .queryParam("sortColumn", "date")
-          .queryParam("sortedAsc", false)
+          .queryParam("pageSize", 20)
+          .queryParam("sortColumn", "prisonNumber")
+          .queryParam("sortedAsc", true)
+          .queryParam("filters.type_code", "TAP")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))

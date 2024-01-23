@@ -1,0 +1,422 @@
+{
+  "id": "dpd002-view-diary-for-a-day",
+  "name": "View Diary for a Day (MOV0015)",
+  "description": "Data products for View Diary for a Day",
+  "metadata": {
+    "author": "Zahoor Hussain",
+    "owner": "Michael Clarke",
+    "version": "0.1"
+  },
+  "datasource": [
+    {
+      "id": "datamart",
+      "name": "datamart"
+    }
+  ],
+  "dataset": [
+    {
+      "id": "all-moves-dataset",
+      "name": "All Movements Dataset",
+      "datasource": "datamart",
+      "query": "SELECT distinct prisoner.number AS prisonNumber,prisoner.name,schedule.date, schedule.destination,schedule.subtype as reason, prisoner.living_unit_id as living_unit, status.legal_status as legalstatus, alert.code as alertCode, property.id as containerID,schedule.type_code as type_code, schedule.type as type FROM datamart.domain.movement_schedule as schedule JOIN datamart.domain.prisoner_prisoner as prisoner ON schedule.prisoner_id = prisoner.id JOIN datamart.domain.prisoner_status as status  ON status.id = prisoner.id  JOIN datamart.domain.prisoner_alert as alert ON prisoner.id = alert.id::INTEGER JOIN datamart.domain.prisoner_property as property ON property.prisoner_id = prisoner.id WHERE schedule.status ='Scheduled (Approved)' AND schedule.date >=now() UNION SELECT distinct prisoner.number AS prisonNumber, prisoner.name,court.date, court.destination, court.subtype as reason, prisoner.living_unit_id as living_unit, status.legal_status as legalstatus, alert.code as alertCode,property.id as containerID, 'CRT' as type_code, 'Court' as type FROM datamart.domain.court_event as court JOIN datamart.domain.prisoner_prisoner as prisoner ON court.prisoner_id = prisoner.id JOIN datamart.domain.prisoner_status as status  ON status.id = prisoner.id JOIN datamart.domain.prisoner_property as property ON property.prisoner_id = prisoner.id JOIN (select id, code, expiry_date from datamart.domain.prisoner_alert where status = 'ACTIVE')alert on prisoner.id = alert.id::INTEGER where court.status ='SCH'and court.date >= now() UNION SELECT distinct prisoner.number AS prisonNumber,prisoner.name,release.date,'--' as destination,release.reason as reason, prisoner.living_unit_id as living_unit, status.legal_status as legalstatus, case when (alert.code = 'XNR' and alert.status = 'ACTIVE') Then alert.code End as NFR, property.id as containerID, release.type as type_code, 'Release' as type FROM datamart.domain.movement_release as release JOIN datamart.domain.prisoner_prisoner as prisoner ON release.prisoner = prisoner.id  JOIN datamart.domain.prisoner_status as status  ON status.id = prisoner.id  JOIN datamart.domain.prisoner_alert as alert ON prisoner.id = alert.id::INTEGER  JOIN datamart.domain.prisoner_property as property ON property.prisoner_id = prisoner.id where release.date >=now()",
+      "schema": {
+        "field": [
+          {
+            "name": "prisonNumber",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "date",
+            "type": "date",
+            "display": ""
+          },
+          {
+            "name": "direction",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "destination",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "living_unit",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "legalstatus",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "alertCode",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "containerID",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "type_code",
+            "type": "string",
+            "display": ""
+          },
+          {
+            "name": "type",
+            "type": "string",
+            "display": ""
+          }
+        ]
+      }
+    }
+  ],
+  "policy": [
+    {
+      "id": "access",
+      "type": "access",
+      "rule": [
+        {
+          "effect": "permit",
+          "condition": [
+            {
+              "match": [
+                "${role}",
+                "ROLE_PRISONS_REPORTING_USER"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "report": [
+    {
+      "id": "temporary-absences",
+      "name": "Temporary Absences",
+      "description": "View Diary for a Day - Temporary Absences",
+      "classification": "list",
+      "version": "v1.0",
+      "render": "HTML",
+      "dataset": "$ref:all-moves-dataset",
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:prisonNumber",
+            "display": "Prison Number",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": true
+          },
+          {
+            "name": "$ref:name",
+            "display": "Name",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:living_unit",
+            "display": "Living Unit",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:legalstatus",
+            "display": "Legal Status",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:date",
+            "display": "Date",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:reason",
+            "display": "Reason",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:destination",
+            "display": "Destination",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:containerID",
+            "display": "Container Id",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:direction",
+            "display": "Direction",
+            "formula": "",
+            "visible": false,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:type_code",
+            "display": "Type",
+            "formula": "",
+            "visible": false,
+            "sortable": true,
+            "defaultsort": false,
+            "filter": {
+              "type": "Radio",
+              "staticoptions": [
+                {
+                  "name": "TAP",
+                  "display": "Temporary Absences"
+                }
+              ]
+            }
+          },
+          {
+            "name": "$ref:type",
+            "display": "Movement Type",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "transfers",
+      "name": "Transfers",
+      "description": "View Diary for a Day - Transfers",
+      "classification": "list",
+      "version": "v1.0",
+      "render": "HTML",
+      "dataset": "$ref:all-moves-dataset",
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:prisonNumber",
+            "display": "Prison Number",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": true
+          },
+          {
+            "name": "$ref:name",
+            "display": "Name",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:living_unit",
+            "display": "Living Unit",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:legalstatus",
+            "display": "Legal Status",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:reason",
+            "display": "Reason",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:destination",
+            "display": "Destination",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:date",
+            "display": "Date",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:containerID",
+            "display": "Container Id",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:direction",
+            "display": "Direction",
+            "formula": "",
+            "visible": false,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:type",
+            "display": "Type",
+            "formula": "",
+            "visible": false,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:type_code",
+            "display": "Type Code",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false,
+            "filter": {
+              "type": "Radio",
+              "staticoptions": [
+                {
+                  "name": "TRN",
+                  "display": "Transfers"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "by-prisoner-surname",
+      "name": "By Prisoner Surname",
+      "description": "View Diary for a Day - By Prisoner Surname",
+      "classification": "list",
+      "version": "v1.0",
+      "render": "HTML",
+      "dataset": "$ref:all-moves-dataset",
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:prisonNumber",
+            "display": "Prison Number",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": true
+          },
+          {
+            "name": "$ref:name",
+            "display": "Name",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:living_unit",
+            "display": "Living Unit",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:legalstatus",
+            "display": "Legal Status",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:status",
+            "display": "Status",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:date",
+            "display": "Date",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:type",
+            "display": "Type",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:reason",
+            "display": "Reason",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:destination",
+            "display": "Destination",
+            "formula": "",
+            "visible": true,
+            "sortable": true,
+            "defaultsort": false
+          }
+        ]
+      }
+    }
+  ]
+}
