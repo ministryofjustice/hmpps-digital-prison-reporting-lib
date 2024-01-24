@@ -30,16 +30,4 @@ class CustomDataSourceConfig(
       .driverClassName(driver)
       .build()
   }
-
-//  @ConditionalOnBean(name = ["defaultDataSource"])
-//  @Bean
-//  fun defaultJdbcTemplate(): NamedParameterJdbcTemplate {
-//    return NamedParameterJdbcTemplate(context.getBean("defaultDataSource", DataSource::class) as DataSource)
-//  }
-//
-//  @ConditionalOnMissingBean(name = ["defaultDataSource"])
-//  @Bean
-//  fun customJdbcTemplate(): NamedParameterJdbcTemplate {
-//    return NamedParameterJdbcTemplate(context.getBean("customDataSource", DataSource::class) as DataSource)
-//  }
 }
