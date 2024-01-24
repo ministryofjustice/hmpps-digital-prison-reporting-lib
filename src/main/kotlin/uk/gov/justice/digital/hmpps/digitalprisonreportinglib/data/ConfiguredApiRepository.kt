@@ -59,7 +59,7 @@ class ConfiguredApiRepository {
     val dataSource = if (context.containsBean(dataSourceName)) {
       context.getBean(dataSourceName, DataSource::class) as DataSource
     } else {
-      log.warn("No DataSource Bean found withe name: {}", dataSourceName)
+      log.warn("No DataSource Bean found with name: {}", dataSourceName)
       context.getBean(DataSource::class.java) as DataSource
     }
 
