@@ -5,9 +5,10 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.isNull
+import org.mockito.kotlin.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -32,6 +33,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -206,6 +208,61 @@ class ReportDefinitionMapperTest {
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(0)
     verifyNoInteractions(configuredApiService)
+  }
+
+  @Test
+  fun `Getting report list for statically returned dynamic filter values on a number succeeds`() {
+    whenever(
+      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())
+    ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
+
+    val productDefinition = ProductDefinition(
+      id = "1",
+      name = "2",
+      metadata = MetaData(
+        author = "3",
+        owner = "4",
+        version = "5",
+      ),
+      dataset = listOf(fullDataset),
+      report = listOf(Report(
+        id = "21",
+        name = "22",
+        description = "23",
+        created = LocalDateTime.MAX,
+        version = "24",
+        dataset = "\$ref:10",
+        render = RenderMethod.PDF,
+        schedule = "26",
+        specification = Specification(
+          template = "27",
+          field = listOf(
+            ReportField(
+              name = "\$ref:13",
+              display = "14",
+              wordWrap = WordWrap.None,
+              filter = FilterDefinition(
+                type = FilterType.Radio,
+                dynamicOptions = DynamicFilterOption(
+                  returnAsStaticOptions = true
+                )
+              ),
+              sortable = true,
+              defaultSort = true,
+              formula = null,
+              visible = true,
+            ),
+          ),
+        ),
+        destination = listOf(singletonMap("28", "29")),
+        classification = "someClassification",
+      )),
+    )
+    val mapper = ReportDefinitionMapper(configuredApiService)
+
+    val result = mapper.map(productDefinition, null, authToken)
+
+    assertThat(result.variants[0].specification!!.fields[0].filter!!.staticOptions).hasSize(2)
   }
 
   @Test

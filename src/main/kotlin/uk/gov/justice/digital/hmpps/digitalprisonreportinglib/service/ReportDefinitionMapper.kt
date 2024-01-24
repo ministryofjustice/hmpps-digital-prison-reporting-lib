@@ -148,7 +148,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
         userToken = userToken,
         reportFieldId = schemaFieldName,
         dataProductDefinitionsPath = dataProductDefinitionsPath,
-      ).flatMap { it.entries }.map { FilterOption(it.value as String, it.value as String) }
+      ).flatMap { it.entries }.map { FilterOption(it.value.toString(), it.value.toString()) }
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 
