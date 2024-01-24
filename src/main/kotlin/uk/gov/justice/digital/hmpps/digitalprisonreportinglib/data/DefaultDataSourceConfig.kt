@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 import javax.sql.DataSource
 
 @Configuration
-class CustomDataSourceConfig(
+class DefaultDataSourceConfig(
   @Value("\${spring.datasource.url}") private val url: String,
   @Value("\${spring.datasource.username}") private val username: String,
   @Value("\${spring.datasource.password}") private val password: String,
