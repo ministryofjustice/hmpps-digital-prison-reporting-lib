@@ -91,31 +91,34 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        repositoryFilters,
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
-        policyEngineResult,
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      repositoryFilters,
-      selectedPage,
-      pageSize,
-      sortColumn,
-      sortedAsc,
-      reportId,
-      policyEngineResult,
+      query = dataSet.query,
+      filters = repositoryFilters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -140,17 +143,20 @@ class ConfiguredApiServiceTest {
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
     val reportFieldId = "name"
     val prefix = "Ab"
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
+
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        repositoryFilters,
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
-        policyEngineResult,
-        reportFieldId,
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dynamicFilterFieldId = reportFieldId,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
@@ -168,15 +174,16 @@ class ConfiguredApiServiceTest {
     )
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      repositoryFilters,
-      selectedPage,
-      pageSize,
-      sortColumn,
-      sortedAsc,
-      reportId,
-      policyEngineResult,
-      reportFieldId,
+      query = dataSet.query,
+      filters = repositoryFilters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dynamicFilterFieldId = reportFieldId,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -209,31 +216,34 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        repositoryFilters,
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
-        policyEngineResult,
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      repositoryFilters,
-      selectedPage,
-      pageSize,
-      sortColumn,
-      sortedAsc,
-      reportId,
-      policyEngineResult,
+      query = dataSet.query,
+      filters = repositoryFilters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -267,17 +277,19 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        repositoryFilters,
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
         policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
@@ -292,6 +304,7 @@ class ConfiguredApiServiceTest {
       sortedAsc,
       reportId,
       policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -324,31 +337,34 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        repositoryFilters,
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
         policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      repositoryFilters,
-      selectedPage,
-      pageSize,
-      sortColumn,
-      sortedAsc,
-      reportId,
+      query = dataSet.query,
+      filters = repositoryFilters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
       policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -370,31 +386,34 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        repositoryFilters,
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
         policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      repositoryFilters,
-      selectedPage,
-      pageSize,
-      sortColumn,
-      sortedAsc,
-      reportId,
+      query = dataSet.query,
+      filters = repositoryFilters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
       policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -425,17 +444,19 @@ class ConfiguredApiServiceTest {
     val pageSize = 10L
     val sortColumn = "date"
     val sortedAsc = true
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        emptyList(),
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
+        query = dataSet.query,
+        filters = emptyList(),
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
         policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(
       listOf(
@@ -446,14 +467,15 @@ class ConfiguredApiServiceTest {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      emptyList(),
-      1,
-      10,
-      "date",
-      true,
-      reportId,
+      query = dataSet.query,
+      filters = emptyList(),
+      selectedPage = 1,
+      pageSize = 10,
+      sortColumn = "date",
+      sortedAsc = true,
+      reportId = reportId,
       policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(
       listOf(
@@ -499,6 +521,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -512,7 +535,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_ID_MESSAGE} $reportId", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -538,6 +561,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -550,7 +574,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
     }
     assertEquals("${ConfiguredApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -566,6 +590,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals("Invalid sortColumn provided: abc", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -600,6 +625,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -616,6 +642,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -650,6 +677,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -661,7 +689,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -686,6 +714,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -697,7 +726,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -722,6 +751,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -733,7 +763,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -749,6 +779,7 @@ class ConfiguredApiServiceTest {
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -793,6 +824,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -804,7 +836,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
     }
     assertEquals(ConfiguredApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -829,6 +861,7 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -840,7 +873,7 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -852,31 +885,34 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        repositoryFilters,
-        selectedPage,
-        pageSize,
-        sortColumn,
-        sortedAsc,
-        reportId,
-        policyEngineResult,
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, null, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      repositoryFilters,
-      selectedPage,
-      pageSize,
-      sortColumn,
-      sortedAsc,
-      reportId,
-      policyEngineResult,
+      query = dataSet.query,
+      filters = repositoryFilters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -937,8 +973,11 @@ class ConfiguredApiServiceTest {
     )
     val productDefRepo = mock<ProductDefinitionRepository>()
     val configuredApiService = ConfiguredApiService(productDefRepo, configuredApiRepository)
+    val dataSourceName = "name"
+
     whenever(productDefRepo.getProductDefinitions())
       .thenReturn(listOf(productDefinition))
+
     whenever(productDefRepo.getSingleReportProductDefinition(reportId, reportVariantId))
       .thenReturn(
         SingleReportProductDefinition(
@@ -952,7 +991,7 @@ class ConfiguredApiServiceTest {
           policy = listOf(policy),
           dataset = dataSet,
           report = report,
-          datasource = Datasource("id", "name"),
+          datasource = Datasource("id", dataSourceName),
         ),
       )
 
@@ -962,28 +1001,30 @@ class ConfiguredApiServiceTest {
 
     whenever(
       configuredApiRepository.executeQuery(
-        dataSet.query,
-        emptyList(),
-        selectedPage,
-        pageSize,
-        null,
-        sortedAsc,
-        reportId,
-        POLICY_PERMIT,
+        query = dataSet.query,
+        filters = emptyList(),
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = null,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = POLICY_PERMIT,
+        dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, null, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
-      emptyList(),
-      selectedPage,
-      pageSize,
-      null,
-      sortedAsc,
-      reportId,
-      POLICY_PERMIT,
+      query = dataSet.query,
+      filters = emptyList(),
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = null,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = POLICY_PERMIT,
+      dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
   }

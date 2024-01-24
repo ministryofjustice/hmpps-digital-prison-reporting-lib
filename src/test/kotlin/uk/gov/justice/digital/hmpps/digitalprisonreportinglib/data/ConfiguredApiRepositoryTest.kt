@@ -43,6 +43,22 @@ import java.time.LocalDateTime
 @ActiveProfiles("test")
 class ConfiguredApiRepositoryTest {
 
+//  @Configuration
+//  class ContextConfiguration(@Value("\${spring.datasource.url}") private val url: String,
+//                                      @Value("\${spring.datasource.username}") private val username: String,
+//                                      @Value("\${spring.datasource.password}") private val password: String,
+//                                      @Value("\${spring.datasource.driver-class-name}") private val driver: String,) {
+//    @Bean("customDataSource")
+//  fun createCustomDataSource(): DataSource {
+//    return DataSourceBuilder.create()
+//      .url(url)
+//      .username(username)
+//      .password(password)
+//      .driverClassName(driver)
+//      .build()
+//  }
+//  }
+
   companion object {
     @JvmStatic
     @DynamicPropertySource

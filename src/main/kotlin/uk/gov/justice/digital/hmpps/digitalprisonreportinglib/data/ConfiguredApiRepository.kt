@@ -3,10 +3,13 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.getBean
+import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import java.sql.Timestamp
+import javax.sql.DataSource
 
 @Service
 class ConfiguredApiRepository {
@@ -20,7 +23,8 @@ class ConfiguredApiRepository {
   }
 
   @Autowired
-  lateinit var jdbcTemplate: NamedParameterJdbcTemplate
+  lateinit var context: ApplicationContext
+
   fun executeQuery(
     query: String,
     filters: List<Filter>,
@@ -31,8 +35,18 @@ class ConfiguredApiRepository {
     reportId: String,
     policyEngineResult: String,
     dynamicFilterFieldId: String? = null,
+    dataSourceName: String? = null,
   ): List<Map<String, Any>> {
     val stopwatch = StopWatch.createStarted()
+    val dataSource: DataSource = dataSourceName?.let {
+      if (context.containsBean(dataSourceName)) {
+        context.getBean(dataSourceName, DataSource::class) as DataSource
+      } else {
+        context.getBean("defaultDataSource", DataSource::class) as DataSource
+      }
+    } ?: context.getBean("defaultDataSource", DataSource::class) as DataSource
+
+    val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
     val result = jdbcTemplate.queryForList(
       buildFinalQuery(
         buildReportQuery(query),
@@ -89,7 +103,9 @@ class ConfiguredApiRepository {
     query: String,
     reportId: String,
     policyEngineResult: String,
+    dataSourceName: String? = null,
   ): Long {
+    val jdbcTemplate = NamedParameterJdbcTemplate(context.getBean("defaultDataSource", DataSource::class) as DataSource)
     return jdbcTemplate.queryForList(
       buildFinalQuery(
         buildReportQuery(query),
