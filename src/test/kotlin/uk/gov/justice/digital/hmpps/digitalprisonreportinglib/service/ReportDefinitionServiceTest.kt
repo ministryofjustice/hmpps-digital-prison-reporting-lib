@@ -29,7 +29,7 @@ import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
 
-  val minimalDefinition = ProductDefinition(
+  private val minimalDefinition = ProductDefinition(
     id = "1",
     name = "2",
     metadata = MetaData(
@@ -47,7 +47,7 @@ class ReportDefinitionServiceTest {
     listOf(Rule(Effect.PERMIT, emptyList())),
   )
 
-  val minimalSingleDefinition = SingleReportProductDefinition(
+  private val minimalSingleDefinition = SingleReportProductDefinition(
     id = "1",
     name = "2",
     report = Report(
@@ -95,14 +95,14 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), any(), anyOrNull()) } doReturn expectedResult
+      on { map(any(), any(), any(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
+    val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
 
     then(repository).should().getProductDefinitions()
-    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, 20, authToken)
+    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, authToken)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -126,14 +126,13 @@ class ReportDefinitionServiceTest {
       on { getSingleReportProductDefinition(any(), any(), anyOrNull()) } doReturn minimalSingleDefinition
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any<SingleReportProductDefinition>(), any<Long>(), any(), anyOrNull()) } doReturn expectedResult
+      on { map(any<SingleReportProductDefinition>(), any(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper)
 
     val actualResult = service.getDefinition(
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
-      20,
       authToken,
     )
 
@@ -141,7 +140,7 @@ class ReportDefinitionServiceTest {
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
     )
-    then(mapper).should().map(minimalSingleDefinition, 20, authToken)
+    then(mapper).should().map(minimalSingleDefinition, authToken)
 
     assertThat(actualResult).isNotNull
     assertThat(actualResult).isEqualTo(expectedResult)
@@ -159,11 +158,11 @@ class ReportDefinitionServiceTest {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), any(), anyOrNull()) } doReturn definitionWithNoVariants
+      on { map(any(), any(), any(), anyOrNull()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, 20, authToken)
+    val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
 
     assertThat(actualResult).hasSize(0)
   }

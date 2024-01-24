@@ -101,7 +101,7 @@
         "name" : "$ref:date",
         "display" : "Date",
         "filter" : {
-          "type" : "daterange",
+          "type" : "dAtErAnGe",
           "default" : "today(-1,months) - today()"
         },
         "sortable" : true,
@@ -147,7 +147,8 @@
           "type" : "autocomplete",
           "dynamicoptions":{
             "minimumLength": 2,
-            "returnAsStaticOptions": true
+            "returnAsStaticOptions": true,
+            "maximumOptions": 1
           }
         }
       } ]

@@ -140,7 +140,7 @@ class ConfiguredApiService(
     if (filterDefinition.dynamicOptions == null) {
       throw ValidationException(INVALID_DYNAMIC_FILTER_MESSAGE)
     }
-    if (filterDefinition.dynamicOptions.minimumLength > prefix.length) {
+    if (filterDefinition.dynamicOptions.minimumLength != null && prefix.length < filterDefinition.dynamicOptions.minimumLength) {
       throw ValidationException(INVALID_DYNAMIC_OPTIONS_MESSAGE)
     }
     return ConfiguredApiRepository.Filter(

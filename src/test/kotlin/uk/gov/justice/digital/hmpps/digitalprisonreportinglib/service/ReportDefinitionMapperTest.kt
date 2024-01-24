@@ -5,8 +5,11 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
@@ -32,6 +35,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -137,7 +141,7 @@ class ReportDefinitionMapperTest {
     policy = listOf(policy),
   )
 
-  private val configuredApiService: ConfiguredApiService = mock<ConfiguredApiService>()
+  private val configuredApiService: ConfiguredApiService = mock()
 
   private val authToken = mock<DprAuthAwareAuthenticationToken>()
 
@@ -145,7 +149,7 @@ class ReportDefinitionMapperTest {
   fun `Getting report list for user maps full data correctly`() {
     val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(fullProductDefinition, null, 10, authToken)
+    val result = mapper.map(fullProductDefinition, null, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullProductDefinition.id)
@@ -201,11 +205,68 @@ class ReportDefinitionMapperTest {
     )
     val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(productDefinition, null, 10, authToken)
+    val result = mapper.map(productDefinition, null, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(0)
     verifyNoInteractions(configuredApiService)
+  }
+
+  @Test
+  fun `Getting report list for statically returned dynamic filter values on a number succeeds`() {
+    whenever(
+      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
+    ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
+
+    val productDefinition = ProductDefinition(
+      id = "1",
+      name = "2",
+      metadata = MetaData(
+        author = "3",
+        owner = "4",
+        version = "5",
+      ),
+      dataset = listOf(fullDataset),
+      report = listOf(
+        Report(
+          id = "21",
+          name = "22",
+          description = "23",
+          created = LocalDateTime.MAX,
+          version = "24",
+          dataset = "\$ref:10",
+          render = RenderMethod.PDF,
+          schedule = "26",
+          specification = Specification(
+            template = "27",
+            field = listOf(
+              ReportField(
+                name = "\$ref:13",
+                display = "14",
+                wordWrap = WordWrap.None,
+                filter = FilterDefinition(
+                  type = FilterType.Radio,
+                  dynamicOptions = DynamicFilterOption(
+                    returnAsStaticOptions = true,
+                  ),
+                ),
+                sortable = true,
+                defaultSort = true,
+                formula = null,
+                visible = true,
+              ),
+            ),
+          ),
+          destination = listOf(singletonMap("28", "29")),
+          classification = "someClassification",
+        ),
+      ),
+    )
+    val mapper = ReportDefinitionMapper(configuredApiService)
+
+    val result = mapper.map(productDefinition, null, authToken)
+
+    assertThat(result.variants[0].specification!!.fields[0].filter!!.staticOptions).hasSize(2)
   }
 
   @Test
@@ -233,7 +294,7 @@ class ReportDefinitionMapperTest {
     val mapper = ReportDefinitionMapper(configuredApiService)
 
     val exception = assertThrows(IllegalArgumentException::class.java) {
-      mapper.map(productDefinition, null, 10, authToken)
+      mapper.map(productDefinition, null, authToken)
     }
     verifyNoInteractions(configuredApiService)
     assertThat(exception).message().isEqualTo("Could not find matching DataSet '9'")
@@ -282,7 +343,7 @@ class ReportDefinitionMapperTest {
     )
     val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(productDefinition, HTML, 10, authToken)
+    val result = mapper.map(productDefinition, HTML, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(1)
@@ -305,7 +366,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinitionWithDefaultFilter("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, 10, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
 
     assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -317,7 +378,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinitionWithDefaultFilter("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, 10, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
 
     assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -332,7 +393,7 @@ class ReportDefinitionMapperTest {
     val expectedDate3 = getExpectedDate(7, ChronoUnit.DAYS)
     val expectedResult = "$expectedDate1, $expectedDate2, $expectedDate3"
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, 10, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
 
     assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
 
@@ -343,7 +404,7 @@ class ReportDefinitionMapperTest {
   fun `Getting single report for user maps full data correctly`() {
     val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(fullSingleReportProductDefinition, 10, authToken)
+    val result = mapper.map(fullSingleReportProductDefinition, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleReportProductDefinition.id)
@@ -425,11 +486,11 @@ class ReportDefinitionMapperTest {
     whenever(
       configuredApiService.validateAndFetchData(
         fullSingleProductDefinition.id,
-        reportWithDynamicFilter.id, emptyMap(), 1, 20, "13", true, authToken, "13",
+        reportWithDynamicFilter.id, emptyMap(), 1, DEFAULT_MAX_STATIC_OPTIONS, "13", true, authToken, "13",
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
-    val result = mapper.map(fullSingleProductDefinition, 20, authToken)
+    val result = mapper.map(fullSingleProductDefinition, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
@@ -513,7 +574,7 @@ class ReportDefinitionMapperTest {
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
-    val result = mapper.map(fullSingleProductDefinition, 10, authToken)
+    val result = mapper.map(fullSingleProductDefinition, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
