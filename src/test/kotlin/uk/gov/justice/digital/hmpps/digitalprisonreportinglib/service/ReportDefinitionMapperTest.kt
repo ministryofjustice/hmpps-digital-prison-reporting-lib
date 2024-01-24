@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.ArgumentMatchers.isNull
-import org.mockito.kotlin.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -139,7 +141,7 @@ class ReportDefinitionMapperTest {
     policy = listOf(policy),
   )
 
-  private val configuredApiService: ConfiguredApiService = mock<ConfiguredApiService>()
+  private val configuredApiService: ConfiguredApiService = mock()
 
   private val authToken = mock<DprAuthAwareAuthenticationToken>()
 
@@ -213,7 +215,7 @@ class ReportDefinitionMapperTest {
   @Test
   fun `Getting report list for statically returned dynamic filter values on a number succeeds`() {
     whenever(
-      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())
+      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
 
     val productDefinition = ProductDefinition(
@@ -225,38 +227,40 @@ class ReportDefinitionMapperTest {
         version = "5",
       ),
       dataset = listOf(fullDataset),
-      report = listOf(Report(
-        id = "21",
-        name = "22",
-        description = "23",
-        created = LocalDateTime.MAX,
-        version = "24",
-        dataset = "\$ref:10",
-        render = RenderMethod.PDF,
-        schedule = "26",
-        specification = Specification(
-          template = "27",
-          field = listOf(
-            ReportField(
-              name = "\$ref:13",
-              display = "14",
-              wordWrap = WordWrap.None,
-              filter = FilterDefinition(
-                type = FilterType.Radio,
-                dynamicOptions = DynamicFilterOption(
-                  returnAsStaticOptions = true
-                )
+      report = listOf(
+        Report(
+          id = "21",
+          name = "22",
+          description = "23",
+          created = LocalDateTime.MAX,
+          version = "24",
+          dataset = "\$ref:10",
+          render = RenderMethod.PDF,
+          schedule = "26",
+          specification = Specification(
+            template = "27",
+            field = listOf(
+              ReportField(
+                name = "\$ref:13",
+                display = "14",
+                wordWrap = WordWrap.None,
+                filter = FilterDefinition(
+                  type = FilterType.Radio,
+                  dynamicOptions = DynamicFilterOption(
+                    returnAsStaticOptions = true,
+                  ),
+                ),
+                sortable = true,
+                defaultSort = true,
+                formula = null,
+                visible = true,
               ),
-              sortable = true,
-              defaultSort = true,
-              formula = null,
-              visible = true,
             ),
           ),
+          destination = listOf(singletonMap("28", "29")),
+          classification = "someClassification",
         ),
-        destination = listOf(singletonMap("28", "29")),
-        classification = "someClassification",
-      )),
+      ),
     )
     val mapper = ReportDefinitionMapper(configuredApiService)
 
