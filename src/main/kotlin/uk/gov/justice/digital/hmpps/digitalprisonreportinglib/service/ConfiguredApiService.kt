@@ -96,6 +96,7 @@ class ConfiguredApiService(
         query = productDefinition.dataset.query,
         reportId = reportId,
         policyEngineResult = policyEngine.execute(),
+        dataSourceName = productDefinition.datasource.name,
       ),
     )
   }

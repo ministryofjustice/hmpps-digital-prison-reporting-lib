@@ -193,16 +193,26 @@ class ConfiguredApiServiceTest {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
-    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, reportId, policyEngineResult)).thenReturn(4)
+    whenever(
+      configuredApiRepository.count(
+        filters = repositoryFilters,
+        query = dataSet.query,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
 
     verify(configuredApiRepository, times(1)).count(
-      repositoryFilters,
-      dataSet.query,
-      reportId,
-      policyEngineResult,
+      filters = repositoryFilters,
+      query = dataSet.query,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(Count(4), actual)
   }
@@ -253,16 +263,26 @@ class ConfiguredApiServiceTest {
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
-    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, reportId, policyEngineResult)).thenReturn(4)
+    whenever(
+      configuredApiRepository.count(
+        filters = repositoryFilters,
+        query = dataSet.query,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
 
     verify(configuredApiRepository, times(1)).count(
-      repositoryFilters,
-      dataSet.query,
-      reportId,
-      policyEngineResult,
+      filters = repositoryFilters,
+      query = dataSet.query,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(Count(4), actual)
   }
@@ -314,16 +334,26 @@ class ConfiguredApiServiceTest {
     val filters = mapOf("direction" to "in")
     val repositoryFilters = listOf(Filter("direction", "in"))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
-    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, reportId, policyEngineResult)).thenReturn(4)
+    whenever(
+      configuredApiRepository.count(
+        filters = repositoryFilters,
+        query = dataSet.query,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
 
     verify(configuredApiRepository, times(1)).count(
-      repositoryFilters,
-      dataSet.query,
-      reportId,
-      policyEngineResult,
+      filters = repositoryFilters,
+      query = dataSet.query,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(Count(4), actual)
   }
@@ -423,16 +453,26 @@ class ConfiguredApiServiceTest {
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
-    whenever(configuredApiRepository.count(repositoryFilters, dataSet.query, reportId, policyEngineResult)).thenReturn(4)
+    whenever(
+      configuredApiRepository.count(
+        filters = repositoryFilters,
+        query = dataSet.query,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, authToken)
 
     verify(configuredApiRepository, times(1)).count(
-      repositoryFilters,
-      dataSet.query,
-      reportId,
-      policyEngineResult,
+      filters = repositoryFilters,
+      query = dataSet.query,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
     )
     assertEquals(Count(4), actual)
   }
@@ -488,12 +528,27 @@ class ConfiguredApiServiceTest {
   @Test
   fun `the service count method calls the repository without filters if no filters are provided`() {
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
 
-    whenever(configuredApiRepository.count(emptyList(), dataSet.query, reportId, policyEngineResult)).thenReturn(4)
+    whenever(
+      configuredApiRepository.count(
+        filters = emptyList(),
+        query = dataSet.query,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, emptyMap(), authToken)
 
-    verify(configuredApiRepository, times(1)).count(emptyList(), dataSet.query, reportId, policyEngineResult)
+    verify(configuredApiRepository, times(1)).count(
+      filters = emptyList(),
+      query = dataSet.query,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
+    )
     assertEquals(Count(4), actual)
   }
 

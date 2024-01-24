@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.getBean
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -38,15 +37,7 @@ class ConfiguredApiRepository {
     dataSourceName: String? = null,
   ): List<Map<String, Any>> {
     val stopwatch = StopWatch.createStarted()
-    val dataSource: DataSource = dataSourceName?.let {
-      if (context.containsBean(dataSourceName)) {
-        context.getBean(dataSourceName, DataSource::class) as DataSource
-      } else {
-        context.getBean("defaultDataSource", DataSource::class) as DataSource
-      }
-    } ?: context.getBean("defaultDataSource", DataSource::class) as DataSource
-
-    val jdbcTemplate = NamedParameterJdbcTemplate(dataSource)
+    val jdbcTemplate = populateJdbcTemplate(dataSourceName)
     val result = jdbcTemplate.queryForList(
       buildFinalQuery(
         buildReportQuery(query),
@@ -63,6 +54,19 @@ class ConfiguredApiRepository {
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
   }
+
+  private fun populateJdbcTemplate(dataSourceName: String?): NamedParameterJdbcTemplate {
+    val dataSource: DataSource = dataSourceName?.let {
+      if (context.containsBean(dataSourceName)) {
+        context.getBean(dataSourceName, DataSource::class) as DataSource
+      } else {
+        context.getBean("defaultDataSource", DataSource::class) as DataSource
+      }
+    } ?: context.getBean("defaultDataSource", DataSource::class) as DataSource
+
+    return NamedParameterJdbcTemplate(dataSource)
+  }
+
   private fun buildReportQuery(query: String) = """WITH $STAGE_1 AS ($query)"""
   private fun buildPolicyQuery(policyEngineResult: String) = """$STAGE_2 AS (SELECT * FROM $STAGE_1 WHERE $policyEngineResult)"""
   private fun buildFiltersQuery(filters: List<Filter>) =
@@ -105,7 +109,7 @@ class ConfiguredApiRepository {
     policyEngineResult: String,
     dataSourceName: String? = null,
   ): Long {
-    val jdbcTemplate = NamedParameterJdbcTemplate(context.getBean("defaultDataSource", DataSource::class) as DataSource)
+    val jdbcTemplate = populateJdbcTemplate(dataSourceName)
     return jdbcTemplate.queryForList(
       buildFinalQuery(
         buildReportQuery(query),
