@@ -19,7 +19,6 @@ class ConfiguredApiRepository {
     private const val STAGE_1 = """stage_1"""
     private const val STAGE_2 = """stage_2"""
     private const val STAGE_3 = """stage_3"""
-    const val DEFAULT_DATASOURCE = "defaultDataSource"
   }
 
   @Autowired
@@ -35,7 +34,7 @@ class ConfiguredApiRepository {
     reportId: String,
     policyEngineResult: String,
     dynamicFilterFieldId: String? = null,
-    dataSourceName: String? = null,
+    dataSourceName: String,
   ): List<Map<String, Any>> {
     val stopwatch = StopWatch.createStarted()
     val jdbcTemplate = populateJdbcTemplate(dataSourceName)
@@ -56,14 +55,13 @@ class ConfiguredApiRepository {
     return result
   }
 
-  private fun populateJdbcTemplate(dataSourceName: String?): NamedParameterJdbcTemplate {
-    val dataSource: DataSource = dataSourceName?.let {
-      if (context.containsBean(dataSourceName)) {
-        context.getBean(dataSourceName, DataSource::class) as DataSource
-      } else {
-        context.getBean(DEFAULT_DATASOURCE, DataSource::class) as DataSource
-      }
-    } ?: context.getBean(DEFAULT_DATASOURCE, DataSource::class) as DataSource
+  private fun populateJdbcTemplate(dataSourceName: String): NamedParameterJdbcTemplate {
+    val dataSource = if (context.containsBean(dataSourceName)) {
+      context.getBean(dataSourceName, DataSource::class) as DataSource
+    } else {
+      log.warn("No DataSource Bean found withe name: {}", dataSourceName)
+      context.getBean(DataSource::class.java) as DataSource
+    }
 
     return NamedParameterJdbcTemplate(dataSource)
   }
@@ -108,7 +106,7 @@ class ConfiguredApiRepository {
     query: String,
     reportId: String,
     policyEngineResult: String,
-    dataSourceName: String? = null,
+    dataSourceName: String,
   ): Long {
     val jdbcTemplate = populateJdbcTemplate(dataSourceName)
     return jdbcTemplate.queryForList(
