@@ -7,6 +7,7 @@ import org.springframework.boot.jdbc.DataSourceBuilder
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.DEFAULT_DATASOURCE
 import javax.sql.DataSource
 
 @Configuration
@@ -21,7 +22,7 @@ class DefaultDataSourceConfig(
   lateinit var context: ApplicationContext
 
   @ConditionalOnMissingBean
-  @Bean("defaultDataSource")
+  @Bean(DEFAULT_DATASOURCE)
   fun createCustomDataSource(): DataSource {
     return DataSourceBuilder.create()
       .url(url)

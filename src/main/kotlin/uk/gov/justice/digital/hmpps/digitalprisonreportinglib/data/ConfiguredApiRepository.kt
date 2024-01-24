@@ -19,6 +19,7 @@ class ConfiguredApiRepository {
     private const val STAGE_1 = """stage_1"""
     private const val STAGE_2 = """stage_2"""
     private const val STAGE_3 = """stage_3"""
+    const val DEFAULT_DATASOURCE = "defaultDataSource"
   }
 
   @Autowired
@@ -60,9 +61,9 @@ class ConfiguredApiRepository {
       if (context.containsBean(dataSourceName)) {
         context.getBean(dataSourceName, DataSource::class) as DataSource
       } else {
-        context.getBean("defaultDataSource", DataSource::class) as DataSource
+        context.getBean(DEFAULT_DATASOURCE, DataSource::class) as DataSource
       }
-    } ?: context.getBean("defaultDataSource", DataSource::class) as DataSource
+    } ?: context.getBean(DEFAULT_DATASOURCE, DataSource::class) as DataSource
 
     return NamedParameterJdbcTemplate(dataSource)
   }
