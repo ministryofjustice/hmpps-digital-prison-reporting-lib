@@ -220,7 +220,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .uri { uriBuilder: UriBuilder ->
           uriBuilder
             .path("/definitions/external-movements/last-month")
-            .queryParam("maxStaticOptions", "1")
             .build()
         }
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -409,10 +408,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                                   {
                                         "name": "Transfer In from Other Establishment",
                                         "display": "Transfer In from Other Establishment"
-                                  },
-                                  {
-                                      "display": "Transfer Out to Other Establishment",
-                                      "name": "Transfer Out to Other Establishment"
                                   }
                                 ],
                                 "defaultValue": null

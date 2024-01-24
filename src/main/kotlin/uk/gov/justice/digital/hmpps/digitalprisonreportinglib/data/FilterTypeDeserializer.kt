@@ -16,7 +16,7 @@ class FilterTypeDeserializer : JsonDeserializer<FilterType?> {
     context: JsonDeserializationContext?,
   ): FilterType {
     val stringValue = json.asString
-    return FilterType.entries.firstOrNull { enum -> enum.type == stringValue }
+    return FilterType.entries.firstOrNull { enum -> enum.toString().lowercase() == stringValue.lowercase() }
       ?: throw IllegalArgumentException("Unknown FilterType $stringValue!")
   }
 }
