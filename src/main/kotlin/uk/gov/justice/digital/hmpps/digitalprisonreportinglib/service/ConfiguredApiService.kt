@@ -52,15 +52,16 @@ class ConfiguredApiService(
     return formatToSchemaFieldsCasing(
       configuredApiRepository
         .executeQuery(
-          productDefinition.dataset.query,
-          validateAndMapFilters(productDefinition, filters) + dynamicFilter,
-          selectedPage,
-          pageSize,
-          sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
-          sortedAsc,
-          reportId,
-          policyEngine.execute(),
-          reportFieldId,
+          query = productDefinition.dataset.query,
+          filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
+          sortedAsc = sortedAsc,
+          reportId = reportId,
+          policyEngineResult = policyEngine.execute(),
+          dynamicFilterFieldId = reportFieldId,
+          dataSourceName = productDefinition.datasource.name,
         ),
       productDefinition.dataset.schema.field,
     )
@@ -91,10 +92,11 @@ class ConfiguredApiService(
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(
       configuredApiRepository.count(
-        validateAndMapFilters(productDefinition, filters),
-        productDefinition.dataset.query,
-        reportId,
-        policyEngine.execute(),
+        filters = validateAndMapFilters(productDefinition, filters),
+        query = productDefinition.dataset.query,
+        reportId = reportId,
+        policyEngineResult = policyEngine.execute(),
+        dataSourceName = productDefinition.datasource.name,
       ),
     )
   }
