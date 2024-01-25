@@ -37,3 +37,6 @@ This mean Strings are concatenated to create the final query which effectively i
 Since Common Table Expressions are used to delineate functionality in the query, SELECT is the only possible DML statement and there are no UPDATE, INSERT or DELETE operations.
 The values of the filters coming from the client are sanitised in a prepared statements and the column names of the filters are validated against the schema field filter names of the report definition. 
 So there has been careful consideration regarding the sanitization of the query to the extent possible, however, there is limited control over what the actual query will be and this is dependent upon what is defined in the DPD.
+</br></br>**Note**: If you have `hmpps/veracode_pipeline_scan` enabled in your CircleCI pipeline it will produce the below warning:</br>
+`CWE-89: Improper Neutralization of Special Elements used in an SQL Command`</br>
+This is is due to what has been mentioned above regarding the construction of the query and it is not an actual issue.
