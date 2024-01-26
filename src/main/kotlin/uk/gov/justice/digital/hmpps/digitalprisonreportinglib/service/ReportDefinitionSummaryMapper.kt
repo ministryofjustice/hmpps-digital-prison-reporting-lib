@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 
