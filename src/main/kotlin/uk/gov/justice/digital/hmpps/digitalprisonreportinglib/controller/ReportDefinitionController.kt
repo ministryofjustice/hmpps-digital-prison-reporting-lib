@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
@@ -29,7 +29,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
 
   @GetMapping("/definitions")
   @Operation(
-    description = "Gets all report definitions",
+    description = "Gets summaries of all report definitions",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
   fun definitions(
@@ -46,7 +46,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): List<ReportDefinition> {
+  ): List<ReportDefinitionSummary> {
     return reportDefinitionService.getListForUser(
       renderMethod,
       if (authentication is DprAuthAwareAuthenticationToken) authentication else null,

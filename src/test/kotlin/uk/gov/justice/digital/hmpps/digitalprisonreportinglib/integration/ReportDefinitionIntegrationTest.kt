@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
-import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -10,6 +9,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import java.time.LocalDate.now
@@ -47,7 +47,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .expectBodyList<ReportDefinition>()
+        .expectBodyList<ReportDefinitionSummary>()
         .returnResult()
 
       assertThat(result.responseBody).isNotNull
@@ -68,21 +68,13 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       val lastMonthVariant = definition.variants[0]
 
       assertThat(lastMonthVariant.id).isEqualTo("last-month")
-      assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
-      assertThat(lastMonthVariant.specification).isNotNull
-      assertThat(lastMonthVariant.specification?.fields).hasSize(8)
 
       val lastWeekVariant = definition.variants[1]
       assertThat(lastWeekVariant.id).isEqualTo("last-week")
-      assertThat(lastWeekVariant.resourceName).isEqualTo("reports/external-movements/last-week")
       assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
       assertThat(lastWeekVariant.name).isEqualTo("Last week")
-      assertThat(lastWeekVariant.specification).isNotNull
-      assertThat(lastWeekVariant.specification?.fields).hasSize(8)
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
     }
   }
 
@@ -109,7 +101,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isOk
-        .expectBodyList<ReportDefinition>()
+        .expectBodyList<ReportDefinitionSummary>()
         .returnResult()
 
       assertThat(result.responseBody).isNotNull
@@ -127,21 +119,13 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       val lastMonthVariant = definition.variants[0]
 
       assertThat(lastMonthVariant.id).isEqualTo("last-month")
-      assertThat(lastMonthVariant.resourceName).isEqualTo("reports/external-movements/last-month")
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
-      assertThat(lastMonthVariant.specification).isNotNull
-      assertThat(lastMonthVariant.specification?.fields).hasSize(8)
 
       val lastWeekVariant = definition.variants[1]
       assertThat(lastWeekVariant.id).isEqualTo("last-week")
-      assertThat(lastWeekVariant.resourceName).isEqualTo("reports/external-movements/last-week")
       assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
       assertThat(lastWeekVariant.name).isEqualTo("Last week")
-      assertThat(lastWeekVariant.specification).isNotNull
-      assertThat(lastWeekVariant.specification?.fields).hasSize(8)
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
     }
   }
 
@@ -158,7 +142,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBodyList<ReportDefinition>()
+      .expectBodyList<ReportDefinitionSummary>()
       .returnResult()
 
     assertThat(result.responseBody).isNotNull
@@ -305,244 +289,12 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
               {
                   "description": "All movements in the past month",
                   "id": "last-month",
-                  "name": "Last month",
-                  "resourceName": "reports/external-movements/last-month",
-                  "specification": {
-                      "fields": [
-                          {
-                              "defaultsort": false,
-                              "display": "Prison Number",
-                              "filter": null,
-                              "name": "prisonNumber",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Name",
-                              "filter": {   
-                                 "dynamicOptions": {
-                                    "minimumLength": 2,
-                                    "returnAsStaticOptions": false
-                                },
-                                "staticOptions": null,
-                                 "type": "autocomplete"
-                              },
-                              "name": "name",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": "None"
-                          },
-                          {
-                              "defaultsort": true,
-                              "display": "Date",
-                              "filter": {
-                                  "staticOptions": null,
-                                  "type": "daterange"
-                              },
-                              "name": "date",
-                              "sortable": true,
-                              "type": "date",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "From",
-                              "filter": null,
-                              "name": "origin",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": "None"
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "To",
-                              "filter": null,
-                              "name": "destination",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": "None"
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Direction",
-                              "filter": {
-                                  "defaultValue": null,
-                                  "staticOptions": [
-                                      {
-                                          "display": "In",
-                                          "name": "in"
-                                      },
-                                      {
-                                          "display": "Out",
-                                          "name": "out"
-                                      }
-                                  ],
-                                  "type": "Radio"
-                              },
-                              "name": "direction",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Type",
-                              "filter": null,
-                              "name": "type",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Reason",
-                              "filter": {
-                                  "type": "autocomplete",
-                                  "dynamicOptions": {
-                                      "minimumLength": 2,
-                                      "returnAsStaticOptions": true
-                                  },
-                                  "staticOptions": [
-                                  {
-                                        "name": "Transfer In from Other Establishment",
-                                        "display": "Transfer In from Other Establishment"
-                                  }
-                                ],
-                                "defaultValue": null
-                              },
-                              "name": "reason",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          }
-                      ],
-                      "template": "list"
-                  }
+                  "name": "Last month"
               },
               {
                   "description": "All movements in the past week",
                   "id": "last-week",
-                  "name": "Last week",
-                  "resourceName": "reports/external-movements/last-week",
-                  "specification": {
-                      "fields": [
-                          {
-                              "defaultsort": false,
-                              "display": "Prison Number",
-                              "filter": null,
-                              "name": "prisonNumber",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Name",
-                              "filter": {   
-                                 "dynamicOptions": {
-                                    "minimumLength": 2,
-                                    "returnAsStaticOptions": false
-                                },
-                                "staticOptions": null,
-                                 "type": "autocomplete"
-                              },
-                              "name": "name",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": "None"
-                          },
-                          {
-                              "defaultsort": true,
-                              "display": "Date",
-                              "filter": {
-                                  "staticOptions": null,
-                                  "type": "daterange"
-                              },
-                              "name": "date",
-                              "sortable": true,
-                              "type": "date",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "From",
-                              "filter": null,
-                              "name": "origin",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": "None"
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "To",
-                              "filter": null,
-                              "name": "destination",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": "None"
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Direction",
-                              "filter": {
-                                  "defaultValue": null,
-                                  "staticOptions": [
-                                      {
-                                          "display": "In",
-                                          "name": "in"
-                                      },
-                                      {
-                                          "display": "Out",
-                                          "name": "out"
-                                      }
-                                  ],
-                                  "type": "Radio"
-                              },
-                              "name": "direction",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Type",
-                              "filter": null,
-                              "name": "type",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          },
-                          {
-                              "defaultsort": false,
-                              "display": "Reason",
-                              "filter": {
-                                  "type": "autocomplete",
-                                  "dynamicOptions": {
-                                      "minimumLength": 2,
-                                      "returnAsStaticOptions": true
-                                  },
-                                  "staticOptions": [
-                                  {
-                                        "name": "Transfer In from Other Establishment",
-                                        "display": "Transfer In from Other Establishment"
-                                  },
-                                  {
-                                      "display": "Transfer Out to Other Establishment",
-                                      "name": "Transfer Out to Other Establishment"
-                                  }
-                                ],
-                                "defaultValue": null
-                              },
-                              "name": "reason",
-                              "sortable": true,
-                              "type": "string",
-                              "wordWrap": null
-                          }
-                      ],
-                      "template": "list"
-                  }
+                  "name": "Last week"
               }
           ]
       }

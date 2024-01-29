@@ -8,9 +8,10 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.then
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
@@ -78,14 +79,13 @@ class ReportDefinitionServiceTest {
 
   @Test
   fun `Getting report list for user maps correctly`() {
-    val expectedResult = ReportDefinition(
+    val expectedResult = ReportDefinitionSummary(
       id = "1",
       name = "2",
       variants = listOf(
-        VariantDefinition(
+        VariantDefinitionSummary(
           id = "1",
           name = "2",
-          resourceName = "3",
         ),
       ),
     )
@@ -94,15 +94,17 @@ class ReportDefinitionServiceTest {
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
-    val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), anyOrNull()) } doReturn expectedResult
+    val mapper = mock<ReportDefinitionMapper> {}
+
+    val summaryMapper = mock<ReportDefinitionSummaryMapper> {
+      on { map(any(), any()) } doReturn expectedResult
     }
-    val service = ReportDefinitionService(repository, mapper)
+    val service = ReportDefinitionService(repository, mapper, summaryMapper)
 
     val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
 
     then(repository).should().getProductDefinitions()
-    then(mapper).should().map(minimalDefinition, RenderMethod.HTML, authToken)
+    then(summaryMapper).should().map(minimalDefinition, RenderMethod.HTML)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -128,7 +130,7 @@ class ReportDefinitionServiceTest {
     val mapper = mock<ReportDefinitionMapper> {
       on { map(any<SingleReportProductDefinition>(), any(), anyOrNull()) } doReturn expectedResult
     }
-    val service = ReportDefinitionService(repository, mapper)
+    val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {})
 
     val actualResult = service.getDefinition(
       minimalSingleDefinition.id,
@@ -149,7 +151,7 @@ class ReportDefinitionServiceTest {
   @Test
   fun `Getting HTML report list with no matches returns no domains`() {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
-    val definitionWithNoVariants = ReportDefinition(
+    val definitionWithNoVariants = ReportDefinitionSummary(
       id = "1",
       name = "2",
       variants = emptyList(),
@@ -157,10 +159,11 @@ class ReportDefinitionServiceTest {
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
-    val mapper = mock<ReportDefinitionMapper> {
-      on { map(any(), any(), any(), anyOrNull()) } doReturn definitionWithNoVariants
+    val mapper = mock<ReportDefinitionMapper> {}
+    val summaryMapper = mock<ReportDefinitionSummaryMapper> {
+      on { map(any(), any()) } doReturn definitionWithNoVariants
     }
-    val service = ReportDefinitionService(repository, mapper)
+    val service = ReportDefinitionService(repository, mapper, summaryMapper)
 
     val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
 

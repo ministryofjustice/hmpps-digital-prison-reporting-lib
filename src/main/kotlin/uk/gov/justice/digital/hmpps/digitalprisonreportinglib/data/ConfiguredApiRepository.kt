@@ -131,12 +131,15 @@ class ConfiguredApiRepository {
   private fun buildFiltersWhereClause(
     filters: List<Filter>,
   ): String {
-    return filters.joinToString(" AND ", transform = this::buildCondition).ifEmpty { "TRUE" }
+    val filterClause = filters.joinToString(" AND ", transform = this::buildCondition).ifEmpty { "TRUE" }
+    log.debug("Filter clause: {}", filterClause)
+    return filterClause
   }
 
   fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {
     val preparedStatementNamedParams = MapSqlParameterSource()
     filters.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
+    log.debug("Prepared statement named parameters: {}", preparedStatementNamedParams)
     return preparedStatementNamedParams
   }
 
