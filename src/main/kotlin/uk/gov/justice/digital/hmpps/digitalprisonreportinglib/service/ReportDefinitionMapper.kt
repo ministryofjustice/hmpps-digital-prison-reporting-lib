@@ -182,7 +182,6 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     return SingleVariantReportDefinition(
       id = definition.id,
       name = definition.name,
-      printable = definition.printable,
       variant = map(report = definition.report, dataSet = definition.dataset, productDefinitionId = definition.id, userToken = userToken, dataProductDefinitionsPath = dataProductDefinitionsPath),
     )
   }
