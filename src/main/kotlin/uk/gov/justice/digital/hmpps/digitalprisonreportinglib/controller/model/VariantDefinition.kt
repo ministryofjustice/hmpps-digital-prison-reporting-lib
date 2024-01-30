@@ -6,4 +6,6 @@ data class VariantDefinition(
   val resourceName: String,
   val description: String? = null,
   val specification: Specification? = null,
+  val classification: String? = null,
+  val printable: Boolean? = true,
 )
