@@ -67,6 +67,7 @@ class ReportDefinitionMapperTest {
     id = "21",
     name = "22",
     description = "23",
+    printable = true,
     created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
@@ -165,6 +166,8 @@ class ReportDefinitionMapperTest {
     assertThat(variant.resourceName).isEqualTo("reports/${fullProductDefinition.id}/${fullProductDefinition.report.first().id}")
     assertThat(variant.description).isEqualTo(fullProductDefinition.report.first().description)
     assertThat(variant.specification).isNotNull
+    assertThat(variant.classification).isEqualTo(fullProductDefinition.report.first().classification)
+    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().printable)
     assertThat(variant.specification?.template).isEqualTo(fullProductDefinition.report.first().specification?.template)
     assertThat(variant.specification?.fields).isNotEmpty
     assertThat(variant.specification?.fields).hasSize(1)

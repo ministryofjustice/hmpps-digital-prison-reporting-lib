@@ -14,4 +14,5 @@ data class Report(
   val specification: Specification? = null,
   val destination: List<Map<String, String>> = emptyList(),
   val classification: String? = null,
+  val printable: Boolean? = true,
 )
