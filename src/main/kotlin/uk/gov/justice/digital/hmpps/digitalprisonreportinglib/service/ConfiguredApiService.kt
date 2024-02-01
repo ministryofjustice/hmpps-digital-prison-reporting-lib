@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -48,10 +47,9 @@ class ConfiguredApiService(
     dataProductDefinitionsPath: String? = null,
   ): List<Map<String, Any>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    // 1. From the list of fields from the report find the fields that have a formula.
-    // 2. Then get their field names from the dataset and replace the values of the Map with the values from the formula key. (This needs to happen after transform keys).
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList())
     return configuredApiRepository
       .executeQuery(
         query = productDefinition.dataset.query,
@@ -66,7 +64,7 @@ class ConfiguredApiService(
         dataSourceName = productDefinition.datasource.name,
       )
       .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
-      .map { row -> applyFormulas(row, productDefinition.report.specification?.field ?: emptyList()) }
+      .map(formulaEngine::applyFormulas)
   }
 
   private fun formatColumnNamesToSchemaFieldNamesCasing(
@@ -220,30 +218,6 @@ class ConfiguredApiService(
   private fun formatToSchemaFieldsCasing(resultRows: List<Map<String, Any>>, schemaFields: List<SchemaField>): List<Map<String, Any>> {
     return resultRows
       .map { row -> row.entries.associate { e -> transformKey(e.key, schemaFields) to e.value } }
-  }
-
-  private fun applyFormulas(row: Map<String, Any>, reportFields: List<ReportField>): Map<String, Any> =
-    row.entries.associate { e ->
-      e.key to (
-        reportFields.firstOrNull { reportField -> reportField.name.removePrefix("\$ref:") == e.key }
-          ?.formula?.ifEmpty { null }
-          ?.let {
-            interpolate(formula = it, row)
-          } ?: e.value
-        )
-    }
-
-  private fun interpolate(formula: String, row: Map<String, Any>): String {
-    val sb = StringBuilder(formula)
-    row.keys.forEach {
-      sb.replace(
-        0,
-        sb.length,
-        sb.toString() // .replace("") { -> row.getOrDefault(it, "") as String })
-          .replace("\${$it}", row.getOrDefault(it, "").toString()),
-      )
-    }
-    return sb.toString()
   }
 
   private fun transformKey(key: String, schemaFields: List<SchemaField>): String {
