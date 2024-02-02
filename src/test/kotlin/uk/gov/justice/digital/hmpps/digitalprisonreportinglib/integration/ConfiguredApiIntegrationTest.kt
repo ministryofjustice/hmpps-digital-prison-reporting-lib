@@ -35,6 +35,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_N
 
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   companion object {
+    fun dateTimeWithSeconds(dateTime: Any?) = """$dateTime:00"""
+
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
@@ -248,6 +250,45 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         )
 
       wireMockServer.verify(1, RequestPatternBuilder(RequestMethod.GET, UrlPattern(EqualToPattern(definitionsServicePath), false)))
+    }
+  }
+
+  class ConfiguredApiFormulaTest : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithFormula.json" }
+      }
+    }
+
+    @Test
+    fun `Configured API returns value from the repository formatting the fields with formulas correctly`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", false)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .json(
+          """[
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
+        "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
+        "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
+      ]       
+      """,
+        )
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
     }
   }
 
@@ -555,6 +596,4 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isBadRequest
   }
-
-  private fun dateTimeWithSeconds(dateTime: Any?) = """$dateTime:00"""
 }

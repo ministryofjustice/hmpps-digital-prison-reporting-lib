@@ -49,23 +49,28 @@ class ConfiguredApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    return formatToSchemaFieldsCasing(
-      configuredApiRepository
-        .executeQuery(
-          query = productDefinition.dataset.query,
-          filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
-          sortedAsc = sortedAsc,
-          reportId = reportId,
-          policyEngineResult = policyEngine.execute(),
-          dynamicFilterFieldId = reportFieldId,
-          dataSourceName = productDefinition.datasource.name,
-        ),
-      productDefinition.dataset.schema.field,
-    )
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList())
+    return configuredApiRepository
+      .executeQuery(
+        query = productDefinition.dataset.query,
+        filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngine.execute(),
+        dynamicFilterFieldId = reportFieldId,
+        dataSourceName = productDefinition.datasource.name,
+      )
+      .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
+      .map(formulaEngine::applyFormulas)
   }
+
+  private fun formatColumnNamesToSchemaFieldNamesCasing(
+    row: Map<String, Any>,
+    productDefinition: SingleReportProductDefinition,
+  ) = row.entries.associate { e -> transformKey(e.key, productDefinition.dataset.schema.field) to e.value }
 
   private fun buildAndValidateDynamicFilter(
     reportFieldId: String?,
