@@ -6,14 +6,22 @@ class FormulaEngine(private val reportFields: List<ReportField>) {
 
   fun applyFormulas(row: Map<String, Any>): Map<String, Any> =
     row.entries.associate { e ->
-      e.key to (
-        reportFields.firstOrNull { reportField -> reportField.name.removePrefix("\$ref:") == e.key }
-          ?.formula?.ifEmpty { null }
-          ?.let {
-            interpolate(formula = it, row)
-          } ?: e.value
-        )
+      e.key to constructValueWithFormulaInterpolationIfNeeded(e, row)
     }
+
+  private fun constructValueWithFormulaInterpolationIfNeeded(
+    e: Map.Entry<String, Any>,
+    row: Map<String, Any>,
+  ) = (
+    findFormulas(e.key)
+      ?.let {
+        interpolate(formula = it, row)
+      } ?: e.value
+    )
+
+  private fun findFormulas(columnName: String) =
+    reportFields.firstOrNull { reportField -> reportField.name.removePrefix("\$ref:") == columnName }
+      ?.formula?.ifEmpty { null }
 
   private fun interpolate(formula: String, row: Map<String, Any>): String {
     val sb = StringBuilder(formula)
