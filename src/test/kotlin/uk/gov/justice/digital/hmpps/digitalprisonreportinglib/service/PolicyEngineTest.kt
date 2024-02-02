@@ -276,15 +276,6 @@ class PolicyEngineTest {
     Assertions.assertThat(policyEngine.execute()).isEqualTo("TRUE")
   }
 
-//  @Bean("customDataSource")
-//  fun createCustomDataSource(): DataSource {
-//    return DataSourceBuilder.create()
-//      .url(url)
-//      .username(username)
-//      .password(password)
-//      .driverClassName(driver)
-//      .build()
-//  }
   @Test
   fun `policy engine returns FALSE for an access policy with a permit rule with a condition of matching a role when no role matches`() {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
