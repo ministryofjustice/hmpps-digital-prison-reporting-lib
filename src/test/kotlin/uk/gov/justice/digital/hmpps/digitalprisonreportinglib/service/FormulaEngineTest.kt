@@ -108,6 +108,32 @@ class FormulaEngineTest {
   }
 
   @Test
+  fun `Formula engine can interpolate fields as long as they are part of the row even if they are not part of the report fields`() {
+    val row: Map<String, Any> = mapOf(
+      NAME to "LastName6, F",
+      DATE to externalMovementOriginCaseloadDirectionIn.time,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination_code",
+        display = "Destination Code",
+        visible = true,
+        formula = "\${destination}:\${name}",
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      NAME to "LastName6, F",
+      DATE to externalMovementOriginCaseloadDirectionIn.time,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "Manchester:LastName6, F",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
   fun `Formula engine ignores fields with empty string formulas and without any formulas`() {
     val row: Map<String, Any> = mapOf(
       NAME to "LastName6, F",
