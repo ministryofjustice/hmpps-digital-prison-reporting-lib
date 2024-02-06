@@ -4,6 +4,6 @@ data class Feature(
   val type: FeatureType,
 )
 
-enum class FeatureType {
-  "print",
-};
+enum class FeatureType(val type: String) {
+  PRINT("print")
+}
