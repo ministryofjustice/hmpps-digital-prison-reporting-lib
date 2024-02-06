@@ -66,7 +66,7 @@ class ReportDefinitionMapperTest {
   )
 
   private val feature = Feature(
-    type = FeatureType.PRINT.type,
+    type = FeatureType.PRINT,
   )
 
   private val fullReport = Report(
