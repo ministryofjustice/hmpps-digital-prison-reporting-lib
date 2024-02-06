@@ -14,5 +14,5 @@ data class Report(
   val specification: Specification? = null,
   val destination: List<Map<String, String>> = emptyList(),
   val classification: String? = null,
-  val feature: List<Feature> = emptyList()
+  val feature: List<Feature> = emptyList(),
 )
