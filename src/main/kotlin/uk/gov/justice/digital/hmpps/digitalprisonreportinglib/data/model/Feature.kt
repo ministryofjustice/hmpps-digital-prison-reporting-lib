@@ -5,5 +5,5 @@ data class Feature(
 )
 
 enum class FeatureType {
-  PRINT('print'),
+  PRINT("print"),
 }
