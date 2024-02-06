@@ -173,7 +173,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.description).isEqualTo(fullProductDefinition.report.first().description)
     assertThat(variant.specification).isNotNull
     assertThat(variant.classification).isEqualTo(fullProductDefinition.report.first().classification)
-    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().feature[0].type == 'print')
+    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().feature.first().type == FeatureType.PRINT.type)
     assertThat(variant.specification?.template).isEqualTo(fullProductDefinition.report.first().specification?.template)
     assertThat(variant.specification?.fields).isNotEmpty
     assertThat(variant.specification?.fields).hasSize(1)
