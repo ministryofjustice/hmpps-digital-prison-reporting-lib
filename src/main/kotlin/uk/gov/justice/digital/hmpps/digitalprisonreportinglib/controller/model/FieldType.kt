@@ -7,4 +7,5 @@ enum class FieldType(@JsonValue val type: kotlin.String) {
   Date("date"),
   Long("long"),
   Time("time"),
+  HTML("HTML"),
 }

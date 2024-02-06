@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
@@ -109,8 +110,13 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, userToken, dataProductDefinitionsPath) },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
-      type = schemaField.type.toString().let(FieldType::valueOf),
+      type = populateType(schemaField, field),
     )
+  }
+
+  private fun populateType(schemaField: SchemaField, reportField: ReportField): FieldType {
+    return reportField.formula?.takeIf { it.startsWith(MAKE_URL_FORMULA_PREFIX) }?.let { FieldType.HTML }
+      ?: schemaField.type.toString().let(FieldType::valueOf)
   }
 
   private fun map(
