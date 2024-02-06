@@ -98,6 +98,11 @@ class ReportDefinitionMapperTest {
     ),
     destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
+    feature: [
+      {
+        type: 'print'
+      }
+    ]
   )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(
@@ -167,7 +172,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.description).isEqualTo(fullProductDefinition.report.first().description)
     assertThat(variant.specification).isNotNull
     assertThat(variant.classification).isEqualTo(fullProductDefinition.report.first().classification)
-    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().printable)
+    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().feature[0].type == 'print')
     assertThat(variant.specification?.template).isEqualTo(fullProductDefinition.report.first().specification?.template)
     assertThat(variant.specification?.fields).isNotEmpty
     assertThat(variant.specification?.fields).hasSize(1)
