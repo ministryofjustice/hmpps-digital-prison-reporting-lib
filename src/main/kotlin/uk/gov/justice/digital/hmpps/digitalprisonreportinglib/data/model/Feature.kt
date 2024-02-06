@@ -6,4 +6,4 @@ data class Feature(
 
 enum class FeatureType {
   "print",
-}
+};
