@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Product
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -67,7 +68,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       description = report.description,
       specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, userToken, dataProductDefinitionsPath),
       classification = report.classification,
-      printable = report.feature.filter { feature -> feature.type == "print" }.size == 1,
+      printable = report.feature.filter { feature -> feature.type == FeatureType.print }.size == 1,
       resourceName = "reports/$productDefinitionId/${report.id}",
     )
   }
