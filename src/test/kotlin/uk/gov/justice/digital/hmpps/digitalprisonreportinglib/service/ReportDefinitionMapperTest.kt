@@ -15,9 +15,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
@@ -66,7 +66,7 @@ class ReportDefinitionMapperTest {
   )
 
   private val feature = Feature(
-    type = FeatureType.PRINT.type
+    type = FeatureType.PRINT.type,
   )
 
   private val fullReport = Report(
@@ -103,7 +103,7 @@ class ReportDefinitionMapperTest {
     ),
     destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
-    feature = listOf(feature)
+    feature = listOf(feature),
   )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(

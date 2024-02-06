@@ -13,11 +13,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.S
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
