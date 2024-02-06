@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
@@ -64,11 +66,14 @@ class ReportDefinitionMapperTest {
     name = "19",
   )
 
+  private val feature = Feature(
+    type = FeatureType.PRINT,
+  )
+
   private val fullReport = Report(
     id = "21",
     name = "22",
     description = "23",
-    printable = true,
     created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
@@ -99,6 +104,7 @@ class ReportDefinitionMapperTest {
     ),
     destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
+    feature = listOf(feature),
   )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(
@@ -168,7 +174,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.description).isEqualTo(fullProductDefinition.report.first().description)
     assertThat(variant.specification).isNotNull
     assertThat(variant.classification).isEqualTo(fullProductDefinition.report.first().classification)
-    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().printable)
+    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().feature?.first()?.type == FeatureType.PRINT)
     assertThat(variant.specification?.template).isEqualTo(fullProductDefinition.report.first().specification?.template)
     assertThat(variant.specification?.fields).isNotEmpty
     assertThat(variant.specification?.fields).hasSize(1)
