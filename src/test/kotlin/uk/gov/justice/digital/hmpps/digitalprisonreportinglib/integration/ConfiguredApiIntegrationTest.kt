@@ -31,7 +31,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.REASON
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.TYPE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement4
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
+import java.time.LocalDateTime
 
 class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   companion object {
@@ -283,6 +286,50 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
           """[
         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
         "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
+        "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
+      ]       
+      """,
+        )
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
+    }
+
+    @Test
+    fun `Configured API returns empty String as the value from the repository for a field which has a formula and whose result set value is null`() {
+      externalMovementRepository.delete(externalMovement4)
+      val externalMovement4WithNullType = ExternalMovementEntity(
+        4,
+        7849,
+        LocalDateTime.of(2023, 5, 1, 0, 0, 0),
+        LocalDateTime.of(2023, 5, 1, 15, 19, 0),
+        null,
+        "LWSTMC",
+        "WANDSWORTH (HMP)",
+        "WWI",
+        "Out",
+        "Transfer",
+        "Transfer Out to Other Establishment",
+      )
+      externalMovementRepository.save(externalMovement4WithNullType)
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", false)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .json(
+          """[
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
+        "origin": null, "origin_code": "", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
         "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
       """,

@@ -213,7 +213,7 @@ class ConfiguredApiRepositoryTest {
 
   @Test
   fun `should return data and not error when there is no sort column provided `() {
-    var actual: List<Map<String, Any>> = emptyList()
+    var actual: List<Map<String, Any?>> = emptyList()
     assertDoesNotThrow {
       actual = configuredApiRepository.executeQuery(
         query = query,

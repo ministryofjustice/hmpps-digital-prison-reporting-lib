@@ -8,33 +8,33 @@ class FormulaEngine(private val reportFields: List<ReportField>) {
     const val MAKE_URL_FORMULA_PREFIX = "make_url"
   }
 
-  fun applyFormulas(row: Map<String, Any>): Map<String, Any> =
+  fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> =
     row.entries.associate { e ->
       e.key to constructValueWithFormulaInterpolationIfNeeded(e, row)
     }
 
   private fun constructValueWithFormulaInterpolationIfNeeded(
-    e: Map.Entry<String, Any>,
-    row: Map<String, Any>,
+    e: Map.Entry<String, Any?>,
+    row: Map<String, Any?>,
   ) = (
-    findFormulas(e.key)
+    findFormula(e.key)
       ?.let {
         interpolate(formula = it, row)
       } ?: e.value
     )
 
-  private fun findFormulas(columnName: String) =
+  private fun findFormula(columnName: String) =
     reportFields.firstOrNull { reportField -> reportField.name.removePrefix("\$ref:") == columnName }
       ?.formula?.ifEmpty { null }
 
-  private fun interpolate(formula: String, row: Map<String, Any>): String {
+  private fun interpolate(formula: String, row: Map<String, Any?>): String {
     val sb = StringBuilder(formula)
     row.keys.forEach {
       sb.replace(
         0,
         sb.length,
         sb.toString()
-          .replace("\${$it}", row.getOrDefault(it, "").toString()),
+          .replace("\${$it}", row.getOrElse(it) { "" }.toString()),
       )
     }
     return sb.toString()

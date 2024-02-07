@@ -45,7 +45,7 @@ class ConfiguredApiService(
     reportFieldId: String? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
-  ): List<Map<String, Any>> {
+  ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
@@ -68,7 +68,7 @@ class ConfiguredApiService(
   }
 
   private fun formatColumnNamesToSchemaFieldNamesCasing(
-    row: Map<String, Any>,
+    row: Map<String, Any?>,
     productDefinition: SingleReportProductDefinition,
   ) = row.entries.associate { e -> transformKey(e.key, productDefinition.dataset.schema.field) to e.value }
 

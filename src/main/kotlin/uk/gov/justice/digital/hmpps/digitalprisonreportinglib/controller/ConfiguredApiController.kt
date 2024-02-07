@@ -85,7 +85,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<List<Map<String, Any>>> {
+  ): ResponseEntity<List<Map<String, Any?>>> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)

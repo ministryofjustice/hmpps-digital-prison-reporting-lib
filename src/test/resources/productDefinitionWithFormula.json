@@ -162,8 +162,7 @@
       } ]
     },
     "destination" : [ ],
-    "visible": "report visibility",
-    "formula": "formula placeholder"
+    "visible": "report visibility"
   }, {
     "id" : "last-week",
     "name" : "Last week",

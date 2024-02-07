@@ -35,7 +35,7 @@ class ConfiguredApiRepository {
     policyEngineResult: String,
     dynamicFilterFieldId: String? = null,
     dataSourceName: String,
-  ): List<Map<String, Any>> {
+  ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val jdbcTemplate = populateJdbcTemplate(dataSourceName)
     val result = jdbcTemplate.queryForList(

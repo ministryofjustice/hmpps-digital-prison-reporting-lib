@@ -17,6 +17,6 @@ data class ExternalMovementEntity(
   val destination: String?,
   val destinationCode: String?,
   val direction: String?,
-  val type: String,
+  val type: String?,
   val reason: String,
 )
