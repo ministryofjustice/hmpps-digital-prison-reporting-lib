@@ -215,11 +215,6 @@ class ConfiguredApiService(
     }
   }
 
-  private fun formatToSchemaFieldsCasing(resultRows: List<Map<String, Any>>, schemaFields: List<SchemaField>): List<Map<String, Any>> {
-    return resultRows
-      .map { row -> row.entries.associate { e -> transformKey(e.key, schemaFields) to e.value } }
-  }
-
   private fun transformKey(key: String, schemaFields: List<SchemaField>): String {
     return schemaFields.first { it.name.lowercase() == key.lowercase() }.name
   }

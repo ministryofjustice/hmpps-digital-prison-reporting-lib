@@ -11,6 +11,7 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -616,6 +617,70 @@ class ReportDefinitionMapperTest {
     assertThat(field.filter?.staticOptions).isNull()
     assertThat(field.filter?.dynamicOptions).isEqualTo(DynamicFilterOption(2, false))
     assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
+    verifyNoInteractions(configuredApiService)
+  }
+
+  @Test
+  fun `getting single report with a field containing a make_url formula maps full data correctly and generates HTML type for that field`() {
+    val reportWithMakeUrlFormula = Report(
+      id = "21",
+      name = "22",
+      description = "23",
+      created = LocalDateTime.MAX,
+      version = "24",
+      dataset = "\$ref:10",
+      render = RenderMethod.PDF,
+      schedule = "26",
+      specification = Specification(
+        template = "27",
+        field = listOf(
+          ReportField(
+            name = "\$ref:13",
+            display = "14",
+            wordWrap = WordWrap.None,
+            sortable = true,
+            defaultSort = true,
+            formula = "make_url('\${profile_host}/prisoner/\${prisoner_number}',\${full_name},TRUE)",
+            visible = true,
+          ),
+        ),
+      ),
+      destination = listOf(singletonMap("28", "29")),
+      classification = "someClassification",
+    )
+
+    val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithMakeUrlFormula)
+
+    val mapper = ReportDefinitionMapper(configuredApiService)
+
+    val result = mapper.map(fullSingleProductDefinition, authToken)
+
+    assertThat(result).isNotNull
+    assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
+    assertThat(result.name).isEqualTo(fullSingleProductDefinition.name)
+    assertThat(result.description).isEqualTo(fullSingleProductDefinition.description)
+
+    val variant = result.variant
+
+    assertThat(variant.id).isEqualTo(fullSingleProductDefinition.report.id)
+    assertThat(variant.name).isEqualTo(fullSingleProductDefinition.report.name)
+    assertThat(variant.resourceName).isEqualTo("reports/${fullSingleProductDefinition.id}/${fullSingleProductDefinition.report.id}")
+    assertThat(variant.description).isEqualTo(fullSingleProductDefinition.report.description)
+    assertThat(variant.specification).isNotNull
+    assertThat(variant.specification?.template).isEqualTo(fullSingleProductDefinition.report.specification?.template)
+    assertThat(variant.specification?.fields).isNotEmpty
+    assertThat(variant.specification?.fields).hasSize(1)
+
+    val field = variant.specification!!.fields.first()
+    val sourceSchemaField = fullSingleProductDefinition.dataset.schema.field.first()
+    val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
+
+    assertThat(field.name).isEqualTo(sourceSchemaField.name)
+    assertThat(field.display).isEqualTo(sourceReportField.display)
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
+    assertThat(field.type).isEqualTo(FieldType.HTML)
     verifyNoInteractions(configuredApiService)
   }
 

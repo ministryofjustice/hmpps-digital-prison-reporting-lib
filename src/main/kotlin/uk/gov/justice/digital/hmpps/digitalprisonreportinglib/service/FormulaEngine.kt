@@ -4,6 +4,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportF
 
 class FormulaEngine(private val reportFields: List<ReportField>) {
 
+  companion object {
+    const val MAKE_URL_FORMULA_PREFIX = "make_url"
+  }
+
   fun applyFormulas(row: Map<String, Any>): Map<String, Any> =
     row.entries.associate { e ->
       e.key to constructValueWithFormulaInterpolationIfNeeded(e, row)
