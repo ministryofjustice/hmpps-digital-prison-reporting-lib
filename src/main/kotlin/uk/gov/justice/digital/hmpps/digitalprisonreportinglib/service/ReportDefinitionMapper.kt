@@ -69,7 +69,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       description = report.description,
       specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, userToken, dataProductDefinitionsPath),
       classification = report.classification,
-      printable = report.feature?.any { it.type == FeatureType.PRINT },
+      printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
       resourceName = "reports/$productDefinitionId/${report.id}",
     )
   }
