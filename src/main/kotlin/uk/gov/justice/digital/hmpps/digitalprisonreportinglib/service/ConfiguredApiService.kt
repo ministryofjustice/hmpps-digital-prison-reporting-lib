@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -21,6 +22,7 @@ import java.time.format.DateTimeParseException
 class ConfiguredApiService(
   val productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,
+  @Value("\${env:#{null}}") val env: String? = null,
 ) {
 
   companion object {
@@ -49,7 +51,7 @@ class ConfiguredApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList())
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
     return configuredApiRepository
       .executeQuery(
         query = productDefinition.dataset.query,
