@@ -35,10 +35,13 @@ class ConfiguredApiRepository {
     policyEngineResult: String,
     dynamicFilterFieldId: String? = null,
     dataSourceName: String,
-  ): List<Map<String, Any>> {
+  ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val jdbcTemplate = populateJdbcTemplate(dataSourceName)
-    val result = jdbcTemplate.queryForList(
+    // The result of the query can contain null values.
+    // This is coming from Java and if the returned type is not specified in Kotlin it will assume it is List<Map<String, Any>>
+    // while in reality it is List<Map<String, Any?>>.
+    val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
       buildFinalQuery(
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),

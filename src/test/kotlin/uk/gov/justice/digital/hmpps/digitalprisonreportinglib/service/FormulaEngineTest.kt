@@ -200,4 +200,30 @@ class FormulaEngineTest {
     val formulaEngine = FormulaEngine(reportFields)
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
+
+  @Test
+  fun `Formula engine outputs empty String for null fields with formulas`() {
+    val row: Map<String, Any?> = mapOf(
+      NAME to null,
+      DATE to externalMovementOriginCaseloadDirectionIn.time,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination_code",
+        display = "Destination Code",
+        visible = true,
+        formula = "\${name}",
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to null,
+      DATE to externalMovementOriginCaseloadDirectionIn.time,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
 }
