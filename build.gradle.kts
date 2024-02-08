@@ -35,7 +35,7 @@ dependencies {
   testImplementation("io.jsonwebtoken:jjwt:0.12.3")
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
   testImplementation("org.postgresql:postgresql:42.7.1")
-  testImplementation("org.testcontainers:junit-jupiter:1.19.3")
+  testImplementation("org.testcontainers:junit-jupiter:1.19.4")
   testImplementation("org.testcontainers:postgresql:1.19.3")
 }
 
