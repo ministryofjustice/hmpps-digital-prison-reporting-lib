@@ -12,6 +12,7 @@ class FormulaEngineTest {
     private const val DATE = "date"
     private const val DESTINATION = "destination"
     private const val DESTINATION_CODE = "destination_code"
+    private const val PRISON_NUMBER = "prison_number"
   }
 
   @Test
@@ -222,6 +223,138 @@ class FormulaEngineTest {
       DATE to externalMovementOriginCaseloadDirectionIn.time,
       DESTINATION to "Manchester",
       DESTINATION_CODE to "",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine outputs correct html for make_url formula when new tab is true`() {
+    val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},TRUE)"
+    val prisonNumber = "ABC123"
+    val name = "LastName6, F"
+    val row: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination_code",
+        display = "Destination Code",
+        visible = true,
+        formula = "\${destination}:\${destination_code}:\${name}",
+      ),
+      ReportField(
+        name = "\$ref:destination",
+        display = "Destination",
+        visible = true,
+      ),
+      ReportField(
+        name = "\$ref:name",
+        display = "Name",
+        visible = true,
+      ),
+      ReportField(
+        name = "\$ref:prison_number",
+        display = "Prison Number",
+        visible = true,
+        formula = makeUrlFormula,
+
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to "<a href=\'https://prisoner-test.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' target=\"_blank\">$name</a>",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "Manchester:MNCH:LastName6, F",
+    )
+    val formulaEngine = FormulaEngine(reportFields, "test")
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine outputs correct html for make_url formula when new tab is false`() {
+    val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},FALSE)"
+    val prisonNumber = "ABC123"
+    val name = "LastName6, F"
+    val row: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination",
+        display = "Destination",
+        visible = true,
+        formula = makeUrlFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "<a href=\'https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' >$name</a>",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields, "dev")
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine outputs correct html for make_url formula when there is no env`() {
+    val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},FALSE)"
+    val prisonNumber = "ABC123"
+    val name = "LastName6, F"
+    val row: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination",
+        display = "Destination",
+        visible = true,
+        formula = makeUrlFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "<a href=\'https://prisoner.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' >$name</a>",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine outputs the html for make_url formula with empty strings in place of null row values`() {
+    val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},FALSE)"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to null,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination",
+        display = "Destination",
+        visible = true,
+        formula = makeUrlFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to null,
+      DESTINATION to "<a href=\'https://prisoner.digital.prison.service.justice.gov.uk/prisoner/\' >$name</a>",
+      DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields)
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))

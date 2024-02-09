@@ -262,6 +262,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       @DynamicPropertySource
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.definition.locations") { "productDefinitionWithFormula.json" }
+        registry.add("URL_ENV_SUFFIX") { "dev" }
       }
     }
 
@@ -285,7 +286,9 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .json(
           """[
         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
-        "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
+        "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN]}", 
+        "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
+        "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
         "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
       """,
@@ -329,7 +332,9 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .json(
           """[
         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
-        "origin": null, "origin_code": "", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
+        "origin": null, "origin_code": "", 
+        "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
+        "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
         "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
       """,

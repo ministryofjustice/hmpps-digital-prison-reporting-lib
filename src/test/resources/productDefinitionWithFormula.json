@@ -124,7 +124,8 @@
         "display" : "To",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultsort" : false
+        "defaultsort" : false,
+        "formula" : "make_url('https://prisoner-${env}.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}',${name},TRUE)"
       }, {
         "name" : "$ref:direction",
         "display" : "Direction",
