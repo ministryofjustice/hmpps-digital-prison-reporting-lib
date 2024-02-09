@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 
-class FormulaEngine(private val reportFields: List<ReportField>, val env: String? = null) {
+class FormulaEngine(private val reportFields: List<ReportField>, private val env: String? = null) {
 
   companion object {
     const val MAKE_URL_FORMULA_PREFIX = "make_url("

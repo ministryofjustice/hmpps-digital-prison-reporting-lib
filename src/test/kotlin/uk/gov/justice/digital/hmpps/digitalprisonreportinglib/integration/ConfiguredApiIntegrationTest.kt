@@ -262,7 +262,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       @DynamicPropertySource
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.definition.locations") { "productDefinitionWithFormula.json" }
-        registry.add("env") { "dev" }
+        registry.add("URL_ENV_SUFFIX") { "dev" }
       }
     }
 

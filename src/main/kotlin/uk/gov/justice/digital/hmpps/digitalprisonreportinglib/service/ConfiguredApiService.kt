@@ -22,7 +22,7 @@ import java.time.format.DateTimeParseException
 class ConfiguredApiService(
   val productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,
-  @Value("\${env:#{null}}") val env: String? = null,
+  @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) {
 
   companion object {
