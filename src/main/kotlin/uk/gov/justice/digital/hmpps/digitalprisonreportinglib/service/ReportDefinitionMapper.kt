@@ -133,6 +133,8 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, filterDefinition.dynamicOptions?.maximumOptions, userToken, dataProductDefinitionsPath),
       dynamicOptions = filterDefinition.dynamicOptions,
       defaultValue = replaceTokens(filterDefinition.default),
+      min = replaceTokens(filterDefinition.min),
+      max = replaceTokens(filterDefinition.max),
     )
   }
 

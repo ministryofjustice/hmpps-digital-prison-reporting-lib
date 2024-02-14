@@ -410,6 +410,33 @@ class ReportDefinitionMapperTest {
     verifyNoInteractions(configuredApiService)
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    "-2,DAYS",
+    "-1,DAYS",
+    "0,DAYS",
+    "1,DAYS",
+    "2,DAYS",
+    "2,WEEKS",
+    "2,MONTHS",
+    "2,YEARS",
+  )
+  fun `Min and Max value tokens are mapped correctly`(offset: Long, magnitude: ChronoUnit) {
+    val defaultValue = createProductDefinitionWithDefaultFilter(
+      "today($offset, $magnitude)",
+      min = "today($offset, $magnitude)",
+      max = "today($offset, $magnitude)",
+    )
+    val expectedDate = getExpectedDate(offset, magnitude)
+
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+
+    assertThat(result.variants[0].specification!!.fields[0].filter!!.min).isEqualTo(expectedDate)
+    assertThat(result.variants[0].specification!!.fields[0].filter!!.max).isEqualTo(expectedDate)
+
+    verifyNoInteractions(configuredApiService)
+  }
+
   @Test
   fun `Getting single report for user maps full data correctly`() {
     val mapper = ReportDefinitionMapper(configuredApiService)
@@ -695,7 +722,11 @@ class ReportDefinitionMapperTest {
     return expectedDate
   }
 
-  private fun createProductDefinitionWithDefaultFilter(defaultFilterValue: String): ProductDefinition {
+  private fun createProductDefinitionWithDefaultFilter(
+    defaultFilterValue: String,
+    min: String? = null,
+    max: String? = null,
+  ): ProductDefinition {
     return ProductDefinition(
       id = "1",
       name = "2",
@@ -736,6 +767,8 @@ class ReportDefinitionMapperTest {
                 filter = FilterDefinition(
                   type = FilterType.DateRange,
                   default = defaultFilterValue,
+                  min = min,
+                  max = max,
                 ),
                 formula = null,
                 visible = true,
