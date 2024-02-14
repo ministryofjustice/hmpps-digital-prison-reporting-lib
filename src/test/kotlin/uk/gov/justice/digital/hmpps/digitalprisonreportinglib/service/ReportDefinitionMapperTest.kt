@@ -99,6 +99,7 @@ class ReportDefinitionMapperTest {
           defaultSort = true,
           formula = null,
           visible = true,
+          mandatory = true,
         ),
       ),
     ),
@@ -188,6 +189,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
+    assertThat(field.mandatory).isEqualTo(sourceReportField.mandatory)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
