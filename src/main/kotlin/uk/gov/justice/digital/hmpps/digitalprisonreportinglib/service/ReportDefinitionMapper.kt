@@ -112,6 +112,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       sortable = field.sortable,
       defaultsort = field.defaultSort,
       type = populateType(schemaField, field),
+      mandatory = field.mandatory,
     )
   }
 

@@ -8,4 +8,5 @@ data class FieldDefinition(
   val sortable: Boolean = true,
   val defaultsort: Boolean = false,
   val type: FieldType,
+  val mandatory: Boolean? = false,
 )
