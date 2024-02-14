@@ -422,8 +422,11 @@ class ReportDefinitionMapperTest {
     "2,YEARS",
   )
   fun `Min and Max value tokens are mapped correctly`(offset: Long, magnitude: ChronoUnit) {
-    val defaultValue = createProductDefinitionWithDefaultFilter("today($offset, $magnitude)",
-      min = "today($offset, $magnitude)", max = "today($offset, $magnitude)")
+    val defaultValue = createProductDefinitionWithDefaultFilter(
+      "today($offset, $magnitude)",
+      min = "today($offset, $magnitude)",
+      max = "today($offset, $magnitude)",
+    )
     val expectedDate = getExpectedDate(offset, magnitude)
 
     val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
@@ -719,9 +722,11 @@ class ReportDefinitionMapperTest {
     return expectedDate
   }
 
-  private fun createProductDefinitionWithDefaultFilter(defaultFilterValue: String,
-                                                       min: String? = null,
-                                                       max: String? = null): ProductDefinition {
+  private fun createProductDefinitionWithDefaultFilter(
+    defaultFilterValue: String,
+    min: String? = null,
+    max: String? = null,
+  ): ProductDefinition {
     return ProductDefinition(
       id = "1",
       name = "2",
