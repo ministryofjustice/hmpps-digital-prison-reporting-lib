@@ -9,4 +9,6 @@ data class FilterDefinition(
   @SerializedName("dynamicoptions")
   val dynamicOptions: DynamicFilterOption? = null,
   val defaultValue: String?,
+  val min: String? = null,
+  val max: String? = null,
 )
