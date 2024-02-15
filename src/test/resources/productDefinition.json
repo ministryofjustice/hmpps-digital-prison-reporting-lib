@@ -77,6 +77,9 @@
     "dataset" : "$ref:external-movements",
     "policy" : [ ],
     "render" : "HTML",
+    "feature": [ {
+      "type": "print"
+    }],
     "specification" : {
       "template" : "list",
       "field" : [ {

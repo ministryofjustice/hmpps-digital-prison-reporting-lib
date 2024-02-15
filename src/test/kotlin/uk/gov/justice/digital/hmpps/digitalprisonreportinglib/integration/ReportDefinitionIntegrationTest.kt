@@ -229,6 +229,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
       assertThat(lastMonthVariant.specification).isNotNull
       assertThat(lastMonthVariant.specification?.fields).hasSize(8)
+      assertThat(lastMonthVariant.printable).isEqualTo(true)
 
       val directionField = lastMonthVariant.specification?.fields?.find { it.name == "direction" }
 
