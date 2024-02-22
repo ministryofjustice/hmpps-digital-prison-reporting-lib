@@ -406,7 +406,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "defaultsort": false,
                     "type": "string",
                     "mandatory": false,
-                    "visible": "FALSE"
+                    "visible": "false"
                   },
                   {
                     "name": "reason",

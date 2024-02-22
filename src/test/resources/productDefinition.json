@@ -141,7 +141,7 @@
         "display" : "Type",
         "sortable" : true,
         "defaultsort" : false,
-        "visible": "FALSE",
+        "visible": "false",
         "mandatory": false
       }, {
         "name" : "$ref:reason",

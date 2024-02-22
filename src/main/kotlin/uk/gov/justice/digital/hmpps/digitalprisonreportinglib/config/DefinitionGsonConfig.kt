@@ -9,8 +9,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.LocalDateTime
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PolicyTypeDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RuleEffectTypeDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.SchemaFieldTypeDeserializer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.VisibleDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import java.time.LocalDateTime
@@ -27,5 +29,6 @@ class DefinitionGsonConfig {
     .registerTypeAdapter(ParameterType::class.java, SchemaFieldTypeDeserializer())
     .registerTypeAdapter(Effect::class.java, RuleEffectTypeDeserializer())
     .registerTypeAdapter(PolicyType::class.java, PolicyTypeDeserializer())
+    .registerTypeAdapter(Visible::class.java, VisibleDeserializer())
     .create()
 }
