@@ -18,7 +18,7 @@
       "id": "court-dataset",
       "name": "court-dataset",
       "datasource": "datamart",
-      "query": "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM datamart.domain.movement_movement as movements\nJOIN datamart.domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id Where type='CRT'",
+      "query": "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM domain.movement_movement as movements\nJOIN domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id Where type='CRT'",
       "schema": {
         "field": [
           {
@@ -78,7 +78,7 @@
       "id": "hospital-dataset",
       "name": "hospital-dataset",
       "datasource": "datamart",
-      "query": "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM movement_movement as movements\nJOIN datamart.domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id Where type='CRT'",
+      "query": "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM movement_movement as movements\nJOIN domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id Where type='CRT'",
       "schema": {
         "field": [
           {
