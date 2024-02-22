@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 
 class FormulaEngineTest {
 
@@ -27,7 +28,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "\${destination}",
       ),
     )
@@ -53,23 +54,23 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "\${destination}:\${destination_code}:\${name}",
       ),
       ReportField(
         name = "\$ref:destination",
         display = "Destination",
-        visible = true,
+        visible = Visible.TRUE,
       ),
       ReportField(
         name = "\$ref:name",
         display = "Name",
-        visible = true,
+        visible = Visible.TRUE,
       ),
       ReportField(
         name = "\$ref:date",
         display = "Date",
-        visible = true,
+        visible = Visible.TRUE,
       ),
     )
     val expectedRow: Map<String, Any> = mapOf(
@@ -94,7 +95,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "\${destination}:\${destination_code}:\${name}",
       ),
     )
@@ -120,7 +121,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "\${destination}:\${name}",
       ),
     )
@@ -146,18 +147,18 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "",
       ),
       ReportField(
         name = "\$ref:destination",
         display = "Destination",
-        visible = true,
+        visible = Visible.TRUE,
       ),
       ReportField(
         name = "\$ref:name",
         display = "Name",
-        visible = true,
+        visible = Visible.TRUE,
       ),
     )
     val formulaEngine = FormulaEngine(reportFields)
@@ -188,7 +189,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "\${non_existing}",
       ),
     )
@@ -214,7 +215,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "\${name}",
       ),
     )
@@ -243,23 +244,23 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination_code",
         display = "Destination Code",
-        visible = true,
+        visible = Visible.TRUE,
         formula = "\${destination}:\${destination_code}:\${name}",
       ),
       ReportField(
         name = "\$ref:destination",
         display = "Destination",
-        visible = true,
+        visible = Visible.TRUE,
       ),
       ReportField(
         name = "\$ref:name",
         display = "Name",
-        visible = true,
+        visible = Visible.TRUE,
       ),
       ReportField(
         name = "\$ref:prison_number",
         display = "Prison Number",
-        visible = true,
+        visible = Visible.TRUE,
         formula = makeUrlFormula,
 
       ),
@@ -289,7 +290,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination",
         display = "Destination",
-        visible = true,
+        visible = Visible.TRUE,
         formula = makeUrlFormula,
       ),
     )
@@ -318,7 +319,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination",
         display = "Destination",
-        visible = true,
+        visible = Visible.TRUE,
         formula = makeUrlFormula,
       ),
     )
@@ -346,7 +347,7 @@ class FormulaEngineTest {
       ReportField(
         name = "\$ref:destination",
         display = "Destination",
-        visible = true,
+        visible = Visible.TRUE,
         formula = makeUrlFormula,
       ),
     )

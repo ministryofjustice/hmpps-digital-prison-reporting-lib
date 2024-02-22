@@ -157,7 +157,6 @@
       } ]
     },
     "destination" : [ ],
-    "visible": "report visibility",
     "formula": "formula placeholder"
   } ]
 }

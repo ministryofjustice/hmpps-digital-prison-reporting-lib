@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
 import java.time.LocalDateTime
 import java.util.Collections.singletonMap
@@ -70,7 +71,7 @@ class ReportDefinitionSummaryMapperTest {
           sortable = true,
           defaultSort = true,
           formula = null,
-          visible = true,
+          visible = Visible.TRUE,
         ),
       ),
     ),

@@ -267,6 +267,190 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Single definition is returned in expected format`() {
+    try {
+      prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+      externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements/last-month")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          """
+          {
+            "id": "external-movements",
+            "name": "External Movements",
+            "description": "Reports about prisoner external movements",
+            "variant": {
+              "id": "last-month",
+              "name": "Last month",
+              "resourceName": "reports/external-movements/last-month",
+              "description": "All movements in the past month",
+              "specification": {
+                "template": "list",
+                "fields": [
+                  {
+                    "name": "prisonNumber",
+                    "display": "Prison Number",
+                    "wordWrap": null,
+                    "filter": null,
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": null,
+                    "visible": null
+                  },
+                  {
+                    "name": "name",
+                    "display": "Name",
+                    "wordWrap": "None",
+                    "filter": {
+                      "type": "autocomplete",
+                      "staticOptions": null,
+                      "dynamicOptions": {
+                        "minimumLength": 2,
+                        "returnAsStaticOptions": false,
+                        "maximumOptions": null
+                      },
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": null,
+                    "visible": null
+                  },
+                  {
+                    "name": "date",
+                    "display": "Date",
+                    "wordWrap": null,
+                    "filter": {
+                      "type": "daterange",
+                      "staticOptions": null,
+                      "dynamicOptions": null,
+                      "defaultValue": "2024-01-22 - 2024-02-22",
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": true,
+                    "type": "date",
+                    "mandatory": null,
+                    "visible": null
+                  },
+                  {
+                    "name": "origin",
+                    "display": "From",
+                    "wordWrap": "None",
+                    "filter": null,
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": null,
+                    "visible": null
+                  },
+                  {
+                    "name": "destination",
+                    "display": "To",
+                    "wordWrap": "None",
+                    "filter": null,
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": null,
+                    "visible": null
+                  },
+                  {
+                    "name": "direction",
+                    "display": "Direction",
+                    "wordWrap": null,
+                    "filter": {
+                      "type": "Radio",
+                      "staticOptions": [
+                        {
+                          "name": "in",
+                          "display": "In"
+                        },
+                        {
+                          "name": "out",
+                          "display": "Out"
+                        }
+                      ],
+                      "dynamicOptions": null,
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": null,
+                    "visible": null
+                  },
+                  {
+                    "name": "type",
+                    "display": "Type",
+                    "wordWrap": null,
+                    "filter": null,
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": "false"
+                  },
+                  {
+                    "name": "reason",
+                    "display": "Reason",
+                    "wordWrap": null,
+                    "filter": {
+                      "type": "autocomplete",
+                      "staticOptions": [
+                        {
+                          "name": "Transfer In from Other Establishment",
+                          "display": "Transfer In from Other Establishment"
+                        }
+                      ],
+                      "dynamicOptions": {
+                        "minimumLength": 2,
+                        "returnAsStaticOptions": true,
+                        "maximumOptions": 1
+                      },
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": null,
+                    "visible": null
+                  }
+                ]
+              },
+              "classification": "report classification",
+              "printable": true
+            }
+          }
+
+          """.trimIndent(),
+        )
+    } finally {
+      externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+    }
+  }
+
+  @Test
   fun `the json response from the definitions endpoint is returned with the expected format`() {
     try {
       prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)

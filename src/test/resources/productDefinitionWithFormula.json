@@ -162,8 +162,7 @@
         }
       } ]
     },
-    "destination" : [ ],
-    "visible": "report visibility"
+    "destination" : [ ]
   }, {
     "id" : "last-week",
     "name" : "Last week",

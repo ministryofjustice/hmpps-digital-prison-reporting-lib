@@ -168,7 +168,7 @@
             "name": "$ref:name",
             "display": "Full Name",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -176,7 +176,7 @@
             "name": "$ref:date",
             "display": "Date",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -188,7 +188,7 @@
             "name": "$ref:origin",
             "display": "From",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -196,7 +196,7 @@
             "name": "$ref:destination",
             "display": "To",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -204,7 +204,7 @@
             "name": "$ref:direction",
             "display": "Direction",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -225,7 +225,7 @@
             "name": "$ref:reason",
             "display": "Reason",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           }
@@ -247,7 +247,7 @@
             "name": "$ref:name",
             "display": "Full Name",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -255,7 +255,7 @@
             "name": "$ref:date",
             "display": "Date",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -267,7 +267,7 @@
             "name": "$ref:origin",
             "display": "From",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -275,7 +275,7 @@
             "name": "$ref:destination",
             "display": "To",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -283,7 +283,7 @@
             "name": "$ref:direction",
             "display": "Direction",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -304,7 +304,7 @@
             "name": "$ref:reason",
             "display": "Reason",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           }
@@ -326,7 +326,7 @@
             "name": "$ref:date",
             "display": "Date",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -338,7 +338,7 @@
             "name": "$ref:origin",
             "display": "From",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -346,7 +346,7 @@
             "name": "$ref:destination",
             "display": "To",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -354,7 +354,7 @@
             "name": "$ref:direction",
             "display": "Direction",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -375,7 +375,7 @@
             "name": "$ref:reason",
             "display": "Reason",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           },
@@ -383,7 +383,7 @@
             "name": "$ref:name",
             "display": "Full Name",
             "formula": "",
-            "visible": true,
+            "visible": "true",
             "sortable": true,
             "defaultsort": false
           }

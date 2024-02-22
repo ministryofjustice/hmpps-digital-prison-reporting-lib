@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -98,7 +99,7 @@ class ReportDefinitionMapperTest {
           sortable = true,
           defaultSort = true,
           formula = null,
-          visible = true,
+          visible = Visible.TRUE,
           mandatory = true,
         ),
       ),
@@ -190,6 +191,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.mandatory).isEqualTo(sourceReportField.mandatory)
+    assertThat(field.visible).isEqualTo(sourceReportField.visible)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
@@ -265,7 +267,7 @@ class ReportDefinitionMapperTest {
                 sortable = true,
                 defaultSort = true,
                 formula = null,
-                visible = true,
+                visible = Visible.TRUE,
               ),
             ),
           ),
@@ -510,7 +512,7 @@ class ReportDefinitionMapperTest {
             sortable = true,
             defaultSort = true,
             formula = null,
-            visible = true,
+            visible = Visible.TRUE,
           ),
         ),
       ),
@@ -594,7 +596,7 @@ class ReportDefinitionMapperTest {
             sortable = true,
             defaultSort = true,
             formula = null,
-            visible = true,
+            visible = Visible.TRUE,
           ),
         ),
       ),
@@ -670,7 +672,7 @@ class ReportDefinitionMapperTest {
             sortable = true,
             defaultSort = true,
             formula = "make_url('\${profile_host}/prisoner/\${prisoner_number}',\${full_name},TRUE)",
-            visible = true,
+            visible = Visible.TRUE,
           ),
         ),
       ),
@@ -773,7 +775,7 @@ class ReportDefinitionMapperTest {
                   max = max,
                 ),
                 formula = null,
-                visible = true,
+                visible = Visible.TRUE,
               ),
             ),
           ),
