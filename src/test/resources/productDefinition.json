@@ -140,7 +140,9 @@
         "name" : "$ref:type",
         "display" : "Type",
         "sortable" : true,
-        "defaultsort" : false
+        "defaultsort" : false,
+        "visible": "FALSE",
+        "mandatory": false
       }, {
         "name" : "$ref:reason",
         "display" : "Reason",
@@ -157,7 +159,6 @@
       } ]
     },
     "destination" : [ ],
-    "visible": "report visibility",
     "formula": "formula placeholder"
   }, {
     "id" : "last-week",
