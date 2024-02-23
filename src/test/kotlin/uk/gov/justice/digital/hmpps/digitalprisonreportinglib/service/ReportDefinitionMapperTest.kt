@@ -100,7 +100,6 @@ class ReportDefinitionMapperTest {
           defaultSort = true,
           formula = null,
           visible = Visible.TRUE,
-          mandatory = true,
         ),
       ),
     ),
@@ -190,8 +189,8 @@ class ReportDefinitionMapperTest {
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
-    assertThat(field.mandatory).isEqualTo(sourceReportField.mandatory)
-    assertThat(field.visible).isEqualTo(sourceReportField.visible)
+    assertThat(field.visible).isTrue()
+    assertThat(field.mandatory).isFalse()
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
@@ -377,7 +376,7 @@ class ReportDefinitionMapperTest {
     "2,YEARS",
   )
   fun `Default value token is mapped correctly`(offset: Long, magnitude: ChronoUnit) {
-    val defaultValue = createProductDefinitionWithDefaultFilter("today($offset, $magnitude)")
+    val defaultValue = createProductDefinition("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
     val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
@@ -389,7 +388,7 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Default value token for today is mapped correctly`() {
-    val defaultValue = createProductDefinitionWithDefaultFilter("today()")
+    val defaultValue = createProductDefinition("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
     val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
@@ -401,7 +400,7 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Multiple default value tokens are mapped correctly`() {
-    val defaultValue = createProductDefinitionWithDefaultFilter("today(-7,DAYS), today(), today(7,DAYS)")
+    val defaultValue = createProductDefinition("today(-7,DAYS), today(), today(7,DAYS)")
     val expectedDate1 = getExpectedDate(-7, ChronoUnit.DAYS)
     val expectedDate2 = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
     val expectedDate3 = getExpectedDate(7, ChronoUnit.DAYS)
@@ -426,7 +425,7 @@ class ReportDefinitionMapperTest {
     "2,YEARS",
   )
   fun `Min and Max value tokens are mapped correctly`(offset: Long, magnitude: ChronoUnit) {
-    val defaultValue = createProductDefinitionWithDefaultFilter(
+    val defaultValue = createProductDefinition(
       "today($offset, $magnitude)",
       min = "today($offset, $magnitude)",
       max = "today($offset, $magnitude)",
@@ -715,6 +714,26 @@ class ReportDefinitionMapperTest {
     verifyNoInteractions(configuredApiService)
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    "TRUE, true, false",
+    "FALSE, false, false",
+    "MANDATORY, true, true",
+  )
+  fun `Visible in the report definition is mapped correctly to the visible and mandatory fields in the controller model`(visibleDpd: Visible, visibleControllerModel: Boolean, mandatoryControllerModel: Boolean) {
+    val defaultValue = createProductDefinition(
+      defaultFilterValue = "today()",
+      visible = visibleDpd,
+    )
+
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+
+    assertThat(result.variants[0].specification!!.fields[0].visible).isEqualTo(visibleControllerModel)
+    assertThat(result.variants[0].specification!!.fields[0].mandatory).isEqualTo(mandatoryControllerModel)
+
+    verifyNoInteractions(configuredApiService)
+  }
+
   private fun getExpectedDate(offset: Long, magnitude: ChronoUnit): String? {
     val expectedDate = when (magnitude) {
       ChronoUnit.DAYS -> LocalDate.now().plusDays(offset)
@@ -726,10 +745,11 @@ class ReportDefinitionMapperTest {
     return expectedDate
   }
 
-  private fun createProductDefinitionWithDefaultFilter(
+  private fun createProductDefinition(
     defaultFilterValue: String,
     min: String? = null,
     max: String? = null,
+    visible: Visible? = Visible.TRUE,
   ): ProductDefinition {
     return ProductDefinition(
       id = "1",
@@ -775,7 +795,7 @@ class ReportDefinitionMapperTest {
                   max = max,
                 ),
                 formula = null,
-                visible = Visible.TRUE,
+                visible = visible,
               ),
             ),
           ),

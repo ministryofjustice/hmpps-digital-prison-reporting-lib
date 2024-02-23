@@ -120,7 +120,8 @@
         "display" : "To",
         "wordWrap" : "None",
         "sortable" : true,
-        "defaultsort" : false
+        "defaultsort" : false,
+        "visible": "true"
       }, {
         "name" : "$ref:direction",
         "display" : "Direction",
@@ -141,13 +142,13 @@
         "display" : "Type",
         "sortable" : true,
         "defaultsort" : false,
-        "visible": "false",
-        "mandatory": false
+        "visible": "false"
       }, {
         "name" : "$ref:reason",
         "display" : "Reason",
         "sortable" : true,
         "defaultsort" : false,
+        "visible": "mandatory",
         "filter" : {
           "type" : "autocomplete",
           "dynamicoptions":{

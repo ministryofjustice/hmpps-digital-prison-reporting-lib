@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import java.time.LocalDate
@@ -112,9 +113,29 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       sortable = field.sortable,
       defaultsort = field.defaultSort,
       type = populateType(schemaField, field),
-      mandatory = field.mandatory,
-      visible = field.visible,
+      mandatory = populateMandatory(field.visible),
+      visible = populateVisible(field.visible),
     )
+  }
+
+  private fun populateVisible(visible: Visible?): Boolean {
+    return visible?.let {
+      when (visible) {
+        Visible.TRUE -> true
+        Visible.FALSE -> false
+        Visible.MANDATORY -> true
+      }
+    } ?: true
+  }
+
+  private fun populateMandatory(visible: Visible?): Boolean {
+    return visible?.let {
+      when (visible) {
+        Visible.TRUE -> false
+        Visible.FALSE -> false
+        Visible.MANDATORY -> true
+      }
+    } ?: false
   }
 
   private fun populateType(schemaField: SchemaField, reportField: ReportField): FieldType {
