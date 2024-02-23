@@ -305,8 +305,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "sortable": true,
                     "defaultsort": false,
                     "type": "string",
-                    "mandatory": null,
-                    "visible": null
+                    "mandatory": false,
+                    "visible": true
                   },
                   {
                     "name": "name",
@@ -327,8 +327,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "sortable": true,
                     "defaultsort": false,
                     "type": "string",
-                    "mandatory": null,
-                    "visible": null
+                    "mandatory": false,
+                    "visible": true
                   },
                   {
                     "name": "date",
@@ -338,15 +338,14 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                       "type": "daterange",
                       "staticOptions": null,
                       "dynamicOptions": null,
-                      "defaultValue": "2024-01-22 - 2024-02-22",
                       "min": null,
                       "max": null
                     },
                     "sortable": true,
                     "defaultsort": true,
                     "type": "date",
-                    "mandatory": null,
-                    "visible": null
+                    "mandatory": false,
+                    "visible": true
                   },
                   {
                     "name": "origin",
@@ -356,8 +355,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "sortable": true,
                     "defaultsort": false,
                     "type": "string",
-                    "mandatory": null,
-                    "visible": null
+                    "mandatory": false,
+                    "visible": true
                   },
                   {
                     "name": "destination",
@@ -367,8 +366,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "sortable": true,
                     "defaultsort": false,
                     "type": "string",
-                    "mandatory": null,
-                    "visible": null
+                    "visible": true,
+                    "mandatory": false
                   },
                   {
                     "name": "direction",
@@ -394,8 +393,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "sortable": true,
                     "defaultsort": false,
                     "type": "string",
-                    "mandatory": null,
-                    "visible": null
+                    "mandatory": false,
+                    "visible": true
                   },
                   {
                     "name": "type",
@@ -406,7 +405,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "defaultsort": false,
                     "type": "string",
                     "mandatory": false,
-                    "visible": "false"
+                    "visible": false
                   },
                   {
                     "name": "reason",
@@ -432,8 +431,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "sortable": true,
                     "defaultsort": false,
                     "type": "string",
-                    "mandatory": null,
-                    "visible": null
+                    "visible": true,
+                    "mandatory": true
                   }
                 ]
               },

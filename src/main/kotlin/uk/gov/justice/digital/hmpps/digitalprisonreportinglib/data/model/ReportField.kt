@@ -12,6 +12,5 @@ data class ReportField(
   val defaultSort: Boolean = false,
   // Formula and visible are not used yet. This is pending ticket https://dsdmoj.atlassian.net/browse/DPR2-241
   val formula: String? = null,
-  val visible: Visible?,
-  val mandatory: Boolean? = false,
+  val visible: Visible? = null,
 )
