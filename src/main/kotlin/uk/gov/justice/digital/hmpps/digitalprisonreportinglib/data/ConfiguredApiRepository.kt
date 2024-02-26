@@ -16,9 +16,9 @@ class ConfiguredApiRepository {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
     const val EXTERNAL_MOVEMENTS_PRODUCT_ID = "external-movements"
-    private const val STAGE_1 = """stage_1"""
-    private const val STAGE_2 = """stage_2"""
-    private const val STAGE_3 = """stage_3"""
+    private const val DATASET_ = """dataset_"""
+    private const val POLICY_ = """policy_"""
+    private const val FILTER_ = """filter_"""
   }
 
   @Autowired
@@ -69,10 +69,10 @@ class ConfiguredApiRepository {
     return NamedParameterJdbcTemplate(dataSource)
   }
 
-  private fun buildReportQuery(query: String) = """WITH $STAGE_1 AS ($query)"""
-  private fun buildPolicyQuery(policyEngineResult: String) = """$STAGE_2 AS (SELECT * FROM $STAGE_1 WHERE $policyEngineResult)"""
+  private fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
+  private fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE $policyEngineResult)"""
   private fun buildFiltersQuery(filters: List<Filter>) =
-    """$STAGE_3 AS (SELECT * FROM $STAGE_2 WHERE ${buildFiltersWhereClause(filters)})"""
+    """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
   private fun buildPaginationQuery(
     dynamicFilterFieldId: String?,
     sortColumn: String?,
@@ -80,7 +80,7 @@ class ConfiguredApiRepository {
     pageSize: Long,
     selectedPage: Long,
   ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
-        FROM stage_3 ${buildOrderByClause(sortColumn, sortedAsc)} 
+        FROM $FILTER_ ${buildOrderByClause(sortColumn, sortedAsc)} 
         limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
 
   private fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
@@ -117,7 +117,7 @@ class ConfiguredApiRepository {
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
-        "SELECT COUNT(1) as total FROM $STAGE_3",
+        "SELECT COUNT(1) as total FROM $FILTER_",
       ),
       buildPreparedStatementNamedParams(filters),
     ).first()?.get("total") as Long
