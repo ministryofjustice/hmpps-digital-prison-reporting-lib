@@ -1,21 +1,17 @@
 name: Publish
 
 on:
-#  workflow_dispatch:
-#    inputs:
-#      versionType:
-#        description: 'The semantic version segment to increment'
-#        required: true
-#        default: feature
-#        type: choice
-#        options:
-#          - major
-#          - feature
-#          - bug
-  push:
-    branches:
-      - main
-      - feature/DPR2-423
+  workflow_dispatch:
+    inputs:
+      versionType:
+        description: 'The semantic version segment to increment'
+        required: true
+        default: feature
+        type: choice
+        options:
+          - major
+          - feature
+          - bug
 
 jobs:
   publish-package:
@@ -49,8 +45,7 @@ jobs:
         uses: christian-draeger/increment-semantic-version@1.1.0
         with:
           current-version: ${{ steps.get-version.outputs.current_version }}
-#          version-fragment: ${{ inputs.versionType }}
-          version-fragment: bug
+          version-fragment: ${{ inputs.versionType }}
 
       - name: Publish to Sonatype
         id: publish-to-sonatype
