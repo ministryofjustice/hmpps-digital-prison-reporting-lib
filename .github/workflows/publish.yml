@@ -40,11 +40,9 @@ jobs:
         id: get-version
         run: |
           CURRENT_VERSION=$(curl -s "https://search.maven.org/solrsearch/select?q=hmpps-digital-prison-reporting-lib")
-          echo "$CURRENT_VERSION"
-          echo "$CURRENT_VERSION" | grep -oP '"latestVersion":"\d+\.\d+\.\d+"' | grep -oP '\d+\.\d+\.\d+'
           CURRENT_VERSION=$(echo "$CURRENT_VERSION" | grep -oP '"latestVersion":"\d+\.\d+\.\d+"' | grep -oP '\d+\.\d+\.\d+')
-          echo "$CURRENT_VERSION"
-          echo "current_version=$CURRENT_VERSION" >> "GITHUB_OUTPUT"
+          echo "Current version: $CURRENT_VERSION"
+          echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Bump version
         id: bump-version
