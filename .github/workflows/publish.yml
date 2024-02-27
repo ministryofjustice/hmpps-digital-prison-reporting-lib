@@ -55,7 +55,8 @@ jobs:
       - name: Publish to Sonatype
         id: publish-to-sonatype
         env:
-          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_signingKey }}
+          ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
           PUBLISH_VERSION: ${{ steps.bump-version.outputs.next-version }}
         run: |
           ./gradlew -Pversion=$PUBLISH_VERSION publishToSonatype closeAndReleaseSonatypeStagingRepository
