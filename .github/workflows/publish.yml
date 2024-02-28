@@ -34,9 +34,11 @@ jobs:
 
       - name: Get version
         id: get-version
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
-          CURRENT_VERSION=$(curl -s "https://search.maven.org/solrsearch/select?q=hmpps-digital-prison-reporting-lib")
-          CURRENT_VERSION=$(echo "$CURRENT_VERSION" | grep -oP '"latestVersion":"\d+\.\d+\.\d+"' | grep -oP '\d+\.\d+\.\d+')
+          CURRENT_VERSION=$(curl -s --request GET --user "$OSSRH_USERNAME:$OSSRH_PASSWORD" https://s01.oss.sonatype.org/service/local/repositories/releases/content/uk/gov/justice/service/hmpps/hmpps-digital-prison-reporting-lib/maven-metadata.xml | grep -oP "\d+\.\d+\.\d+" | tail -n 1)
           echo "Current version: $CURRENT_VERSION"
           echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
 
@@ -56,5 +58,5 @@ jobs:
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
           ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
-          ./gradlew -Pversion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
+          ./gradlew -PpublishVersion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
 
