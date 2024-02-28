@@ -107,7 +107,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
     return FieldDefinition(
       name = schemaField.name,
-      display = field.display,
+      display = populateDisplay(field.display, schemaField.display),
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
       filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, userToken, dataProductDefinitionsPath) },
       sortable = field.sortable,
@@ -116,6 +116,10 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       mandatory = populateMandatory(field.visible),
       visible = populateVisible(field.visible),
     )
+  }
+
+  private fun populateDisplay(reportFieldDisplay: String, schemaFieldDisplay: String): String {
+    return reportFieldDisplay.ifBlank { schemaFieldDisplay }
   }
 
   private fun populateVisible(visible: Visible?): Boolean {
