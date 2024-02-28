@@ -57,6 +57,7 @@ class ReportDefinitionMapperTest {
         SchemaField(
           name = "13",
           type = ParameterType.Long,
+          display = "",
         ),
       ),
     ),
@@ -734,6 +735,26 @@ class ReportDefinitionMapperTest {
     verifyNoInteractions(configuredApiService)
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    "a,'', a",
+    "'', a, a",
+    "a, b, b",
+  )
+  fun `Display field falls back to dataset display when the report display field is not specified `(datasetDisplay: String, reportDisplay: String, expectedDisplay: String) {
+    val defaultValue = createProductDefinition(
+      defaultFilterValue = "today()",
+      datasetDisplay = datasetDisplay,
+      reportFieldDisplay = reportDisplay,
+    )
+
+    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+
+    assertThat(result.variants[0].specification!!.fields[0].display).isEqualTo(expectedDisplay)
+
+    verifyNoInteractions(configuredApiService)
+  }
+
   private fun getExpectedDate(offset: Long, magnitude: ChronoUnit): String? {
     val expectedDate = when (magnitude) {
       ChronoUnit.DAYS -> LocalDate.now().plusDays(offset)
@@ -750,6 +771,8 @@ class ReportDefinitionMapperTest {
     min: String? = null,
     max: String? = null,
     visible: Visible? = Visible.TRUE,
+    datasetDisplay: String = "",
+    reportFieldDisplay: String = "20",
   ): ProductDefinition {
     return ProductDefinition(
       id = "1",
@@ -769,6 +792,7 @@ class ReportDefinitionMapperTest {
               SchemaField(
                 name = "13",
                 type = ParameterType.Date,
+                display = datasetDisplay,
               ),
             ),
           ),
@@ -787,7 +811,7 @@ class ReportDefinitionMapperTest {
             field = listOf(
               ReportField(
                 name = "\$ref:13",
-                display = "20",
+                display = reportFieldDisplay,
                 filter = FilterDefinition(
                   type = FilterType.DateRange,
                   default = defaultFilterValue,
