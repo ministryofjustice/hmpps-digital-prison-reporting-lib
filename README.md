@@ -88,7 +88,7 @@ project.
 
 ### Versioning
 * Use [semantic versioning](https://semver.org/) to indicate the scope of the change.
-* For versions considered unstable add a suffix to the version number such as `-beta` or `-wip` to indicate this.
+* New versions can be published using the [Publish GitHub action](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-lib/actions/workflows/publish.yml)
 
 ## Integrating to your Spring Boot project
 

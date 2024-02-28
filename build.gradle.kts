@@ -75,6 +75,7 @@ publishing {
         group = "uk.gov.justice.service.hmpps"
         name.set(base.archivesName)
         artifactId = base.archivesName.get()
+        version = project.property("publishVersion") as String
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
         url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-lib")
         licenses {
