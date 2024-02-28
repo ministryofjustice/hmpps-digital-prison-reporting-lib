@@ -33,6 +33,7 @@ class ReportDefinitionSummaryMapperTest {
         SchemaField(
           name = "13",
           type = ParameterType.Long,
+          display = "",
         ),
       ),
     ),

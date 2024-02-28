@@ -19,34 +19,44 @@
     "schema" : {
       "field" : [ {
         "name" : "prisonNumber",
-        "type" : "string"
+        "type" : "string",
+        "display" : "Prison Number"
       }, {
         "name" : "name",
-        "type" : "string"
+        "type" : "string",
+        "display" : "Name"
       }, {
         "name" : "date",
-        "type" : "date"
+        "type" : "date",
+        "display" : ""
       }, {
         "name" : "origin",
-        "type" : "string"
+        "type" : "string",
+        "display" : ""
       }, {
         "name" : "origin_code",
-        "type" : "string"
+        "type" : "string",
+        "display" : ""
       }, {
         "name" : "destination",
-        "type" : "string"
+        "type" : "string",
+        "display" : ""
       },{
         "name" : "destination_code",
-        "type" : "string"
+        "type" : "string",
+        "display" : ""
       }, {
         "name" : "direction",
-        "type" : "string"
+        "type" : "string",
+        "display" : ""
       }, {
         "name" : "type",
-        "type" : "string"
+        "type" : "string",
+        "display" : ""
       }, {
         "name" : "reason",
-        "type" : "string"
+        "type" : "string",
+        "display" : ""
       } ]
     }
   } ],
@@ -84,7 +94,7 @@
       "template" : "list",
       "field" : [ {
         "name" : "$ref:prisonNumber",
-        "display" : "Prison Number",
+        "display" : "",
         "sortable" : true,
         "defaultsort" : false
       }, {

@@ -978,7 +978,7 @@ class ConfiguredApiServiceTest {
   @Test
   fun `should call the configuredApiRepository with no sort column if none is provided and there is no default`() {
     val dataSet =
-      Dataset("datasetId", "datasetname", "select *", Schema(listOf(SchemaField("9", ParameterType.String))))
+      Dataset("datasetId", "datasetname", "select *", Schema(listOf(SchemaField("9", ParameterType.String, display = ""))))
     val report = Report(
       id = "6",
       name = "7",
