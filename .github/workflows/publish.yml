@@ -1,0 +1,60 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      versionType:
+        description: 'The semantic version segment to increment'
+        required: true
+        default: feature
+        type: choice
+        options:
+          - major
+          - feature
+          - bug
+
+jobs:
+  publish-package:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '19'
+          distribution: 'corretto'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Get version
+        id: get-version
+        run: |
+          CURRENT_VERSION=$(curl -s "https://search.maven.org/solrsearch/select?q=hmpps-digital-prison-reporting-lib")
+          CURRENT_VERSION=$(echo "$CURRENT_VERSION" | grep -oP '"latestVersion":"\d+\.\d+\.\d+"' | grep -oP '\d+\.\d+\.\d+')
+          echo "Current version: $CURRENT_VERSION"
+          echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version
+        id: bump-version
+        uses: christian-draeger/increment-semantic-version@1.1.0
+        with:
+          current-version: ${{ steps.get-version.outputs.current_version }}
+          version-fragment: ${{ inputs.versionType }}
+
+      - name: Publish to Sonatype
+        id: publish-to-sonatype
+        env:
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        run: |
+          ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
+          ./gradlew -Pversion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
+
