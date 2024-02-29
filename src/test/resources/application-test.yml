@@ -11,8 +11,6 @@ spring:
     username: sa
     password: sa
     driver-class-name: org.h2.Driver
-    hikari:
-      connection-init-sql: "CREATE SCHEMA IF NOT EXISTS domain"
   security:
     oauth2:
       resourceserver:

@@ -14,11 +14,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
@@ -61,19 +57,6 @@ abstract class IntegrationTestBase {
     @JvmStatic
     fun teardownClass() {
       wireMockServer.stop()
-    }
-
-    @Container
-    private val postgreSQLContainer = PostgreSQLContainer<Nothing>("postgres:latest")
-
-    @DynamicPropertySource
-    @JvmStatic
-    fun registerDynamicProperties(registry: DynamicPropertyRegistry) {
-      registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl)
-      registry.add("spring.datasource.username", postgreSQLContainer::getUsername)
-      registry.add("spring.datasource.password", postgreSQLContainer::getPassword)
-      registry.add("spring.datasource.driver-class-name", postgreSQLContainer::getDriverClassName)
-      registry.add("spring.jpa.database-platform", "org.hibernate.dialect.PostgreSQLDialect"::toString)
     }
   }
 
