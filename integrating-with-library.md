@@ -41,3 +41,7 @@ So there has been careful consideration regarding the sanitization of the query 
 </br></br>**Note**: If you have `hmpps/veracode_pipeline_scan` enabled in your CircleCI pipeline it will produce the below warning:</br>
 `CWE-89: Improper Neutralization of Special Elements used in an SQL Command`</br>
 This is is due to what has been mentioned above regarding the construction of the query and it is not an actual issue.
+
+### Changelog
+
+The documentation of the changes in each library version is contained in the [changelog](CHANGELOG.md). 
