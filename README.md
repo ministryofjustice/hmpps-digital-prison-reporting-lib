@@ -142,6 +142,8 @@ In `build.gradle.kts` we use environment variables `OSSRH_USERNAME` and `OSSRH_P
 Note that this means the environment variables have been [set in Circle CI](https://app.circleci.com/settings/project/github/ministryofjustice/hmpps-digital-prison-reporting-lib/environment-variables). This is safe as environment variables cannot be retrieved from Circle.
 
 #### Changing the Sonatype Credentials
+For account credentials management of Sonatype users this used to be performed through https://issues.sonatype.org/ .
+However, since 12/03/2024 this service has moved to https://account.oss.sonatype.org/realms/central-ossrh/account/.
 
 If you need to change the secrets used to authorise with Sonatype delete the Circle CI environment variables (`OSSRH_USERNAME` and `OSSRH_PASSWORD`) and re-add them with the username and password of another Sonatype user with access to the domain.
 
