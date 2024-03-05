@@ -27,7 +27,6 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Add linting fixes
-        id: calculate-test-coverage
         run: ./gradlew ktlintFormat
 
       - uses: stefanzweifel/git-auto-commit-action@v5
