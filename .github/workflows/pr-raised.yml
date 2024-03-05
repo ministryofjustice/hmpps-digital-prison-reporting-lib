@@ -29,7 +29,8 @@ jobs:
       - name: Add linting fixes
         run: ./gradlew ktlintFormat
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Commit linting fixes
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Linting fixes
 
