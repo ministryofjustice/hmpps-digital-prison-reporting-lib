@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
@@ -355,6 +357,38 @@ class FormulaEngineTest {
       NAME to name,
       PRISON_NUMBER to null,
       DESTINATION to "<a href=\'https://prisoner.digital.prison.service.justice.gov.uk/prisoner/\' >$name</a>",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "dd/MM/yyyy, 01/06/2023",
+    "dd/MM/yyyy hh:mm, 01/06/2023 12:00",
+  )
+  fun `Formula engine formats the date based on the provided format in the format_date formula`(dateFormat: String, expectedDate: String) {
+    val formatDateFormula = "format_date(\${date}, '$dateFormat')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to externalMovementOriginCaseloadDirectionIn.time,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:date",
+        display = "Date",
+        visible = Visible.TRUE,
+        formula = formatDateFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to expectedDate,
+      DESTINATION to "Manchester",
       DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields)
