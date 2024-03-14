@@ -285,7 +285,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .expectBody()
         .json(
           """[
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "01/05/2023", 
         "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN]}", 
         "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
         "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
@@ -331,7 +331,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
         .expectBody()
         .json(
           """[
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "01/05/2023", 
         "origin": null, "origin_code": "", 
         "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
         "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 

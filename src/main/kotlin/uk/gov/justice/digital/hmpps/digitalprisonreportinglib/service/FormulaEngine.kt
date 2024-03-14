@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class FormulaEngine(private val reportFields: List<ReportField>, private val env: String? = null) {
 
   companion object {
     const val MAKE_URL_FORMULA_PREFIX = "make_url("
+    const val FORMAT_DATE_FORMULA_PREFIX = "format_date("
   }
 
   fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> =
@@ -28,8 +31,21 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
       ?.formula?.ifEmpty { null }
 
   private fun interpolate(formula: String, row: Map<String, Any?>): String {
-    return if (formula.startsWith(MAKE_URL_FORMULA_PREFIX)) interpolateUrlFormula(formula, row) else interpolateStandardFormula(formula, row)
+    return when {
+      formula.startsWith(MAKE_URL_FORMULA_PREFIX) -> interpolateUrlFormula(formula, row)
+      formula.startsWith(FORMAT_DATE_FORMULA_PREFIX) -> interpolateFormatDateFormula(formula, row)
+      else -> interpolateStandardFormula(formula, row)
+    }
   }
+
+  private fun interpolateFormatDateFormula(formula: String, row: Map<String, Any?>): String {
+    val (dateFieldPlaceholder, dateFormat) = formula.substring(FORMAT_DATE_FORMULA_PREFIX.length, formula.indexOf(")"))
+      .split(",")
+    val date = interpolateStandardFormula(dateFieldPlaceholder.trim(), row)
+    return LocalDateTime.parse(date).format(DateTimeFormatter.ofPattern(removeQuotes(dateFormat.trim())))
+  }
+
+  private fun removeQuotes(dateFormat: String) = dateFormat.removeSurrounding("'", "'").removeSurrounding("\"", "\"")
 
   private fun interpolateStandardFormula(formula: String, row: Map<String, Any?>): String {
     val sb = StringBuilder(formula)
