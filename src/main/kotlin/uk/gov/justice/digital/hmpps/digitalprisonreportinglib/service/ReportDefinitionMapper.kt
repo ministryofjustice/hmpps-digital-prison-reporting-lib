@@ -115,7 +115,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       type = populateType(schemaField, field),
       mandatory = populateMandatory(field.visible),
       visible = populateVisible(field.visible),
-      calculated = field.formula?.isNotBlank() ?: false
+      calculated = field.formula?.isNotBlank() ?: false,
     )
   }
 
