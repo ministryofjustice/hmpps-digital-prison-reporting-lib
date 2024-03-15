@@ -771,8 +771,10 @@ class ReportDefinitionMapperTest {
     "a,'', a",
     "'', a, a",
     "a, b, b",
+    "a, null, a",
+    nullValues = ["null"],
   )
-  fun `Display field falls back to dataset display when the report display field is not specified `(datasetDisplay: String, reportDisplay: String, expectedDisplay: String) {
+  fun `Display field falls back to dataset display when the report display field is not specified `(datasetDisplay: String, reportDisplay: String?, expectedDisplay: String) {
     val defaultValue = createProductDefinition(
       defaultFilterValue = "today()",
       datasetDisplay = datasetDisplay,
@@ -830,7 +832,7 @@ class ReportDefinitionMapperTest {
     max: String? = null,
     visible: Visible? = Visible.TRUE,
     datasetDisplay: String = "",
-    reportFieldDisplay: String = "20",
+    reportFieldDisplay: String? = "20",
     formula: String? = null,
   ): ProductDefinition {
     return ProductDefinition(

@@ -118,8 +118,8 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     )
   }
 
-  private fun populateDisplay(reportFieldDisplay: String, schemaFieldDisplay: String): String {
-    return reportFieldDisplay.ifBlank { schemaFieldDisplay }
+  private fun populateDisplay(reportFieldDisplay: String?, schemaFieldDisplay: String): String {
+    return reportFieldDisplay?.ifBlank { schemaFieldDisplay } ?: schemaFieldDisplay
   }
 
   private fun populateVisible(visible: Visible?): Boolean {

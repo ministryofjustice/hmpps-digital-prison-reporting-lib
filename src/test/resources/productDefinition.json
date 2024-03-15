@@ -94,7 +94,6 @@
       "template" : "list",
       "field" : [ {
         "name" : "$ref:prisonNumber",
-        "display" : "",
         "sortable" : true,
         "defaultsort" : false
       }, {
