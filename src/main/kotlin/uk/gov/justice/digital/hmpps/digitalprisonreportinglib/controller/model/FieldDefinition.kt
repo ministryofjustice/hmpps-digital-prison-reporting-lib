@@ -10,4 +10,5 @@ data class FieldDefinition(
   val type: FieldType,
   val mandatory: Boolean = false,
   val visible: Boolean = true,
+  val calculated: Boolean = false,
 )
