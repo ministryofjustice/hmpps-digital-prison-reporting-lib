@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class ReportField(
   val name: String,
-  val display: String,
+  val display: String?,
   val wordWrap: WordWrap? = null,
   val filter: FilterDefinition? = null,
   val sortable: Boolean = true,
