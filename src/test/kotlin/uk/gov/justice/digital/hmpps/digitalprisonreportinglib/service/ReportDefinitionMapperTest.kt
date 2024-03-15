@@ -192,6 +192,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.visible).isTrue()
     assertThat(field.mandatory).isFalse()
+    assertThat(field.calculated).isFalse()
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
@@ -687,6 +688,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.type).isEqualTo(FieldType.HTML)
+    assertThat(field.calculated).isEqualTo(true)
     verifyNoInteractions(configuredApiService)
   }
 
@@ -743,6 +745,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.type).isEqualTo(FieldType.Date)
+    assertThat(field.calculated).isEqualTo(true)
     verifyNoInteractions(configuredApiService)
   }
 

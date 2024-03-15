@@ -8,3 +8,6 @@ Support for format_date formula. Please refer to the [integrating-with-library](
 
 ## v3.5.1
 Make the report variant display field optional as there is already a fallback to the dataset display field. 
+
+## v3.5.2
+Add a 'calculated' property to the controller definition, to show whether a field value is calculated using a formula.
