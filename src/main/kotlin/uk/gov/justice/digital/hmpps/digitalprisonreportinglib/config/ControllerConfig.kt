@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.WebFluxAutoConfiguration
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
 import org.springframework.context.annotation.Bean
@@ -13,9 +12,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.Configured
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
 
 // @ConditionalOnMissingClass
+// @EnableAutoConfiguration
 @Configuration
 @AutoConfigureBefore(WebFluxAutoConfiguration::class, WebMvcAutoConfiguration::class)
-//@EnableAutoConfiguration
 class ControllerConfig {
 
   @Bean
