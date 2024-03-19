@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
+import com.google.gson.annotations.SerializedName
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
@@ -12,15 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.S
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import java.time.LocalDate
@@ -144,8 +137,22 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
   }
 
   private fun populateType(schemaField: SchemaField, reportField: ReportField): FieldType {
-    return reportField.formula?.takeIf { it.startsWith(MAKE_URL_FORMULA_PREFIX) }?.let { FieldType.HTML }
-      ?: schemaField.type.toString().let(FieldType::valueOf)
+    if (reportField.formula?.startsWith(MAKE_URL_FORMULA_PREFIX) ?: false) {
+      return FieldType.HTML
+    }
+
+    when(schemaField.type) {
+      ParameterType.Boolean -> return FieldType.Boolean
+      ParameterType.Date -> return FieldType.Date
+      ParameterType.DateTime -> return FieldType.Date
+      ParameterType.Timestamp -> return FieldType.Date
+      ParameterType.Time -> return FieldType.Time
+      ParameterType.Double -> return FieldType.Double
+      ParameterType.Float -> return FieldType.Double
+      ParameterType.Integer -> return FieldType.Long
+      ParameterType.Long -> return FieldType.Long
+      ParameterType.String -> return FieldType.String
+    }
   }
 
   private fun map(

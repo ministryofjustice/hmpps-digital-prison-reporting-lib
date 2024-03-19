@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model
 import com.fasterxml.jackson.annotation.JsonValue
 
 enum class FieldType(@JsonValue val type: kotlin.String) {
-  String("string"),
+  Boolean("boolean"),
   Date("date"),
-  Long("long"),
-  Time("time"),
+  Double("double"),
   HTML("HTML"),
+  Long("long"),
+  String("string"),
+  Time("time"),
 }
