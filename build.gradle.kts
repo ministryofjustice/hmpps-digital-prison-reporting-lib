@@ -34,7 +34,6 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.12.5")
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
-  testImplementation("org.testcontainers:junit-jupiter:1.19.3")
 }
 
 java {
