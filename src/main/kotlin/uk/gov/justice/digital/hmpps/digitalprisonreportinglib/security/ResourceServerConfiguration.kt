@@ -6,25 +6,21 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
-@Configuration
+@Configuration("dprResourceServerConfiguration")
 @ConditionalOnProperty(name = ["dpr.lib.user.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
-@EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
 class ResourceServerConfiguration(
   @Value("\${dpr.lib.user.role}") private var authorisedRole: String,
-  val caseloadProvider: CaseloadProvider,
 ) {
 
-  @Bean
-  fun filterChain(http: HttpSecurity): SecurityFilterChain? {
+  @Bean("dprFilterChain")
+  @Throws(Exception::class)
+  fun filterChain(http: HttpSecurity, tokenConverter: DprAuthAwareTokenConverter): SecurityFilterChain? {
     http {
       headers { frameOptions { sameOrigin = true } }
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
@@ -47,7 +43,7 @@ class ResourceServerConfiguration(
       }
       oauth2ResourceServer {
         jwt {
-          jwtAuthenticationConverter = DefaultDprAuthAwareTokenConverter(caseloadProvider)
+          jwtAuthenticationConverter = tokenConverter
         }
       }
     }
