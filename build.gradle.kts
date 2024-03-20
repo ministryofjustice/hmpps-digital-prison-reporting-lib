@@ -24,6 +24,7 @@ dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+  implementation("org.springframework.security.oauth.boot:spring-security-oauth2-autoconfigure:2.6.8")
   implementation("com.google.guava:guava:33.0.0-jre")
 
   // Swagger
