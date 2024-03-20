@@ -11,3 +11,6 @@ Make the report variant display field optional as there is already a fallback to
 
 ## v3.5.2
 Add a 'calculated' property to the controller definition, to show whether a field value is calculated using a formula.
+
+## v3.6.0
+The library is autoconfigured and there is no longer need of a @ComponentScan annotation in the hosting application.

@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -9,7 +11,8 @@ import org.springframework.security.config.annotation.web.invoke
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 
-@Configuration(("dprResourceServerConfiguration"))
+@AutoConfigureBefore(WebMvcAutoConfiguration::class)
+@Configuration("dprResourceServerConfiguration")
 @ConditionalOnProperty(name = ["dpr.lib.user.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
 class ResourceServerConfiguration(
   @Value("\${dpr.lib.user.role}") private var authorisedRole: String,
@@ -17,7 +20,7 @@ class ResourceServerConfiguration(
 
   @Bean("dprFilterChain")
   @Throws(Exception::class)
-  fun filterChain(http: HttpSecurity, caseloadProvider: CaseloadProvider, tokenConverter: DprAuthAwareTokenConverter): SecurityFilterChain? {
+  fun filterChain(http: HttpSecurity, tokenConverter: DprAuthAwareTokenConverter): SecurityFilterChain? {
     http {
       headers { frameOptions { sameOrigin = true } }
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
