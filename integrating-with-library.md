@@ -2,10 +2,6 @@
 To integrate the library into your project you will need to add the dependency to your build.gradle file, e.g:
 `implementation("uk.gov.justice.service.hmpps:hmpps-digital-prison-reporting-lib:1.0.0")`
 
-You will also need to add the following to your Spring Boot application class:
-`@ComponentScan("yourapplicationpackage","uk.gov.justice.digital.hmpps.digitalprisonreportinglib")`
-Where you will need to replace "yourapplicationpackage" with the actual package of your application.
-
 You will also need to use or extended the AuthAwareAuthenticationToken class in your Spring Security configuration as your Authentication implementation in order to pass the list of active caseload ids since this is used
 for row level security in the library. 
 The JWT token is needed to retrieve the caseload user details and this can be done simply by calling the getActiveCaseloadIds method of the CaseloadProvider and passing the JWT as a parameter.
