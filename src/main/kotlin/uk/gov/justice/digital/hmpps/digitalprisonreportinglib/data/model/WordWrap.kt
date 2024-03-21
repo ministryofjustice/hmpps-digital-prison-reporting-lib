@@ -10,5 +10,5 @@ enum class WordWrap() {
   Normal,
 
   @SerializedName("break-words")
-  BreakWords
+  BreakWords,
 }

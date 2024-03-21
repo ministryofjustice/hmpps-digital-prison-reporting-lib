@@ -5,5 +5,5 @@ import com.fasterxml.jackson.annotation.JsonValue
 enum class WordWrap(@JsonValue val value: String) {
   None("none"),
   Normal("normal"),
-  BreakWords("break-words")
+  BreakWords("break-words"),
 }
