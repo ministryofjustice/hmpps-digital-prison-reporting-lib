@@ -149,7 +149,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       return FieldType.HTML
     }
 
-    return when(schemaField.type) {
+    return when (schemaField.type) {
       ParameterType.Boolean -> FieldType.Boolean
       ParameterType.Date -> FieldType.Date
       ParameterType.DateTime -> FieldType.Date
