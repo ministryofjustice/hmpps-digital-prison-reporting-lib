@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.V
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
@@ -144,8 +145,22 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
   }
 
   private fun populateType(schemaField: SchemaField, reportField: ReportField): FieldType {
-    return reportField.formula?.takeIf { it.startsWith(MAKE_URL_FORMULA_PREFIX) }?.let { FieldType.HTML }
-      ?: schemaField.type.toString().let(FieldType::valueOf)
+    if (reportField.formula?.startsWith(MAKE_URL_FORMULA_PREFIX) == true) {
+      return FieldType.HTML
+    }
+
+    return when (schemaField.type) {
+      ParameterType.Boolean -> FieldType.Boolean
+      ParameterType.Date -> FieldType.Date
+      ParameterType.DateTime -> FieldType.Date
+      ParameterType.Timestamp -> FieldType.Date
+      ParameterType.Time -> FieldType.Time
+      ParameterType.Double -> FieldType.Double
+      ParameterType.Float -> FieldType.Double
+      ParameterType.Integer -> FieldType.Long
+      ParameterType.Long -> FieldType.Long
+      ParameterType.String -> FieldType.String
+    }
   }
 
   private fun map(

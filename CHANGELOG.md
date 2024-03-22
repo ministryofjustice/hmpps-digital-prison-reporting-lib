@@ -14,3 +14,14 @@ Add a 'calculated' property to the controller definition, to show whether a fiel
 
 ## v3.6.0
 The library is autoconfigured and there is no longer need of a @ComponentScan annotation in the hosting application.
+
+## 3.7.0
+The JSON schema has been reconciled to the library functionality:
+
+- Changed report-specification.template from a string to an enum with currently just the possible value of `list`.
+- Changed report-field.wordwrap enum values from `[ "on", "off", "none" ]`  to `[ "none", "normal", "break-words" ]` .
+  - `none` prevents wrapping.
+  - `normal`  is normal wrapping behaviour - adding line breaks at the ends of words where necessary.
+  - `break-words` allows the text to wrap, breaking words if it has to.
+- Removed report-field.type enum values: `null`, `bytes`.
+- Added support for the remaining field types. 

@@ -311,7 +311,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   {
                     "name": "name",
                     "display": "Name",
-                    "wordWrap": "None",
+                    "wordWrap": "none",
                     "filter": {
                       "type": "autocomplete",
                       "staticOptions": null,
@@ -350,7 +350,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   {
                     "name": "origin",
                     "display": "From",
-                    "wordWrap": "None",
+                    "wordWrap": "none",
                     "filter": null,
                     "sortable": true,
                     "defaultsort": false,
@@ -361,7 +361,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   {
                     "name": "destination",
                     "display": "To",
-                    "wordWrap": "None",
+                    "wordWrap": "none",
                     "filter": null,
                     "sortable": true,
                     "defaultsort": false,
@@ -372,7 +372,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   {
                     "name": "direction",
                     "display": "Direction",
-                    "wordWrap": null,
+                    "wordWrap": "break-words",
                     "filter": {
                       "type": "Radio",
                       "staticOptions": [
@@ -399,7 +399,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   {
                     "name": "type",
                     "display": "Type",
-                    "wordWrap": null,
+                    "wordWrap": "normal",
                     "filter": null,
                     "sortable": true,
                     "defaultsort": false,
