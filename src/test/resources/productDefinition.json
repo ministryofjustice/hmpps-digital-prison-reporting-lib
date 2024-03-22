@@ -134,6 +134,7 @@
       }, {
         "name" : "$ref:direction",
         "display" : "Direction",
+        "wordWrap" : "break-words",
         "filter" : {
           "type" : "Radio",
           "staticoptions" : [ {
@@ -151,7 +152,8 @@
         "display" : "Type",
         "sortable" : true,
         "defaultsort" : false,
-        "visible": "false"
+        "visible": "false",
+        "wordWrap" : "normal"
       }, {
         "name" : "$ref:reason",
         "display" : "Reason",

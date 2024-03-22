@@ -372,7 +372,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   {
                     "name": "direction",
                     "display": "Direction",
-                    "wordWrap": null,
+                    "wordWrap": "break-words",
                     "filter": {
                       "type": "Radio",
                       "staticOptions": [
@@ -399,7 +399,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   {
                     "name": "type",
                     "display": "Type",
-                    "wordWrap": null,
+                    "wordWrap": "normal",
                     "filter": null,
                     "sortable": true,
                     "defaultsort": false,
