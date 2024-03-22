@@ -99,7 +99,7 @@
       }, {
         "name" : "$ref:name",
         "display" : "Name",
-        "wordWrap" : "None",
+        "wordWrap" : "none",
         "sortable" : true,
         "defaultsort" : false,
         "filter" : {
@@ -121,13 +121,13 @@
       }, {
         "name" : "$ref:origin",
         "display" : "From",
-        "wordWrap" : "None",
+        "wordWrap" : "none",
         "sortable" : true,
         "defaultsort" : false
       }, {
         "name" : "$ref:destination",
         "display" : "To",
-        "wordWrap" : "None",
+        "wordWrap" : "none",
         "sortable" : true,
         "defaultsort" : false,
         "visible": "true"
@@ -191,7 +191,7 @@
       }, {
         "name" : "$ref:name",
         "display" : "Name",
-        "wordWrap" : "None",
+        "wordWrap" : "none",
         "sortable" : true,
         "defaultsort" : false,
         "filter" : {
@@ -213,13 +213,13 @@
       }, {
         "name" : "$ref:origin",
         "display" : "From",
-        "wordWrap" : "None",
+        "wordWrap" : "none",
         "sortable" : true,
         "defaultsort" : false
       }, {
         "name" : "$ref:destination",
         "display" : "To",
-        "wordWrap" : "None",
+        "wordWrap" : "none",
         "sortable" : true,
         "defaultsort" : false
       }, {
