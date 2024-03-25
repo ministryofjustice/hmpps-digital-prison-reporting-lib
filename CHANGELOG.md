@@ -25,3 +25,6 @@ The JSON schema has been reconciled to the library functionality:
   - `break-words` allows the text to wrap, breaking words if it has to.
 - Removed report-field.type enum values: `null`, `bytes`.
 - Added support for the remaining field types. 
+
+## 3.7.1
+Fixed the issue in which null dates would throw an error when the format_date function was applied to them. 
