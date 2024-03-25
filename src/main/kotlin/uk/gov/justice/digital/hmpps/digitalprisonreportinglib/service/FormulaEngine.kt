@@ -42,6 +42,9 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
     val (dateFieldPlaceholder, dateFormat) = formula.substring(FORMAT_DATE_FORMULA_PREFIX.length, formula.indexOf(")"))
       .split(",")
     val date = interpolateStandardFormula(dateFieldPlaceholder.trim(), row)
+    if (date.isBlank()) {
+      return ""
+    }
     return LocalDateTime.parse(date).format(DateTimeFormatter.ofPattern(removeQuotes(dateFormat.trim())))
   }
 
