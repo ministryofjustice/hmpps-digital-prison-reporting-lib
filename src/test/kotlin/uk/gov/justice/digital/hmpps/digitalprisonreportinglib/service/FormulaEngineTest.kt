@@ -394,4 +394,32 @@ class FormulaEngineTest {
     val formulaEngine = FormulaEngine(reportFields)
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
+
+  @Test
+  fun `Formula engine returns an empty string for a null date and the format_date formula does not error`() {
+    val formatDateFormula = "format_date(\${date}, 'dd/MM/yyyy')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to null,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:date",
+        display = "Date",
+        visible = Visible.TRUE,
+        formula = formatDateFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to "",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
 }
