@@ -228,7 +228,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
       assertThat(lastMonthVariant.specification).isNotNull
-      assertThat(lastMonthVariant.specification?.fields).hasSize(8)
+      assertThat(lastMonthVariant.specification?.fields).hasSize(9)
       assertThat(lastMonthVariant.printable).isEqualTo(true)
 
       val directionField = lastMonthVariant.specification?.fields?.find { it.name == "direction" }
@@ -433,6 +433,34 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "type": "string",
                     "visible": true,
                     "mandatory": true
+                  },
+                  {
+                    "name": "is_closed",
+                    "display": "Closed",
+                    "wordWrap":null,
+                    "sortable": true,
+                    "defaultsort":false,
+                    "filter": {
+                      "type": "Radio",
+                      "staticOptions": [
+                        {
+                          "name": "false",
+                          "display": "Only open"
+                        },
+                        {
+                          "name": "true",
+                          "display": "Only closed"
+                        }
+                      ],
+                      "dynamicOptions": null,
+                      "defaultValue":"false",
+                      "min": null,
+                      "max": null
+                    },
+                    "type": "boolean",
+                    "mandatory": false,
+                    "visible": true,
+                    "calculated": false
                   }
                 ]
               },

@@ -141,7 +141,8 @@ class ConfiguredApiRepository {
 
   fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {
     val preparedStatementNamedParams = MapSqlParameterSource()
-    filters.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
+    filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
+    filters.filter { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.toBoolean()) }
     log.debug("Prepared statement named parameters: {}", preparedStatementNamedParams)
     return preparedStatementNamedParams
   }
@@ -157,6 +158,7 @@ class ConfiguredApiRepository {
       FilterType.RANGE_END -> "$lowerCaseField <= :$key"
       FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
       FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
+      FilterType.BOOLEAN -> "${filter.field} = :$key"
     }
   }
 
@@ -175,5 +177,6 @@ class ConfiguredApiRepository {
     DATE_RANGE_START(".start"),
     DATE_RANGE_END(".end"),
     DYNAMIC,
+    BOOLEAN,
   }
 }

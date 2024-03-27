@@ -57,7 +57,11 @@
         "name" : "reason",
         "type" : "string",
         "display" : ""
-      } ]
+      }, {
+        "name" : "is_closed",
+        "type" : "boolean",
+        "display" : ""
+      }]
     }
   } ],
   "policy": [
@@ -167,6 +171,24 @@
             "returnAsStaticOptions": true,
             "maximumOptions": 1
           }
+        }
+      }, {
+        "name": "$ref:is_closed",
+        "display": "Closed",
+        "sortable": true,
+        "filter": {
+          "type": "Radio",
+          "default": "false",
+          "staticoptions": [
+            {
+              "name": "false",
+              "display": "Only open"
+            },
+            {
+              "name": "true",
+              "display": "Only closed"
+            }
+          ]
         }
       } ]
     },
