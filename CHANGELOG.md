@@ -28,3 +28,6 @@ The JSON schema has been reconciled to the library functionality:
 
 ## 3.7.1
 Fixed the issue in which null dates would throw an error when the format_date function was applied to them. 
+
+## 3.7.2
+Fixed the issue in which filtering by Boolean fields would throw an error.

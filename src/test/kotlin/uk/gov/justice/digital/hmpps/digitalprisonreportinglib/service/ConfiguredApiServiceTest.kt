@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -19,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.C
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.BOOLEAN
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DYNAMIC
@@ -1080,6 +1084,65 @@ class ConfiguredApiServiceTest {
       sortedAsc = sortedAsc,
       reportId = reportId,
       policyEngineResult = POLICY_PERMIT,
+      dataSourceName = dataSourceName,
+    )
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `should throw an exception when a filter is passed as a non boolean value when a boolean is expected`() {
+    val exception = Assertions.assertThrows(ValidationException::class.java) {
+      configuredApiService.validateAndFetchData(
+        reportId,
+        reportVariantId,
+        mapOf("is_closed" to "in"),
+        1L,
+        10L,
+        "date",
+        true,
+        authToken,
+      )
+    }
+    Mockito.verifyNoInteractions(configuredApiRepository)
+    assertThat(exception).message().isEqualTo("Invalid value in for filter is_closed. Cannot be parsed as a boolean.")
+  }
+
+  @Test
+  fun `should call the repository with Boolean Filter type for boolean filters`() {
+    val filters = mapOf("is_closed" to "true", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
+
+    whenever(
+      configuredApiRepository.executeQuery(
+        query = dataSet.query,
+        filters = repositoryFilters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      query = dataSet.query,
+      filters = repositoryFilters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)

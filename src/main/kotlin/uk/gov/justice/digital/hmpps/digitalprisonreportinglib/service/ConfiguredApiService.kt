@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -137,7 +138,7 @@ class ConfiguredApiService(
       ConfiguredApiRepository.Filter(
         field = truncatedKey,
         value = it.value,
-        type = mapFilterType(filterDefinition, it.key),
+        type = mapFilterType(filterDefinition, it.key, truncatedKey, definition.dataset.schema),
       )
     }
   }
@@ -157,7 +158,7 @@ class ConfiguredApiService(
     )
   }
 
-  private fun mapFilterType(filterDefinition: FilterDefinition, key: String): ConfiguredApiRepository.FilterType {
+  private fun mapFilterType(filterDefinition: FilterDefinition, key: String, truncatedKey: String, schema: Schema): ConfiguredApiRepository.FilterType {
     if (filterDefinition.type == FilterType.DateRange) {
       if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
         return ConfiguredApiRepository.FilterType.DATE_RANGE_START
@@ -170,6 +171,10 @@ class ConfiguredApiService(
       return ConfiguredApiRepository.FilterType.RANGE_START
     } else if (key.endsWith(RANGE_FILTER_END_SUFFIX)) {
       return ConfiguredApiRepository.FilterType.RANGE_END
+    }
+    val schemaField = schema.field.first { it.name == truncatedKey }
+    if (schemaField.type == ParameterType.Boolean) {
+      return ConfiguredApiRepository.FilterType.BOOLEAN
     }
 
     return ConfiguredApiRepository.FilterType.STANDARD
@@ -204,8 +209,14 @@ class ConfiguredApiService(
       } catch (e: DateTimeParseException) {
         throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a date.")
       }
+    } else if (schemaField.type == ParameterType.Boolean) {
+      if (isNotABoolean(value)) {
+        throw ValidationException("Invalid value $value for filter $key. Cannot be parsed as a boolean.")
+      }
     }
   }
+
+  private fun isNotABoolean(value: String) = value.lowercase() != "true" && value.lowercase() != "false"
 
   private fun truncateBasedOnSuffix(k: String): String {
     return if (k.endsWith(RANGE_FILTER_START_SUFFIX)) {

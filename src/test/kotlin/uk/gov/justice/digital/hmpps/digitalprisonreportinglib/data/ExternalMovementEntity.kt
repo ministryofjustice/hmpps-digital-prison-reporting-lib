@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
@@ -19,4 +20,6 @@ data class ExternalMovementEntity(
   val direction: String?,
   val type: String?,
   val reason: String,
+  @Column(name = "IS_CLOSED")
+  val isClosed: Boolean? = null,
 )
