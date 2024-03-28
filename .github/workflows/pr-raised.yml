@@ -43,5 +43,6 @@ jobs:
       - name: PR comment
         uses: thollander/actions-comment-pull-request@v2
         with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           comment_tag: coverage
           filePath: message.txt
