@@ -1,7 +1,5 @@
 name: PR preparation
 
-permissions: write-all
-
 on:
   pull_request:
     types:
@@ -12,7 +10,9 @@ jobs:
   preparation:
     runs-on: ubuntu-latest
 
-    permissions: write-all
+    permissions:
+      pull-requests: write
+      contents: write
 
     steps:
       - uses: actions/checkout@v3
