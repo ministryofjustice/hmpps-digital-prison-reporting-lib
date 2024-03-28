@@ -12,9 +12,7 @@ jobs:
   preparation:
     runs-on: ubuntu-latest
 
-    permissions:
-      pull-requests: write
-      contents: write
+    permissions: write-all
 
     steps:
       - uses: actions/checkout@v3
