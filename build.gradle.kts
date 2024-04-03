@@ -3,9 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.+"
-  kotlin("jvm") version "1.9.22"
-  kotlin("plugin.spring") version "1.9.22"
-  kotlin("plugin.jpa") version "1.9.22"
+  kotlin("jvm") version "1.9.23"
+  kotlin("plugin.spring") version "1.9.23"
+  kotlin("plugin.jpa") version "1.9.23"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "3.1.0"
   id("maven-publish")
