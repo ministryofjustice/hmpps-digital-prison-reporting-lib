@@ -50,18 +50,6 @@ run the tests.
     ./gradlew clean test
 ```
 
-### Integration Tests
-
-```
-    TBD
-```
-
-### Acceptance Tests
-
-```
-    TBD
-```
-
 ## Contributing
 
 Please adhere to the following guidelines when making contributions to the
@@ -166,3 +154,7 @@ The current public signing key has been uploaded to [this public keyserver](http
 * To allow the private key to be inserted into Circle, convert the newlines in the private key to `\n` see [this forum](https://discuss.circleci.com/t/gpg-keys-as-environment-variables/28641) if you have problems with this. 
 * Delete the environment variables `ORG_GRADLE_PROJECT_signingKey` and `ORG_GRADLE_PROJECT_signingPassword` from the [Circle CI env vars page](https://app.circleci.com/settings/project/github/ministryofjustice/hmpps-digital-prison-reporting-lib/environment-variables)
 * Recreate the environment variables where `ORG_GRADLE_PROJECT_signingKey` contains the private key (with newlines) and `ORG_GRADLE_PROJECT_signingPassword` contains the passphrase.  
+
+## Data Product Definitions (DPDs)
+
+The DPDs used by this library adhere to the DPD JSON schema hosted here: https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema/blob/main/schema/data-product-definition-schema.json
