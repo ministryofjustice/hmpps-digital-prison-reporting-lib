@@ -27,7 +27,7 @@ dependencies {
   implementation("com.google.guava:guava:33.0.0-jre")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
 
   // Testing
   testImplementation("com.h2database:h2")
