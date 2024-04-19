@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 3.7.4
+Fixed insecure dependency versions.
+
 ## 3.7.2
 Fixed the issue in which filtering by Boolean fields would throw an error.
 
