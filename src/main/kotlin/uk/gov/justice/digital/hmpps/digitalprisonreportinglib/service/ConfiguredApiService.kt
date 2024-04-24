@@ -70,6 +70,33 @@ class ConfiguredApiService(
       .map(formulaEngine::applyFormulas)
   }
 
+  fun validateAndExecuteStatementAsync(
+    reportId: String,
+    reportVariantId: String,
+    filters: Map<String, String>,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    userToken: DprAuthAwareAuthenticationToken?,
+    reportFieldId: String? = null,
+    prefix: String? = null,
+    dataProductDefinitionsPath: String? = null,
+  ): String {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
+    val policyEngine = PolicyEngine(productDefinition.policy, userToken)
+    return configuredApiRepository
+      .executeQueryAsync(
+        query = productDefinition.dataset.query,
+        filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
+        sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngine.execute(),
+        dynamicFilterFieldId = reportFieldId,
+        dataSourceName = productDefinition.datasource.name,
+      )
+  }
+
   private fun formatColumnNamesToSchemaFieldNamesCasing(
     row: Map<String, Any?>,
     productDefinition: SingleReportProductDefinition,

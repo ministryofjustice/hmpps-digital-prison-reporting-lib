@@ -49,6 +49,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDateTime
+import java.util.UUID
 
 class ConfiguredApiServiceTest {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
@@ -1146,5 +1147,40 @@ class ConfiguredApiServiceTest {
       dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `should make the async call to the repository with all provided arguments when validateAndExecuteStatementAsync is called`() {
+    val filters = mapOf("is_closed" to "true", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
+    val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
+    val executionID = UUID.randomUUID().toString()
+    whenever(
+      configuredApiRepository.executeQueryAsync(
+        query = dataSet.query,
+        filters = repositoryFilters,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngineResult,
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(executionID)
+
+    val actual = configuredApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, sortColumn, sortedAsc, authToken)
+
+    verify(configuredApiRepository, times(1)).executeQueryAsync(
+      query = dataSet.query,
+      filters = repositoryFilters,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
+    )
+    assertEquals(executionID, actual)
   }
 }
