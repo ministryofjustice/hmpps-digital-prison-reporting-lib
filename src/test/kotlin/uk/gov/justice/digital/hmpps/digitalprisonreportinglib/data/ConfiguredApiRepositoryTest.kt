@@ -2,15 +2,22 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
+import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
+import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
@@ -697,6 +704,47 @@ class ConfiguredApiRepositoryTest {
       dataSourceName = dataSourceName,
     )
     Assertions.assertEquals(0, actual)
+  }
+
+  @Test
+  fun `should call the redshift data api with the correct query and return the execution id`() {
+    val redshiftDataClient = mock<RedshiftDataClient>()
+    val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
+    val executeStatementResponse = mock<ExecuteStatementResponse>()
+    val configuredApiRepository = ConfiguredApiRepository(redshiftDataClient, executeStatementRequestBuilder)
+
+    whenever(
+      executeStatementRequestBuilder.sql(
+        "SELECT * FROM datamart.domain.movement_movement",
+      ),
+    ).thenReturn(
+      ExecuteStatementRequest.builder()
+        .clusterIdentifier("ab")
+        .database("cd")
+        .secretArn("ef"),
+    )
+
+    whenever(
+      redshiftDataClient.executeStatement(
+        any<ExecuteStatementRequest>(),
+      ),
+    ).thenReturn(executeStatementResponse)
+
+    whenever(
+      executeStatementResponse.id(),
+    ).thenReturn("someId")
+
+    val actual = configuredApiRepository.executeQueryAsync(
+      query = query,
+      filters = emptyList(),
+      sortColumn = "date",
+      sortedAsc = true,
+      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = policyEngineResult,
+      dataSourceName = dataSourceName,
+    )
+
+    assertEquals("someId", actual)
   }
 
   private fun assertExternalMovements(sortColumn: String, expectedForAscending: Map<String, Any>, expectedForDescending: Map<String, Any>): List<DynamicTest> {

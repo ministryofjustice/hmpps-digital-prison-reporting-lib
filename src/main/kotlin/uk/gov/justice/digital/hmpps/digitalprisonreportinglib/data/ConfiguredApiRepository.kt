@@ -3,26 +3,20 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import java.sql.Timestamp
 import javax.sql.DataSource
 
-
 @Service
 class ConfiguredApiRepository(
-  @Value("\${redshiftdataapi.database:#{null}}") val redshiftDataApiDb: String? = null,
-  @Value("\${redshiftdataapi.clusterid:#{null}}") val redshiftDataApiClusterId: String? = null,
-  @Value("\${redshiftdataapi.secretarn:#{null}}") val redshiftDataApiSecretArn: String? = null,
-
+  val redshiftDataClient: RedshiftDataClient,
+  val executeStatementRequestBuilder: ExecuteStatementRequest.Builder,
 ) {
 
   companion object {
@@ -70,29 +64,19 @@ class ConfiguredApiRepository(
     return result
   }
 
-  fun executeQueryAsync(query: String,
-                        filters: List<Filter>,
-                        sortColumn: String?,
-                        sortedAsc: Boolean,
-                        reportId: String,
-                        policyEngineResult: String,
-                        dynamicFilterFieldId: String? = null,
-                        dataSourceName: String,): String {
-    val redshiftDataClient = RedshiftDataClient.builder()
-      .region(Region.EU_WEST_2)
-      .build()
-    val sqlStatement = " SELECT * FROM datamart.domain.movement_movement"
-//    val yearParam: SqlParameter = SqlParameter.builder()
-//      .name("year")
-//      .value(java.lang.String.valueOf(year))
-//      .build()
+  fun executeQueryAsync(
+    query: String,
+    filters: List<Filter>,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    reportId: String,
+    policyEngineResult: String,
+    dynamicFilterFieldId: String? = null,
+    dataSourceName: String,
+  ): String {
+    val sqlStatement = "SELECT * FROM datamart.domain.movement_movement"
 
-    val statementRequest: ExecuteStatementRequest = ExecuteStatementRequest.builder()
-      .clusterIdentifier(redshiftDataApiClusterId)
-      .database(redshiftDataApiDb)
-//      .dbUser(dbUser)
-      .secretArn(redshiftDataApiSecretArn)
-//      .parameters(yearParam)
+    val statementRequest: ExecuteStatementRequest = executeStatementRequestBuilder
       .sql(sqlStatement)
       .build()
 
