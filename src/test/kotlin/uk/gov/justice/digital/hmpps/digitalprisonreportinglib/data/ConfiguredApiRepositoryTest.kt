@@ -18,6 +18,7 @@ import org.springframework.test.context.DynamicPropertySource
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
@@ -713,20 +714,36 @@ class ConfiguredApiRepositoryTest {
     val executeStatementResponse = mock<ExecuteStatementResponse>()
     val configuredApiRepository = ConfiguredApiRepository(redshiftDataClient, executeStatementRequestBuilder)
 
+    val sqlStatement = """WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
+FROM datamart.domain.movement_movement as movements
+JOIN datamart.domain.prisoner_prisoner as prisoners
+ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE lower(direction) = :direction)
+SELECT *
+          FROM filter_ ORDER BY date asc;""".trimMargin()
+    val mockedBuilderWithSql = ExecuteStatementRequest.builder()
+      .clusterIdentifier("ab")
+      .database("cd")
+      .secretArn("ef")
+      .sql(sqlStatement)
     whenever(
       executeStatementRequestBuilder.sql(
-        "SELECT * FROM datamart.domain.movement_movement",
+        sqlStatement,
       ),
     ).thenReturn(
-      ExecuteStatementRequest.builder()
-        .clusterIdentifier("ab")
-        .database("cd")
-        .secretArn("ef"),
+      mockedBuilderWithSql,
+    )
+
+    val queryParams = listOf(SqlParameter.builder().name("direction").value("out").build())
+    whenever(
+      executeStatementRequestBuilder.parameters(queryParams),
+    ).thenReturn(
+      mockedBuilderWithSql
+        .parameters(queryParams)
     )
 
     whenever(
       redshiftDataClient.executeStatement(
-        any<ExecuteStatementRequest>(),
+        mockedBuilderWithSql.build(),
       ),
     ).thenReturn(executeStatementResponse)
 
@@ -736,7 +753,7 @@ class ConfiguredApiRepositoryTest {
 
     val actual = configuredApiRepository.executeQueryAsync(
       query = query,
-      filters = emptyList(),
+      filters = listOf(Filter("direction", "out")),
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,

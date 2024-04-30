@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import java.sql.Timestamp
 import javax.sql.DataSource
 
@@ -52,7 +53,7 @@ class ConfiguredApiRepository(
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
-        buildPaginationQuery(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
+        buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
       ),
       buildPreparedStatementNamedParams(filters),
     )
@@ -74,10 +75,16 @@ class ConfiguredApiRepository(
     dynamicFilterFieldId: String? = null,
     dataSourceName: String,
   ): String {
-    val sqlStatement = "SELECT * FROM datamart.domain.movement_movement"
-
     val statementRequest: ExecuteStatementRequest = executeStatementRequestBuilder
-      .sql(sqlStatement)
+      .sql(
+        buildFinalQuery(
+          buildReportQuery(query),
+          buildPolicyQuery(policyEngineResult),
+          buildFiltersQuery(filters),
+          buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
+        )
+      )
+      .parameters(buildQueryParams(filters))
       .build()
 
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
@@ -100,15 +107,24 @@ class ConfiguredApiRepository(
   private fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE $policyEngineResult)"""
   private fun buildFiltersQuery(filters: List<Filter>) =
     """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
-  private fun buildPaginationQuery(
+  private fun buildFinalStageQueryWithPagination(
     dynamicFilterFieldId: String?,
     sortColumn: String?,
     sortedAsc: Boolean,
     pageSize: Long,
     selectedPage: Long,
+  ) = """${buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc)} 
+        ${buildPaginationQuery(pageSize, selectedPage)}"""
+
+  private fun buildFinalStageQuery(
+    dynamicFilterFieldId: String?,
+    sortColumn: String?,
+    sortedAsc: Boolean,
   ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
-        FROM $FILTER_ ${buildOrderByClause(sortColumn, sortedAsc)} 
-        limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+          FROM $FILTER_ ${buildOrderByClause(sortColumn, sortedAsc)}"""
+
+  private fun buildPaginationQuery(pageSize: Long, selectedPage: Long) =
+    """limit $pageSize OFFSET ($selectedPage - 1) * $pageSize"""
 
   private fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
     sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
@@ -119,7 +135,7 @@ class ConfiguredApiRepository(
     filtersQuery: String,
     selectFromFinalStageQuery: String,
   ): String {
-    val query = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    val query = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery;"
     log.debug("Database query: $query")
     return query
   }
@@ -172,6 +188,14 @@ class ConfiguredApiRepository(
     filters.filter { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.toBoolean()) }
     log.debug("Prepared statement named parameters: {}", preparedStatementNamedParams)
     return preparedStatementNamedParams
+  }
+
+  fun buildQueryParams(filters: List<Filter>): List<SqlParameter> {
+    val sqlParams: MutableList<SqlParameter> = mutableListOf()
+    filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(it.getKey()).value(it.value.lowercase()).build()) }
+    filters.filter { it.type == FilterType.BOOLEAN }.forEach {  sqlParams.add(SqlParameter.builder().name(it.getKey()).value(it.value).build()) }
+    log.debug("SQL parameters: {}", sqlParams)
+    return sqlParams
   }
 
   private fun buildCondition(filter: Filter): String {
