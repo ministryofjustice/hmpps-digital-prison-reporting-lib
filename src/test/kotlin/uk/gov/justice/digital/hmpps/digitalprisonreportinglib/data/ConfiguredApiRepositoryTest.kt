@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -719,7 +718,8 @@ FROM datamart.domain.movement_movement as movements
 JOIN datamart.domain.prisoner_prisoner as prisoners
 ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE lower(direction) = :direction)
 SELECT *
-          FROM filter_ ORDER BY date asc;""".trimMargin()
+          FROM filter_ ORDER BY date asc;
+    """.trimMargin()
     val mockedBuilderWithSql = ExecuteStatementRequest.builder()
       .clusterIdentifier("ab")
       .database("cd")
@@ -738,7 +738,7 @@ SELECT *
       executeStatementRequestBuilder.parameters(queryParams),
     ).thenReturn(
       mockedBuilderWithSql
-        .parameters(queryParams)
+        .parameters(queryParams),
     )
 
     whenever(

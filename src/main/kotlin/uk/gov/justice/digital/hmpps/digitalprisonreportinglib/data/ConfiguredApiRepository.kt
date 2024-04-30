@@ -82,7 +82,7 @@ class ConfiguredApiRepository(
           buildPolicyQuery(policyEngineResult),
           buildFiltersQuery(filters),
           buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
-        )
+        ),
       )
       .parameters(buildQueryParams(filters))
       .build()
@@ -193,7 +193,7 @@ class ConfiguredApiRepository(
   fun buildQueryParams(filters: List<Filter>): List<SqlParameter> {
     val sqlParams: MutableList<SqlParameter> = mutableListOf()
     filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(it.getKey()).value(it.value.lowercase()).build()) }
-    filters.filter { it.type == FilterType.BOOLEAN }.forEach {  sqlParams.add(SqlParameter.builder().name(it.getKey()).value(it.value).build()) }
+    filters.filter { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(it.getKey()).value(it.value).build()) }
     log.debug("SQL parameters: {}", sqlParams)
     return sqlParams
   }
