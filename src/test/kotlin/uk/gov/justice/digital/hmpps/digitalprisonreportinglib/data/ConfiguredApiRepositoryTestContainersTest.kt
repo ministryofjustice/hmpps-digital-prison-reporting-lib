@@ -11,6 +11,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import java.time.LocalDateTime
 
 @Testcontainers
@@ -106,12 +107,12 @@ class ConfiguredApiRepositoryTestContainersTest {
       )
       val actual = configuredApiRepository.executeQuery(
         query,
-        listOf(ConfiguredApiRepository.Filter("is_closed", "true", ConfiguredApiRepository.FilterType.BOOLEAN)),
+        listOf(ConfiguredApiRepository.Filter("is_closed", "true", RepositoryHelper.FilterType.BOOLEAN)),
         1,
         10,
         "date",
         false,
-        ConfiguredApiRepository.EXTERNAL_MOVEMENTS_PRODUCT_ID,
+        EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
       )

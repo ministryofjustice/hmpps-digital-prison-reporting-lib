@@ -20,15 +20,16 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.BOOLEAN
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DYNAMIC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.BOOLEAN
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
@@ -57,7 +58,8 @@ class ConfiguredApiServiceTest {
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
   )
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
-  private val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository)
+  private val redshiftDataApiRepository: RedshiftDataApiRepository = mock<RedshiftDataApiRepository>()
+  private val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository)
   private val expectedRepositoryResult = listOf(
     mapOf("PRISONNUMBER" to "1"),
     mapOf("NAME" to "FirstName"),
@@ -411,7 +413,7 @@ class ConfiguredApiServiceTest {
       listOf("productDefinitionPolicyNoAction.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     )
-    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository)
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository)
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("USER-ROLE-1")))
     val policyEngineResult = "TRUE"
     val reportId = "definition-policy-no-action"
@@ -1033,7 +1035,7 @@ class ConfiguredApiServiceTest {
       mapOf("9" to "1"),
     )
     val productDefRepo = mock<ProductDefinitionRepository>()
-    val configuredApiService = ConfiguredApiService(productDefRepo, configuredApiRepository)
+    val configuredApiService = ConfiguredApiService(productDefRepo, configuredApiRepository, redshiftDataApiRepository)
     val dataSourceName = "name"
 
     whenever(productDefRepo.getProductDefinitions())
@@ -1159,7 +1161,7 @@ class ConfiguredApiServiceTest {
     val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
     val executionID = UUID.randomUUID().toString()
     whenever(
-      configuredApiRepository.executeQueryAsync(
+      redshiftDataApiRepository.executeQueryAsync(
         query = dataSet.query,
         filters = repositoryFilters,
         sortColumn = sortColumn,
@@ -1172,7 +1174,7 @@ class ConfiguredApiServiceTest {
 
     val actual = configuredApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, sortColumn, sortedAsc, authToken)
 
-    verify(configuredApiRepository, times(1)).executeQueryAsync(
+    verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
       query = dataSet.query,
       filters = repositoryFilters,
       sortColumn = sortColumn,
