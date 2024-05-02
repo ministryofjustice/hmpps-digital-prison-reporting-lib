@@ -11,9 +11,9 @@ import software.amazon.awssdk.services.redshiftdata.model.RedshiftDataRequest
 
 @Configuration
 class RedshiftDataApiConfig(
-  @Value("\${redshiftdataapi.database:#{null}}") val redshiftDataApiDb: String? = null,
-  @Value("\${redshiftdataapi.clusterid:#{null}}") val redshiftDataApiClusterId: String? = null,
-  @Value("\${redshiftdataapi.secretarn:#{null}}") val redshiftDataApiSecretArn: String? = null,
+  @Value("\${dpr.lib.redshiftdataapi.database:#{null}}") val redshiftDataApiDb: String? = null,
+  @Value("\${dpr.lib.redshiftdataapi.clusterid:#{null}}") val redshiftDataApiClusterId: String? = null,
+  @Value("\${dpr.lib.redshiftdataapi.secretarn:#{null}}") val redshiftDataApiSecretArn: String? = null,
 ) {
 
   @Bean
