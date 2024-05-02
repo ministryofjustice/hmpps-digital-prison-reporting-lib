@@ -11,11 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_END
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DATE_RANGE_START
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.FilterType.DYNAMIC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner2
@@ -36,6 +32,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9846
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9847
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import java.time.LocalDateTime
 
@@ -44,6 +44,25 @@ import java.time.LocalDateTime
 class ConfiguredApiRepositoryTest {
 
   companion object {
+
+    const val REPOSITORY_TEST_QUERY = "SELECT " +
+      "prisoners.number AS prisonNumber," +
+      "CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name," +
+      "movements.time AS date," +
+      "movements.direction," +
+      "movements.type," +
+      "movements.origin," +
+      "movements.origin_code," +
+      "movements.destination," +
+      "movements.destination_code," +
+      "movements.reason\n" +
+      "FROM datamart.domain.movement_movement as movements\n" +
+      "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
+      "ON movements.prisoner = prisoners.id"
+
+    const val REPOSITORY_TEST_POLICY_ENGINE_RESULT = "(origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')"
+    const val REPOSITORY_TEST_DATASOURCE_NAME = "datamart"
+
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
@@ -70,36 +89,18 @@ class ConfiguredApiRepositoryTest {
     }
   }
 
-  val query = "SELECT " +
-    "prisoners.number AS prisonNumber," +
-    "CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name," +
-    "movements.time AS date," +
-    "movements.direction," +
-    "movements.type," +
-    "movements.origin," +
-    "movements.origin_code," +
-    "movements.destination," +
-    "movements.destination_code," +
-    "movements.reason\n" +
-    "FROM datamart.domain.movement_movement as movements\n" +
-    "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
-    "ON movements.prisoner = prisoners.id"
-
-  private val policyEngineResult = "(origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')"
-  private val dataSourceName = "datamart"
-
   @Test
   fun `should return 2 external movements for the selected page 2 and pageSize 2 sorted by date in ascending order`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = emptyList(),
       selectedPage = 2,
       pageSize = 2,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(listOf(movementPrisoner3, movementPrisoner4), actual)
     Assertions.assertEquals(2, actual.size)
@@ -108,15 +109,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return 1 row for the selected page 3 and pageSize 2 sorted by date in ascending order`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = emptyList(),
       selectedPage = 3,
       pageSize = 2,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(listOf(movementPrisoner5), actual)
     Assertions.assertEquals(1, actual.size)
@@ -125,15 +126,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return 5 rows for the selected page 1 and pageSize 5 sorted by date in ascending order`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = emptyList(),
       selectedPage = 1,
       pageSize = 5,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(listOf(movementPrisoner1, movementPrisoner2, movementPrisoner3, movementPrisoner4, movementPrisoner5), actual)
     Assertions.assertEquals(5, actual.size)
@@ -142,15 +143,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return an empty list for the selected page 2 and pageSize 5 sorted by date in ascending order`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = emptyList(),
       selectedPage = 2,
       pageSize = 5,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -158,15 +159,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return an empty list for the selected page 6 and pageSize 1 sorted by date in ascending order`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = emptyList(),
       selectedPage = 6,
       pageSize = 1,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -216,15 +217,15 @@ class ConfiguredApiRepositoryTest {
     var actual: List<Map<String, Any?>> = emptyList()
     assertDoesNotThrow {
       actual = configuredApiRepository.executeQuery(
-        query = query,
+        query = REPOSITORY_TEST_QUERY,
         filters = emptyList(),
         selectedPage = 3,
         pageSize = 2,
         sortColumn = null,
         sortedAsc = true,
         reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-        policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
+        policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+        dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       )
     }
     Assertions.assertEquals(1, actual.size)
@@ -233,15 +234,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a list of all results with no filters`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = emptyList(),
       selectedPage = 1,
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(5, actual.size)
   }
@@ -249,15 +250,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a list of rows filtered by an in direction filter`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("direction", "In")),
       selectedPage = 1,
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -265,15 +266,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a list of inwards movements with an in direction filter regardless of the casing`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("direction", "in")),
       selectedPage = 1,
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -281,15 +282,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a list of rows filtered by out direction filter`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("direction", "Out")),
       selectedPage = 1,
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -297,15 +298,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a list of outwards movements with an out direction filter regardless of the casing`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("direction", "out")),
       selectedPage = 1,
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -313,15 +314,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return all the rows on or after the provided start date`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3), actual)
   }
@@ -329,15 +330,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return all the rows on or before the provided end date`() {
     val actual = configuredApiRepository.executeQuery(
-      query,
+      REPOSITORY_TEST_QUERY,
       listOf(Filter("date", "2023-04-25", DATE_RANGE_END)),
       1,
       10,
       "date",
       false,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(listOf(movementPrisoner2, movementPrisoner1), actual)
   }
@@ -345,15 +346,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return all the rows between the provided start and end dates`() {
     val actual = configuredApiRepository.executeQuery(
-      query,
+      REPOSITORY_TEST_QUERY,
       listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END)),
       1,
       10,
       "date",
       false,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -361,15 +362,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return all the rows between the provided start and end dates matching the direction filter`() {
     val actual = configuredApiRepository.executeQuery(
-      query,
+      REPOSITORY_TEST_QUERY,
       listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END), Filter("direction", "in")),
       1,
       10,
       "date",
       false,
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -377,7 +378,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return all the rows matching the dynamic filter between the provided start and end dates and given direction `() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(
         Filter("date", "2023-04-25", DATE_RANGE_START),
         Filter("date", "2023-05-20", DATE_RANGE_END),
@@ -389,9 +390,9 @@ class ConfiguredApiRepositoryTest {
       sortColumn = NAME,
       sortedAsc = false,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dynamicFilterFieldId = NAME,
-      dataSourceName = dataSourceName,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(
       listOf(
@@ -406,7 +407,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return no the rows if the dynamic filter does not match anything`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(
         Filter("date", "2023-04-25", DATE_RANGE_START),
         Filter("date", "2023-05-20", DATE_RANGE_END),
@@ -418,8 +419,8 @@ class ConfiguredApiRepositoryTest {
       sortColumn = "date",
       sortedAsc = false,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -427,15 +428,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return no rows if the start date is after the latest table date`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("date", "2025-01-01", DATE_RANGE_START)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -443,15 +444,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return no rows if the end date is before the earliest table date`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("date", "2015-01-01", DATE_RANGE_END)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -459,15 +460,15 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return no rows if the start date is after the end date`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("date", "2023-05-01", DATE_RANGE_START), Filter("date", "2023-04-25", DATE_RANGE_END)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -506,7 +507,7 @@ class ConfiguredApiRepositoryTest {
       externalMovementRepository.save(externalMovementNullValues)
       prisonerRepository.save(prisoner9846)
       val actual = configuredApiRepository.executeQuery(
-        query = query,
+        query = REPOSITORY_TEST_QUERY,
         filters = listOf(Filter("date", "2050-06-01", DATE_RANGE_START), Filter("date", "2050-06-01", DATE_RANGE_END)),
         selectedPage = 1,
         pageSize = 1,
@@ -514,7 +515,7 @@ class ConfiguredApiRepositoryTest {
         sortedAsc = true,
         reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
+        dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       )
       Assertions.assertEquals(listOf(movementPrisonerNullValues), actual)
       Assertions.assertEquals(1, actual.size)
@@ -535,7 +536,7 @@ class ConfiguredApiRepositoryTest {
       prisonerRepository.save(prisoner9847)
       prisonerRepository.save(prisoner9848)
       val actual = configuredApiRepository.executeQuery(
-        query = query,
+        query = REPOSITORY_TEST_QUERY,
         filters = listOf(Filter("date", "2022-06-01", DATE_RANGE_START), Filter("date", "2024-06-01", DATE_RANGE_END)),
         selectedPage = 1,
         pageSize = 10,
@@ -543,7 +544,7 @@ class ConfiguredApiRepositoryTest {
         sortedAsc = true,
         reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
+        dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       )
       Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerDestinationCaseloadDirectionIn), actual)
       Assertions.assertEquals(2, actual.size)
@@ -560,7 +561,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return no rows for a policy deny`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = emptyList(),
       selectedPage = 1,
       pageSize = 5,
@@ -568,7 +569,7 @@ class ConfiguredApiRepositoryTest {
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = POLICY_DENY,
-      dataSourceName = dataSourceName,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
@@ -577,7 +578,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return no rows for a policy deny even if some filters match`() {
     val actual = configuredApiRepository.executeQuery(
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       filters = listOf(Filter("direction", "in")),
       selectedPage = 1,
       pageSize = 5,
@@ -585,7 +586,7 @@ class ConfiguredApiRepositoryTest {
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = POLICY_DENY,
-      dataSourceName = dataSourceName,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
@@ -595,10 +596,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of all rows with no filters`() {
     val actual = configuredApiRepository.count(
       filters = emptyList(),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(5L, actual)
   }
@@ -607,10 +608,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of rows with an in direction filter`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("direction", "in")),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(4L, actual)
   }
@@ -619,10 +620,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of rows with an out direction filter`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("direction", "out")),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(1L, actual)
   }
@@ -631,10 +632,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of rows with a startDate filter`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("date", "2023-05-01", DATE_RANGE_START)),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(2, actual)
   }
@@ -643,10 +644,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of rows with an endDate filter`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("date", "2023-01-31", DATE_RANGE_END)),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(1, actual)
   }
@@ -655,10 +656,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of movements with a startDate and an endDate filter`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2023-05-01", DATE_RANGE_END)),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(2, actual)
   }
@@ -667,10 +668,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of zero with a date start greater than the latest movement date`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("date", "2025-04-30", DATE_RANGE_START)),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(0, actual)
   }
@@ -679,10 +680,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of zero with a date end less than the earliest movement date`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("date", "2019-04-30", DATE_RANGE_END)),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(0, actual)
   }
@@ -691,10 +692,10 @@ class ConfiguredApiRepositoryTest {
   fun `should return a count of zero if the start date is after the end date`() {
     val actual = configuredApiRepository.count(
       filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2019-05-01", DATE_RANGE_END)),
-      query = query,
+      query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(0, actual)
   }
@@ -707,15 +708,15 @@ class ConfiguredApiRepositoryTest {
       .map { (sortedAsc, expected) ->
         DynamicTest.dynamicTest("When sorting by $sortColumn and sortedAsc is $sortedAsc the result is $expected") {
           val actual = configuredApiRepository.executeQuery(
-            query = query,
+            query = REPOSITORY_TEST_QUERY,
             filters = emptyList(),
             selectedPage = 1,
             pageSize = 1,
             sortColumn = sortColumn,
             sortedAsc = sortedAsc,
             reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
-            policyEngineResult = policyEngineResult,
-            dataSourceName = dataSourceName,
+            policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+            dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
           )
           Assertions.assertEquals(expected, actual)
           Assertions.assertEquals(1, actual.size)

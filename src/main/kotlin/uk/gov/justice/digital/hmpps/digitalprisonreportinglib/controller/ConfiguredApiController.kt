@@ -113,6 +113,66 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     }
   }
 
+  @GetMapping("/async/reports/{reportId}/{reportVariantId}")
+  @Operation(
+    description = "Executes asynchronously the dataset query for the given report and returns the execution ID. " +
+      "This is the asynchronous non-paginated version of the /reports/{reportId}/{reportVariantId} API.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun asyncConfiguredApiExecuteQuery(
+    @RequestParam sortColumn: String?,
+    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
+    authentication: Authentication,
+  ): ResponseEntity<String> {
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          configuredApiService.validateAndExecuteStatementAsync(
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            filters = filtersOnly(filters),
+            sortColumn = sortColumn,
+            sortedAsc = sortedAsc,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
+          ),
+        )
+    } catch (exception: NoDataAvailableException) {
+      val headers = HttpHeaders()
+      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .headers(headers)
+        .body(null)
+    }
+  }
+
   @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
   @Operation(
     description = "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",

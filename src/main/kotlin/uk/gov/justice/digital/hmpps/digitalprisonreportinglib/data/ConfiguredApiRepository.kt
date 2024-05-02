@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.apache.commons.lang3.time.StopWatch
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -11,15 +10,7 @@ import java.sql.Timestamp
 import javax.sql.DataSource
 
 @Service
-class ConfiguredApiRepository {
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-    const val EXTERNAL_MOVEMENTS_PRODUCT_ID = "external-movements"
-    private const val DATASET_ = """dataset_"""
-    private const val POLICY_ = """policy_"""
-    private const val FILTER_ = """filter_"""
-  }
+class ConfiguredApiRepository : RepositoryHelper() {
 
   @Autowired
   lateinit var context: ApplicationContext
@@ -46,7 +37,7 @@ class ConfiguredApiRepository {
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
-        buildPaginationQuery(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
+        buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
       ),
       buildPreparedStatementNamedParams(filters),
     )
@@ -69,40 +60,17 @@ class ConfiguredApiRepository {
     return NamedParameterJdbcTemplate(dataSource)
   }
 
-  private fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
-  private fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE $policyEngineResult)"""
-  private fun buildFiltersQuery(filters: List<Filter>) =
-    """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
-  private fun buildPaginationQuery(
+  private fun buildFinalStageQueryWithPagination(
     dynamicFilterFieldId: String?,
     sortColumn: String?,
     sortedAsc: Boolean,
     pageSize: Long,
     selectedPage: Long,
-  ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
-        FROM $FILTER_ ${buildOrderByClause(sortColumn, sortedAsc)} 
-        limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"""
+  ) = """${buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc)} 
+        ${buildPaginationQuery(pageSize, selectedPage)}"""
 
-  private fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
-    sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
-
-  private fun buildFinalQuery(
-    reportQuery: String,
-    policiesQuery: String,
-    filtersQuery: String,
-    selectFromFinalStageQuery: String,
-  ): String {
-    val query = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
-    log.debug("Database query: $query")
-    return query
-  }
-
-  private fun calculateSortingDirection(sortedAsc: Boolean): String {
-    return if (sortedAsc) "asc" else "desc"
-  }
-
-  private fun constructProjectedColumns(dynamicFilterFieldId: String?) =
-    dynamicFilterFieldId?.let { "DISTINCT $dynamicFilterFieldId" } ?: "*"
+  private fun buildPaginationQuery(pageSize: Long, selectedPage: Long) =
+    """limit $pageSize OFFSET ($selectedPage - 1) * $pageSize"""
 
   fun count(
     filters: List<Filter>,
@@ -131,14 +99,6 @@ class ConfiguredApiRepository {
     }
   }
 
-  private fun buildFiltersWhereClause(
-    filters: List<Filter>,
-  ): String {
-    val filterClause = filters.joinToString(" AND ", transform = this::buildCondition).ifEmpty { "TRUE" }
-    log.debug("Filter clause: {}", filterClause)
-    return filterClause
-  }
-
   fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {
     val preparedStatementNamedParams = MapSqlParameterSource()
     filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
@@ -147,36 +107,11 @@ class ConfiguredApiRepository {
     return preparedStatementNamedParams
   }
 
-  private fun buildCondition(filter: Filter): String {
-    val lowerCaseField = "lower(${filter.field})"
-    val key = filter.getKey()
-
-    return when (filter.type) {
-      FilterType.STANDARD -> "$lowerCaseField = :$key"
-      FilterType.RANGE_START -> "$lowerCaseField >= :$key"
-      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:$key AS timestamp)"
-      FilterType.RANGE_END -> "$lowerCaseField <= :$key"
-      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
-      FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
-      FilterType.BOOLEAN -> "${filter.field} = :$key"
-    }
-  }
-
   data class Filter(
     val field: String,
     val value: String,
     val type: FilterType = FilterType.STANDARD,
   ) {
     fun getKey(): String = "${this.field}${this.type.suffix}".lowercase()
-  }
-
-  enum class FilterType(val suffix: String = "") {
-    STANDARD,
-    RANGE_START(".start"),
-    RANGE_END(".end"),
-    DATE_RANGE_START(".start"),
-    DATE_RANGE_END(".end"),
-    DYNAMIC,
-    BOOLEAN,
   }
 }

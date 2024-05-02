@@ -5,11 +5,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 
 @RestControllerAdvice
 class DigitalPrisonReportingExceptionHandler {
@@ -17,6 +19,18 @@ class DigitalPrisonReportingExceptionHandler {
   @ResponseStatus(BAD_REQUEST)
   fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> {
     return respondWithBadRequest(e)
+  }
+
+  @ExceptionHandler(software.amazon.awssdk.services.redshiftdata.model.ValidationException::class)
+  @ResponseStatus(BAD_REQUEST)
+  fun handleRedshiftDataValidationException(e: Exception): ResponseEntity<ErrorResponse> {
+    return respondWithBadRequest(e)
+  }
+
+  @ExceptionHandler(ActiveStatementsExceededException::class)
+  @ResponseStatus(TOO_MANY_REQUESTS)
+  fun handleRedshiftActiveStatementsExceededException(e: Exception): ResponseEntity<ErrorResponse> {
+    return respondWithTooManyRequests(e)
   }
 
   @Suppress("TYPE_MISMATCH")
@@ -48,6 +62,19 @@ class DigitalPrisonReportingExceptionHandler {
         ErrorResponse(
           status = BAD_REQUEST,
           userMessage = "Validation failure: ${e.message}",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  private fun respondWithTooManyRequests(e: Exception): ResponseEntity<ErrorResponse> {
+    log.info("Number of active statements exceeded the limit: {}", e.message)
+    return ResponseEntity
+      .status(TOO_MANY_REQUESTS)
+      .body(
+        ErrorResponse(
+          status = TOO_MANY_REQUESTS,
+          userMessage = "Number of active statements exceeded the limit: ${e.message}",
           developerMessage = e.message,
         ),
       )

@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
@@ -23,6 +25,7 @@ import java.time.format.DateTimeParseException
 class ConfiguredApiService(
   val productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,
+  val redshiftDataApiRepository: RedshiftDataApiRepository,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) {
 
@@ -68,6 +71,33 @@ class ConfiguredApiService(
       )
       .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
       .map(formulaEngine::applyFormulas)
+  }
+
+  fun validateAndExecuteStatementAsync(
+    reportId: String,
+    reportVariantId: String,
+    filters: Map<String, String>,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    userToken: DprAuthAwareAuthenticationToken?,
+    reportFieldId: String? = null,
+    prefix: String? = null,
+    dataProductDefinitionsPath: String? = null,
+  ): String {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
+    val policyEngine = PolicyEngine(productDefinition.policy, userToken)
+    return redshiftDataApiRepository
+      .executeQueryAsync(
+        query = productDefinition.dataset.query,
+        filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
+        sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = policyEngine.execute(),
+        dynamicFilterFieldId = reportFieldId,
+        dataSourceName = productDefinition.datasource.name,
+      )
   }
 
   private fun formatColumnNamesToSchemaFieldNamesCasing(
@@ -154,30 +184,30 @@ class ConfiguredApiService(
     return ConfiguredApiRepository.Filter(
       field = fieldId,
       value = prefix,
-      type = ConfiguredApiRepository.FilterType.DYNAMIC,
+      type = RepositoryHelper.FilterType.DYNAMIC,
     )
   }
 
-  private fun mapFilterType(filterDefinition: FilterDefinition, key: String, truncatedKey: String, schema: Schema): ConfiguredApiRepository.FilterType {
+  private fun mapFilterType(filterDefinition: FilterDefinition, key: String, truncatedKey: String, schema: Schema): RepositoryHelper.FilterType {
     if (filterDefinition.type == FilterType.DateRange) {
       if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
-        return ConfiguredApiRepository.FilterType.DATE_RANGE_START
+        return RepositoryHelper.FilterType.DATE_RANGE_START
       } else if (key.endsWith(RANGE_FILTER_END_SUFFIX)) {
-        return ConfiguredApiRepository.FilterType.DATE_RANGE_END
+        return RepositoryHelper.FilterType.DATE_RANGE_END
       }
     }
 
     if (key.endsWith(RANGE_FILTER_START_SUFFIX)) {
-      return ConfiguredApiRepository.FilterType.RANGE_START
+      return RepositoryHelper.FilterType.RANGE_START
     } else if (key.endsWith(RANGE_FILTER_END_SUFFIX)) {
-      return ConfiguredApiRepository.FilterType.RANGE_END
+      return RepositoryHelper.FilterType.RANGE_END
     }
     val schemaField = schema.field.first { it.name == truncatedKey }
     if (schemaField.type == ParameterType.Boolean) {
-      return ConfiguredApiRepository.FilterType.BOOLEAN
+      return RepositoryHelper.FilterType.BOOLEAN
     }
 
-    return ConfiguredApiRepository.FilterType.STANDARD
+    return RepositoryHelper.FilterType.STANDARD
   }
 
   fun findFilterDefinition(definition: SingleReportProductDefinition, filterName: String): FilterDefinition {
