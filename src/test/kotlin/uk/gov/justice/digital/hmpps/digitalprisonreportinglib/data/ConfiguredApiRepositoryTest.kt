@@ -62,6 +62,7 @@ class ConfiguredApiRepositoryTest {
 
     const val REPOSITORY_TEST_POLICY_ENGINE_RESULT = "(origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')"
     const val REPOSITORY_TEST_DATASOURCE_NAME = "datamart"
+
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
