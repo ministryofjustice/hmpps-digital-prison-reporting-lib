@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 3.7.6
+Added dpr.lib prefix to the redshiftdataapi properties. 
+
 ## 3.7.5
 Introduction of the asynchronous API to execute SQL statements to generate reports and return the execution ID. This is not stable yet.
 
