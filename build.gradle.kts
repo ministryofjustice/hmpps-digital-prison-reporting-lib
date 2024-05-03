@@ -24,7 +24,7 @@ dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("com.google.guava:guava:33.1.0-jre")
+  implementation("com.google.guava:guava:33.2.0-jre")
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
   implementation("software.amazon.awssdk:redshiftdata:2.25.35")
 
