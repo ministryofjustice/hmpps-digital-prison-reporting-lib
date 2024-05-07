@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -1184,5 +1185,27 @@ class ConfiguredApiServiceTest {
       dataSourceName = dataSourceName,
     )
     assertEquals(executionID, actual)
+  }
+
+  @Test
+  fun `should call the repository with the statement execution ID when getStatementStatus is called`() {
+    val statementId = "statementId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
+    val resultRows = 10L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      query,
+      resultRows,
+    )
+    whenever(
+      redshiftDataApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+
+    val actual = configuredApiService.getStatementStatus(statementId)
+    verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
+    assertEquals(statementExecutionStatus, actual)
   }
 }

@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
@@ -161,6 +162,51 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
             dataProductDefinitionsPath = dataProductDefinitionsPath,
           ),
+        )
+    } catch (exception: NoDataAvailableException) {
+      val headers = HttpHeaders()
+      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .headers(headers)
+        .body(null)
+    }
+  }
+
+  @GetMapping("/report/status/{statementId}")
+  @Operation(
+    description = "Returns the status of the statement execution based on the statement ID provided." +
+      "The following status values can be returned: \n" +
+      "ABORTED - The query run was stopped by the user.\n" +
+      "ALL - A status value that includes all query statuses. This value can be used to filter results.\n" +
+      "FAILED - The query run failed.\n" +
+      "FINISHED - The query has finished running.\n" +
+      "PICKED - The query has been chosen to be run.\n" +
+      "STARTED - The query run has started.\n" +
+      "SUBMITTED - The query was submitted, but not yet processed.\n" +
+      "Note: When the status is FAILED the error field of the response will be populated.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun getQueryExecutionStatus(
+    @PathVariable("statementId") statementId: String,
+    authentication: Authentication,
+  ): ResponseEntity<StatementExecutionStatus> {
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          configuredApiService.getStatementStatus(statementId),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()

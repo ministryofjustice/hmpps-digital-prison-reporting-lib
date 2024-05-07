@@ -10,6 +10,7 @@ import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 
@@ -115,5 +116,48 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isEqualTo(429)
+  }
+
+  @Test
+  fun `Calling the report status endpoint calls the getStatementStatus of the ConfiguredApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
+    val resultRows = 10L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      query,
+      resultRows,
+    )
+    given(
+      configuredApiService.getStatementStatus(
+        eq(queryExecutionId),
+      ),
+    )
+      .willReturn(statementExecutionStatus)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/report/status/$queryExecutionId")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """{
+          "status": "$status",
+          "duration": $duration,
+          "queryString": "$query",
+          "resultRows": $resultRows,
+          "error": null
+        }
+      """,
+      )
   }
 }

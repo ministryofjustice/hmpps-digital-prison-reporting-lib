@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -98,6 +99,10 @@ class ConfiguredApiService(
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = productDefinition.datasource.name,
       )
+  }
+
+  fun getStatementStatus(statementId: String): StatementExecutionStatus {
+    return redshiftDataApiRepository.getStatementStatus(statementId)
   }
 
   private fun formatColumnNamesToSchemaFieldNamesCasing(
