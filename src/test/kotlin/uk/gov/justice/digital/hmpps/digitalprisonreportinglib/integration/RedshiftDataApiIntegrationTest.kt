@@ -1,0 +1,119 @@
+package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
+
+import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.given
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.web.util.UriBuilder
+import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
+import software.amazon.awssdk.services.redshiftdata.model.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
+  @MockBean
+  private lateinit var configuredApiService: ConfiguredApiService
+
+  @MockBean
+  lateinit var productDefinitionRepository: ProductDefinitionRepository
+
+  @Test
+  fun `Calling the async execute statement endpoint calls the configuredApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    given(
+      configuredApiService.validateAndExecuteStatementAsync(
+        eq("external-movements"),
+        eq("last-month"),
+        eq(emptyMap()),
+        eq("date"),
+        eq(false),
+        any<DprAuthAwareAuthenticationToken>(),
+        eq(null),
+        eq(null),
+        eq("definitions/prisons/orphanage"),
+      ),
+    )
+      .willReturn(queryExecutionId)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/async/reports/external-movements/last-month")
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody(String::class.java)
+      .isEqualTo(queryExecutionId)
+  }
+
+  @Test
+  fun `When a ValidationException is thrown the async execute statement endpoint responds with 400`() {
+    given(
+      configuredApiService.validateAndExecuteStatementAsync(
+        eq("external-movements"),
+        eq("last-month"),
+        eq(emptyMap()),
+        eq("date"),
+        eq(false),
+        any<DprAuthAwareAuthenticationToken>(),
+        eq(null),
+        eq(null),
+        eq("definitions/prisons/orphanage"),
+      ),
+    )
+      .willThrow(ValidationException.builder().message("Validation Error").build())
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/async/reports/external-movements/last-month")
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+  }
+
+  @Test
+  fun `When an ActiveStatementsExceededException is thrown the async execute statement endpoint responds with 429`() {
+    given(
+      configuredApiService.validateAndExecuteStatementAsync(
+        eq("external-movements"),
+        eq("last-month"),
+        eq(emptyMap()),
+        eq("date"),
+        eq(false),
+        any<DprAuthAwareAuthenticationToken>(),
+        eq(null),
+        eq(null),
+        eq("definitions/prisons/orphanage"),
+      ),
+    )
+      .willThrow(ActiveStatementsExceededException.builder().build())
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/async/reports/external-movements/last-month")
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isEqualTo(429)
+  }
+}
