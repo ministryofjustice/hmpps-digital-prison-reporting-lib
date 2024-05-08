@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 3.7.7
+Report execution status API to get the execution status of queries which were ran asynchronously.  
+
 ## 3.7.6
 Added dpr.lib prefix to the redshiftdataapi properties. 
 

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.whenever
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
+import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
+import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
@@ -12,11 +14,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 
 class RedshiftDataApiRepositoryTest {
 
   @Test
-  fun `should call the redshift data api with the correct query and return the execution id`() {
+  fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
@@ -71,5 +74,40 @@ SELECT *
     )
 
     assertEquals("someId", actual)
+  }
+
+  @Test
+  fun `getStatementStatus should call the redshift data api with the correct statement ID and return the StatementExecutionStatus`() {
+    val redshiftDataClient = mock<RedshiftDataClient>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock())
+    val statementId = "statementId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
+    val resultRows = 10L
+    val executeStatementResponse = DescribeStatementResponse.builder()
+      .status(status)
+      .duration(duration)
+      .queryString(query)
+      .resultRows(resultRows)
+      .build()
+
+    whenever(
+      redshiftDataClient.describeStatement(
+        DescribeStatementRequest.builder()
+          .id(statementId)
+          .build(),
+      ),
+    ).thenReturn(executeStatementResponse)
+
+    val expected = StatementExecutionStatus(
+      status,
+      duration,
+      query,
+      resultRows,
+    )
+    val actual = redshiftDataApiRepository.getStatementStatus(statementId)
+
+    assertEquals(expected, actual)
   }
 }
