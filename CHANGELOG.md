@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 3.7.8
+Bug fix of the asynchronous query execution which was throwing an error when no filters were provided.
+
 ## 3.7.7
 Report execution status API to get the execution status of queries which were ran asynchronously.  
 
