@@ -28,7 +28,7 @@ class RedshiftDataApiRepository(
     dynamicFilterFieldId: String? = null,
     dataSourceName: String,
   ): String {
-    val statementRequest: ExecuteStatementRequest = executeStatementRequestBuilder
+    val requestBuilder = executeStatementRequestBuilder
       .sql(
         buildFinalQuery(
           buildReportQuery(query),
@@ -37,8 +37,11 @@ class RedshiftDataApiRepository(
           buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
         ),
       )
-      .parameters(buildQueryParams(filters))
-      .build()
+    if (filters.isNotEmpty()) {
+      requestBuilder
+        .parameters(buildQueryParams(filters))
+    }
+    val statementRequest: ExecuteStatementRequest = requestBuilder.build()
 
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
     log.info("Execution ID: {}", response.id())
