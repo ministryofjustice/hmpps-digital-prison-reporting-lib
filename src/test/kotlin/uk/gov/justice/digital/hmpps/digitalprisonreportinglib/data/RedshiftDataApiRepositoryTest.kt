@@ -130,7 +130,8 @@ FROM datamart.domain.movement_movement as movements
 JOIN datamart.domain.prisoner_prisoner as prisoners
 ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE TRUE)
 SELECT *
-          FROM filter_ ORDER BY date asc;""".trimIndent()
+          FROM filter_ ORDER BY date asc;
+      """.trimIndent()
 
     val mockedBuilderWithSql = ExecuteStatementRequest.builder()
       .clusterIdentifier("ab")
