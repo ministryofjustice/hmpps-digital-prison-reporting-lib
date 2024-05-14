@@ -219,9 +219,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     }
   }
 
-  @GetMapping("/report/statements/{statementId}/result")
+  @GetMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}/result")
   @Operation(
-    description = "Returns the result of the executed statement.",
+    description = "Returns the resulting rows of the executed statement.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
     responses = [
       ApiResponse(
@@ -235,14 +235,18 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     ],
   )
   fun getQueryExecutionResult(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
     @PathVariable("statementId") statementId: String,
     authentication: Authentication,
-  ): ResponseEntity<StatementExecutionStatus> {
+  ): ResponseEntity<List<Map<String, Any?>>> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.getStatementResult(statementId),
+          configuredApiService.getStatementResult(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()

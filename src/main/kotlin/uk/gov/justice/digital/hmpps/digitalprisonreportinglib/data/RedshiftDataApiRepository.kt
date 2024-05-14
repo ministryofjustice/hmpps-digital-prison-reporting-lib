@@ -3,20 +3,17 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
+import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import software.amazon.awssdk.services.redshiftdata.model.Field
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultRequest
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
-import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
+import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
-
-
 
 @Service
 class RedshiftDataApiRepository(
@@ -88,7 +85,7 @@ class RedshiftDataApiRepository(
       "varchar" -> field.stringValue()
       "int8" -> field.longValue()
       "timestamp" -> LocalDateTime.parse(field.stringValue(), formatter)
-      //This will need to be extended to support more date types when required in the future.
+      // This will need to be extended to support more date types when required in the future.
       else -> field.stringValue()
     }
     return columnMetadata.name() to value

@@ -62,24 +62,28 @@ class ConfiguredApiServiceTest {
   private val redshiftDataApiRepository: RedshiftDataApiRepository = mock<RedshiftDataApiRepository>()
   private val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository)
   private val expectedRepositoryResult = listOf(
-    mapOf("PRISONNUMBER" to "1"),
-    mapOf("NAME" to "FirstName"),
-    mapOf("DATE" to "2023-05-20"),
-    mapOf("ORIGIN" to "OriginLocation"),
-    mapOf("DESTINATION" to "DestinationLocation"),
-    mapOf("DIRECTION" to "in"),
-    mapOf("TYPE" to "trn"),
-    mapOf("REASON" to "normal transfer"),
+    mapOf(
+      "PRISONNUMBER" to "1",
+      "NAME" to "FirstName",
+      "DATE" to "2023-05-20",
+      "ORIGIN" to "OriginLocation",
+      "DESTINATION" to "DestinationLocation",
+      "DIRECTION" to "in",
+      "TYPE" to "trn",
+      "REASON" to "normal transfer",
+    ),
   )
   private val expectedServiceResult = listOf(
-    mapOf("prisonNumber" to "1"),
-    mapOf("name" to "FirstName"),
-    mapOf("date" to "2023-05-20"),
-    mapOf("origin" to "OriginLocation"),
-    mapOf("destination" to "DestinationLocation"),
-    mapOf("direction" to "in"),
-    mapOf("type" to "trn"),
-    mapOf("reason" to "normal transfer"),
+    mapOf(
+      "prisonNumber" to "1",
+      "name" to "FirstName",
+      "date" to "2023-05-20",
+      "origin" to "OriginLocation",
+      "destination" to "DestinationLocation",
+      "direction" to "in",
+      "type" to "trn",
+      "reason" to "normal transfer",
+    ),
   )
   private val authToken = mock<DprAuthAwareAuthenticationToken>()
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
@@ -1207,5 +1211,40 @@ class ConfiguredApiServiceTest {
     val actual = configuredApiService.getStatementStatus(statementId)
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     assertEquals(statementExecutionStatus, actual)
+  }
+
+  @Test
+  fun `should call the repository with all provided arguments when getStatementResult is called`() {
+    val executionID = UUID.randomUUID().toString()
+    whenever(
+      redshiftDataApiRepository.getStatementResult(executionID),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.getStatementResult(executionID, reportId, reportVariantId)
+
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `getStatementResult should apply formulas to the rows returned by the repository`() {
+    val expectedRepositoryResult = listOf(
+      mapOf("PRISONNUMBER" to "1", "NAME" to "FirstName", "ORIGIN" to "OriginLocation", "ORIGIN_CODE" to "abc"),
+    )
+    val expectedServiceResult = listOf(
+      mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "origin_code" to "OriginLocation"),
+    )
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithFormula.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository)
+    val executionID = UUID.randomUUID().toString()
+    whenever(
+      redshiftDataApiRepository.getStatementResult(executionID),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.getStatementResult(executionID, reportId, reportVariantId)
+
+    assertEquals(expectedServiceResult, actual)
   }
 }
