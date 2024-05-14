@@ -7,7 +7,16 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
+import software.amazon.awssdk.services.redshiftdata.model.Field
+import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultRequest
+import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
+import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+
+
 
 @Service
 class RedshiftDataApiRepository(
@@ -60,6 +69,29 @@ class RedshiftDataApiRepository(
       queryString = describeStatementResponse.queryString(),
       resultRows = describeStatementResponse.resultRows(),
     )
+  }
+
+  fun getStatementResult(statementId: String): List<Map<String, Any?>> {
+    val statementRequest: GetStatementResultRequest = GetStatementResultRequest.builder()
+      .id(statementId)
+      .build()
+    val resultStatementResponse: GetStatementResultResponse = redshiftDataClient.getStatementResult(statementRequest)
+    return resultStatementResponse.records().map { record ->
+      record.mapIndexed { index, field -> extractFieldValue(field, resultStatementResponse.columnMetadata()[index]) }
+        .toMap()
+    }
+  }
+
+  private fun extractFieldValue(field: Field, columnMetadata: ColumnMetadata): Pair<String, Any?> {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    val value = when (columnMetadata.typeName()) {
+      "varchar" -> field.stringValue()
+      "int8" -> field.longValue()
+      "timestamp" -> LocalDateTime.parse(field.stringValue(), formatter)
+      //This will need to be extended to support more date types when required in the future.
+      else -> field.stringValue()
+    }
+    return columnMetadata.name() to value
   }
 
   private fun buildQueryParams(filters: List<ConfiguredApiRepository.Filter>): List<SqlParameter> {

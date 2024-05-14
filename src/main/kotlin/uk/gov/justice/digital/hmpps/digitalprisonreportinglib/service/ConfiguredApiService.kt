@@ -105,6 +105,10 @@ class ConfiguredApiService(
     return redshiftDataApiRepository.getStatementStatus(statementId)
   }
 
+  fun getStatementResult(statementId: String): StatementExecutionStatus {
+    return redshiftDataApiRepository.getStatementStatus(statementId)
+  }
+
   private fun formatColumnNamesToSchemaFieldNamesCasing(
     row: Map<String, Any?>,
     productDefinition: SingleReportProductDefinition,

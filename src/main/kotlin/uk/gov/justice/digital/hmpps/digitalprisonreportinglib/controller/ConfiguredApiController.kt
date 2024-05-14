@@ -174,7 +174,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     }
   }
 
-  @GetMapping("/report/status/{statementId}")
+  @GetMapping("/report/statements/{statementId}/status")
   @Operation(
     description = "Returns the status of the statement execution based on the statement ID provided." +
       "The following status values can be returned: \n" +
@@ -207,6 +207,42 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         .status(HttpStatus.OK)
         .body(
           configuredApiService.getStatementStatus(statementId),
+        )
+    } catch (exception: NoDataAvailableException) {
+      val headers = HttpHeaders()
+      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .headers(headers)
+        .body(null)
+    }
+  }
+
+  @GetMapping("/report/statements/{statementId}/result")
+  @Operation(
+    description = "Returns the result of the executed statement.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun getQueryExecutionResult(
+    @PathVariable("statementId") statementId: String,
+    authentication: Authentication,
+  ): ResponseEntity<StatementExecutionStatus> {
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          configuredApiService.getStatementResult(statementId),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()

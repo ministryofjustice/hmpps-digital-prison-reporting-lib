@@ -141,7 +141,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
-          .path("/report/status/$queryExecutionId")
+          .path("/report/statements/$queryExecutionId/status")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
