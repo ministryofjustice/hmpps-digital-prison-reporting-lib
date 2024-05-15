@@ -105,6 +105,19 @@ class ConfiguredApiService(
     return redshiftDataApiRepository.getStatementStatus(statementId)
   }
 
+  fun getStatementResult(
+    statementId: String,
+    reportId: String,
+    reportVariantId: String,
+    dataProductDefinitionsPath: String? = null,
+  ): List<Map<String, Any?>> {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
+    return redshiftDataApiRepository.getStatementResult(statementId)
+      .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
+      .map(formulaEngine::applyFormulas)
+  }
+
   private fun formatColumnNamesToSchemaFieldNamesCasing(
     row: Map<String, Any?>,
     productDefinition: SingleReportProductDefinition,
