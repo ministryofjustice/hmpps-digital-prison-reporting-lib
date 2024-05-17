@@ -18,10 +18,13 @@ import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultRequ
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_DATASOURCE_NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 import java.time.LocalDateTime
 
@@ -78,6 +81,85 @@ SELECT *
     val actual = redshiftDataApiRepository.executeQueryAsync(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(ConfiguredApiRepository.Filter("direction", "out")),
+      sortColumn = "date",
+      sortedAsc = true,
+      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+    )
+
+    assertEquals("someId", actual)
+  }
+
+  @Test
+  fun `executeQueryAsync should replace filters which contain a dot in their name with an underscore and not error`() {
+    val dateStartKeyUnderscore = "date_start"
+    val dateEndKeyUnderscore = "date_end"
+    val startDate = "2024-02-16"
+    val endDate = "2024-02-17"
+    val startDateFilter = ConfiguredApiRepository.Filter("date", startDate, FilterType.DATE_RANGE_START)
+    val endDateFilter = ConfiguredApiRepository.Filter("date", endDate, FilterType.DATE_RANGE_END)
+    val sqlStatement =
+      """WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
+FROM datamart.domain.movement_movement as movements
+JOIN datamart.domain.prisoner_prisoner as prisoners
+ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE date >= CAST(:$dateStartKeyUnderscore AS timestamp) AND date < (CAST(:$dateEndKeyUnderscore AS timestamp) + INTERVAL '1' day))
+SELECT *
+          FROM filter_ ORDER BY date asc;
+      """.trimIndent()
+    val redshiftDataClient = mock<RedshiftDataClient>()
+    val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
+    val executeStatementResponse = mock<ExecuteStatementResponse>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder)
+
+    val mockedBuilderWithSql = ExecuteStatementRequest.builder()
+      .clusterIdentifier("ab")
+      .database("cd")
+      .secretArn("ef")
+      .sql(sqlStatement)
+    whenever(
+      executeStatementRequestBuilder.sql(
+        sqlStatement,
+      ),
+    ).thenReturn(
+      mockedBuilderWithSql,
+    )
+
+    val queryParamsWithUnderscores = listOf(
+      SqlParameter.builder().name(dateStartKeyUnderscore).value(startDate).build(),
+      SqlParameter.builder().name(dateEndKeyUnderscore).value(endDate).build(),
+    )
+    whenever(
+      executeStatementRequestBuilder.parameters(queryParamsWithUnderscores),
+    ).thenReturn(
+      mockedBuilderWithSql
+        .parameters(queryParamsWithUnderscores),
+    )
+
+    val queryParamsWithDots = listOf(
+      SqlParameter.builder().name("date$RANGE_FILTER_START_SUFFIX").value(startDate).build(),
+      SqlParameter.builder().name("date$RANGE_FILTER_END_SUFFIX").value(endDate).build(),
+    )
+    whenever(
+      executeStatementRequestBuilder.parameters(queryParamsWithDots),
+    ).thenThrow(ValidationException::class.java)
+
+    whenever(
+      redshiftDataClient.executeStatement(
+        mockedBuilderWithSql.build(),
+      ),
+    ).thenReturn(executeStatementResponse)
+
+    whenever(
+      executeStatementResponse.id(),
+    ).thenReturn("someId")
+
+    val actual = redshiftDataApiRepository.executeQueryAsync(
+      query = REPOSITORY_TEST_QUERY,
+      filters = listOf(
+        startDateFilter,
+        endDateFilter,
+      ),
       sortColumn = "date",
       sortedAsc = true,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,

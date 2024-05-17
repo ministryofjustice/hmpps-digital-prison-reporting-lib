@@ -39,7 +39,7 @@ class RedshiftDataApiRepository(
         buildFinalQuery(
           buildReportQuery(query),
           buildPolicyQuery(policyEngineResult),
-          buildFiltersQuery(filters),
+          buildFiltersQuery(filters, queryParamKeyTransformer),
           buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
         ),
       )
@@ -93,9 +93,11 @@ class RedshiftDataApiRepository(
 
   private fun buildQueryParams(filters: List<ConfiguredApiRepository.Filter>): List<SqlParameter> {
     val sqlParams: MutableList<SqlParameter> = mutableListOf()
-    filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(it.getKey()).value(it.value.lowercase()).build()) }
-    filters.filter { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(it.getKey()).value(it.value).build()) }
+    filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(maybeTransform(queryParamKeyTransformer, it.getKey())).value(it.value.lowercase()).build()) }
+    filters.filter { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(maybeTransform(queryParamKeyTransformer, it.getKey())).value(it.value).build()) }
     log.debug("SQL parameters: {}", sqlParams)
     return sqlParams
   }
+
+  val queryParamKeyTransformer: (s: String) -> String = { s -> s.replace(".", "_") }
 }
