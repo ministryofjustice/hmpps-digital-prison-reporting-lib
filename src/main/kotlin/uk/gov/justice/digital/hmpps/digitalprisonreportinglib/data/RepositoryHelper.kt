@@ -52,17 +52,17 @@ abstract class RepositoryHelper {
     val key = filter.getKey()
 
     return when (filter.type) {
-      FilterType.STANDARD -> "$lowerCaseField = :${maybeTransform(keyTransformer, key)}"
-      FilterType.RANGE_START -> "$lowerCaseField >= :${maybeTransform(keyTransformer, key)}"
-      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:${maybeTransform(keyTransformer, key)} AS timestamp)"
-      FilterType.RANGE_END -> "$lowerCaseField <= :${maybeTransform(keyTransformer, key)}"
-      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:${maybeTransform(keyTransformer, key)} AS timestamp) + INTERVAL '1' day)"
+      FilterType.STANDARD -> "$lowerCaseField = :${maybeTransform(key, keyTransformer)}"
+      FilterType.RANGE_START -> "$lowerCaseField >= :${maybeTransform(key, keyTransformer)}"
+      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:${maybeTransform(key, keyTransformer)} AS timestamp)"
+      FilterType.RANGE_END -> "$lowerCaseField <= :${maybeTransform(key, keyTransformer)}"
+      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:${maybeTransform(key, keyTransformer)} AS timestamp) + INTERVAL '1' day)"
       FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
-      FilterType.BOOLEAN -> "${filter.field} = :${maybeTransform(keyTransformer, key)}"
+      FilterType.BOOLEAN -> "${filter.field} = :${maybeTransform(key, keyTransformer)}"
     }
   }
 
-  protected fun maybeTransform(keyTransformer: ((s: String) -> String)?, key: String) =
+  protected fun maybeTransform(key: String, keyTransformer: ((s: String) -> String)?) =
     keyTransformer?.let { it(key) } ?: key
 
   private fun constructProjectedColumns(dynamicFilterFieldId: String?) =
