@@ -10,6 +10,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
@@ -27,11 +29,16 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Calling the async execute statement endpoint calls the configuredApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
+    val filtersPrefix = "filters."
+    val dateStartFilter = "date$RANGE_FILTER_START_SUFFIX"
+    val dateEndFilter = "date$RANGE_FILTER_END_SUFFIX"
+    val startDate = "2024-02-20"
+    val endDate = "2024-02-22"
     given(
       configuredApiService.validateAndExecuteStatementAsync(
         eq("external-movements"),
         eq("last-month"),
-        eq(emptyMap()),
+        eq(mapOf(dateStartFilter to startDate, dateEndFilter to endDate)),
         eq("date"),
         eq(false),
         any<DprAuthAwareAuthenticationToken>(),
@@ -46,6 +53,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/async/reports/external-movements/last-month")
+          .queryParam(filtersPrefix + dateStartFilter, startDate)
+          .queryParam(filtersPrefix + dateEndFilter, endDate)
           .queryParam("sortColumn", "date")
           .queryParam("sortedAsc", false)
           .build()

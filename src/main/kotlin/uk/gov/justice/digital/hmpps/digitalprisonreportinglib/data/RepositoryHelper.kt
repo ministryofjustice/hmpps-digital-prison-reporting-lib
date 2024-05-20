@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 
 abstract class RepositoryHelper {
   companion object {
@@ -26,13 +28,14 @@ abstract class RepositoryHelper {
 
   protected fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
   protected fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE $policyEngineResult)"""
-  protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) =
-    """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
+  protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>, keyTransformer: ((s: String) -> String)? = null) =
+    """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters, keyTransformer)})"""
 
   private fun buildFiltersWhereClause(
     filters: List<ConfiguredApiRepository.Filter>,
+    keyTransformer: ((s: String) -> String)?,
   ): String {
-    val filterClause = filters.joinToString(" AND ", transform = this::buildCondition).ifEmpty { "TRUE" }
+    val filterClause = filters.joinToString(" AND ") { this.buildCondition(it, keyTransformer) }.ifEmpty { "TRUE" }
     log.debug("Filter clause: {}", filterClause)
     return filterClause
   }
@@ -44,20 +47,23 @@ abstract class RepositoryHelper {
   ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
           FROM $FILTER_ ${buildOrderByClause(sortColumn, sortedAsc)}"""
 
-  private fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
+  private fun buildCondition(filter: ConfiguredApiRepository.Filter, keyTransformer: ((s: String) -> String)?): String {
     val lowerCaseField = "lower(${filter.field})"
     val key = filter.getKey()
 
     return when (filter.type) {
-      FilterType.STANDARD -> "$lowerCaseField = :$key"
-      FilterType.RANGE_START -> "$lowerCaseField >= :$key"
-      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:$key AS timestamp)"
-      FilterType.RANGE_END -> "$lowerCaseField <= :$key"
-      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
+      FilterType.STANDARD -> "$lowerCaseField = :${maybeTransform(key, keyTransformer)}"
+      FilterType.RANGE_START -> "$lowerCaseField >= :${maybeTransform(key, keyTransformer)}"
+      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:${maybeTransform(key, keyTransformer)} AS timestamp)"
+      FilterType.RANGE_END -> "$lowerCaseField <= :${maybeTransform(key, keyTransformer)}"
+      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:${maybeTransform(key, keyTransformer)} AS timestamp) + INTERVAL '1' day)"
       FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
-      FilterType.BOOLEAN -> "${filter.field} = :$key"
+      FilterType.BOOLEAN -> "${filter.field} = :${maybeTransform(key, keyTransformer)}"
     }
   }
+
+  protected fun maybeTransform(key: String, keyTransformer: ((s: String) -> String)?) =
+    keyTransformer?.let { it(key) } ?: key
 
   private fun constructProjectedColumns(dynamicFilterFieldId: String?) =
     dynamicFilterFieldId?.let { "DISTINCT $dynamicFilterFieldId" } ?: "*"
@@ -71,10 +77,10 @@ abstract class RepositoryHelper {
 
   enum class FilterType(val suffix: String = "") {
     STANDARD,
-    RANGE_START(".start"),
-    RANGE_END(".end"),
-    DATE_RANGE_START(".start"),
-    DATE_RANGE_END(".end"),
+    RANGE_START(RANGE_FILTER_START_SUFFIX),
+    RANGE_END(RANGE_FILTER_END_SUFFIX),
+    DATE_RANGE_START(RANGE_FILTER_START_SUFFIX),
+    DATE_RANGE_END(RANGE_FILTER_END_SUFFIX),
     DYNAMIC,
     BOOLEAN,
   }

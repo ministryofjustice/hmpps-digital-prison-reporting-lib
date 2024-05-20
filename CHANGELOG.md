@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 3.7.10
+Bug fix of the error thrown when the filters in the request contained dots. 
+
 ## 3.7.9
 Introduction of the API to get statement result.
 
