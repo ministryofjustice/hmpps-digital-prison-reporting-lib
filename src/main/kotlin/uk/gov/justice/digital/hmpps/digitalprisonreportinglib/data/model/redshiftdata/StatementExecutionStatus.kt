@@ -6,5 +6,7 @@ data class StatementExecutionStatus(
   val duration: Long,
   val queryString: String,
   val resultRows: Long,
+  //Size of the results in bytes.
+  val resultSize: Long?,
   val error: String? = null,
 )

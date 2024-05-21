@@ -222,11 +222,13 @@ SELECT *
     val duration = 278109264L
     val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
     val resultRows = 10L
+    val resultSize = 100L
     val executeStatementResponse = DescribeStatementResponse.builder()
       .status(status)
       .duration(duration)
       .queryString(query)
       .resultRows(resultRows)
+      .resultSize(resultSize)
       .build()
 
     whenever(
@@ -242,6 +244,7 @@ SELECT *
       duration,
       query,
       resultRows,
+      resultSize,
     )
     val actual = redshiftDataApiRepository.getStatementStatus(statementId)
 

@@ -137,11 +137,13 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val duration = 278109264L
     val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
     val resultRows = 10L
+    val resultSize = 100L
     val statementExecutionStatus = StatementExecutionStatus(
       status,
       duration,
       query,
       resultRows,
+      resultSize,
     )
     given(
       configuredApiService.getStatementStatus(
@@ -167,6 +169,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           "duration": $duration,
           "queryString": "$query",
           "resultRows": $resultRows,
+          "resultSize": $resultSize,
           "error": null
         }
       """,

@@ -1199,11 +1199,13 @@ class ConfiguredApiServiceTest {
     val duration = 278109264L
     val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
     val resultRows = 10L
+    val resultSize = 100L
     val statementExecutionStatus = StatementExecutionStatus(
       status,
       duration,
       query,
       resultRows,
+      resultSize,
     )
     whenever(
       redshiftDataApiRepository.getStatementStatus(statementId),

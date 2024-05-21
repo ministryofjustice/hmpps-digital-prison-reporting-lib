@@ -186,7 +186,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       "PICKED - The query has been chosen to be run.\n" +
       "STARTED - The query run has started.\n" +
       "SUBMITTED - The query was submitted, but not yet processed.\n" +
-      "Note: When the status is FAILED the error field of the response will be populated.",
+      "Note: When the status is FAILED the error field of the response will be populated." +
+      "ResultRows is the number of rows returned from the SQL statement. A -1 indicates the value is null." +
+      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
     responses = [
       ApiResponse(

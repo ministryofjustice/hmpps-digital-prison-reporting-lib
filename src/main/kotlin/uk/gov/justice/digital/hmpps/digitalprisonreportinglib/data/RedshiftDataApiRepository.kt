@@ -62,10 +62,11 @@ class RedshiftDataApiRepository(
     val describeStatementResponse = redshiftDataClient.describeStatement(statementRequest)
     return StatementExecutionStatus(
       status = describeStatementResponse.statusAsString(),
-      error = describeStatementResponse.error(),
       duration = describeStatementResponse.duration(),
       queryString = describeStatementResponse.queryString(),
       resultRows = describeStatementResponse.resultRows(),
+      resultSize = describeStatementResponse.resultSize(),
+      error = describeStatementResponse.error(),
     )
   }
 
