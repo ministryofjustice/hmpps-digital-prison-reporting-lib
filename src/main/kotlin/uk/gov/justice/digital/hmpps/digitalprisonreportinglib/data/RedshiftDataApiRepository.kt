@@ -11,7 +11,8 @@ import software.amazon.awssdk.services.redshiftdata.model.Field
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultRequest
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -68,16 +69,21 @@ class RedshiftDataApiRepository(
     )
   }
 
-  fun getStatementResult(statementId: String): List<Map<String, Any?>> {
-    val statementRequest: GetStatementResultRequest = GetStatementResultRequest.builder()
-      .id(statementId)
+  fun getStatementResult(statementId: String, nextToken: String? = null): StatementResult {
+    val requestBuilder = GetStatementResultRequest.builder()
+    requestBuilder.id(statementId)
+    nextToken?.let { requestBuilder.nextToken(it) }
+    val statementRequest: GetStatementResultRequest = requestBuilder
       .build()
     val resultStatementResponse: GetStatementResultResponse = redshiftDataClient.getStatementResult(statementRequest)
-    return resultStatementResponse.records().map { record ->
+    return StatementResult(extractRecords(resultStatementResponse), resultStatementResponse.nextToken())
+  }
+
+  private fun extractRecords(resultStatementResponse: GetStatementResultResponse) =
+    resultStatementResponse.records().map { record ->
       record.mapIndexed { index, field -> extractFieldValue(field, resultStatementResponse.columnMetadata()[index]) }
         .toMap()
     }
-  }
 
   private fun extractFieldValue(field: Field, columnMetadata: ColumnMetadata): Pair<String, Any?> {
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")

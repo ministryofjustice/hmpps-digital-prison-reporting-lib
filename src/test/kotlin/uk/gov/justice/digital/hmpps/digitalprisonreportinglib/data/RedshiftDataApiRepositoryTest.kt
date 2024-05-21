@@ -25,7 +25,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import java.time.LocalDateTime
 
 class RedshiftDataApiRepositoryTest {
@@ -38,6 +39,48 @@ ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (
 SELECT *
           FROM filter_ ORDER BY date asc;
     """.trimMargin()
+
+    val columnMetadata = listOf<ColumnMetadata>(
+      ColumnMetadata.builder().name("id").typeName("varchar").build(),
+      ColumnMetadata.builder().name("prisoner").typeName("int8").build(),
+      ColumnMetadata.builder().name("date").typeName("timestamp").build(),
+      ColumnMetadata.builder().name("time").typeName("timestamp").build(),
+      ColumnMetadata.builder().name("direction").typeName("varchar").build(),
+      ColumnMetadata.builder().name("type").typeName("varchar").build(),
+      ColumnMetadata.builder().name("origin_code").typeName("varchar").build(),
+      ColumnMetadata.builder().name("origin").typeName("varchar").build(),
+      ColumnMetadata.builder().name("destination_code").typeName("varchar").build(),
+      ColumnMetadata.builder().name("destination").typeName("varchar").build(),
+      ColumnMetadata.builder().name("reason").typeName("varchar").build(),
+    )
+    val movementPrisoner1 = mapOf("id" to "171034.12", "prisoner" to 171034L, "date" to LocalDateTime.of(2010, 12, 17, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 17, 7, 12, 0), "direction" to "OUT", "type" to "CRT", "origin_code" to "LFI", "origin" to "LANCASTER FARMS (HMPYOI)", "destination_code" to "STHEMC", "destination" to "St. Helens Magistrates Court", "reason" to "Production (Sentence/Civil Custody)")
+    val movementPrisoner1Fields = listOf<Field>(
+      Field.builder().stringValue("171034.12").build(),
+      Field.builder().longValue(171034).build(),
+      Field.builder().stringValue("2010-12-17 00:00:00").build(),
+      Field.builder().stringValue("2010-12-17 07:12:00").build(),
+      Field.builder().stringValue("OUT").build(),
+      Field.builder().stringValue("CRT").build(),
+      Field.builder().stringValue("LFI").build(),
+      Field.builder().stringValue("LANCASTER FARMS (HMPYOI)").build(),
+      Field.builder().stringValue("STHEMC").build(),
+      Field.builder().stringValue("St. Helens Magistrates Court").build(),
+      Field.builder().stringValue("Production (Sentence/Civil Custody)").build(),
+    )
+    val movementPrisoner2 = mapOf("id" to "227482.1", "prisoner" to 227482L, "date" to LocalDateTime.of(2010, 12, 8, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 8, 10, 8, 0), "direction" to "IN", "type" to "ADM", "origin_code" to "IMM", "origin" to "Immigration", "destination_code" to "HRI", "destination" to "Haslar Immigration Removal Centre", "reason" to "Detained Immigration Act 71 -Wait Deport")
+    val movementPrisoner2Fields = listOf<Field>(
+      Field.builder().stringValue("227482.1").build(),
+      Field.builder().longValue(227482).build(),
+      Field.builder().stringValue("2010-12-08 00:00:00").build(),
+      Field.builder().stringValue("2010-12-08 10:08:00").build(),
+      Field.builder().stringValue("IN").build(),
+      Field.builder().stringValue("ADM").build(),
+      Field.builder().stringValue("IMM").build(),
+      Field.builder().stringValue("Immigration").build(),
+      Field.builder().stringValue("HRI").build(),
+      Field.builder().stringValue("Haslar Immigration Removal Centre").build(),
+      Field.builder().stringValue("Detained Immigration Act 71 -Wait Deport").build(),
+    )
   }
 
   @Test
@@ -266,47 +309,6 @@ SELECT *
 
   @Test
   fun `getStatementResult should call the Redshift Data API and return the existing results`() {
-    val columnMetadata = listOf<ColumnMetadata>(
-      ColumnMetadata.builder().name("id").typeName("varchar").build(),
-      ColumnMetadata.builder().name("prisoner").typeName("int8").build(),
-      ColumnMetadata.builder().name("date").typeName("timestamp").build(),
-      ColumnMetadata.builder().name("time").typeName("timestamp").build(),
-      ColumnMetadata.builder().name("direction").typeName("varchar").build(),
-      ColumnMetadata.builder().name("type").typeName("varchar").build(),
-      ColumnMetadata.builder().name("origin_code").typeName("varchar").build(),
-      ColumnMetadata.builder().name("origin").typeName("varchar").build(),
-      ColumnMetadata.builder().name("destination_code").typeName("varchar").build(),
-      ColumnMetadata.builder().name("destination").typeName("varchar").build(),
-      ColumnMetadata.builder().name("reason").typeName("varchar").build(),
-    )
-    val movementPrisoner1 = mapOf("id" to "171034.12", "prisoner" to 171034L, "date" to LocalDateTime.of(2010, 12, 17, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 17, 7, 12, 0), "direction" to "OUT", "type" to "CRT", "origin_code" to "LFI", "origin" to "LANCASTER FARMS (HMPYOI)", "destination_code" to "STHEMC", "destination" to "St. Helens Magistrates Court", "reason" to "Production (Sentence/Civil Custody)")
-    val movementPrisoner1Fields = listOf<Field>(
-      Field.builder().stringValue("171034.12").build(),
-      Field.builder().longValue(171034).build(),
-      Field.builder().stringValue("2010-12-17 00:00:00").build(),
-      Field.builder().stringValue("2010-12-17 07:12:00").build(),
-      Field.builder().stringValue("OUT").build(),
-      Field.builder().stringValue("CRT").build(),
-      Field.builder().stringValue("LFI").build(),
-      Field.builder().stringValue("LANCASTER FARMS (HMPYOI)").build(),
-      Field.builder().stringValue("STHEMC").build(),
-      Field.builder().stringValue("St. Helens Magistrates Court").build(),
-      Field.builder().stringValue("Production (Sentence/Civil Custody)").build(),
-    )
-    val movementPrisoner2 = mapOf("id" to "227482.1", "prisoner" to 227482L, "date" to LocalDateTime.of(2010, 12, 8, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 8, 10, 8, 0), "direction" to "IN", "type" to "ADM", "origin_code" to "IMM", "origin" to "Immigration", "destination_code" to "HRI", "destination" to "Haslar Immigration Removal Centre", "reason" to "Detained Immigration Act 71 -Wait Deport")
-    val movementPrisoner2Fields = listOf<Field>(
-      Field.builder().stringValue("227482.1").build(),
-      Field.builder().longValue(227482).build(),
-      Field.builder().stringValue("2010-12-08 00:00:00").build(),
-      Field.builder().stringValue("2010-12-08 10:08:00").build(),
-      Field.builder().stringValue("IN").build(),
-      Field.builder().stringValue("ADM").build(),
-      Field.builder().stringValue("IMM").build(),
-      Field.builder().stringValue("Immigration").build(),
-      Field.builder().stringValue("HRI").build(),
-      Field.builder().stringValue("Haslar Immigration Removal Centre").build(),
-      Field.builder().stringValue("Detained Immigration Act 71 -Wait Deport").build(),
-    )
     val redshiftDataClient = mock<RedshiftDataClient>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock())
     val statementId = "statementId"
@@ -323,8 +325,36 @@ SELECT *
       ),
     ).thenReturn(resultStatementResponse)
 
-    val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
+    val expected = StatementResult(listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2))
     val actual = redshiftDataApiRepository.getStatementResult(statementId)
+
+    assertEquals(expected, actual)
+  }
+
+  @Test
+  fun `getStatementResult should call the Redshift Data API with a request containing a nextToken when a nextToken exists`() {
+    val redshiftDataClient = mock<RedshiftDataClient>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock())
+    val statementId = "statementId"
+    val nextTokenRequest = "batch1"
+    val nextTokenResponse = "batch2"
+    val resultStatementResponse = GetStatementResultResponse.builder()
+      .columnMetadata(columnMetadata)
+      .records(listOf(movementPrisoner1Fields, movementPrisoner2Fields))
+      .nextToken(nextTokenResponse)
+      .build()
+
+    whenever(
+      redshiftDataClient.getStatementResult(
+        GetStatementResultRequest.builder()
+          .id(statementId)
+          .nextToken(nextTokenRequest)
+          .build(),
+      ),
+    ).thenReturn(resultStatementResponse)
+
+    val expected = StatementResult(listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2), nextTokenResponse)
+    val actual = redshiftDataApiRepository.getStatementResult(statementId, nextTokenRequest)
 
     assertEquals(expected, actual)
   }

@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
+package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata
 
 data class StatementExecutionStatus(
   val status: String,

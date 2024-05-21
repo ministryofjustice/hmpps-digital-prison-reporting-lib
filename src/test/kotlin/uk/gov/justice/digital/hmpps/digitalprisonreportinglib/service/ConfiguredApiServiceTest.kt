@@ -42,13 +42,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDateTime
 import java.util.UUID
@@ -1216,22 +1217,31 @@ class ConfiguredApiServiceTest {
   @Test
   fun `should call the repository with all provided arguments when getStatementResult is called`() {
     val executionID = UUID.randomUUID().toString()
+    val nextToken = "token1"
     whenever(
       redshiftDataApiRepository.getStatementResult(executionID),
-    ).thenReturn(expectedRepositoryResult)
+    ).thenReturn(StatementResult(expectedRepositoryResult, nextToken))
 
     val actual = configuredApiService.getStatementResult(executionID, reportId, reportVariantId)
 
-    assertEquals(expectedServiceResult, actual)
+    assertEquals(StatementResult(expectedServiceResult, nextToken), actual)
   }
 
   @Test
   fun `getStatementResult should apply formulas to the rows returned by the repository`() {
-    val expectedRepositoryResult = listOf(
-      mapOf("PRISONNUMBER" to "1", "NAME" to "FirstName", "ORIGIN" to "OriginLocation", "ORIGIN_CODE" to "abc"),
+    val requestNextToken = "requestNextToken"
+    val responseNextToken = "responseNextToken"
+    val expectedRepositoryResult = StatementResult(
+      listOf(
+        mapOf("PRISONNUMBER" to "1", "NAME" to "FirstName", "ORIGIN" to "OriginLocation", "ORIGIN_CODE" to "abc"),
+      ),
+      responseNextToken,
     )
-    val expectedServiceResult = listOf(
-      mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "origin_code" to "OriginLocation"),
+    val expectedServiceResult = StatementResult(
+      listOf(
+        mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "origin_code" to "OriginLocation"),
+      ),
+      responseNextToken,
     )
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithFormula.json"),
@@ -1240,10 +1250,15 @@ class ConfiguredApiServiceTest {
     val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository)
     val executionID = UUID.randomUUID().toString()
     whenever(
-      redshiftDataApiRepository.getStatementResult(executionID),
+      redshiftDataApiRepository.getStatementResult(executionID, requestNextToken),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.getStatementResult(executionID, reportId, reportVariantId)
+    val actual = configuredApiService.getStatementResult(
+      statementId = executionID,
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      nextToken = requestNextToken,
+    )
 
     assertEquals(expectedServiceResult, actual)
   }

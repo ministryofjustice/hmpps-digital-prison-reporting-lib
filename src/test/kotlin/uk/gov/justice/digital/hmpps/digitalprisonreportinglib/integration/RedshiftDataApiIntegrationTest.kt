@@ -14,7 +14,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 
@@ -175,17 +176,22 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Calling the getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
-    val expectedServiceResult = listOf(
-      mapOf(
-        "prisonNumber" to "1",
-        "name" to "FirstName",
-        "date" to "2023-05-20",
-        "origin" to "OriginLocation",
-        "destination" to "DestinationLocation",
-        "direction" to "in",
-        "type" to "trn",
-        "reason" to "normal transfer",
+    val requestNextToken = "requestNextToken"
+    val responseNextToken = "responseNextToken"
+    val expectedServiceResult = StatementResult(
+      listOf(
+        mapOf(
+          "prisonNumber" to "1",
+          "name" to "FirstName",
+          "date" to "2023-05-20",
+          "origin" to "OriginLocation",
+          "destination" to "DestinationLocation",
+          "direction" to "in",
+          "type" to "trn",
+          "reason" to "normal transfer",
+        ),
       ),
+      responseNextToken,
     )
     given(
       configuredApiService.getStatementResult(
@@ -193,6 +199,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        eq(requestNextToken),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -201,6 +208,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/reports/external-movements/last-month/statements/$queryExecutionId/result")
+          .queryParam("nextToken", requestNextToken)
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
