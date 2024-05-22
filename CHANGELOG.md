@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-## 3.7.10
+## 3.7.11
 Added nextToken query parameter to the getQueryExecutionResult endpoint and 
 changed the response of the endpoint to contain the nextToken if it exists to support
 pagination.
