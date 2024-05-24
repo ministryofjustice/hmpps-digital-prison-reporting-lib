@@ -22,7 +22,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
@@ -185,7 +186,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       "PICKED - The query has been chosen to be run.\n" +
       "STARTED - The query run has started.\n" +
       "SUBMITTED - The query was submitted, but not yet processed.\n" +
-      "Note: When the status is FAILED the error field of the response will be populated.",
+      "Note: When the status is FAILED the error field of the response will be populated." +
+      "ResultRows is the number of rows returned from the SQL statement. A -1 indicates the value is null." +
+      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
     responses = [
       ApiResponse(
@@ -240,13 +243,22 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     @PathVariable("statementId") statementId: String,
+    @Parameter(
+      description = "A value that indicates the starting point for the next set of response records in a subsequent request. " +
+        "If a value is returned in a response, you can retrieve the next set of records by providing this returned NextToken value in " +
+        "the next nextToken query parameter and retrying the API call. " +
+        "If the nextToken field is empty, all response records have been retrieved for the request.",
+      example = "aa37926e-e40a-43ce-a553-ec015ecec52e",
+    )
+    @RequestParam("nextToken", required = false)
+    nextToken: String?,
     authentication: Authentication,
-  ): ResponseEntity<List<Map<String, Any?>>> {
+  ): ResponseEntity<StatementResult> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.getStatementResult(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
+          configuredApiService.getStatementResult(statementId, reportId, reportVariantId, dataProductDefinitionsPath, nextToken),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()

@@ -17,7 +17,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -70,8 +71,7 @@ class ConfiguredApiService(
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = productDefinition.datasource.name,
       )
-      .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
-      .map(formulaEngine::applyFormulas)
+      .let { formatColumnsAndApplyFormulas(it, productDefinition, formulaEngine) }
   }
 
   fun validateAndExecuteStatementAsync(
@@ -110,13 +110,24 @@ class ConfiguredApiService(
     reportId: String,
     reportVariantId: String,
     dataProductDefinitionsPath: String? = null,
-  ): List<Map<String, Any?>> {
+    nextToken: String? = null,
+  ): StatementResult {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
-    return redshiftDataApiRepository.getStatementResult(statementId)
-      .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
-      .map(formulaEngine::applyFormulas)
+    val statementResult = redshiftDataApiRepository.getStatementResult(statementId, nextToken)
+    return StatementResult(
+      formatColumnsAndApplyFormulas(statementResult.records, productDefinition, formulaEngine),
+      statementResult.nextToken,
+    )
   }
+
+  private fun formatColumnsAndApplyFormulas(
+    records: List<Map<String, Any?>>,
+    productDefinition: SingleReportProductDefinition,
+    formulaEngine: FormulaEngine,
+  ) = records
+    .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
+    .map(formulaEngine::applyFormulas)
 
   private fun formatColumnNamesToSchemaFieldNamesCasing(
     row: Map<String, Any?>,
