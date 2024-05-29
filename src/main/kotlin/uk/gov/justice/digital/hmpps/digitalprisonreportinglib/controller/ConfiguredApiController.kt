@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
@@ -117,8 +118,9 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
 
   @GetMapping("/async/reports/{reportId}/{reportVariantId}")
   @Operation(
-    description = "Executes asynchronously the dataset query for the given report and returns the execution ID. " +
-      "This is the asynchronous non-paginated version of the /reports/{reportId}/{reportVariantId} API.",
+    description = "Executes asynchronously the dataset query for the given report and stores the result into an external table." +
+      "The response returned contains the table ID and the execution ID. " +
+      "This is the asynchronous version of the /reports/{reportId}/{reportVariantId} API.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
     responses = [
       ApiResponse(
@@ -149,7 +151,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<String> {
+  ): ResponseEntity<StatementExecutionResponse> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)

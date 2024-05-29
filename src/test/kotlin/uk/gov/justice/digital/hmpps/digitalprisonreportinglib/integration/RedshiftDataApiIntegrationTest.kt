@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -30,6 +31,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Calling the async execute statement endpoint calls the configuredApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
+    val tableId = "tableId"
+    val statementExecutionResponse = StatementExecutionResponse(tableId, queryExecutionId)
     val filtersPrefix = "filters."
     val dateStartFilter = "date$RANGE_FILTER_START_SUFFIX"
     val dateEndFilter = "date$RANGE_FILTER_END_SUFFIX"
@@ -48,7 +51,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("definitions/prisons/orphanage"),
       ),
     )
-      .willReturn(queryExecutionId)
+      .willReturn(statementExecutionResponse)
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -64,8 +67,14 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk()
-      .expectBody(String::class.java)
-      .isEqualTo(queryExecutionId)
+      .expectBody()
+      .json(
+        """{
+          "tableId": "$tableId",
+          "executionId": "$queryExecutionId"
+        }
+      """,
+      )
   }
 
   @Test

@@ -21,7 +21,7 @@ abstract class RepositoryHelper {
     filtersQuery: String,
     selectFromFinalStageQuery: String,
   ): String {
-    val query = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery;"
+    val query = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
     log.debug("Database query: $query")
     return query
   }

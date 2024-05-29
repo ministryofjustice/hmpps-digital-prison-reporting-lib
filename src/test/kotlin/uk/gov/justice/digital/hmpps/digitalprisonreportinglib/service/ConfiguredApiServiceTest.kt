@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -1165,7 +1166,9 @@ class ConfiguredApiServiceTest {
     val sortedAsc = true
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
     val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
-    val executionID = UUID.randomUUID().toString()
+    val executionId = UUID.randomUUID().toString()
+    val tableId = executionId.replace("-", "_")
+    val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
         query = dataSet.query,
@@ -1176,7 +1179,7 @@ class ConfiguredApiServiceTest {
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
       ),
-    ).thenReturn(executionID)
+    ).thenReturn(statementExecutionResponse)
 
     val actual = configuredApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, sortColumn, sortedAsc, authToken)
 
@@ -1189,7 +1192,7 @@ class ConfiguredApiServiceTest {
       policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
     )
-    assertEquals(executionID, actual)
+    assertEquals(statementExecutionResponse, actual)
   }
 
   @Test

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import com.google.common.cache.Cache
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -25,20 +26,29 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.LocalDateTime
 
 class RedshiftDataApiRepositoryTest {
 
   companion object {
-    val sqlStatement = """WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
-FROM datamart.domain.movement_movement as movements
-JOIN datamart.domain.prisoner_prisoner as prisoners
-ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE lower(direction) = :direction)
-SELECT *
-          FROM filter_ ORDER BY date asc;
-    """.trimMargin()
+    fun sqlStatement(tableId: String) =
+      """
+                  CREATE EXTERNAL TABLE reports.$tableId 
+                  STORED AS parquet 
+                  LOCATION 's3://dpr-working-development/reports/$tableId/' 
+                  AS ( 
+                  WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
+        FROM datamart.domain.movement_movement as movements
+        JOIN datamart.domain.prisoner_prisoner as prisoners
+        ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE lower(direction) = :direction)
+        SELECT *
+                  FROM filter_ ORDER BY date asc
+                  );
+      """.trimIndent()
 
     val columnMetadata = listOf<ColumnMetadata>(
       ColumnMetadata.builder().name("id").typeName("varchar").build(),
@@ -83,21 +93,33 @@ SELECT *
     )
   }
 
+  private val tableIdToStatementIdCache: Cache<String, String> = mock()
+
   @Test
   fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder)
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
+    val executionId = "someId"
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder, tableIdToStatementIdCache, tableIdGenerator)
 
     val mockedBuilderWithSql = ExecuteStatementRequest.builder()
       .clusterIdentifier("ab")
       .database("cd")
       .secretArn("ef")
-      .sql(sqlStatement)
+      .sql(sqlStatement(tableId))
+
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+    )
+
     whenever(
       executeStatementRequestBuilder.sql(
-        sqlStatement,
+        sqlStatement(tableId),
       ),
     ).thenReturn(
       mockedBuilderWithSql,
@@ -119,7 +141,7 @@ SELECT *
 
     whenever(
       executeStatementResponse.id(),
-    ).thenReturn("someId")
+    ).thenReturn(executionId)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
       query = REPOSITORY_TEST_QUERY,
@@ -131,7 +153,7 @@ SELECT *
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
 
-    assertEquals("someId", actual)
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
   }
 
   @Test
@@ -142,24 +164,39 @@ SELECT *
     val endDate = "2024-02-17"
     val startDateFilter = ConfiguredApiRepository.Filter("date", startDate, FilterType.DATE_RANGE_START)
     val endDateFilter = ConfiguredApiRepository.Filter("date", endDate, FilterType.DATE_RANGE_END)
+    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
+    val executionId = "someId"
     val sqlStatement =
-      """WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
+      """          CREATE EXTERNAL TABLE reports.$tableId 
+          STORED AS parquet 
+          LOCATION 's3://dpr-working-development/reports/$tableId/' 
+          AS ( 
+          WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
 FROM datamart.domain.movement_movement as movements
 JOIN datamart.domain.prisoner_prisoner as prisoners
 ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE date >= CAST(:$dateStartKeyUnderscore AS timestamp) AND date < (CAST(:$dateEndKeyUnderscore AS timestamp) + INTERVAL '1' day))
 SELECT *
-          FROM filter_ ORDER BY date asc;
+          FROM filter_ ORDER BY date asc
+          );
       """.trimIndent()
     val redshiftDataClient = mock<RedshiftDataClient>()
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder)
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder, tableIdToStatementIdCache, tableIdGenerator)
 
     val mockedBuilderWithSql = ExecuteStatementRequest.builder()
       .clusterIdentifier("ab")
       .database("cd")
       .secretArn("ef")
       .sql(sqlStatement)
+
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+    )
+
     whenever(
       executeStatementRequestBuilder.sql(
         sqlStatement,
@@ -195,7 +232,7 @@ SELECT *
 
     whenever(
       executeStatementResponse.id(),
-    ).thenReturn("someId")
+    ).thenReturn(executionId)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
       query = REPOSITORY_TEST_QUERY,
@@ -210,13 +247,14 @@ SELECT *
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
 
-    assertEquals("someId", actual)
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
   }
 
   @Test
   fun `getStatementStatus should call the redshift data api with the correct statement ID and return the StatementExecutionStatus`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock())
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock(), tableIdToStatementIdCache, tableIdGenerator)
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -256,14 +294,23 @@ SELECT *
     val redshiftDataClient = mock<RedshiftDataClient>()
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder)
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder, tableIdToStatementIdCache, tableIdGenerator)
+    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
+    val executionId = "someId"
     val finalQuery =
-      """WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
-FROM datamart.domain.movement_movement as movements
-JOIN datamart.domain.prisoner_prisoner as prisoners
-ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE TRUE)
-SELECT *
-          FROM filter_ ORDER BY date asc;
+      """
+                  CREATE EXTERNAL TABLE reports.$tableId 
+                  STORED AS parquet 
+                  LOCATION 's3://dpr-working-development/reports/$tableId/' 
+                  AS ( 
+                  WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
+        FROM datamart.domain.movement_movement as movements
+        JOIN datamart.domain.prisoner_prisoner as prisoners
+        ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE TRUE)
+        SELECT *
+                  FROM filter_ ORDER BY date asc
+                  );
       """.trimIndent()
 
     val mockedBuilderWithSql = ExecuteStatementRequest.builder()
@@ -271,6 +318,12 @@ SELECT *
       .database("cd")
       .secretArn("ef")
       .sql(finalQuery)
+
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+    )
 
     whenever(
       executeStatementRequestBuilder.sql(
@@ -293,7 +346,7 @@ SELECT *
 
     whenever(
       executeStatementResponse.id(),
-    ).thenReturn("someId")
+    ).thenReturn(executionId)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
       query = REPOSITORY_TEST_QUERY,
@@ -307,13 +360,14 @@ SELECT *
 
     verify(executeStatementRequestBuilder, times(0)).parameters(any<List<SqlParameter>>())
 
-    assertEquals("someId", actual)
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
   }
 
   @Test
   fun `getStatementResult should call the Redshift Data API and return the existing results`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock())
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock(), tableIdToStatementIdCache, tableIdGenerator)
     val statementId = "statementId"
     val resultStatementResponse = GetStatementResultResponse.builder()
       .columnMetadata(columnMetadata)
@@ -337,7 +391,8 @@ SELECT *
   @Test
   fun `getStatementResult should call the Redshift Data API with a request containing a nextToken when a nextToken exists`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock())
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock(), tableIdToStatementIdCache, tableIdGenerator)
     val statementId = "statementId"
     val nextTokenRequest = "batch1"
     val nextTokenResponse = "batch2"

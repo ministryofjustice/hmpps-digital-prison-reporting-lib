@@ -38,7 +38,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
         buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
-      ),
+      ) + ";",
       buildPreparedStatementNamedParams(filters),
     )
       .map {
@@ -86,7 +86,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
         "SELECT COUNT(1) as total FROM $FILTER_",
-      ),
+      ) + ";",
       buildPreparedStatementNamedParams(filters),
     ).first()?.get("total") as Long
   }

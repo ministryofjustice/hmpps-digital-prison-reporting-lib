@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import com.google.common.cache.Cache
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
@@ -11,8 +13,10 @@ import software.amazon.awssdk.services.redshiftdata.model.Field
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultRequest
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -20,6 +24,10 @@ import java.time.format.DateTimeFormatter
 class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
   val executeStatementRequestBuilder: ExecuteStatementRequest.Builder,
+  val tableIdToStatementIdCache: Cache<String, String>,
+  val tableIdGenerator: TableIdGenerator,
+  @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
+  private val s3location: String = "dpr-working-development/reports",
 ) : RepositoryHelper() {
 
   companion object {
@@ -34,15 +42,26 @@ class RedshiftDataApiRepository(
     policyEngineResult: String,
     dynamicFilterFieldId: String? = null,
     dataSourceName: String,
-  ): String {
+  ): StatementExecutionResponse {
+    val tableId = tableIdGenerator.generateNewExternalTableId()
+    val generateSql = """
+          CREATE EXTERNAL TABLE reports.$tableId 
+          STORED AS parquet 
+          LOCATION 's3://$s3location/$tableId/' 
+          AS ( 
+          ${
+      buildFinalQuery(
+        buildReportQuery(query),
+        buildPolicyQuery(policyEngineResult),
+        buildFiltersQuery(filters, queryParamKeyTransformer),
+        buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
+      )
+    }
+          );
+    """.trimIndent()
     val requestBuilder = executeStatementRequestBuilder
       .sql(
-        buildFinalQuery(
-          buildReportQuery(query),
-          buildPolicyQuery(policyEngineResult),
-          buildFiltersQuery(filters, queryParamKeyTransformer),
-          buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
-        ),
+        generateSql,
       )
     if (filters.isNotEmpty()) {
       requestBuilder
@@ -51,8 +70,10 @@ class RedshiftDataApiRepository(
     val statementRequest: ExecuteStatementRequest = requestBuilder.build()
 
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
-    log.info("Execution ID: {}", response.id())
-    return response.id()
+    tableIdToStatementIdCache.put(tableId, response.id())
+    log.debug("Execution ID: {}", response.id())
+    log.debug("External table ID: {}", tableId)
+    return StatementExecutionResponse(tableId, response.id())
   }
 
   fun getStatementStatus(statementId: String): StatementExecutionStatus {

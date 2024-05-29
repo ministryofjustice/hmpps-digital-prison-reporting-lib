@@ -56,6 +56,12 @@ class ProductDefinitionRepositoryAutoConfig(
     .concurrencyLevel(Runtime.getRuntime().availableProcessors())
     .build()
 
+  @Bean("tableIdToStatementIdCache")
+  fun tableIdToStatementIdCache(): Cache<String, String> = CacheBuilder.newBuilder()
+    .expireAfterWrite(24, TimeUnit.HOURS)
+    .concurrencyLevel(Runtime.getRuntime().availableProcessors())
+    .build()
+
   @Bean
   @ConditionalOnMissingBean(LocalDateTimeTypeAdaptor::class)
   fun localDateTimeTypeAdaptor(): LocalDateTimeTypeAdaptor {
