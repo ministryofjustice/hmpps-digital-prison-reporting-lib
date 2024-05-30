@@ -363,7 +363,7 @@ SELECT *
   }
 
   @Test
-  fun `count should make a paginated JDBC call and return the existing results`() {
+  fun `count should make a JDBC call and return the existing results`() {
     val tableId = "tableId"
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
