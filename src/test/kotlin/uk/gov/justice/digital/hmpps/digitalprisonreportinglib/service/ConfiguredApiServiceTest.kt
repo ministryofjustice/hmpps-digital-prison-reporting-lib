@@ -1268,4 +1268,17 @@ class ConfiguredApiServiceTest {
 
     assertEquals(expectedServiceResult, actual)
   }
+
+  @Test
+  fun `should call the repository with all provided arguments when count is called`() {
+    val tableId = "123"
+    val expectedRepositoryResult = 5L
+    whenever(
+      redshiftDataApiRepository.count(tableId),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.count(tableId)
+
+    assertEquals(Count(expectedRepositoryResult), actual)
+  }
 }

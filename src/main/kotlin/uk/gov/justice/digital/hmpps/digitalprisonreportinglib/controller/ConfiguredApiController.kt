@@ -222,6 +222,41 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         .body(null)
     }
   }
+  @GetMapping("/report/tables/{tableId}/count")
+  @Operation(
+    description = "Returns the number of rows of the table which contains the result of a previously executed query.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun getExternalTableRowCount(
+    @PathVariable("tableId") tableId: String,
+    authentication: Authentication,
+  ): ResponseEntity<Count> {
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          configuredApiService.count(tableId),
+        )
+    } catch (exception: NoDataAvailableException) {
+      val headers = HttpHeaders()
+      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .headers(headers)
+        .body(null)
+    }
+  }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result")
   @Operation(

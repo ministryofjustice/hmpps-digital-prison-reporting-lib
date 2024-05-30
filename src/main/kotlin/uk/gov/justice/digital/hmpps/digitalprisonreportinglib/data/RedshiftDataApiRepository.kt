@@ -109,22 +109,11 @@ class RedshiftDataApiRepository(
     return result
   }
 
-  private fun extractRecords(resultStatementResponse: GetStatementResultResponse) =
-    resultStatementResponse.records().map { record ->
-      record.mapIndexed { index, field -> extractFieldValue(field, resultStatementResponse.columnMetadata()[index]) }
-        .toMap()
-    }
-
-  private fun extractFieldValue(field: Field, columnMetadata: ColumnMetadata): Pair<String, Any?> {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    val value = when (columnMetadata.typeName()) {
-      "varchar" -> field.stringValue()
-      "int8" -> field.longValue()
-      "timestamp" -> LocalDateTime.parse(field.stringValue(), formatter)
-      // This will need to be extended to support more date types when required in the future.
-      else -> field.stringValue()
-    }
-    return columnMetadata.name() to value
+  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),): Long {
+    return jdbcTemplate.queryForList(
+      "SELECT COUNT(1) as total FROM reports.$tableId;",
+      MapSqlParameterSource(),
+    ).first()?.get("total") as Long
   }
 
   private fun buildQueryParams(filters: List<ConfiguredApiRepository.Filter>): List<SqlParameter> {
@@ -135,5 +124,5 @@ class RedshiftDataApiRepository(
     return sqlParams
   }
 
-  val queryParamKeyTransformer: (s: String) -> String = { s -> s.replace(".", "_") }
+  private val queryParamKeyTransformer: (s: String) -> String = { s -> s.replace(".", "_") }
 }

@@ -1,8 +1,12 @@
 Below you can find the changes included in each release.
 
+## 4.1.0
+Added count endpoint for the created external tables.
+
 ## 4.0.0
 The asynchronous Redshift endpoint executes the DPD query and the results are stored into an external table.
 The endpoint to retrieve the results queries that table and allows for pagination.
+The path of this endpoint has also changed to `/reports/{reportId}/{reportVariantId}/tables/{tableId}/result`
 
 ## 3.7.11
 Added nextToken query parameter to the getQueryExecutionResult endpoint and 

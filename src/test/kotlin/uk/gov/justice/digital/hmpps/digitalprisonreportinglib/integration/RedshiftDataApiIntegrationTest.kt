@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.redshiftdata.model.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -221,6 +222,32 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month/tables/$tableId/result")
           .queryParam("selectedPage", 2L)
           .queryParam("pageSize", 20L)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(Gson().toJson(expectedServiceResult))
+  }
+
+  @Test
+  fun `Calling the getExternalTableRowCount endpoint calls the configuredApiService with the correct arguments`() {
+    val tableId = "tableId"
+    val expectedServiceResult = Count(5)
+
+    given(
+      configuredApiService.count(
+        eq(tableId),
+      ),
+    )
+      .willReturn(Count(5))
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/report/tables/$tableId/count")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
