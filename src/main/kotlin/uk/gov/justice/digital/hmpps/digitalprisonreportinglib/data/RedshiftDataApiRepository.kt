@@ -7,18 +7,13 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
-import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import software.amazon.awssdk.services.redshiftdata.model.Field
-import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 class RedshiftDataApiRepository(
@@ -109,7 +104,7 @@ class RedshiftDataApiRepository(
     return result
   }
 
-  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),): Long {
+  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
     return jdbcTemplate.queryForList(
       "SELECT COUNT(1) as total FROM reports.$tableId;",
       MapSqlParameterSource(),

@@ -222,6 +222,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
         .body(null)
     }
   }
+
   @GetMapping("/report/tables/{tableId}/count")
   @Operation(
     description = "Returns the number of rows of the table which contains the result of a previously executed query.",
