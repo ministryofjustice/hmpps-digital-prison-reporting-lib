@@ -14,8 +14,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
 
@@ -30,6 +30,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Calling the async execute statement endpoint calls the configuredApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
+    val tableId = "tableId"
+    val statementExecutionResponse = StatementExecutionResponse(tableId, queryExecutionId)
     val filtersPrefix = "filters."
     val dateStartFilter = "date$RANGE_FILTER_START_SUFFIX"
     val dateEndFilter = "date$RANGE_FILTER_END_SUFFIX"
@@ -48,7 +50,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("definitions/prisons/orphanage"),
       ),
     )
-      .willReturn(queryExecutionId)
+      .willReturn(statementExecutionResponse)
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -64,8 +66,14 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk()
-      .expectBody(String::class.java)
-      .isEqualTo(queryExecutionId)
+      .expectBody()
+      .json(
+        """{
+          "tableId": "$tableId",
+          "executionId": "$queryExecutionId"
+        }
+      """,
+      )
   }
 
   @Test
@@ -178,10 +186,10 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
 
   @Test
   fun `Calling the getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
-    val queryExecutionId = "queryExecutionId"
-    val requestNextToken = "requestNextToken"
-    val responseNextToken = "responseNextToken"
-    val expectedServiceResult = StatementResult(
+    val tableId = "tableId"
+    val selectedPage = 2L
+    val pageSize = 20L
+    val expectedServiceResult =
       listOf(
         mapOf(
           "prisonNumber" to "1",
@@ -193,16 +201,16 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           "type" to "trn",
           "reason" to "normal transfer",
         ),
-      ),
-      responseNextToken,
-    )
+      )
+
     given(
       configuredApiService.getStatementResult(
-        eq(queryExecutionId),
+        eq(tableId),
         eq("external-movements"),
         eq("last-month"),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        eq(requestNextToken),
+        eq(selectedPage),
+        eq(pageSize),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -210,8 +218,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
-          .path("/reports/external-movements/last-month/statements/$queryExecutionId/result")
-          .queryParam("nextToken", requestNextToken)
+          .path("/reports/external-movements/last-month/tables/$tableId/result")
+          .queryParam("selectedPage", 2L)
+          .queryParam("pageSize", 20L)
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))

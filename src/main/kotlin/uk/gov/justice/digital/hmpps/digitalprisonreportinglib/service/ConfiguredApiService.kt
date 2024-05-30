@@ -17,8 +17,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -84,7 +84,7 @@ class ConfiguredApiService(
     reportFieldId: String? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
-  ): String {
+  ): StatementExecutionResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
@@ -106,18 +106,19 @@ class ConfiguredApiService(
   }
 
   fun getStatementResult(
-    statementId: String,
+    tableId: String,
     reportId: String,
     reportVariantId: String,
     dataProductDefinitionsPath: String? = null,
-    nextToken: String? = null,
-  ): StatementResult {
+    selectedPage: Long,
+    pageSize: Long,
+  ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
-    val statementResult = redshiftDataApiRepository.getStatementResult(statementId, nextToken)
-    return StatementResult(
-      formatColumnsAndApplyFormulas(statementResult.records, productDefinition, formulaEngine),
-      statementResult.nextToken,
+    return formatColumnsAndApplyFormulas(
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+      productDefinition,
+      formulaEngine,
     )
   }
 

@@ -14,3 +14,4 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionS
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DigitalPrisonReportingExceptionHandler
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator

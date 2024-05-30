@@ -1,19 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.apache.commons.lang3.time.StopWatch
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
-import java.sql.Timestamp
-import javax.sql.DataSource
 
 @Service
 class ConfiguredApiRepository : RepositoryHelper() {
-
-  @Autowired
-  lateinit var context: ApplicationContext
 
   fun executeQuery(
     query: String,
@@ -38,7 +30,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
         buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
-      ),
+      ) + ";",
       buildPreparedStatementNamedParams(filters),
     )
       .map {
@@ -47,17 +39,6 @@ class ConfiguredApiRepository : RepositoryHelper() {
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
-  }
-
-  private fun populateJdbcTemplate(dataSourceName: String): NamedParameterJdbcTemplate {
-    val dataSource = if (context.containsBean(dataSourceName)) {
-      context.getBean(dataSourceName, DataSource::class) as DataSource
-    } else {
-      log.warn("No DataSource Bean found with name: {}", dataSourceName)
-      context.getBean(DataSource::class.java) as DataSource
-    }
-
-    return NamedParameterJdbcTemplate(dataSource)
   }
 
   private fun buildFinalStageQueryWithPagination(
@@ -86,17 +67,9 @@ class ConfiguredApiRepository : RepositoryHelper() {
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
         "SELECT COUNT(1) as total FROM $FILTER_",
-      ),
+      ) + ";",
       buildPreparedStatementNamedParams(filters),
     ).first()?.get("total") as Long
-  }
-
-  private fun transformTimestampToLocalDateTime(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->
-    if (v is Timestamp) {
-      k to v.toLocalDateTime()
-    } else {
-      k to v
-    }
   }
 
   private fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {

@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+## 4.0.0
+The asynchronous Redshift endpoint executes the DPD query and the results are stored into an external table.
+The endpoint to retrieve the results queries that table and allows for pagination.
+
 ## 3.7.11
 Added nextToken query parameter to the getQueryExecutionResult endpoint and 
 changed the response of the endpoint to contain the nextToken if it exists to support
