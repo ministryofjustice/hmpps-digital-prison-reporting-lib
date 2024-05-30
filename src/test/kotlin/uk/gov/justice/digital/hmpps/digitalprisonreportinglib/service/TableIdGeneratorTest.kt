@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 class TableIdGeneratorTest {
   @Test
-  fun `generateExternalTableId generates a table UUID starting with an underscore and contains underscores instead of hyphens`() {
+  fun `generateExternalTableId generates a table UUID starting with an underscore and containing underscores instead of hyphens`() {
     val tableIdGenerator = TableIdGenerator()
     val tableId = tableIdGenerator.generateNewExternalTableId()
     assertThat(tableId).startsWith("_")

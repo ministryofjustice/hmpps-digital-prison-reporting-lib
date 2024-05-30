@@ -2,8 +2,13 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import java.sql.Timestamp
+import javax.sql.DataSource
 
 abstract class RepositoryHelper {
   companion object {
@@ -15,6 +20,31 @@ abstract class RepositoryHelper {
     const val POLICY_ = """policy_"""
     const val FILTER_ = """filter_"""
   }
+
+  @Autowired
+  lateinit var context: ApplicationContext
+
+  protected fun populateJdbcTemplate(dataSourceName: String? = null): NamedParameterJdbcTemplate {
+    val dataSource = if (dataSourceName == null) {
+      context.getBean(DataSource::class.java) as DataSource
+    } else if (context.containsBean(dataSourceName)) {
+      context.getBean(dataSourceName, DataSource::class) as DataSource
+    } else {
+      log.warn("No DataSource Bean found with name: {}", dataSourceName)
+      context.getBean(DataSource::class.java) as DataSource
+    }
+
+    return NamedParameterJdbcTemplate(dataSource)
+  }
+
+  protected fun transformTimestampToLocalDateTime(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->
+    if (v is Timestamp) {
+      k to v.toLocalDateTime()
+    } else {
+      k to v
+    }
+  }
+
   protected fun buildFinalQuery(
     reportQuery: String,
     policiesQuery: String,

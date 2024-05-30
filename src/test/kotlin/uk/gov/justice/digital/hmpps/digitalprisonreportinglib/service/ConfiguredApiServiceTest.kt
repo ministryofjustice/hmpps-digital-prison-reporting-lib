@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDateTime
 import java.util.UUID
@@ -1221,32 +1220,33 @@ class ConfiguredApiServiceTest {
 
   @Test
   fun `should call the repository with all provided arguments when getStatementResult is called`() {
-    val executionID = UUID.randomUUID().toString()
-    val nextToken = "token1"
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+    val selectedPage = 1L
+    val pageSize = 20L
     whenever(
-      redshiftDataApiRepository.getStatementResult(executionID),
-    ).thenReturn(StatementResult(expectedRepositoryResult, nextToken))
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+    ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.getStatementResult(executionID, reportId, reportVariantId)
+    val actual = configuredApiService.getStatementResult(
+      tableId,
+      reportId,
+      reportVariantId,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+    )
 
-    assertEquals(StatementResult(expectedServiceResult, nextToken), actual)
+    assertEquals(expectedServiceResult, actual)
   }
 
   @Test
   fun `getStatementResult should apply formulas to the rows returned by the repository`() {
-    val requestNextToken = "requestNextToken"
-    val responseNextToken = "responseNextToken"
-    val expectedRepositoryResult = StatementResult(
-      listOf(
-        mapOf("PRISONNUMBER" to "1", "NAME" to "FirstName", "ORIGIN" to "OriginLocation", "ORIGIN_CODE" to "abc"),
-      ),
-      responseNextToken,
+    val selectedPage = 1L
+    val pageSize = 20L
+    val expectedRepositoryResult = listOf(
+      mapOf("PRISONNUMBER" to "1", "NAME" to "FirstName", "ORIGIN" to "OriginLocation", "ORIGIN_CODE" to "abc"),
     )
-    val expectedServiceResult = StatementResult(
-      listOf(
-        mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "origin_code" to "OriginLocation"),
-      ),
-      responseNextToken,
+    val expectedServiceResult = listOf(
+      mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "origin_code" to "OriginLocation"),
     )
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithFormula.json"),
@@ -1255,14 +1255,15 @@ class ConfiguredApiServiceTest {
     val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository)
     val executionID = UUID.randomUUID().toString()
     whenever(
-      redshiftDataApiRepository.getStatementResult(executionID, requestNextToken),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getStatementResult(
-      statementId = executionID,
+      tableId = executionID,
       reportId = reportId,
       reportVariantId = reportVariantId,
-      nextToken = requestNextToken,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
     )
 
     assertEquals(expectedServiceResult, actual)

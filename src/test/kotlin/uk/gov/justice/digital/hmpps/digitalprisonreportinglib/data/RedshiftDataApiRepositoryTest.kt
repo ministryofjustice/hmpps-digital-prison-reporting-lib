@@ -6,17 +6,16 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
-import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import software.amazon.awssdk.services.redshiftdata.model.Field
-import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultRequest
-import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
@@ -28,7 +27,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.LocalDateTime
 
@@ -50,47 +48,8 @@ class RedshiftDataApiRepositoryTest {
                   );
       """.trimIndent()
 
-    val columnMetadata = listOf<ColumnMetadata>(
-      ColumnMetadata.builder().name("id").typeName("varchar").build(),
-      ColumnMetadata.builder().name("prisoner").typeName("int8").build(),
-      ColumnMetadata.builder().name("date").typeName("timestamp").build(),
-      ColumnMetadata.builder().name("time").typeName("timestamp").build(),
-      ColumnMetadata.builder().name("direction").typeName("varchar").build(),
-      ColumnMetadata.builder().name("type").typeName("varchar").build(),
-      ColumnMetadata.builder().name("origin_code").typeName("varchar").build(),
-      ColumnMetadata.builder().name("origin").typeName("varchar").build(),
-      ColumnMetadata.builder().name("destination_code").typeName("varchar").build(),
-      ColumnMetadata.builder().name("destination").typeName("varchar").build(),
-      ColumnMetadata.builder().name("reason").typeName("varchar").build(),
-    )
     val movementPrisoner1 = mapOf("id" to "171034.12", "prisoner" to 171034L, "date" to LocalDateTime.of(2010, 12, 17, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 17, 7, 12, 0), "direction" to "OUT", "type" to "CRT", "origin_code" to "LFI", "origin" to "LANCASTER FARMS (HMPYOI)", "destination_code" to "STHEMC", "destination" to "St. Helens Magistrates Court", "reason" to "Production (Sentence/Civil Custody)")
-    val movementPrisoner1Fields = listOf<Field>(
-      Field.builder().stringValue("171034.12").build(),
-      Field.builder().longValue(171034).build(),
-      Field.builder().stringValue("2010-12-17 00:00:00").build(),
-      Field.builder().stringValue("2010-12-17 07:12:00").build(),
-      Field.builder().stringValue("OUT").build(),
-      Field.builder().stringValue("CRT").build(),
-      Field.builder().stringValue("LFI").build(),
-      Field.builder().stringValue("LANCASTER FARMS (HMPYOI)").build(),
-      Field.builder().stringValue("STHEMC").build(),
-      Field.builder().stringValue("St. Helens Magistrates Court").build(),
-      Field.builder().stringValue("Production (Sentence/Civil Custody)").build(),
-    )
     val movementPrisoner2 = mapOf("id" to "227482.1", "prisoner" to 227482L, "date" to LocalDateTime.of(2010, 12, 8, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 8, 10, 8, 0), "direction" to "IN", "type" to "ADM", "origin_code" to "IMM", "origin" to "Immigration", "destination_code" to "HRI", "destination" to "Haslar Immigration Removal Centre", "reason" to "Detained Immigration Act 71 -Wait Deport")
-    val movementPrisoner2Fields = listOf<Field>(
-      Field.builder().stringValue("227482.1").build(),
-      Field.builder().longValue(227482).build(),
-      Field.builder().stringValue("2010-12-08 00:00:00").build(),
-      Field.builder().stringValue("2010-12-08 10:08:00").build(),
-      Field.builder().stringValue("IN").build(),
-      Field.builder().stringValue("ADM").build(),
-      Field.builder().stringValue("IMM").build(),
-      Field.builder().stringValue("Immigration").build(),
-      Field.builder().stringValue("HRI").build(),
-      Field.builder().stringValue("Haslar Immigration Removal Centre").build(),
-      Field.builder().stringValue("Detained Immigration Act 71 -Wait Deport").build(),
-    )
   }
 
   private val tableIdToStatementIdCache: Cache<String, String> = mock()
@@ -103,7 +62,12 @@ class RedshiftDataApiRepositoryTest {
     val tableIdGenerator = mock<TableIdGenerator>()
     val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
     val executionId = "someId"
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder, tableIdToStatementIdCache, tableIdGenerator)
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      executeStatementRequestBuilder,
+      tableIdToStatementIdCache,
+      tableIdGenerator,
+    )
 
     val mockedBuilderWithSql = ExecuteStatementRequest.builder()
       .clusterIdentifier("ab")
@@ -183,7 +147,12 @@ SELECT *
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
     val tableIdGenerator = mock<TableIdGenerator>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder, tableIdToStatementIdCache, tableIdGenerator)
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      executeStatementRequestBuilder,
+      tableIdToStatementIdCache,
+      tableIdGenerator,
+    )
 
     val mockedBuilderWithSql = ExecuteStatementRequest.builder()
       .clusterIdentifier("ab")
@@ -254,7 +223,12 @@ SELECT *
   fun `getStatementStatus should call the redshift data api with the correct statement ID and return the StatementExecutionStatus`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
     val tableIdGenerator = mock<TableIdGenerator>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock(), tableIdToStatementIdCache, tableIdGenerator)
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      mock(),
+      tableIdToStatementIdCache,
+      tableIdGenerator,
+    )
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -295,7 +269,12 @@ SELECT *
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
     val tableIdGenerator = mock<TableIdGenerator>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, executeStatementRequestBuilder, tableIdToStatementIdCache, tableIdGenerator)
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      executeStatementRequestBuilder,
+      tableIdToStatementIdCache,
+      tableIdGenerator,
+    )
     val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
     val executionId = "someId"
     val finalQuery =
@@ -364,55 +343,29 @@ SELECT *
   }
 
   @Test
-  fun `getStatementResult should call the Redshift Data API and return the existing results`() {
+  fun `getStatementResult should make a paginated JDBC call and return the existing results`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
     val tableIdGenerator = mock<TableIdGenerator>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock(), tableIdToStatementIdCache, tableIdGenerator)
-    val statementId = "statementId"
-    val resultStatementResponse = GetStatementResultResponse.builder()
-      .columnMetadata(columnMetadata)
-      .records(listOf(movementPrisoner1Fields, movementPrisoner2Fields))
-      .build()
+    val tableId = "tableId"
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      mock(),
+      tableIdToStatementIdCache,
+      tableIdGenerator,
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
 
     whenever(
-      redshiftDataClient.getStatementResult(
-        GetStatementResultRequest.builder()
-          .id(statementId)
-          .build(),
+      jdbcTemplate.queryForList(
+        eq("SELECT * FROM reports.$tableId limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+        any<MapSqlParameterSource>(),
       ),
-    ).thenReturn(resultStatementResponse)
+    ).thenReturn(expected)
 
-    val expected = StatementResult(listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2))
-    val actual = redshiftDataApiRepository.getStatementResult(statementId)
-
-    assertEquals(expected, actual)
-  }
-
-  @Test
-  fun `getStatementResult should call the Redshift Data API with a request containing a nextToken when a nextToken exists`() {
-    val redshiftDataClient = mock<RedshiftDataClient>()
-    val tableIdGenerator = mock<TableIdGenerator>()
-    val redshiftDataApiRepository = RedshiftDataApiRepository(redshiftDataClient, mock(), tableIdToStatementIdCache, tableIdGenerator)
-    val statementId = "statementId"
-    val nextTokenRequest = "batch1"
-    val nextTokenResponse = "batch2"
-    val resultStatementResponse = GetStatementResultResponse.builder()
-      .columnMetadata(columnMetadata)
-      .records(listOf(movementPrisoner1Fields, movementPrisoner2Fields))
-      .nextToken(nextTokenResponse)
-      .build()
-
-    whenever(
-      redshiftDataClient.getStatementResult(
-        GetStatementResultRequest.builder()
-          .id(statementId)
-          .nextToken(nextTokenRequest)
-          .build(),
-      ),
-    ).thenReturn(resultStatementResponse)
-
-    val expected = StatementResult(listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2), nextTokenResponse)
-    val actual = redshiftDataApiRepository.getStatementResult(statementId, nextTokenRequest)
+    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, jdbcTemplate)
 
     assertEquals(expected, actual)
   }

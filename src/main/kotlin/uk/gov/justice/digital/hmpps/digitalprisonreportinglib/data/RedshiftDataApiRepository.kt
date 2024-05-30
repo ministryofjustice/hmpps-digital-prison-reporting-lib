@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
+import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
@@ -10,12 +13,10 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.Field
-import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultRequest
 import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -91,14 +92,24 @@ class RedshiftDataApiRepository(
     )
   }
 
-  fun getStatementResult(statementId: String, nextToken: String? = null): StatementResult {
-    val requestBuilder = GetStatementResultRequest.builder()
-    requestBuilder.id(statementId)
-    nextToken?.let { requestBuilder.nextToken(it) }
-    val statementRequest: GetStatementResultRequest = requestBuilder
-      .build()
-    val resultStatementResponse: GetStatementResultResponse = redshiftDataClient.getStatementResult(statementRequest)
-    return StatementResult(extractRecords(resultStatementResponse), resultStatementResponse.nextToken())
+  fun getPaginatedExternalTableResult(
+    tableId: String,
+    selectedPage: Long,
+    pageSize: Long,
+    jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),
+  ): List<Map<String, Any?>> {
+    val stopwatch = StopWatch.createStarted()
+    val result = jdbcTemplate
+      .queryForList(
+        "SELECT * FROM reports.$tableId limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;",
+        MapSqlParameterSource(),
+      )
+      .map {
+        transformTimestampToLocalDateTime(it)
+      }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return result
   }
 
   private fun extractRecords(resultStatementResponse: GetStatementResultResponse) =
