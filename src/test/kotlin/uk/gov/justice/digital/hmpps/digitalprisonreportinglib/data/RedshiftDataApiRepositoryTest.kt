@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import com.google.common.cache.Cache
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
@@ -52,8 +51,6 @@ class RedshiftDataApiRepositoryTest {
     val movementPrisoner2 = mapOf("id" to "227482.1", "prisoner" to 227482L, "date" to LocalDateTime.of(2010, 12, 8, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 8, 10, 8, 0), "direction" to "IN", "type" to "ADM", "origin_code" to "IMM", "origin" to "Immigration", "destination_code" to "HRI", "destination" to "Haslar Immigration Removal Centre", "reason" to "Detained Immigration Act 71 -Wait Deport")
   }
 
-  private val tableIdToStatementIdCache: Cache<String, String> = mock()
-
   @Test
   fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
@@ -65,7 +62,6 @@ class RedshiftDataApiRepositoryTest {
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       executeStatementRequestBuilder,
-      tableIdToStatementIdCache,
       tableIdGenerator,
     )
 
@@ -150,7 +146,6 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       executeStatementRequestBuilder,
-      tableIdToStatementIdCache,
       tableIdGenerator,
     )
 
@@ -226,7 +221,6 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       mock(),
-      tableIdToStatementIdCache,
       tableIdGenerator,
     )
     val statementId = "statementId"
@@ -272,7 +266,6 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       executeStatementRequestBuilder,
-      tableIdToStatementIdCache,
       tableIdGenerator,
     )
     val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
@@ -351,7 +344,6 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       mock(),
-      tableIdToStatementIdCache,
       tableIdGenerator,
     )
     val selectedPage = 1L

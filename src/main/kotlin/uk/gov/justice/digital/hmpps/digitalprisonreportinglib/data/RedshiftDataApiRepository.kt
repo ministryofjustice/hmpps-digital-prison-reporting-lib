@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import com.google.common.cache.Cache
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -25,7 +24,6 @@ import java.time.format.DateTimeFormatter
 class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
   val executeStatementRequestBuilder: ExecuteStatementRequest.Builder,
-  val tableIdToStatementIdCache: Cache<String, String>,
   val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
@@ -71,7 +69,6 @@ class RedshiftDataApiRepository(
     val statementRequest: ExecuteStatementRequest = requestBuilder.build()
 
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
-    tableIdToStatementIdCache.put(tableId, response.id())
     log.debug("Execution ID: {}", response.id())
     log.debug("External table ID: {}", tableId)
     return StatementExecutionResponse(tableId, response.id())
