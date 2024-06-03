@@ -7,18 +7,13 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
-import software.amazon.awssdk.services.redshiftdata.model.ColumnMetadata
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import software.amazon.awssdk.services.redshiftdata.model.Field
-import software.amazon.awssdk.services.redshiftdata.model.GetStatementResultResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 class RedshiftDataApiRepository(
@@ -109,22 +104,11 @@ class RedshiftDataApiRepository(
     return result
   }
 
-  private fun extractRecords(resultStatementResponse: GetStatementResultResponse) =
-    resultStatementResponse.records().map { record ->
-      record.mapIndexed { index, field -> extractFieldValue(field, resultStatementResponse.columnMetadata()[index]) }
-        .toMap()
-    }
-
-  private fun extractFieldValue(field: Field, columnMetadata: ColumnMetadata): Pair<String, Any?> {
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    val value = when (columnMetadata.typeName()) {
-      "varchar" -> field.stringValue()
-      "int8" -> field.longValue()
-      "timestamp" -> LocalDateTime.parse(field.stringValue(), formatter)
-      // This will need to be extended to support more date types when required in the future.
-      else -> field.stringValue()
-    }
-    return columnMetadata.name() to value
+  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
+    return jdbcTemplate.queryForList(
+      "SELECT COUNT(1) as total FROM reports.$tableId;",
+      MapSqlParameterSource(),
+    ).first()?.get("total") as Long
   }
 
   private fun buildQueryParams(filters: List<ConfiguredApiRepository.Filter>): List<SqlParameter> {
@@ -135,5 +119,5 @@ class RedshiftDataApiRepository(
     return sqlParams
   }
 
-  val queryParamKeyTransformer: (s: String) -> String = { s -> s.replace(".", "_") }
+  private val queryParamKeyTransformer: (s: String) -> String = { s -> s.replace(".", "_") }
 }

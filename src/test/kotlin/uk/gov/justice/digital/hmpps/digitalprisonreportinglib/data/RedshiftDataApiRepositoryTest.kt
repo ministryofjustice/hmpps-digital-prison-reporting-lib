@@ -361,4 +361,27 @@ SELECT *
 
     assertEquals(expected, actual)
   }
+
+  @Test
+  fun `count should make a JDBC call and return the existing results`() {
+    val tableId = "tableId"
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      mock(),
+      mock(),
+      mock(),
+    )
+    val expected = listOf<Map<String, Any?>>(mapOf("total" to 5L))
+
+    whenever(
+      jdbcTemplate.queryForList(
+        eq("SELECT COUNT(1) as total FROM reports.$tableId;"),
+        any<MapSqlParameterSource>(),
+      ),
+    ).thenReturn(expected)
+
+    val actual = redshiftDataApiRepository.count(tableId, jdbcTemplate)
+
+    assertEquals(5L, actual)
+  }
 }

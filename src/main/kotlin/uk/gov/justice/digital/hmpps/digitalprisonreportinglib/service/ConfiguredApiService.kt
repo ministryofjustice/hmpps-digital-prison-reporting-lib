@@ -169,7 +169,11 @@ class ConfiguredApiService(
     )
   }
 
-  fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? {
+  fun count(tableId: String): Count {
+    return Count(redshiftDataApiRepository.count(tableId))
+  }
+
+  private fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? {
     return definition.report.specification
       ?.field
       ?.firstOrNull { it.defaultSort }
