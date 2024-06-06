@@ -52,7 +52,7 @@ class RedshiftDataApiRepositoryTest {
   }
 
   @Test
-  fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id`() {
+  fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id and table id`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
@@ -227,8 +227,8 @@ SELECT *
     val status = "FINISHED"
     val duration = 278109264L
     val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
-    val resultRows = 10L
-    val resultSize = 100L
+    val resultRows = 0L
+    val resultSize = 0L
     val executeStatementResponse = DescribeStatementResponse.builder()
       .status(status)
       .duration(duration)

@@ -189,7 +189,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       "SUBMITTED - The query was submitted, but not yet processed.\n" +
       "Note: When the status is FAILED the error field of the response will be populated." +
       "ResultRows is the number of rows returned from the SQL statement. A -1 indicates the value is null." +
-      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.",
+      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.\n" +
+      "For Athena: \n" +
+      "Athena automatically retries your queries in cases of certain transient errors. " +
+      "As a result, you may see the query state transition from STARTED or FAILED to SUBMITTED.\n",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
     responses = [
       ApiResponse(
