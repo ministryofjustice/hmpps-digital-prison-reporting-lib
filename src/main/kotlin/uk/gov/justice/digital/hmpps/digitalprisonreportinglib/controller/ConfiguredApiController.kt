@@ -176,7 +176,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     }
   }
 
-  @GetMapping("/report/statements/{statementId}/status")
+  @GetMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}/status")
   @Operation(
     description = "Returns the status of the statement execution based on the statement ID provided." +
       "The following status values can be returned: \n" +
@@ -189,7 +189,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       "SUBMITTED - The query was submitted, but not yet processed.\n" +
       "Note: When the status is FAILED the error field of the response will be populated." +
       "ResultRows is the number of rows returned from the SQL statement. A -1 indicates the value is null." +
-      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.",
+      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.\n" +
+      "For Athena: \n" +
+      "Athena automatically retries your queries in cases of certain transient errors. " +
+      "As a result, you may see the query state transition from STARTED or FAILED to SUBMITTED.\n",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
     responses = [
       ApiResponse(
@@ -203,14 +206,22 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     ],
   )
   fun getQueryExecutionStatus(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("statementId") statementId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.getStatementStatus(statementId),
+          configuredApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()

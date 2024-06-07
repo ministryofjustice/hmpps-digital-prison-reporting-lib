@@ -1,5 +1,14 @@
 Below you can find the changes included in each release.
 
+## 4.2.0
+New AthenaAPIRepository which queries Athena.\
+Datasource supports two new optional fields: database and catalog.\
+Added functionality to call the Athena API to start the query execution and retrieve the execution status for nomis and bodmis reports based on the datasource name.
+Existing datamart reports will run against the Redshift Data API.
+Filters are not supported yet for nomis and bodmis reports as part of this release.\
+The `/report/statements/{statementId}/status` endpoint has changed to
+`/reports/{reportId}/{reportVariantId}/statements/{statementId}/status`
+
 ## 4.1.0
 Added count endpoint for the created external tables.
 

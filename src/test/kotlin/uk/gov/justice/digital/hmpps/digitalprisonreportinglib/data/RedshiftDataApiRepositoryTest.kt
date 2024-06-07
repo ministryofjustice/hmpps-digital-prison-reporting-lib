@@ -19,10 +19,8 @@ import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_DATASOURCE_NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -52,7 +50,7 @@ class RedshiftDataApiRepositoryTest {
   }
 
   @Test
-  fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id`() {
+  fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id and table id`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
     val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
@@ -108,9 +106,7 @@ class RedshiftDataApiRepositoryTest {
       filters = listOf(ConfiguredApiRepository.Filter("direction", "out")),
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
-      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -206,9 +202,7 @@ SELECT *
       ),
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
-      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -227,8 +221,8 @@ SELECT *
     val status = "FINISHED"
     val duration = 278109264L
     val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
-    val resultRows = 10L
-    val resultSize = 100L
+    val resultRows = 0L
+    val resultSize = 0L
     val executeStatementResponse = DescribeStatementResponse.builder()
       .status(status)
       .duration(duration)
@@ -325,9 +319,7 @@ SELECT *
       filters = emptyList(),
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
-      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
 
     verify(executeStatementRequestBuilder, times(0)).parameters(any<List<SqlParameter>>())

@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
@@ -28,6 +30,7 @@ class ConfiguredApiService(
   val productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,
   val redshiftDataApiRepository: RedshiftDataApiRepository,
+  val athenaApiRepository: AthenaApiRepository,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) {
 
@@ -40,6 +43,13 @@ class ConfiguredApiService(
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
     private const val SCHEMA_REF_PREFIX = "\$ref:"
   }
+
+  private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
+    get() = mapOf(
+      "datamart" to redshiftDataApiRepository,
+      "nomis" to athenaApiRepository,
+      "bodmis" to athenaApiRepository,
+    )
 
   fun validateAndFetchData(
     reportId: String,
@@ -88,21 +98,22 @@ class ConfiguredApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    return redshiftDataApiRepository
+    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name, redshiftDataApiRepository)
       .executeQueryAsync(
         query = productDefinition.dataset.query,
         filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
-        reportId = reportId,
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
-        dataSourceName = productDefinition.datasource.name,
+        database = productDefinition.datasource.database,
+        catalog = productDefinition.datasource.catalog,
       )
   }
 
-  fun getStatementStatus(statementId: String): StatementExecutionStatus {
-    return redshiftDataApiRepository.getStatementStatus(statementId)
+  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name, redshiftDataApiRepository).getStatementStatus(statementId)
   }
 
   fun getStatementResult(
