@@ -116,7 +116,6 @@ SELECT *
       .build()
     val completionTime = Instant.now()
     val submissionTime = completionTime.minus(Duration.of(10, ChronoUnit.MINUTES))
-//    val getQueryExecutionResponse = mock<GetQueryExecutionResponse>()
     val getQueryExecutionResponse = GetQueryExecutionResponse.builder()
       .queryExecution(
         QueryExecution.builder()
@@ -135,26 +134,6 @@ SELECT *
         getQueryExecutionRequest,
       ),
     ).thenReturn(getQueryExecutionResponse)
-//    val queryExecution = mock<QueryExecution>()
-//    whenever(
-//      getQueryExecutionResponse.queryExecution(),
-//    ).thenReturn(queryExecution)
-//    val queryExecutionStatus = mock<QueryExecutionStatus>()
-//    whenever(
-//      queryExecution.query(),
-//    ).thenReturn(query)
-//    whenever(
-//      queryExecution.status(),
-//    ).thenReturn(queryExecutionStatus)
-//    whenever(
-//      queryExecutionStatus.state(),
-//    ).thenReturn(QueryExecutionState.SUCCEEDED)
-//    whenever(
-//      queryExecutionStatus.completionDateTime(),
-//    ).thenReturn(completionTime)
-//    whenever(
-//      queryExecutionStatus.submissionDateTime(),
-//    ).thenReturn(submissionTime)
     val tenMinutesInNanoseconds = 600000000000
     val expected = StatementExecutionStatus(
       redshiftStatus,
