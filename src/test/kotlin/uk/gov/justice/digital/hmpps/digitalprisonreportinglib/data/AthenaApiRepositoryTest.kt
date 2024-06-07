@@ -89,7 +89,7 @@ SELECT *
       sortedAsc = true,
       policyEngineResult = "TRUE",
       database = testDb,
-      dataCatalog = testCatalog,
+      catalog = testCatalog,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)

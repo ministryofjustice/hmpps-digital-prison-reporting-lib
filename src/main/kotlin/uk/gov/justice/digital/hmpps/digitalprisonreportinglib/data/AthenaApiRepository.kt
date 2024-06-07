@@ -20,26 +20,26 @@ class AthenaApiRepository(
   val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : RepositoryHelper() {
+) : AthenaAndRedshiftCommonRepository() {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun executeQueryAsync(
+  override fun executeQueryAsync(
     query: String,
     filters: List<ConfiguredApiRepository.Filter>,
     sortColumn: String?,
     sortedAsc: Boolean,
     policyEngineResult: String,
-    dataCatalog: String,
-    database: String,
-    dynamicFilterFieldId: String? = null,
+    dynamicFilterFieldId: String?,
+    database: String?,
+    catalog: String?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val queryExecutionContext = QueryExecutionContext.builder()
       .database(database) // "DIGITAL_PRISON_REPORTING"
-      .catalog(dataCatalog) // "nomis"
+      .catalog(catalog) // "nomis"
       .build()
 
     val finalQuery = """
@@ -74,7 +74,7 @@ class AthenaApiRepository(
     return StatementExecutionResponse(tableId, queryExecutionId)
   }
 
-  fun getStatementStatus(statementId: String): StatementExecutionStatus {
+  override fun getStatementStatus(statementId: String): StatementExecutionStatus {
     val getQueryExecutionRequest = GetQueryExecutionRequest.builder()
       .queryExecutionId(statementId)
       .build()

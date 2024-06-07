@@ -1,10 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
@@ -22,20 +19,20 @@ class RedshiftDataApiRepository(
   val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : RepositoryHelper() {
+) : AthenaAndRedshiftCommonRepository() {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
-  fun executeQueryAsync(
+  override fun executeQueryAsync(
     query: String,
     filters: List<ConfiguredApiRepository.Filter>,
     sortColumn: String?,
     sortedAsc: Boolean,
-    reportId: String,
     policyEngineResult: String,
-    dynamicFilterFieldId: String? = null,
-    dataSourceName: String,
+    dynamicFilterFieldId: String?,
+    database: String?,
+    catalog: String?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
@@ -69,7 +66,7 @@ class RedshiftDataApiRepository(
     return StatementExecutionResponse(tableId, response.id())
   }
 
-  fun getStatementStatus(statementId: String): StatementExecutionStatus {
+  override fun getStatementStatus(statementId: String): StatementExecutionStatus {
     val statementRequest = DescribeStatementRequest.builder()
       .id(statementId)
       .build()
@@ -82,33 +79,6 @@ class RedshiftDataApiRepository(
       resultSize = describeStatementResponse.resultSize(),
       error = describeStatementResponse.error(),
     )
-  }
-
-  fun getPaginatedExternalTableResult(
-    tableId: String,
-    selectedPage: Long,
-    pageSize: Long,
-    jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),
-  ): List<Map<String, Any?>> {
-    val stopwatch = StopWatch.createStarted()
-    val result = jdbcTemplate
-      .queryForList(
-        "SELECT * FROM reports.$tableId limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;",
-        MapSqlParameterSource(),
-      )
-      .map {
-        transformTimestampToLocalDateTime(it)
-      }
-    stopwatch.stop()
-    log.debug("Query Execution time in ms: {}", stopwatch.time)
-    return result
-  }
-
-  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
-    return jdbcTemplate.queryForList(
-      "SELECT COUNT(1) as total FROM reports.$tableId;",
-      MapSqlParameterSource(),
-    ).first()?.get("total") as Long
   }
 
   private fun buildQueryParams(filters: List<ConfiguredApiRepository.Filter>): List<SqlParameter> {
