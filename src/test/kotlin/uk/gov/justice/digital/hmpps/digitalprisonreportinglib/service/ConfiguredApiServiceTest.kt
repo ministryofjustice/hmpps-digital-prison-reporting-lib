@@ -1245,7 +1245,8 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the statement execution ID when getStatementStatus is called`() {
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when getStatementStatus is called`() {
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -1263,8 +1264,40 @@ class ConfiguredApiServiceTest {
       redshiftDataApiRepository.getStatementStatus(statementId),
     ).thenReturn(statementExecutionStatus)
 
-    val actual = configuredApiService.getStatementStatus(statementId)
+    val actual = configuredApiService.getStatementStatus(statementId, "external-movements", "last-month")
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
+    verifyNoInteractions(athenaApiRepository)
+    assertEquals(statementExecutionStatus, actual)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["productDefinitionNomis.json", "productDefinitionBodmis.json"])
+  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getStatementStatus is called`(definitionFile: String) {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf(definitionFile),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
+    val statementId = "statementId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
+    val resultRows = 10L
+    val resultSize = 100L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      query,
+      resultRows,
+      resultSize,
+    )
+    whenever(
+      athenaApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+
+    val actual = configuredApiService.getStatementStatus(statementId, "external-movements", "last-month")
+    verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
+    verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionStatus, actual)
   }
 

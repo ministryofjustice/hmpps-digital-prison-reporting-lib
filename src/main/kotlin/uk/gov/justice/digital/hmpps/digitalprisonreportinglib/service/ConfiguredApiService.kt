@@ -111,8 +111,9 @@ class ConfiguredApiService(
       )
   }
 
-  fun getStatementStatus(statementId: String): StatementExecutionStatus {
-    return redshiftDataApiRepository.getStatementStatus(statementId)
+  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name, redshiftDataApiRepository).getStatementStatus(statementId)
   }
 
   fun getStatementResult(

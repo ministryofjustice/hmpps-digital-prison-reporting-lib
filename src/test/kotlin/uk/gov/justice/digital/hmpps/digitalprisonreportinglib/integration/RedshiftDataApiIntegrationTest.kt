@@ -142,6 +142,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Calling the report status endpoint calls the getStatementStatus of the ConfiguredApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
+    val reportId = "external-movements"
+    val reportVariantId = "last-month"
     val status = "FINISHED"
     val duration = 278109264L
     val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
@@ -157,6 +159,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     given(
       configuredApiService.getStatementStatus(
         eq(queryExecutionId),
+        eq(reportId),
+        eq(reportVariantId),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
       .willReturn(statementExecutionStatus)
@@ -164,7 +169,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
-          .path("/report/statements/$queryExecutionId/status")
+          .path("/reports/$reportId/$reportVariantId/statements/$queryExecutionId/status")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))

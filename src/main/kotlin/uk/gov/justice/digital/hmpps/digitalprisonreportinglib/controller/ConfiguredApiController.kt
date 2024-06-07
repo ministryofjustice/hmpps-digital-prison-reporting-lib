@@ -176,7 +176,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     }
   }
 
-  @GetMapping("/report/statements/{statementId}/status")
+  @GetMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}/status")
   @Operation(
     description = "Returns the status of the statement execution based on the statement ID provided." +
       "The following status values can be returned: \n" +
@@ -206,14 +206,22 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     ],
   )
   fun getQueryExecutionStatus(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("statementId") statementId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
     return try {
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.getStatementStatus(statementId),
+          configuredApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
