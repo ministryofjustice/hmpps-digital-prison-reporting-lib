@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.2.1
+Fixes the issue in which when a request was made with filters then all subsequent requests without filters would fail.
+
 ## 4.2.0
 New AthenaAPIRepository which queries Athena.\
 Datasource supports two new optional fields: database and catalog.\

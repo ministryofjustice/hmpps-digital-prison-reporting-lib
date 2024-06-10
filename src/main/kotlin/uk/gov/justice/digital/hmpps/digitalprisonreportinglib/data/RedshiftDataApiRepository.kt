@@ -15,8 +15,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 @Service
 class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
-  val executeStatementRequestBuilder: ExecuteStatementRequest.Builder,
   val tableIdGenerator: TableIdGenerator,
+  @Value("\${dpr.lib.redshiftdataapi.database:db}") private val redshiftDataApiDb: String,
+  @Value("\${dpr.lib.redshiftdataapi.clusterid:clusterId}") private val redshiftDataApiClusterId: String,
+  @Value("\${dpr.lib.redshiftdataapi.secretarn:arn}") private val redshiftDataApiSecretArn: String,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
 ) : AthenaAndRedshiftCommonRepository() {
@@ -50,10 +52,11 @@ class RedshiftDataApiRepository(
     }
           );
     """.trimIndent()
-    val requestBuilder = executeStatementRequestBuilder
-      .sql(
-        generateSql,
-      )
+    val requestBuilder = ExecuteStatementRequest.builder()
+      .clusterIdentifier(redshiftDataApiClusterId)
+      .database(redshiftDataApiDb)
+      .secretArn(redshiftDataApiSecretArn)
+      .sql(generateSql)
     if (filters.isNotEmpty()) {
       requestBuilder
         .parameters(buildQueryParams(filters))

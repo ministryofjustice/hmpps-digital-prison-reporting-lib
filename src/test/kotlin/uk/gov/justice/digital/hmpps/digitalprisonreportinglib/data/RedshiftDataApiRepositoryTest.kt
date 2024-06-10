@@ -3,10 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -16,9 +14,6 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRespo
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
-import software.amazon.awssdk.services.redshiftdata.model.ValidationException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
@@ -47,27 +42,33 @@ class RedshiftDataApiRepositoryTest {
 
     val movementPrisoner1 = mapOf("id" to "171034.12", "prisoner" to 171034L, "date" to LocalDateTime.of(2010, 12, 17, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 17, 7, 12, 0), "direction" to "OUT", "type" to "CRT", "origin_code" to "LFI", "origin" to "LANCASTER FARMS (HMPYOI)", "destination_code" to "STHEMC", "destination" to "St. Helens Magistrates Court", "reason" to "Production (Sentence/Civil Custody)")
     val movementPrisoner2 = mapOf("id" to "227482.1", "prisoner" to 227482L, "date" to LocalDateTime.of(2010, 12, 8, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 8, 10, 8, 0), "direction" to "IN", "type" to "ADM", "origin_code" to "IMM", "origin" to "Immigration", "destination_code" to "HRI", "destination" to "Haslar Immigration Removal Centre", "reason" to "Detained Immigration Act 71 -Wait Deport")
+    private const val REDSHIFT_DATA_API_DB: String = "redshiftDB"
+    private const val REDSHIFT_DATA_API_CLUSTER_ID: String = "redshiftClusterId"
+    private const val REDSHIFT_DATA_API_SECRET_ARN: String = "redshiftSecretArn"
   }
 
   @Test
   fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id and table id`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
-    val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
     val tableIdGenerator = mock<TableIdGenerator>()
     val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
     val executionId = "someId"
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
-      executeStatementRequestBuilder,
       tableIdGenerator,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
     )
-
-    val mockedBuilderWithSql = ExecuteStatementRequest.builder()
-      .clusterIdentifier("ab")
-      .database("cd")
-      .secretArn("ef")
+    val queryParams = listOf(SqlParameter.builder().name("direction").value("out").build())
+    val executeStatementRequest = ExecuteStatementRequest.builder()
+      .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
+      .database(REDSHIFT_DATA_API_DB)
+      .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
       .sql(sqlStatement(tableId))
+      .parameters(queryParams)
+      .build()
 
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
@@ -76,24 +77,8 @@ class RedshiftDataApiRepositoryTest {
     )
 
     whenever(
-      executeStatementRequestBuilder.sql(
-        sqlStatement(tableId),
-      ),
-    ).thenReturn(
-      mockedBuilderWithSql,
-    )
-
-    val queryParams = listOf(SqlParameter.builder().name("direction").value("out").build())
-    whenever(
-      executeStatementRequestBuilder.parameters(queryParams),
-    ).thenReturn(
-      mockedBuilderWithSql
-        .parameters(queryParams),
-    )
-
-    whenever(
       redshiftDataClient.executeStatement(
-        mockedBuilderWithSql.build(),
+        executeStatementRequest,
       ),
     ).thenReturn(executeStatementResponse)
 
@@ -136,20 +121,26 @@ SELECT *
           );
       """.trimIndent()
     val redshiftDataClient = mock<RedshiftDataClient>()
-    val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
     val tableIdGenerator = mock<TableIdGenerator>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
-      executeStatementRequestBuilder,
       tableIdGenerator,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
     )
-
-    val mockedBuilderWithSql = ExecuteStatementRequest.builder()
-      .clusterIdentifier("ab")
-      .database("cd")
-      .secretArn("ef")
+    val queryParamsWithUnderscores = listOf(
+      SqlParameter.builder().name(dateStartKeyUnderscore).value(startDate).build(),
+      SqlParameter.builder().name(dateEndKeyUnderscore).value(endDate).build(),
+    )
+    val executeStatementRequest = ExecuteStatementRequest.builder()
+      .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
+      .database(REDSHIFT_DATA_API_DB)
+      .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
       .sql(sqlStatement)
+      .parameters(queryParamsWithUnderscores)
+      .build()
 
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
@@ -158,35 +149,8 @@ SELECT *
     )
 
     whenever(
-      executeStatementRequestBuilder.sql(
-        sqlStatement,
-      ),
-    ).thenReturn(
-      mockedBuilderWithSql,
-    )
-
-    val queryParamsWithUnderscores = listOf(
-      SqlParameter.builder().name(dateStartKeyUnderscore).value(startDate).build(),
-      SqlParameter.builder().name(dateEndKeyUnderscore).value(endDate).build(),
-    )
-    whenever(
-      executeStatementRequestBuilder.parameters(queryParamsWithUnderscores),
-    ).thenReturn(
-      mockedBuilderWithSql
-        .parameters(queryParamsWithUnderscores),
-    )
-
-    val queryParamsWithDots = listOf(
-      SqlParameter.builder().name("date$RANGE_FILTER_START_SUFFIX").value(startDate).build(),
-      SqlParameter.builder().name("date$RANGE_FILTER_END_SUFFIX").value(endDate).build(),
-    )
-    whenever(
-      executeStatementRequestBuilder.parameters(queryParamsWithDots),
-    ).thenThrow(ValidationException::class.java)
-
-    whenever(
       redshiftDataClient.executeStatement(
-        mockedBuilderWithSql.build(),
+        executeStatementRequest,
       ),
     ).thenReturn(executeStatementResponse)
 
@@ -214,8 +178,10 @@ SELECT *
     val tableIdGenerator = mock<TableIdGenerator>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
-      mock(),
       tableIdGenerator,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
     )
     val statementId = "statementId"
     val status = "FINISHED"
@@ -254,13 +220,14 @@ SELECT *
   @Test
   fun `executeQueryAsync should call the redshift data api and not error when no filters are provided`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
-    val executeStatementRequestBuilder = mock<ExecuteStatementRequest.Builder>()
     val executeStatementResponse = mock<ExecuteStatementResponse>()
     val tableIdGenerator = mock<TableIdGenerator>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
-      executeStatementRequestBuilder,
       tableIdGenerator,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
     )
     val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
     val executionId = "someId"
@@ -279,11 +246,12 @@ SELECT *
                   );
       """.trimIndent()
 
-    val mockedBuilderWithSql = ExecuteStatementRequest.builder()
-      .clusterIdentifier("ab")
-      .database("cd")
-      .secretArn("ef")
+    val executeStatementRequest = ExecuteStatementRequest.builder()
+      .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
+      .database(REDSHIFT_DATA_API_DB)
+      .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
       .sql(finalQuery)
+      .build()
 
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
@@ -292,21 +260,8 @@ SELECT *
     )
 
     whenever(
-      executeStatementRequestBuilder.sql(
-        finalQuery,
-      ),
-    ).thenReturn(
-      mockedBuilderWithSql,
-    )
-
-    val queryParams = emptyList<SqlParameter>()
-    whenever(
-      executeStatementRequestBuilder.parameters(queryParams),
-    ).thenThrow(ValidationException::class.java)
-
-    whenever(
       redshiftDataClient.executeStatement(
-        mockedBuilderWithSql.build(),
+        executeStatementRequest,
       ),
     ).thenReturn(executeStatementResponse)
 
@@ -322,8 +277,6 @@ SELECT *
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
     )
 
-    verify(executeStatementRequestBuilder, times(0)).parameters(any<List<SqlParameter>>())
-
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
   }
 
@@ -335,8 +288,10 @@ SELECT *
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
-      mock(),
       tableIdGenerator,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
     )
     val selectedPage = 1L
     val pageSize = 10L
@@ -361,7 +316,9 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       mock(),
       mock(),
-      mock(),
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
     )
     val expected = listOf<Map<String, Any?>>(mapOf("total" to 5L))
 
