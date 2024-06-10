@@ -58,14 +58,13 @@ abstract class RepositoryHelper {
 
   protected fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
   protected fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE $policyEngineResult)"""
-  protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>, keyTransformer: ((s: String) -> String)? = null) =
-    """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters, keyTransformer)})"""
+  protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) =
+    """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
 
   private fun buildFiltersWhereClause(
     filters: List<ConfiguredApiRepository.Filter>,
-    keyTransformer: ((s: String) -> String)?,
   ): String {
-    val filterClause = filters.joinToString(" AND ") { this.buildCondition(it, keyTransformer) }.ifEmpty { "TRUE" }
+    val filterClause = filters.joinToString(" AND ") { this.buildCondition(it) }.ifEmpty { "TRUE" }
     log.debug("Filter clause: {}", filterClause)
     return filterClause
   }
@@ -77,18 +76,18 @@ abstract class RepositoryHelper {
   ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
           FROM $FILTER_ ${buildOrderByClause(sortColumn, sortedAsc)}"""
 
-  private fun buildCondition(filter: ConfiguredApiRepository.Filter, keyTransformer: ((s: String) -> String)?): String {
+  protected open fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
     val lowerCaseField = "lower(${filter.field})"
     val key = filter.getKey()
 
     return when (filter.type) {
-      FilterType.STANDARD -> "$lowerCaseField = :${maybeTransform(key, keyTransformer)}"
-      FilterType.RANGE_START -> "$lowerCaseField >= :${maybeTransform(key, keyTransformer)}"
-      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:${maybeTransform(key, keyTransformer)} AS timestamp)"
-      FilterType.RANGE_END -> "$lowerCaseField <= :${maybeTransform(key, keyTransformer)}"
-      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:${maybeTransform(key, keyTransformer)} AS timestamp) + INTERVAL '1' day)"
+      FilterType.STANDARD -> "$lowerCaseField = :$key"
+      FilterType.RANGE_START -> "$lowerCaseField >= :$key"
+      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST(:$key AS timestamp)"
+      FilterType.RANGE_END -> "$lowerCaseField <= :$key"
+      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST(:$key AS timestamp) + INTERVAL '1' day)"
       FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
-      FilterType.BOOLEAN -> "${filter.field} = :${maybeTransform(key, keyTransformer)}"
+      FilterType.BOOLEAN -> "${filter.field} = :$key"
     }
   }
 
