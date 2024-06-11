@@ -13,7 +13,6 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
@@ -34,7 +33,7 @@ class RedshiftDataApiRepositoryTest {
                   WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
         FROM datamart.domain.movement_movement as movements
         JOIN datamart.domain.prisoner_prisoner as prisoners
-        ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE lower(direction) = :direction)
+        ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE lower(direction) = 'out')
         SELECT *
                   FROM filter_ ORDER BY date asc
                   );
@@ -61,13 +60,11 @@ class RedshiftDataApiRepositoryTest {
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
     )
-    val queryParams = listOf(SqlParameter.builder().name("direction").value("out").build())
     val executeStatementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
       .database(REDSHIFT_DATA_API_DB)
       .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
       .sql(sqlStatement(tableId))
-      .parameters(queryParams)
       .build()
 
     whenever(
@@ -98,13 +95,13 @@ class RedshiftDataApiRepositoryTest {
   }
 
   @Test
-  fun `executeQueryAsync should replace filters which contain a dot in their name with an underscore and not error`() {
-    val dateStartKeyUnderscore = "date_start"
-    val dateEndKeyUnderscore = "date_end"
+  fun `executeQueryAsync should call the redshift data api with the correct query including all filters and return the execution id and table id`() {
     val startDate = "2024-02-16"
     val endDate = "2024-02-17"
+    val directionFilter = ConfiguredApiRepository.Filter("direction", "out")
     val startDateFilter = ConfiguredApiRepository.Filter("date", startDate, FilterType.DATE_RANGE_START)
     val endDateFilter = ConfiguredApiRepository.Filter("date", endDate, FilterType.DATE_RANGE_END)
+    val nameDynamicFilter = ConfiguredApiRepository.Filter("name", "LastNa", FilterType.DYNAMIC)
     val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
     val executionId = "someId"
     val sqlStatement =
@@ -115,7 +112,7 @@ class RedshiftDataApiRepositoryTest {
           WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
 FROM datamart.domain.movement_movement as movements
 JOIN datamart.domain.prisoner_prisoner as prisoners
-ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE date >= CAST(:$dateStartKeyUnderscore AS timestamp) AND date < (CAST(:$dateEndKeyUnderscore AS timestamp) + INTERVAL '1' day))
+ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE date >= CAST('$startDate' AS timestamp) AND date < (CAST('$endDate' AS timestamp) + INTERVAL '1' day) AND lower(direction) = 'out' AND name ILIKE 'LastNa%')
 SELECT *
           FROM filter_ ORDER BY date asc
           );
@@ -130,16 +127,11 @@ SELECT *
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
     )
-    val queryParamsWithUnderscores = listOf(
-      SqlParameter.builder().name(dateStartKeyUnderscore).value(startDate).build(),
-      SqlParameter.builder().name(dateEndKeyUnderscore).value(endDate).build(),
-    )
     val executeStatementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
       .database(REDSHIFT_DATA_API_DB)
       .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
       .sql(sqlStatement)
-      .parameters(queryParamsWithUnderscores)
       .build()
 
     whenever(
@@ -163,6 +155,8 @@ SELECT *
       filters = listOf(
         startDateFilter,
         endDateFilter,
+        directionFilter,
+        nameDynamicFilter,
       ),
       sortColumn = "date",
       sortedAsc = true,

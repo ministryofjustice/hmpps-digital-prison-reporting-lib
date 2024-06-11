@@ -38,8 +38,8 @@ class AthenaApiRepository(
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val queryExecutionContext = QueryExecutionContext.builder()
-      .database(database) // "DIGITAL_PRISON_REPORTING"
-      .catalog(catalog) // "nomis"
+      .database(database)
+      .catalog(catalog)
       .build()
 
     val finalQuery = """

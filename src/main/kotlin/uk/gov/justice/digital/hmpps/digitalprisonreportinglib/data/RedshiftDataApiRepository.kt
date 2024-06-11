@@ -7,7 +7,6 @@ import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import software.amazon.awssdk.services.redshiftdata.model.SqlParameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
@@ -46,22 +45,18 @@ class RedshiftDataApiRepository(
       buildFinalQuery(
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),
-        buildFiltersQuery(filters, queryParamKeyTransformer),
+        buildFiltersQuery(filters),
         buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
       )
     }
           );
     """.trimIndent()
-    val requestBuilder = ExecuteStatementRequest.builder()
+    val statementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(redshiftDataApiClusterId)
       .database(redshiftDataApiDb)
       .secretArn(redshiftDataApiSecretArn)
       .sql(generateSql)
-    if (filters.isNotEmpty()) {
-      requestBuilder
-        .parameters(buildQueryParams(filters))
-    }
-    val statementRequest: ExecuteStatementRequest = requestBuilder.build()
+      .build()
 
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
     log.debug("Execution ID: {}", response.id())
@@ -83,14 +78,16 @@ class RedshiftDataApiRepository(
       error = describeStatementResponse.error(),
     )
   }
-
-  private fun buildQueryParams(filters: List<ConfiguredApiRepository.Filter>): List<SqlParameter> {
-    val sqlParams: MutableList<SqlParameter> = mutableListOf()
-    filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(maybeTransform(it.getKey(), queryParamKeyTransformer)).value(it.value.lowercase()).build()) }
-    filters.filter { it.type == FilterType.BOOLEAN }.forEach { sqlParams.add(SqlParameter.builder().name(maybeTransform(it.getKey(), queryParamKeyTransformer)).value(it.value).build()) }
-    log.debug("SQL parameters: {}", sqlParams)
-    return sqlParams
+  override fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
+    val lowerCaseField = "lower(${filter.field})"
+    return when (filter.type) {
+      FilterType.STANDARD -> "$lowerCaseField = '${filter.value.lowercase()}'"
+      FilterType.RANGE_START -> "$lowerCaseField >= ${filter.value.lowercase()}"
+      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST('${filter.value}' AS timestamp)"
+      FilterType.RANGE_END -> "$lowerCaseField <= ${filter.value.lowercase()}"
+      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST('${filter.value}' AS timestamp) + INTERVAL '1' day)"
+      FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
+      FilterType.BOOLEAN -> "${filter.field} = ${filter.value.toBoolean()}"
+    }
   }
-
-  private val queryParamKeyTransformer: (s: String) -> String = { s -> s.replace(".", "_") }
 }

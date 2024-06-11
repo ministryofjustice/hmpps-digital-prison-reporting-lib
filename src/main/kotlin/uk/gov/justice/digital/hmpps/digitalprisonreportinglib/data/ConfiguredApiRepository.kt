@@ -74,7 +74,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
 
   private fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {
     val preparedStatementNamedParams = MapSqlParameterSource()
-    filters.filterNot { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
+    filters.filterNot { it.type == FilterType.DYNAMIC }.filterNot { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
     filters.filter { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.toBoolean()) }
     log.debug("Prepared statement named parameters: {}", preparedStatementNamedParams)
     return preparedStatementNamedParams
