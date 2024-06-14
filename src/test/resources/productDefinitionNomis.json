@@ -10,7 +10,7 @@
   "datasource" : [
     {
       "id": "nomis",
-      "name": "nomis",
+      "name": "NOMIS",
       "database": "nomis_db",
       "catalog": "nomis"
     }],
