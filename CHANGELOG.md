@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.2.3
+Case-insensitive comparison of Datasource name to determine whether to use the Athena or Redshift API.
+
 ## 4.2.2
 Fixes the issue in which the Redshift async query was failing when the parameters' values were passed using the ExecuteStatementRequest.Builder.parameters method of the Redshift Data Api.
 

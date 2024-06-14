@@ -98,7 +98,7 @@ class ConfiguredApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name, redshiftDataApiRepository)
+    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
       .executeQueryAsync(
         query = productDefinition.dataset.query,
         filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
@@ -113,7 +113,7 @@ class ConfiguredApiService(
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name, redshiftDataApiRepository).getStatementStatus(statementId)
+    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository).getStatementStatus(statementId)
   }
 
   fun getStatementResult(
