@@ -7,6 +7,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import java.sql.Timestamp
 import javax.sql.DataSource
 
@@ -15,6 +16,8 @@ abstract class RepositoryHelper {
     @JvmStatic
     protected val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val EXTERNAL_MOVEMENTS_PRODUCT_ID = "external-movements"
+    const val TRUE_WHERE_CLAUSE = "1=1"
+    const val FALSE_WHERE_CLAUSE = "0=1"
 
     const val DATASET_ = """dataset_"""
     const val POLICY_ = """policy_"""
@@ -57,14 +60,20 @@ abstract class RepositoryHelper {
   }
 
   protected fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
-  protected fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE $policyEngineResult)"""
+  protected fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
   protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) =
     """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
+
+  private fun convertPolicyResultToSql(policyEngineResult: String): String {
+    return policyEngineResult
+      .replace(PolicyResult.POLICY_PERMIT, TRUE_WHERE_CLAUSE)
+      .replace(PolicyResult.POLICY_DENY, FALSE_WHERE_CLAUSE)
+  }
 
   private fun buildFiltersWhereClause(
     filters: List<ConfiguredApiRepository.Filter>,
   ): String {
-    val filterClause = filters.joinToString(" AND ") { this.buildCondition(it) }.ifEmpty { "TRUE" }
+    val filterClause = filters.joinToString(" AND ") { this.buildCondition(it) }.ifEmpty { TRUE_WHERE_CLAUSE }
     log.debug("Filter clause: {}", filterClause)
     return filterClause
   }

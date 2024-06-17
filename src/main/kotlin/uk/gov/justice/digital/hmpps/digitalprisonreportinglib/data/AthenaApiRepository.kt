@@ -54,7 +54,7 @@ class AthenaApiRepository(
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),
         // The filters part will be replaced with the variables CTE
-        "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE TRUE)",
+        "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
       ).replace("'", "''")
     }'
