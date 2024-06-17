@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -15,7 +17,10 @@ import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementReques
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
@@ -234,7 +239,7 @@ SELECT *
                   WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
         FROM datamart.domain.movement_movement as movements
         JOIN datamart.domain.prisoner_prisoner as prisoners
-        ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE TRUE)
+        ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
         SELECT *
                   FROM filter_ ORDER BY date asc
                   );
@@ -269,6 +274,73 @@ SELECT *
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+    )
+
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "${PolicyResult.POLICY_PERMIT}, $TRUE_WHERE_CLAUSE",
+    "${PolicyResult.POLICY_DENY}, $FALSE_WHERE_CLAUSE",
+  )
+  fun `executeQueryAsync should call the redshift data api with the converted sql where clause for permit and denied policies`(policyEngineResult: String, queryWhereClause: String) {
+    val redshiftDataClient = mock<RedshiftDataClient>()
+    val executeStatementResponse = mock<ExecuteStatementResponse>()
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
+    val executionId = "someId"
+    val finalQuery =
+      """
+                  CREATE EXTERNAL TABLE reports.$tableId 
+                  STORED AS parquet 
+                  LOCATION 's3://dpr-working-development/reports/$tableId/' 
+                  AS ( 
+                  WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
+        FROM datamart.domain.movement_movement as movements
+        JOIN datamart.domain.prisoner_prisoner as prisoners
+        ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE $queryWhereClause),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
+        SELECT *
+                  FROM filter_ ORDER BY date asc
+                  );
+      """.trimIndent()
+
+    val executeStatementRequest = ExecuteStatementRequest.builder()
+      .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
+      .database(REDSHIFT_DATA_API_DB)
+      .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
+      .sql(finalQuery)
+      .build()
+
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+    )
+
+    whenever(
+      redshiftDataClient.executeStatement(
+        executeStatementRequest,
+      ),
+    ).thenReturn(executeStatementResponse)
+
+    whenever(
+      executeStatementResponse.id(),
+    ).thenReturn(executionId)
+
+    val actual = redshiftDataApiRepository.executeQueryAsync(
+      query = REPOSITORY_TEST_QUERY,
+      filters = emptyList(),
+      sortColumn = "date",
+      sortedAsc = true,
+      policyEngineResult = policyEngineResult,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)

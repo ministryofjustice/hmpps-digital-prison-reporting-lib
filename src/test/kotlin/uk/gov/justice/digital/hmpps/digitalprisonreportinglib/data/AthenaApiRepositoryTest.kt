@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
@@ -15,6 +14,9 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
@@ -27,22 +29,26 @@ class AthenaApiRepositoryTest {
   companion object {
     val dpdQuery = "SELECT column_a,column_b FROM schema_a.table_a"
   }
-  fun sqlStatement(tableId: String) =
+  fun sqlStatement(tableId: String, whereClauseCondition: String? = TRUE_WHERE_CLAUSE) =
     """          CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           'WITH dataset_ AS ($dpdQuery),policy_ AS (SELECT * FROM dataset_ WHERE TRUE),filter_ AS (SELECT * FROM policy_ WHERE TRUE)
+           'WITH dataset_ AS ($dpdQuery),policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
 SELECT *
           FROM filter_ ORDER BY column_a asc'
            )) 
           );
     """.trimIndent()
 
-  @Test
-  fun `executeQueryAsync should call the athena data api with the correct query and return the execution id and table id`() {
+  @ParameterizedTest
+  @CsvSource(
+    "${PolicyResult.POLICY_PERMIT}, $TRUE_WHERE_CLAUSE",
+    "${PolicyResult.POLICY_DENY}, $FALSE_WHERE_CLAUSE",
+  )
+  fun `executeQueryAsync should call the athena data api with the correct query and return the execution id and table id`(policyEngineResult: String, whereClauseCondition: String) {
     val athenaClient = mock<AthenaClient>()
     val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
     val tableIdGenerator = mock<TableIdGenerator>()
@@ -62,7 +68,7 @@ SELECT *
       .outputLocation("s3://dpr-working-development/reports/$tableId/")
       .build()
     val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
-      .queryString(sqlStatement(tableId))
+      .queryString(sqlStatement(tableId, whereClauseCondition))
       .queryExecutionContext(queryExecutionContext)
       .resultConfiguration(resultConfiguration)
       .build()
@@ -87,7 +93,7 @@ SELECT *
       filters = emptyList(),
       sortColumn = "column_a",
       sortedAsc = true,
-      policyEngineResult = "TRUE",
+      policyEngineResult = policyEngineResult,
       database = testDb,
       catalog = testCatalog,
     )
