@@ -1,5 +1,18 @@
 Below you can find the changes included in each release.
 
+## 4.3.0
+Change the way we resolve Filters and Policy CTEs from WHERE TRUE and WHERE FALSE clauses to WHERE 1=1 and 0=1 respectively  
+in the SQL queries in order to provide support also for Oracle.
+
+## 4.2.3
+Case-insensitive comparison of Datasource name to determine whether to use the Athena or Redshift API.
+
+## 4.2.2
+Fixes the issue in which the Redshift async query was failing when the parameters' values were passed using the ExecuteStatementRequest.Builder.parameters method of the Redshift Data Api.
+
+## 4.2.1
+Fixes the issue in which when a request was made with filters then all subsequent requests without filters would fail.
+
 ## 4.2.0
 New AthenaAPIRepository which queries Athena.\
 Datasource supports two new optional fields: database and catalog.\

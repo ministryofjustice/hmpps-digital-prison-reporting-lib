@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import java.time.LocalDateTime
 
@@ -590,6 +591,22 @@ class ConfiguredApiRepositoryTest {
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
+  }
+
+  @Test
+  fun `should return all rows for a permit policy `() {
+    val actual = configuredApiRepository.executeQuery(
+      query = REPOSITORY_TEST_QUERY,
+      filters = emptyList(),
+      selectedPage = 1,
+      pageSize = 20,
+      sortColumn = "date",
+      sortedAsc = true,
+      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+    )
+    Assertions.assertEquals(5, actual.size)
   }
 
   @Test

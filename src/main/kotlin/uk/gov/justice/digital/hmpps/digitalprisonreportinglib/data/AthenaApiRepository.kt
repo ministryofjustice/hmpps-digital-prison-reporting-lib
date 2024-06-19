@@ -38,8 +38,8 @@ class AthenaApiRepository(
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val queryExecutionContext = QueryExecutionContext.builder()
-      .database(database) // "DIGITAL_PRISON_REPORTING"
-      .catalog(catalog) // "nomis"
+      .database(database)
+      .catalog(catalog)
       .build()
 
     val finalQuery = """
@@ -54,7 +54,7 @@ class AthenaApiRepository(
         buildReportQuery(query),
         buildPolicyQuery(policyEngineResult),
         // The filters part will be replaced with the variables CTE
-        "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE TRUE)",
+        "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
       ).replace("'", "''")
     }'
