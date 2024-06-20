@@ -6,8 +6,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
@@ -15,7 +13,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.W
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
@@ -35,27 +32,13 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
   val todayRegex: Regex = Regex("today\\(\\)")
   val dateRegex: Regex = Regex("today\\((-?\\d+), ?([a-z]+)\\)", RegexOption.IGNORE_CASE)
-
-  fun map(
-    productDefinition: ProductDefinition,
-    renderMethod: RenderMethod?,
-    userToken: DprAuthAwareAuthenticationToken?,
-    dataProductDefinitionsPath: String? = null,
-  ): ReportDefinition = ReportDefinition(
-    id = productDefinition.id,
-    name = productDefinition.name,
-    description = productDefinition.description,
-    variants = productDefinition.report
-      .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(productDefinition.id, it, productDefinition.dataset, userToken, dataProductDefinitionsPath) },
-  )
-
-  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): VariantDefinition {
-    val dataSetRef = report.dataset.removePrefix("\$ref:")
-    val dataSet = datasets.find { it.id == dataSetRef }
-      ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
-
-    return map(report, dataSet, productDefinitionId, userToken, dataProductDefinitionsPath)
+  fun map(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
+    return SingleVariantReportDefinition(
+      id = definition.id,
+      name = definition.name,
+      description = definition.description,
+      variant = map(report = definition.report, dataSet = definition.dataset, productDefinitionId = definition.id, userToken = userToken, dataProductDefinitionsPath = dataProductDefinitionsPath),
+    )
   }
 
   private fun map(
@@ -229,13 +212,4 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     name = definition.name,
     display = definition.display,
   )
-
-  fun map(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
-    return SingleVariantReportDefinition(
-      id = definition.id,
-      name = definition.name,
-      description = definition.description,
-      variant = map(report = definition.report, dataSet = definition.dataset, productDefinitionId = definition.id, userToken = userToken, dataProductDefinitionsPath = dataProductDefinitionsPath),
-    )
-  }
 }

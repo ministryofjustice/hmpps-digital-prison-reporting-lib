@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import org.assertj.core.api.Assertions
+import jakarta.validation.ValidationException
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
@@ -27,8 +29,23 @@ class JsonFileProductDefinitionRepositoryTest {
     val productDefinition = jsonFileProductDefinitionRepository.getProductDefinition(
       "dpd001-court-hospital-movements",
     )
-    Assertions.assertThat(productDefinition).isNotNull
-    Assertions.assertThat(productDefinition.id).isEqualTo("dpd001-court-hospital-movements")
-    Assertions.assertThat(productDefinition.policy).isEqualTo(listOf(policy))
+    assertThat(productDefinition).isNotNull
+    assertThat(productDefinition.id).isEqualTo("dpd001-court-hospital-movements")
+    assertThat(productDefinition.policy).isEqualTo(listOf(policy))
+  }
+
+  @Test
+  fun `getSingleReportProductDefinition fails when there is no matching dataset`() {
+    val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("nonMatchingDatasetProductDefinition.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val exception = assertThrows(ValidationException::class.java) {
+      jsonFileProductDefinitionRepository.getSingleReportProductDefinition(
+        "dpd001-court-hospital-movements",
+        "report003-hospital-movement",
+      )
+    }
+    assertThat(exception).message().isEqualTo("Invalid dataSetId in report: non-matching-dataset")
   }
 }
