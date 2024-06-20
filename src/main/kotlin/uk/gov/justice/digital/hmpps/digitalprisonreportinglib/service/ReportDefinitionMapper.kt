@@ -40,27 +40,6 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       variant = map(report = definition.report, dataSet = definition.dataset, productDefinitionId = definition.id, userToken = userToken, dataProductDefinitionsPath = dataProductDefinitionsPath),
     )
   }
-//  fun map(
-//    productDefinition: ProductDefinition,
-//    renderMethod: RenderMethod?,
-//    userToken: DprAuthAwareAuthenticationToken?,
-//    dataProductDefinitionsPath: String? = null,
-//  ): ReportDefinition = ReportDefinition(
-//    id = productDefinition.id,
-//    name = productDefinition.name,
-//    description = productDefinition.description,
-//    variants = productDefinition.report
-//      .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-//      .map { map(productDefinition.id, it, productDefinition.dataset, userToken, dataProductDefinitionsPath) },
-//  )
-
-  private fun map(productDefinitionId: String, report: Report, datasets: List<Dataset>, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): VariantDefinition {
-    val dataSetRef = report.dataset.removePrefix("\$ref:")
-    val dataSet = datasets.find { it.id == dataSetRef }
-      ?: throw IllegalArgumentException("Could not find matching DataSet '$dataSetRef'")
-
-    return map(report, dataSet, productDefinitionId, userToken, dataProductDefinitionsPath)
-  }
 
   private fun map(
     report: Report,
