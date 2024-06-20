@@ -8,7 +8,6 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
@@ -167,7 +166,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBodyList<ReportDefinition>()
+      .expectBodyList<ReportDefinitionSummary>()
       .returnResult()
 
     assertThat(result.responseBody).isNotNull

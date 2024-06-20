@@ -4,4 +4,5 @@ data class DynamicFilterOption(
   val minimumLength: Int? = null,
   val returnAsStaticOptions: Boolean,
   val maximumOptions: Long? = null,
+  val dataset: String? = null,
 )

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -13,7 +12,7 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
@@ -23,7 +22,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
@@ -36,6 +34,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -109,7 +108,7 @@ class ReportDefinitionMapperTest {
     feature = listOf(feature),
   )
 
-  private val fullProductDefinition: ProductDefinition = ProductDefinition(
+  private val singleReportProductDefinition: SingleReportProductDefinition = SingleReportProductDefinition(
     id = "1",
     name = "2",
     description = "3",
@@ -121,9 +120,16 @@ class ReportDefinitionMapperTest {
       profile = "8",
       dqri = "9",
     ),
-    dataset = listOf(fullDataset),
-    datasource = listOf(fullDatasource),
-    report = listOf(fullReport),
+    dataset = fullDataset,
+    datasource = fullDatasource,
+    report = fullReport,
+    policy = listOf(
+      Policy(
+        id = "caseload",
+        type = PolicyType.ACCESS,
+        rule = listOf(Rule(Effect.PERMIT, emptyList())),
+      ),
+    ),
   )
 
   private val policy: Policy = Policy(
@@ -156,34 +162,33 @@ class ReportDefinitionMapperTest {
   private val authToken = mock<DprAuthAwareAuthenticationToken>()
 
   @Test
-  fun `Getting report list for user maps full data correctly`() {
+  fun `Getting report for user maps full data correctly`() {
     val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(fullProductDefinition, null, authToken)
+    val result = mapper.map(definition = singleReportProductDefinition, userToken = authToken)
 
     assertThat(result).isNotNull
-    assertThat(result.id).isEqualTo(fullProductDefinition.id)
-    assertThat(result.name).isEqualTo(fullProductDefinition.name)
-    assertThat(result.description).isEqualTo(fullProductDefinition.description)
-    assertThat(result.variants).isNotEmpty
-    assertThat(result.variants).hasSize(1)
+    assertThat(result.id).isEqualTo(singleReportProductDefinition.id)
+    assertThat(result.name).isEqualTo(singleReportProductDefinition.name)
+    assertThat(result.description).isEqualTo(singleReportProductDefinition.description)
+    assertThat(result.variant).isNotNull
 
-    val variant = result.variants.first()
+    val variant = result.variant
 
-    assertThat(variant.id).isEqualTo(fullProductDefinition.report.first().id)
-    assertThat(variant.name).isEqualTo(fullProductDefinition.report.first().name)
-    assertThat(variant.resourceName).isEqualTo("reports/${fullProductDefinition.id}/${fullProductDefinition.report.first().id}")
-    assertThat(variant.description).isEqualTo(fullProductDefinition.report.first().description)
+    assertThat(variant.id).isEqualTo(singleReportProductDefinition.report.id)
+    assertThat(variant.name).isEqualTo(singleReportProductDefinition.report.name)
+    assertThat(variant.resourceName).isEqualTo("reports/${singleReportProductDefinition.id}/${singleReportProductDefinition.report.id}")
+    assertThat(variant.description).isEqualTo(singleReportProductDefinition.report.description)
     assertThat(variant.specification).isNotNull
-    assertThat(variant.classification).isEqualTo(fullProductDefinition.report.first().classification)
-    assertThat(variant.printable).isEqualTo(fullProductDefinition.report.first().feature?.first()?.type == FeatureType.PRINT)
-    assertThat(variant.specification?.template).isEqualTo(fullProductDefinition.report.first().specification?.template)
+    assertThat(variant.classification).isEqualTo(singleReportProductDefinition.report.classification)
+    assertThat(variant.printable).isEqualTo(singleReportProductDefinition.report.feature?.first()?.type == FeatureType.PRINT)
+    assertThat(variant.specification?.template).isEqualTo(singleReportProductDefinition.report.specification?.template)
     assertThat(variant.specification?.fields).isNotEmpty
     assertThat(variant.specification?.fields).hasSize(1)
 
     val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullProductDefinition.dataset.first().schema.field.first()
-    val sourceReportField = fullProductDefinition.report.first().specification!!.field.first()
+    val sourceSchemaField = singleReportProductDefinition.dataset.schema.field.first()
+    val sourceReportField = singleReportProductDefinition.report.specification!!.field.first()
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
@@ -208,32 +213,12 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `Getting report list for user maps minimal data successfully`() {
-    val productDefinition = ProductDefinition(
-      id = "1",
-      name = "2",
-      metadata = MetaData(
-        author = "3",
-        owner = "4",
-        version = "5",
-      ),
-    )
-    val mapper = ReportDefinitionMapper(configuredApiService)
-
-    val result = mapper.map(productDefinition, null, authToken)
-
-    assertThat(result).isNotNull
-    assertThat(result.variants).hasSize(0)
-    verifyNoInteractions(configuredApiService)
-  }
-
-  @Test
-  fun `Getting report list for statically returned dynamic filter values on a number succeeds`() {
+  fun `Getting report for statically returned dynamic filter values on a number succeeds`() {
     whenever(
       configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
 
-    val productDefinition = ProductDefinition(
+    val productDefinition = SingleReportProductDefinition(
       id = "1",
       name = "2",
       metadata = MetaData(
@@ -241,129 +226,53 @@ class ReportDefinitionMapperTest {
         owner = "4",
         version = "5",
       ),
-      dataset = listOf(fullDataset),
-      report = listOf(
-        Report(
-          id = "21",
-          name = "22",
-          description = "23",
-          created = LocalDateTime.MAX,
-          version = "24",
-          dataset = "\$ref:10",
-          render = RenderMethod.PDF,
-          schedule = "26",
-          specification = Specification(
-            template = "27",
-            field = listOf(
-              ReportField(
-                name = "\$ref:13",
-                display = "14",
-                wordWrap = WordWrap.None,
-                filter = FilterDefinition(
-                  type = FilterType.Radio,
-                  dynamicOptions = DynamicFilterOption(
-                    returnAsStaticOptions = true,
-                  ),
+      dataset = fullDataset,
+      report = Report(
+        id = "21",
+        name = "22",
+        description = "23",
+        created = LocalDateTime.MAX,
+        version = "24",
+        dataset = "\$ref:10",
+        render = RenderMethod.PDF,
+        schedule = "26",
+        specification = Specification(
+          template = "27",
+          field = listOf(
+            ReportField(
+              name = "\$ref:13",
+              display = "14",
+              wordWrap = WordWrap.None,
+              filter = FilterDefinition(
+                type = FilterType.Radio,
+                dynamicOptions = DynamicFilterOption(
+                  returnAsStaticOptions = true,
                 ),
-                sortable = true,
-                defaultSort = true,
-                formula = null,
-                visible = Visible.TRUE,
               ),
+              sortable = true,
+              defaultSort = true,
+              formula = null,
+              visible = Visible.TRUE,
             ),
           ),
-          destination = listOf(singletonMap("28", "29")),
-          classification = "someClassification",
+        ),
+        destination = listOf(singletonMap("28", "29")),
+        classification = "someClassification",
+      ),
+      policy = listOf(
+        Policy(
+          id = "caseload",
+          type = PolicyType.ACCESS,
+          rule = listOf(Rule(Effect.PERMIT, emptyList())),
         ),
       ),
+      datasource = Datasource("datasourceId", "datasourceName"),
     )
     val mapper = ReportDefinitionMapper(configuredApiService)
 
-    val result = mapper.map(productDefinition, null, authToken)
+    val result = mapper.map(productDefinition, authToken)
 
-    assertThat(result.variants[0].specification!!.fields[0].filter!!.staticOptions).hasSize(2)
-  }
-
-  @Test
-  fun `Getting report list for user fails when mapping report with no matching dataset`() {
-    val productDefinition = ProductDefinition(
-      id = "1",
-      name = "2",
-      metadata = MetaData(
-        author = "3",
-        owner = "4",
-        version = "5",
-      ),
-      report = listOf(
-        Report(
-          id = "6",
-          name = "7",
-          created = LocalDateTime.MAX,
-          version = "8",
-          dataset = "\$ref:9",
-          render = RenderMethod.SVG,
-          classification = "someClassification",
-        ),
-      ),
-    )
-    val mapper = ReportDefinitionMapper(configuredApiService)
-
-    val exception = assertThrows(IllegalArgumentException::class.java) {
-      mapper.map(productDefinition, null, authToken)
-    }
-    verifyNoInteractions(configuredApiService)
-    assertThat(exception).message().isEqualTo("Could not find matching DataSet '9'")
-  }
-
-  @Test
-  fun `Getting HTML report list returns relevant reports`() {
-    val productDefinition = ProductDefinition(
-      id = "1",
-      name = "2",
-      metadata = MetaData(
-        author = "3",
-        owner = "4",
-        version = "5",
-      ),
-      dataset = listOf(
-        Dataset(
-          id = "10",
-          name = "11",
-          query = "12",
-          schema = Schema(
-            field = emptyList(),
-          ),
-        ),
-      ),
-      report = listOf(
-        Report(
-          id = "13",
-          name = "14",
-          created = LocalDateTime.MAX,
-          version = "15",
-          dataset = "\$ref:10",
-          render = RenderMethod.SVG,
-          classification = "someClassification",
-        ),
-        Report(
-          id = "16",
-          name = "17",
-          created = LocalDateTime.MAX,
-          version = "18",
-          dataset = "\$ref:10",
-          render = RenderMethod.HTML,
-          classification = "someClassification",
-        ),
-      ),
-    )
-    val mapper = ReportDefinitionMapper(configuredApiService)
-
-    val result = mapper.map(productDefinition, HTML, authToken)
-
-    assertThat(result).isNotNull
-    assertThat(result.variants).hasSize(1)
-    assertThat(result.variants.first().id).isEqualTo("16")
-    verifyNoInteractions(configuredApiService)
+    assertThat(result.variant.specification!!.fields[0].filter!!.staticOptions).hasSize(2)
   }
 
   @ParameterizedTest
@@ -381,9 +290,9 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(definition = defaultValue, userToken = authToken)
 
-    assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
+    assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
     verifyNoInteractions(configuredApiService)
   }
@@ -393,9 +302,9 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(definition = defaultValue, userToken = authToken)
 
-    assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
+    assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
     verifyNoInteractions(configuredApiService)
   }
@@ -408,9 +317,9 @@ class ReportDefinitionMapperTest {
     val expectedDate3 = getExpectedDate(7, ChronoUnit.DAYS)
     val expectedResult = "$expectedDate1, $expectedDate2, $expectedDate3"
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(definition = defaultValue, userToken = authToken)
 
-    assertThat(result.variants[0].specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
+    assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
 
     verifyNoInteractions(configuredApiService)
   }
@@ -434,10 +343,10 @@ class ReportDefinitionMapperTest {
     )
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(definition = defaultValue, userToken = authToken)
 
-    assertThat(result.variants[0].specification!!.fields[0].filter!!.min).isEqualTo(expectedDate)
-    assertThat(result.variants[0].specification!!.fields[0].filter!!.max).isEqualTo(expectedDate)
+    assertThat(result.variant.specification!!.fields[0].filter!!.min).isEqualTo(expectedDate)
+    assertThat(result.variant.specification!!.fields[0].filter!!.max).isEqualTo(expectedDate)
 
     verifyNoInteractions(configuredApiService)
   }
@@ -761,10 +670,10 @@ class ReportDefinitionMapperTest {
       visible = visibleDpd,
     )
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+    val result: SingleVariantReportDefinition = ReportDefinitionMapper(configuredApiService).map(definition = defaultValue, userToken = authToken)
 
-    assertThat(result.variants[0].specification!!.fields[0].visible).isEqualTo(visibleControllerModel)
-    assertThat(result.variants[0].specification!!.fields[0].mandatory).isEqualTo(mandatoryControllerModel)
+    assertThat(result.variant.specification!!.fields[0].visible).isEqualTo(visibleControllerModel)
+    assertThat(result.variant.specification!!.fields[0].mandatory).isEqualTo(mandatoryControllerModel)
 
     verifyNoInteractions(configuredApiService)
   }
@@ -784,9 +693,9 @@ class ReportDefinitionMapperTest {
       reportFieldDisplay = reportDisplay,
     )
 
-    val result = ReportDefinitionMapper(configuredApiService).map(defaultValue, HTML, authToken)
+    val result = ReportDefinitionMapper(configuredApiService).map(definition = defaultValue, userToken = authToken)
 
-    assertThat(result.variants[0].specification!!.fields[0].display).isEqualTo(expectedDisplay)
+    assertThat(result.variant.specification!!.fields[0].display).isEqualTo(expectedDisplay)
 
     verifyNoInteractions(configuredApiService)
   }
@@ -837,8 +746,8 @@ class ReportDefinitionMapperTest {
     datasetDisplay: String = "",
     reportFieldDisplay: String? = "20",
     formula: String? = null,
-  ): ProductDefinition {
-    return ProductDefinition(
+  ): SingleReportProductDefinition {
+    return SingleReportProductDefinition(
       id = "1",
       name = "2",
       metadata = MetaData(
@@ -846,48 +755,54 @@ class ReportDefinitionMapperTest {
         owner = "4",
         version = "5",
       ),
-      dataset = listOf(
-        Dataset(
-          id = "10",
-          name = "11",
-          query = "12",
-          schema = Schema(
-            field = listOf(
-              SchemaField(
-                name = "13",
-                type = ParameterType.Date,
-                display = datasetDisplay,
-              ),
+      datasource = Datasource("datasourceId", "datasourceName"),
+      dataset =
+      Dataset(
+        id = "10",
+        name = "11",
+        query = "12",
+        schema = Schema(
+          field = listOf(
+            SchemaField(
+              name = "13",
+              type = ParameterType.Date,
+              display = datasetDisplay,
             ),
           ),
         ),
       ),
-      report = listOf(
-        Report(
-          id = "16",
-          name = "17",
-          created = LocalDateTime.MAX,
-          version = "18",
-          dataset = "\$ref:10",
-          render = RenderMethod.HTML,
-          specification = Specification(
-            template = "19",
-            field = listOf(
-              ReportField(
-                name = "\$ref:13",
-                display = reportFieldDisplay,
-                filter = FilterDefinition(
-                  type = FilterType.DateRange,
-                  default = defaultFilterValue,
-                  min = min,
-                  max = max,
-                ),
-                formula = formula,
-                visible = visible,
+      report =
+      Report(
+        id = "16",
+        name = "17",
+        created = LocalDateTime.MAX,
+        version = "18",
+        dataset = "\$ref:10",
+        render = RenderMethod.HTML,
+        specification = Specification(
+          template = "19",
+          field = listOf(
+            ReportField(
+              name = "\$ref:13",
+              display = reportFieldDisplay,
+              filter = FilterDefinition(
+                type = FilterType.DateRange,
+                default = defaultFilterValue,
+                min = min,
+                max = max,
               ),
+              formula = formula,
+              visible = visible,
             ),
           ),
-          classification = "someClassification",
+        ),
+        classification = "someClassification",
+      ),
+      policy = listOf(
+        Policy(
+          id = "caseload",
+          type = PolicyType.ACCESS,
+          rule = listOf(Rule(Effect.PERMIT, emptyList())),
         ),
       ),
     )
