@@ -1,8 +1,12 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService.Companion.SCHEMA_REF_PREFIX
 
 abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository {
 
@@ -11,14 +15,13 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
     reportId: String,
     dataProductDefinitionsPath: String?,
   ): SingleReportProductDefinition {
-    val schemaRefPrefix = "\$ref:"
     val productDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
     val reportDefinition = productDefinition.report
       .filter { it.id == reportId }
       .ifEmpty { throw ValidationException("Invalid report variant id provided: $reportId") }
       .first()
 
-    val dataSetId = reportDefinition.dataset.removePrefix(schemaRefPrefix)
+    val dataSetId = reportDefinition.dataset.removePrefix(SCHEMA_REF_PREFIX)
     val dataSet = productDefinition.dataset
       .filter { it.id == dataSetId }
       .ifEmpty { throw ValidationException("Invalid dataSetId in report: $dataSetId") }
@@ -30,7 +33,8 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
       description = productDefinition.description,
       metadata = productDefinition.metadata,
       datasource = productDefinition.datasource.first(),
-      dataset = dataSet,
+      reportDataset = dataSet,
+      filterDatasets = findDatasetsForDynamicOptionFilters(reportDefinition, productDefinition.dataset),
       report = reportDefinition,
       policy = productDefinition.policy,
     )
@@ -40,4 +44,17 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
     .filter { it.id == definitionId }
     .ifEmpty { throw ValidationException("Invalid report id provided: $definitionId") }
     .first()
+
+  private fun findDatasetsForDynamicOptionFilters(
+    reportDefinition: Report,
+    productDefinitionDatasets: List<Dataset>,
+  ) = reportDefinition.specification?.field
+    ?.map { field: ReportField ->
+      field.filter?.dynamicOptions?.dataset?.removePrefix(SCHEMA_REF_PREFIX)
+    }?.flatMap { datasetIdForFilterWithoutPrefix ->
+      productDefinitionDatasets
+        .filter { productDefinitionDataset: Dataset ->
+          datasetIdForFilterWithoutPrefix == productDefinitionDataset.id
+        }
+    }
 }

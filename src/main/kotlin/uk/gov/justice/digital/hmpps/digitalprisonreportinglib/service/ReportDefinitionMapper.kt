@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService.Companion.SCHEMA_REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
@@ -37,7 +38,14 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       id = definition.id,
       name = definition.name,
       description = definition.description,
-      variant = map(report = definition.report, dataSet = definition.dataset, productDefinitionId = definition.id, userToken = userToken, dataProductDefinitionsPath = dataProductDefinitionsPath),
+      variant = map(
+        report = definition.report,
+        dataSet = definition.reportDataset,
+        productDefinitionId = definition.id,
+        userToken = userToken,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        filterDatasets = definition.filterDatasets,
+      ),
     )
   }
 
@@ -47,12 +55,21 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     productDefinitionId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
+    filterDatasets: List<Dataset>? = null,
   ): VariantDefinition {
     return VariantDefinition(
       id = report.id,
       name = report.name,
       description = report.description,
-      specification = map(report.specification, dataSet.schema.field, productDefinitionId, report.id, userToken, dataProductDefinitionsPath),
+      specification = map(
+        specification = report.specification,
+        schemaFields = dataSet.schema.field,
+        productDefinitionId = productDefinitionId,
+        reportVariantId = report.id,
+        userToken = userToken,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        filterDatasets = filterDatasets,
+      ),
       classification = report.classification,
       printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
       resourceName = "reports/$productDefinitionId/${report.id}",
@@ -66,6 +83,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
+    filterDatasets: List<Dataset>? = null,
   ): Specification? {
     if (specification == null) {
       return null
@@ -73,7 +91,17 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
     return Specification(
       template = specification.template,
-      fields = specification.field.map { map(it, schemaFields, productDefinitionId, reportVariantId, userToken, dataProductDefinitionsPath) },
+      fields = specification.field.map {
+        map(
+          field = it,
+          schemaFields = schemaFields,
+          productDefinitionId = productDefinitionId,
+          reportVariantId = reportVariantId,
+          userToken = userToken,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          filterDatasets = filterDatasets,
+        )
+      },
     )
   }
 
@@ -84,8 +112,9 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     reportVariantId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
+    filterDatasets: List<Dataset>? = null,
   ): FieldDefinition {
-    val schemaFieldRef = field.name.removePrefix("\$ref:")
+    val schemaFieldRef = field.name.removePrefix(SCHEMA_REF_PREFIX)
     val schemaField = schemaFields.find { it.name == schemaFieldRef }
       ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRef'")
 
@@ -93,7 +122,17 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       name = schemaField.name,
       display = populateDisplay(field.display, schemaField.display),
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
-      filter = field.filter?.let { map(it, productDefinitionId, reportVariantId, schemaField.name, userToken, dataProductDefinitionsPath) },
+      filter = field.filter?.let {
+        map(
+          filterDefinition = it,
+          productDefinitionId = productDefinitionId,
+          reportVariantId = reportVariantId,
+          schemaFieldName = schemaField.name,
+          userToken = userToken,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          filterDatasets = filterDatasets,
+        )
+      },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
       type = populateType(schemaField, field),
@@ -153,10 +192,20 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     schemaFieldName: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
+    filterDatasets: List<Dataset>? = null,
   ): FilterDefinition {
     return FilterDefinition(
       type = FilterType.valueOf(filterDefinition.type.toString()),
-      staticOptions = populateStaticOptions(filterDefinition, productDefinitionId, reportVariantId, schemaFieldName, filterDefinition.dynamicOptions?.maximumOptions, userToken, dataProductDefinitionsPath),
+      staticOptions = populateStaticOptions(
+        filterDefinition = filterDefinition,
+        productDefinitionId = productDefinitionId,
+        reportVariantId = reportVariantId,
+        schemaFieldName = schemaFieldName,
+        maxStaticOptions = filterDefinition.dynamicOptions?.maximumOptions,
+        userToken = userToken,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        filterDatasets = filterDatasets,
+      ),
       dynamicOptions = filterDefinition.dynamicOptions,
       defaultValue = replaceTokens(filterDefinition.default),
       min = replaceTokens(filterDefinition.min),
@@ -172,20 +221,45 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     maxStaticOptions: Long?,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
+    filterDatasets: List<Dataset>? = null,
   ): List<FilterOption>? {
-    return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let {
-      configuredApiService.validateAndFetchData(
-        reportId = productDefinitionId,
-        reportVariantId = reportVariantId,
-        filters = emptyMap(),
-        selectedPage = 1,
-        pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
-        sortColumn = schemaFieldName,
-        sortedAsc = true,
-        userToken = userToken,
-        reportFieldId = schemaFieldName,
-        dataProductDefinitionsPath = dataProductDefinitionsPath,
-      ).flatMap { it.entries }.map { FilterOption(it.value.toString(), it.value.toString()) }
+    return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
+      // if dynamicOptions have dataset then populate static options for filter with dataset
+      dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
+        val schemaFieldRefForName = dynamicFilterOption.name?.removePrefix(SCHEMA_REF_PREFIX)
+        val schemaFieldRefForDisplay = dynamicFilterOption.display?.removePrefix(SCHEMA_REF_PREFIX)
+        val matchingFilterDataset = filterDatasets?.find { it.id == dynamicFilterDatasetId }
+        val matchingSchemaFieldsForFilterDataset = matchingFilterDataset?.schema?.field
+        val nameSchemaField = matchingSchemaFieldsForFilterDataset?.find { it.name == schemaFieldRefForName } ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForName'")
+        val displaySchemaField = matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForDisplay } ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForDisplay'")
+        val queryDistinctColumns = linkedSetOf(nameSchemaField.name, displaySchemaField.name)
+        return configuredApiService.validateAndFetchData(
+          reportId = productDefinitionId,
+          reportVariantId = reportVariantId,
+          filters = emptyMap(),
+          selectedPage = 1,
+          pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
+          sortColumn = nameSchemaField.name,
+          sortedAsc = true,
+          userToken = userToken,
+          reportFieldId = queryDistinctColumns,
+          datasetForFilter = matchingFilterDataset,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+        ).map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
+      }
+        ?: // else populate standard static options
+        configuredApiService.validateAndFetchData(
+          reportId = productDefinitionId,
+          reportVariantId = reportVariantId,
+          filters = emptyMap(),
+          selectedPage = 1,
+          pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
+          sortColumn = schemaFieldName,
+          sortedAsc = true,
+          userToken = userToken,
+          reportFieldId = setOf(schemaFieldName),
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+        ).flatMap { it.entries }.map { FilterOption(it.value.toString(), it.value.toString()) }
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 

@@ -19,7 +19,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     sortColumn: String?,
     sortedAsc: Boolean,
     policyEngineResult: String,
-    dynamicFilterFieldId: String? = null,
+    dynamicFilterFieldId: Set<String>? = null,
     database: String? = null,
     catalog: String? = null,
   ): StatementExecutionResponse

@@ -392,7 +392,7 @@ class ConfiguredApiRepositoryTest {
       sortedAsc = false,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
-      dynamicFilterFieldId = NAME,
+      dynamicFilterFieldId = setOf(NAME),
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
     )
     Assertions.assertEquals(

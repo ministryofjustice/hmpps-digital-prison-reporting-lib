@@ -31,7 +31,7 @@ class RedshiftDataApiRepository(
     sortColumn: String?,
     sortedAsc: Boolean,
     policyEngineResult: String,
-    dynamicFilterFieldId: String?,
+    dynamicFilterFieldId: Set<String>?,
     database: String?,
     catalog: String?,
   ): StatementExecutionResponse {

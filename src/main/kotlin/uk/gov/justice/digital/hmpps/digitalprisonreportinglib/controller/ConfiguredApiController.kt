@@ -387,7 +387,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             sortColumn = fieldId,
             sortedAsc = sortedAsc,
             userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            reportFieldId = fieldId,
+            reportFieldId = setOf(fieldId),
             prefix = prefix,
             dataProductDefinitionsPath = dataProductDefinitionsPath,
           ).asSequence()

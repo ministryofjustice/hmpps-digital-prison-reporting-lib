@@ -79,7 +79,7 @@ abstract class RepositoryHelper {
   }
 
   protected fun buildFinalStageQuery(
-    dynamicFilterFieldId: String?,
+    dynamicFilterFieldId: Set<String>?,
     sortColumn: String?,
     sortedAsc: Boolean,
   ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
@@ -103,8 +103,8 @@ abstract class RepositoryHelper {
   protected fun maybeTransform(key: String, keyTransformer: ((s: String) -> String)?) =
     keyTransformer?.let { it(key) } ?: key
 
-  private fun constructProjectedColumns(dynamicFilterFieldId: String?) =
-    dynamicFilterFieldId?.let { "DISTINCT $dynamicFilterFieldId" } ?: "*"
+  private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) =
+    dynamicFilterFieldId?.let { "DISTINCT ${dynamicFilterFieldId.joinToString(", ")}" } ?: "*"
 
   private fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
     sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""

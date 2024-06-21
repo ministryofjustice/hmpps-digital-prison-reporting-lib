@@ -173,7 +173,7 @@ class ConfiguredApiServiceTest {
         sortedAsc = sortedAsc,
         reportId = reportId,
         policyEngineResult = policyEngineResult,
-        dynamicFilterFieldId = reportFieldId,
+        dynamicFilterFieldId = setOf(reportFieldId),
         dataSourceName = dataSourceName,
       ),
     ).thenReturn(expectedRepositoryResult)
@@ -187,7 +187,7 @@ class ConfiguredApiServiceTest {
       sortColumn,
       sortedAsc,
       authToken,
-      reportFieldId,
+      setOf(reportFieldId),
       prefix,
     )
 
@@ -200,7 +200,7 @@ class ConfiguredApiServiceTest {
       sortedAsc = sortedAsc,
       reportId = reportId,
       policyEngineResult = policyEngineResult,
-      dynamicFilterFieldId = reportFieldId,
+      dynamicFilterFieldId = setOf(reportFieldId),
       dataSourceName = dataSourceName,
     )
     assertEquals(expectedServiceResult, actual)
@@ -711,7 +711,7 @@ class ConfiguredApiServiceTest {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken, fieldId, "ab")
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken, setOf(fieldId), "ab")
     }
     assertEquals(ConfiguredApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -737,7 +737,7 @@ class ConfiguredApiServiceTest {
     val fieldId = "direction"
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken, fieldId, "ab")
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken, setOf(fieldId), "ab")
     }
     assertEquals(ConfiguredApiService.INVALID_DYNAMIC_FILTER_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -882,7 +882,7 @@ class ConfiguredApiServiceTest {
         sortColumn,
         sortedAsc,
         authToken,
-        "name",
+        setOf("name"),
         "A",
       )
     }
@@ -1062,7 +1062,7 @@ class ConfiguredApiServiceTest {
             version = "5",
           ),
           policy = listOf(policy),
-          dataset = dataSet,
+          reportDataset = dataSet,
           report = report,
           datasource = Datasource("id", dataSourceName),
         ),

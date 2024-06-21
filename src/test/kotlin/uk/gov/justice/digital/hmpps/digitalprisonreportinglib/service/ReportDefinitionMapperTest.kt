@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService.Companion.SCHEMA_REF_PREFIX
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -120,7 +121,7 @@ class ReportDefinitionMapperTest {
       profile = "8",
       dqri = "9",
     ),
-    dataset = fullDataset,
+    reportDataset = fullDataset,
     datasource = fullDatasource,
     report = fullReport,
     policy = listOf(
@@ -152,7 +153,7 @@ class ReportDefinitionMapperTest {
       dqri = "9",
     ),
     datasource = fullDatasource,
-    dataset = fullDataset,
+    reportDataset = fullDataset,
     report = fullReport,
     policy = listOf(policy),
   )
@@ -187,7 +188,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification?.fields).hasSize(1)
 
     val field = variant.specification!!.fields.first()
-    val sourceSchemaField = singleReportProductDefinition.dataset.schema.field.first()
+    val sourceSchemaField = singleReportProductDefinition.reportDataset.schema.field.first()
     val sourceReportField = singleReportProductDefinition.report.specification!!.field.first()
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
@@ -215,7 +216,7 @@ class ReportDefinitionMapperTest {
   @Test
   fun `Getting report for statically returned dynamic filter values on a number succeeds`() {
     whenever(
-      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
+      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
 
     val productDefinition = SingleReportProductDefinition(
@@ -226,7 +227,7 @@ class ReportDefinitionMapperTest {
         owner = "4",
         version = "5",
       ),
-      dataset = fullDataset,
+      reportDataset = fullDataset,
       report = Report(
         id = "21",
         name = "22",
@@ -374,7 +375,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification?.fields).hasSize(1)
 
     val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullSingleReportProductDefinition.dataset.schema.field.first()
+    val sourceSchemaField = fullSingleReportProductDefinition.reportDataset.schema.field.first()
     val sourceReportField = fullSingleReportProductDefinition.report.specification!!.field.first()
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
@@ -399,36 +400,7 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `getting single report with dynamic options maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
-    val reportWithDynamicFilter = Report(
-      id = "21",
-      name = "22",
-      description = "23",
-      created = LocalDateTime.MAX,
-      version = "24",
-      dataset = "\$ref:10",
-      render = RenderMethod.PDF,
-      schedule = "26",
-      specification = Specification(
-        template = "27",
-        field = listOf(
-          ReportField(
-            name = "\$ref:13",
-            display = "14",
-            wordWrap = WordWrap.None,
-            filter = FilterDefinition(
-              type = FilterType.AutoComplete,
-              dynamicOptions = DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = true),
-            ),
-            sortable = true,
-            defaultSort = true,
-            formula = null,
-            visible = Visible.TRUE,
-          ),
-        ),
-      ),
-      destination = listOf(singletonMap("28", "29")),
-      classification = "someClassification",
-    )
+    val reportWithDynamicFilter = generateReport(DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = true))
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
@@ -437,39 +409,15 @@ class ReportDefinitionMapperTest {
     whenever(
       configuredApiService.validateAndFetchData(
         fullSingleProductDefinition.id,
-        reportWithDynamicFilter.id, emptyMap(), 1, DEFAULT_MAX_STATIC_OPTIONS, "13", true, authToken, "13",
+        reportWithDynamicFilter.id, emptyMap(), 1, DEFAULT_MAX_STATIC_OPTIONS, "13", true, authToken, setOf("13"),
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
     val result = mapper.map(fullSingleProductDefinition, authToken)
 
-    assertThat(result).isNotNull
-    assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
-    assertThat(result.name).isEqualTo(fullSingleProductDefinition.name)
-    assertThat(result.description).isEqualTo(fullSingleProductDefinition.description)
+    assertResult(result, fullSingleProductDefinition)
+    val field = result.variant.specification!!.fields.first()
 
-    val variant = result.variant
-
-    assertThat(variant.id).isEqualTo(fullSingleProductDefinition.report.id)
-    assertThat(variant.name).isEqualTo(fullSingleProductDefinition.report.name)
-    assertThat(variant.resourceName).isEqualTo("reports/${fullSingleProductDefinition.id}/${fullSingleProductDefinition.report.id}")
-    assertThat(variant.description).isEqualTo(fullSingleProductDefinition.report.description)
-    assertThat(variant.specification).isNotNull
-    assertThat(variant.specification?.template).isEqualTo(fullSingleProductDefinition.report.specification?.template)
-    assertThat(variant.specification?.fields).isNotEmpty
-    assertThat(variant.specification?.fields).hasSize(1)
-
-    val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullSingleProductDefinition.dataset.schema.field.first()
-    val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
-
-    assertThat(field.name).isEqualTo(sourceSchemaField.name)
-    assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
-    assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
-    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
-    assertThat(field.filter).isNotNull
-    assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
     assertThat(field.filter?.staticOptions).hasSize(2)
     assertThat(field.filter?.staticOptions).isEqualTo(
@@ -478,42 +426,73 @@ class ReportDefinitionMapperTest {
         FilterOption("static2", "static2"),
       ),
     )
-    assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
+  }
+
+  @Test
+  fun `getting single report with dynamic options which have a dataset maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
+    val estCodeSchemaFieldName = "establishment_code"
+    val establishmentCodeSchemaField = SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code")
+    val estNameSchemaFieldName = "establishment_name"
+    val establishmentNameSchemaField = SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name")
+    val estDatasetId = "establishment-dataset-id"
+    val establishmentDataset = Dataset(
+      estDatasetId,
+      "establishment-dataset-name",
+      "select * from table",
+      Schema(
+        listOf(
+          establishmentCodeSchemaField,
+          establishmentNameSchemaField,
+        ),
+      ),
+    )
+    val reportWithDynamicFilter = generateReport(DynamicFilterOption(returnAsStaticOptions = true, dataset = estDatasetId, name = SCHEMA_REF_PREFIX + estCodeSchemaFieldName, display = SCHEMA_REF_PREFIX + estNameSchemaFieldName))
+
+    val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(
+      report = reportWithDynamicFilter,
+      filterDatasets = listOf(establishmentDataset),
+    )
+
+    val mapper = ReportDefinitionMapper(configuredApiService)
+
+    whenever(
+      configuredApiService.validateAndFetchData(
+        reportId = fullSingleProductDefinition.id,
+        reportVariantId = reportWithDynamicFilter.id,
+        filters = emptyMap(),
+        selectedPage = 1,
+        pageSize = DEFAULT_MAX_STATIC_OPTIONS,
+        sortColumn = estCodeSchemaFieldName,
+        sortedAsc = true,
+        userToken = authToken,
+        reportFieldId = linkedSetOf(estCodeSchemaFieldName, estNameSchemaFieldName),
+        datasetForFilter = establishmentDataset,
+      ),
+    ).thenReturn(
+      listOf(
+        mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
+        mapOf(estCodeSchemaFieldName to "code2", estNameSchemaFieldName to "name2"),
+      ),
+    )
+
+    val result = mapper.map(fullSingleProductDefinition, authToken)
+
+    assertResult(result, fullSingleProductDefinition)
+    val field = result.variant.specification!!.fields.first()
+
+    assertThat(field.filter?.staticOptions).isNotEmpty
+    assertThat(field.filter?.staticOptions).hasSize(2)
+    assertThat(field.filter?.staticOptions).isEqualTo(
+      listOf(
+        FilterOption("code1", "name1"),
+        FilterOption("code2", "name2"),
+      ),
+    )
   }
 
   @Test
   fun `getting single report with dynamic options maps full data correctly and generates dynamic options in the result when returnAsStaticOptions is false`() {
-    val reportWithDynamicFilter = Report(
-      id = "21",
-      name = "22",
-      description = "23",
-      created = LocalDateTime.MAX,
-      version = "24",
-      dataset = "\$ref:10",
-      render = RenderMethod.PDF,
-      schedule = "26",
-      specification = Specification(
-        template = "27",
-        field = listOf(
-          ReportField(
-            name = "\$ref:13",
-            display = "14",
-            wordWrap = WordWrap.None,
-            filter = FilterDefinition(
-              type = FilterType.AutoComplete,
-              dynamicOptions = DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = false),
-            ),
-            sortable = true,
-            defaultSort = true,
-            formula = null,
-            visible = Visible.TRUE,
-          ),
-        ),
-      ),
-      destination = listOf(singletonMap("28", "29")),
-      classification = "someClassification",
-    )
-
+    val reportWithDynamicFilter = generateReport(DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = false))
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
     val mapper = ReportDefinitionMapper(configuredApiService)
@@ -521,7 +500,7 @@ class ReportDefinitionMapperTest {
     whenever(
       configuredApiService.validateAndFetchData(
         fullSingleProductDefinition.id,
-        reportWithDynamicFilter.id, emptyMap(), 1, 10, "13", true, authToken, "13",
+        reportWithDynamicFilter.id, emptyMap(), 1, 10, "13", true, authToken, setOf("13"),
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
@@ -532,32 +511,11 @@ class ReportDefinitionMapperTest {
     assertThat(result.name).isEqualTo(fullSingleProductDefinition.name)
     assertThat(result.description).isEqualTo(fullSingleProductDefinition.description)
 
-    val variant = result.variant
+    assertResult(result, fullSingleProductDefinition)
 
-    assertThat(variant.id).isEqualTo(fullSingleProductDefinition.report.id)
-    assertThat(variant.name).isEqualTo(fullSingleProductDefinition.report.name)
-    assertThat(variant.resourceName).isEqualTo("reports/${fullSingleProductDefinition.id}/${fullSingleProductDefinition.report.id}")
-    assertThat(variant.description).isEqualTo(fullSingleProductDefinition.report.description)
-    assertThat(variant.specification).isNotNull
-    assertThat(variant.specification?.template).isEqualTo(fullSingleProductDefinition.report.specification?.template)
-    assertThat(variant.specification?.fields).isNotEmpty
-    assertThat(variant.specification?.fields).hasSize(1)
-
-    val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullSingleProductDefinition.dataset.schema.field.first()
-    val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
-
-    assertThat(field.name).isEqualTo(sourceSchemaField.name)
-    assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
-    assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
-    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
-    assertThat(field.filter).isNotNull
-    assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
-
+    val field = result.variant.specification!!.fields.first()
     assertThat(field.filter?.staticOptions).isNull()
     assertThat(field.filter?.dynamicOptions).isEqualTo(DynamicFilterOption(2, false))
-    assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
     verifyNoInteractions(configuredApiService)
   }
 
@@ -588,7 +546,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification?.fields).hasSize(1)
 
     val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullSingleProductDefinition.dataset.schema.field.first()
+    val sourceSchemaField = fullSingleProductDefinition.reportDataset.schema.field.first()
     val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
@@ -608,7 +566,7 @@ class ReportDefinitionMapperTest {
     val fullSingleProductDefinition = fullSingleReportProductDefinition
       .copy(
         report = reportWithFormatDateFormula,
-        dataset = Dataset(
+        reportDataset = Dataset(
           id = "10",
           name = "11",
           query = "12",
@@ -645,7 +603,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification?.fields).hasSize(1)
 
     val field = variant.specification!!.fields.first()
-    val sourceSchemaField = fullSingleProductDefinition.dataset.schema.field.first()
+    val sourceSchemaField = fullSingleProductDefinition.reportDataset.schema.field.first()
     val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
@@ -698,6 +656,68 @@ class ReportDefinitionMapperTest {
     assertThat(result.variant.specification!!.fields[0].display).isEqualTo(expectedDisplay)
 
     verifyNoInteractions(configuredApiService)
+  }
+
+  private fun generateReport(dynamicFilterOption: DynamicFilterOption) = Report(
+    id = "21",
+    name = "22",
+    description = "23",
+    created = LocalDateTime.MAX,
+    version = "24",
+    dataset = "\$ref:10",
+    render = RenderMethod.PDF,
+    schedule = "26",
+    specification = Specification(
+      template = "27",
+      field = listOf(
+        ReportField(
+          name = "\$ref:13",
+          display = "14",
+          wordWrap = WordWrap.None,
+          filter = FilterDefinition(
+            type = FilterType.AutoComplete,
+            dynamicOptions = dynamicFilterOption,
+          ),
+          sortable = true,
+          defaultSort = true,
+          formula = null,
+          visible = Visible.TRUE,
+        ),
+      ),
+    ),
+    destination = listOf(singletonMap("28", "29")),
+    classification = "someClassification",
+  )
+
+  private fun assertResult(result: SingleVariantReportDefinition, fullSingleProductDefinition: SingleReportProductDefinition) {
+    assertThat(result).isNotNull
+    assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
+    assertThat(result.name).isEqualTo(fullSingleProductDefinition.name)
+    assertThat(result.description).isEqualTo(fullSingleProductDefinition.description)
+
+    val variant = result.variant
+
+    assertThat(variant.id).isEqualTo(fullSingleProductDefinition.report.id)
+    assertThat(variant.name).isEqualTo(fullSingleProductDefinition.report.name)
+    assertThat(variant.resourceName).isEqualTo("reports/${fullSingleProductDefinition.id}/${fullSingleProductDefinition.report.id}")
+    assertThat(variant.description).isEqualTo(fullSingleProductDefinition.report.description)
+    assertThat(variant.specification).isNotNull
+    assertThat(variant.specification?.template).isEqualTo(fullSingleProductDefinition.report.specification?.template)
+    assertThat(variant.specification?.fields).isNotEmpty
+    assertThat(variant.specification?.fields).hasSize(1)
+
+    val field = variant.specification!!.fields.first()
+    val sourceSchemaField = fullSingleProductDefinition.reportDataset.schema.field.first()
+    val sourceReportField = fullSingleProductDefinition.report.specification!!.field.first()
+
+    assertThat(field.name).isEqualTo(sourceSchemaField.name)
+    assertThat(field.display).isEqualTo(sourceReportField.display)
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
+    assertThat(field.filter).isNotNull
+    assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
+    assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
   }
 
   private fun getExpectedDate(offset: Long, magnitude: ChronoUnit): String? {
@@ -756,7 +776,7 @@ class ReportDefinitionMapperTest {
         version = "5",
       ),
       datasource = Datasource("datasourceId", "datasourceName"),
-      dataset =
+      reportDataset =
       Dataset(
         id = "10",
         name = "11",
