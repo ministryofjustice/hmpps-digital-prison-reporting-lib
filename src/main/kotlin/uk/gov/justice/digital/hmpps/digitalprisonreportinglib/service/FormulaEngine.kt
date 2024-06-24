@@ -49,7 +49,7 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
     return when {
       (date.length == 10) -> LocalDate.parse(date).format(DateTimeFormatter.ofPattern(removeQuotes(dateFormat.trim())))
       (date.length == 16) -> LocalDateTime.parse(date).format(DateTimeFormatter.ofPattern(removeQuotes(dateFormat.trim())))
-      else ->  throw IllegalArgumentException("Could not parse date: $date")
+      else -> throw IllegalArgumentException("Could not parse date: $date")
     }
   }
 
