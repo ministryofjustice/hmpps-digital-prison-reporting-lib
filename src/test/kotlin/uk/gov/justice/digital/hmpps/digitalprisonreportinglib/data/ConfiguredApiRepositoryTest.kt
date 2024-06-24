@@ -13,6 +13,7 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.NAME
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.PRISON_NUMBER
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner2
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner3
@@ -403,6 +404,38 @@ class ConfiguredApiRepositoryTest {
       ),
       actual,
     )
+  }
+
+  @Test
+  fun `should return only the distinct columns defined in the dynamicFilterFieldId`() {
+    val duplicatePrisoner = PrisonerEntity(6002, "G3154UG", "FirstName5", "LastName5", null)
+    try {
+      prisonerRepository.save(duplicatePrisoner)
+      val actual = configuredApiRepository.executeQuery(
+        query = REPOSITORY_TEST_QUERY,
+        filters = emptyList(),
+        selectedPage = 1,
+        pageSize = 10,
+        sortColumn = NAME,
+        sortedAsc = true,
+        reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
+        policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+        dynamicFilterFieldId = setOf(NAME, PRISON_NUMBER),
+        dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      )
+      Assertions.assertEquals(
+        listOf(
+          mapOf(NAME to "LastName1, F", PRISON_NUMBER to "G2504UV"),
+          mapOf(NAME to "LastName1, F", PRISON_NUMBER to "G2927UV"),
+          mapOf(NAME to "LastName3, F", PRISON_NUMBER to "G3418VR"),
+          mapOf(NAME to "LastName5, F", PRISON_NUMBER to "G3154UG"),
+          mapOf(NAME to "LastName5, F", PRISON_NUMBER to "G3411VR"),
+        ),
+        actual,
+      )
+    } finally {
+      prisonerRepository.delete(duplicatePrisoner)
+    }
   }
 
   @Test
