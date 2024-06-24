@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.S
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
@@ -224,43 +225,85 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     filterDatasets: List<Dataset>? = null,
   ): List<FilterOption>? {
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
-      // if dynamicOptions have dataset then populate static options for filter with dataset
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
-        val schemaFieldRefForName = dynamicFilterOption.name?.removePrefix(SCHEMA_REF_PREFIX)
-        val schemaFieldRefForDisplay = dynamicFilterOption.display?.removePrefix(SCHEMA_REF_PREFIX)
-        val matchingFilterDataset = filterDatasets?.find { it.id == dynamicFilterDatasetId.removePrefix(SCHEMA_REF_PREFIX) }
-        val matchingSchemaFieldsForFilterDataset = matchingFilterDataset?.schema?.field
-        val nameSchemaField = matchingSchemaFieldsForFilterDataset?.find { it.name == schemaFieldRefForName } ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForName'")
-        val displaySchemaField = matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForDisplay } ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForDisplay'")
-        val queryDistinctColumns = linkedSetOf(nameSchemaField.name, displaySchemaField.name)
-        return configuredApiService.validateAndFetchData(
-          reportId = productDefinitionId,
-          reportVariantId = reportVariantId,
-          filters = emptyMap(),
-          selectedPage = 1,
-          pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
-          sortColumn = nameSchemaField.name,
-          sortedAsc = true,
-          userToken = userToken,
-          reportFieldId = queryDistinctColumns,
-          datasetForFilter = matchingFilterDataset,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-        ).map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
+        return populateStaticOptionsForFilterWithDataset(
+          dynamicFilterOption,
+          filterDatasets,
+          dynamicFilterDatasetId,
+          productDefinitionId,
+          reportVariantId,
+          maxStaticOptions,
+          userToken,
+          dataProductDefinitionsPath,
+        )
       }
-        ?: // else populate standard static options
-        configuredApiService.validateAndFetchData(
-          reportId = productDefinitionId,
-          reportVariantId = reportVariantId,
-          filters = emptyMap(),
-          selectedPage = 1,
-          pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
-          sortColumn = schemaFieldName,
-          sortedAsc = true,
-          userToken = userToken,
-          reportFieldId = setOf(schemaFieldName),
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-        ).flatMap { it.entries }.map { FilterOption(it.value.toString(), it.value.toString()) }
+        ?: populateStandardStaticOptionsForReportDefinition(
+          productDefinitionId,
+          reportVariantId,
+          maxStaticOptions,
+          schemaFieldName,
+          userToken,
+          dataProductDefinitionsPath,
+        )
     } ?: filterDefinition.staticOptions?.map(this::map)
+  }
+
+  private fun populateStandardStaticOptionsForReportDefinition(
+    productDefinitionId: String,
+    reportVariantId: String,
+    maxStaticOptions: Long?,
+    schemaFieldName: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
+  ) = configuredApiService.validateAndFetchData(
+    reportId = productDefinitionId,
+    reportVariantId = reportVariantId,
+    filters = emptyMap(),
+    selectedPage = 1,
+    pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
+    sortColumn = schemaFieldName,
+    sortedAsc = true,
+    userToken = userToken,
+    reportFieldId = setOf(schemaFieldName),
+    dataProductDefinitionsPath = dataProductDefinitionsPath,
+  )
+    .flatMap { it.entries }
+    .map { FilterOption(it.value.toString(), it.value.toString()) }
+
+  private fun populateStaticOptionsForFilterWithDataset(
+    dynamicFilterOption: DynamicFilterOption,
+    filterDatasets: List<Dataset>?,
+    dynamicFilterDatasetId: String,
+    productDefinitionId: String,
+    reportVariantId: String,
+    maxStaticOptions: Long?,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
+  ): List<FilterOption> {
+    val schemaFieldRefForName = dynamicFilterOption.name?.removePrefix(SCHEMA_REF_PREFIX)
+    val schemaFieldRefForDisplay = dynamicFilterOption.display?.removePrefix(SCHEMA_REF_PREFIX)
+    val matchingFilterDataset = filterDatasets?.find { it.id == dynamicFilterDatasetId.removePrefix(SCHEMA_REF_PREFIX) }
+    val matchingSchemaFieldsForFilterDataset = matchingFilterDataset?.schema?.field
+    val nameSchemaField =
+      matchingSchemaFieldsForFilterDataset?.find { it.name == schemaFieldRefForName } ?: throw IllegalArgumentException(
+        "Could not find matching Schema Field '$schemaFieldRefForName'",
+      )
+    val displaySchemaField = matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForDisplay }
+      ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForDisplay'")
+    return configuredApiService.validateAndFetchData(
+      reportId = productDefinitionId,
+      reportVariantId = reportVariantId,
+      filters = emptyMap(),
+      selectedPage = 1,
+      pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
+      sortColumn = nameSchemaField.name,
+      sortedAsc = true,
+      userToken = userToken,
+      reportFieldId = linkedSetOf(nameSchemaField.name, displaySchemaField.name),
+      datasetForFilter = matchingFilterDataset,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+    )
+      .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
   }
 
   private fun replaceTokens(defaultValue: String?): String? {
