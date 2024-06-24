@@ -207,6 +207,81 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
+  fun `should call the repository with the correct dataset query, a permit policy and get a list of rows when a datasetForFilter is provided`() {
+    val selectedPage = 1L
+    val pageSize = 30L
+    val sortedAsc = true
+    val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
+    val estNameSchemaFieldName = "establishment_name"
+    val estCodeSchemaFieldName = "establishment_code"
+    val filterDataset = Dataset(
+      "establishment-dataset",
+      "establishment-dataset-name",
+      "select * from table",
+      Schema(
+        listOf(
+          SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code"),
+          SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name"),
+        ),
+      ),
+    )
+    val expectedEstablishmentRepositoryResult = listOf(
+      mapOf(
+        estNameSchemaFieldName.uppercase() to "establishment name",
+        estCodeSchemaFieldName.uppercase() to "establishment code",
+      ),
+    )
+    val expectedServiceResult = listOf(
+      mapOf(
+        estNameSchemaFieldName to "establishment name",
+        estCodeSchemaFieldName to "establishment code",
+      ),
+    )
+
+    whenever(
+      configuredApiRepository.executeQuery(
+        query = filterDataset.query,
+        filters = emptyList(),
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = estNameSchemaFieldName,
+        sortedAsc = sortedAsc,
+        reportId = reportId,
+        policyEngineResult = POLICY_PERMIT,
+        dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
+        dataSourceName = dataSourceName,
+      ),
+    ).thenReturn(expectedEstablishmentRepositoryResult)
+
+    val actual = configuredApiService.validateAndFetchData(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      filters = emptyMap(),
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = estNameSchemaFieldName,
+      sortedAsc = sortedAsc,
+      userToken = authToken,
+      reportFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
+      datasetForFilter = filterDataset,
+    )
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      query = filterDataset.query,
+      filters = emptyList(),
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = estNameSchemaFieldName,
+      sortedAsc = sortedAsc,
+      reportId = reportId,
+      policyEngineResult = POLICY_PERMIT,
+      dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
+      dataSourceName = dataSourceName,
+    )
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
   fun `should call the repository with the corresponding arguments and get a count of rows when both range and non range filters are provided`() {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))

@@ -228,7 +228,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
         val schemaFieldRefForName = dynamicFilterOption.name?.removePrefix(SCHEMA_REF_PREFIX)
         val schemaFieldRefForDisplay = dynamicFilterOption.display?.removePrefix(SCHEMA_REF_PREFIX)
-        val matchingFilterDataset = filterDatasets?.find { it.id == dynamicFilterDatasetId }
+        val matchingFilterDataset = filterDatasets?.find { it.id == dynamicFilterDatasetId.removePrefix(SCHEMA_REF_PREFIX) }
         val matchingSchemaFieldsForFilterDataset = matchingFilterDataset?.schema?.field
         val nameSchemaField = matchingSchemaFieldsForFilterDataset?.find { it.name == schemaFieldRefForName } ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForName'")
         val displaySchemaField = matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForDisplay } ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForDisplay'")

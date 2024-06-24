@@ -446,7 +446,7 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-    val reportWithDynamicFilter = generateReport(DynamicFilterOption(returnAsStaticOptions = true, dataset = estDatasetId, name = SCHEMA_REF_PREFIX + estCodeSchemaFieldName, display = SCHEMA_REF_PREFIX + estNameSchemaFieldName))
+    val reportWithDynamicFilter = generateReport(DynamicFilterOption(returnAsStaticOptions = true, dataset = SCHEMA_REF_PREFIX + estDatasetId, name = SCHEMA_REF_PREFIX + estCodeSchemaFieldName, display = SCHEMA_REF_PREFIX + estNameSchemaFieldName))
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(
       report = reportWithDynamicFilter,

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 
 class JsonFileProductDefinitionRepositoryTest {
 
-  val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
+  private val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json", "dpd001-court-hospital-movements.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
   )
@@ -56,7 +56,7 @@ class JsonFileProductDefinitionRepositoryTest {
   @Test
   fun `getSingleReportProductDefinition returns the correct product definition which includes also the filterDatasets when they exist`() {
     val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinitionWithDatasetForFilters.json"),
+      listOf("productDefinition.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     )
     val productDefinition = jsonFileProductDefinitionRepository
