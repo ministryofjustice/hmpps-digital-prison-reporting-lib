@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+## 4.3.1
+
+Allow dates (as well as datetimes) to be used as a source for format_date.
+
 ## 4.3.0
 Change the way we resolve Filters and Policy CTEs from WHERE TRUE and WHERE FALSE clauses to WHERE 1=1 and 0=1 respectively  
 in the SQL queries in order to provide support also for Oracle.
