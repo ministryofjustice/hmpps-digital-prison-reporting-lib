@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
+import java.time.LocalDate
 
 class FormulaEngineTest {
 
@@ -368,7 +369,7 @@ class FormulaEngineTest {
     "dd/MM/yyyy, 01/06/2023",
     "dd/MM/yyyy hh:mm, 01/06/2023 12:00",
   )
-  fun `Formula engine formats the date based on the provided format in the format_date formula`(dateFormat: String, expectedDate: String) {
+  fun `Formula engine formats the datetime based on the provided format in the format_date formula`(dateFormat: String, expectedDate: String) {
     val formatDateFormula = "format_date(\${date}, '$dateFormat')"
     val name = "LastName6, F"
     val row: Map<String, Any?> = mapOf(
@@ -388,6 +389,34 @@ class FormulaEngineTest {
     val expectedRow: Map<String, Any?> = mapOf(
       NAME to name,
       DATE to expectedDate,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine formats the date based on the provided format in the format_date formula`() {
+    val formatDateFormula = "format_date(\${date}, 'dd/MM/yyyy')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to LocalDate.of(2023, 6, 1),
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:date",
+        display = "Date",
+        visible = Visible.TRUE,
+        formula = formatDateFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to "01/06/2023",
       DESTINATION to "Manchester",
       DESTINATION_CODE to "MNCH",
     )
