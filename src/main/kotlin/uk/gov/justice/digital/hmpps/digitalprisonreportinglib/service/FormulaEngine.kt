@@ -40,15 +40,12 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
   }
 
   private fun interpolateFormatDateFormula(formula: String, row: Map<String, Any?>): String {
-    val (dateFieldPlaceholder, dateFormat) = formula.substring(FORMAT_DATE_FORMULA_PREFIX.length, formula.indexOf(")"))
-      .split(",")
-    val date = interpolateStandardFormula(dateFieldPlaceholder.trim(), row)
-    if (date.isBlank()) {
-      return ""
-    }
-    return when {
-      (date.length == 10) -> LocalDate.parse(date).format(DateTimeFormatter.ofPattern(removeQuotes(dateFormat.trim())))
-      (date.length == 16) -> LocalDateTime.parse(date).format(DateTimeFormatter.ofPattern(removeQuotes(dateFormat.trim())))
+    val datePlaceholder = formula.substring(FORMAT_DATE_FORMULA_PREFIX.length, formula.indexOf(")"))
+      .split(",")[1]
+    val date = row["date"] ?: return ""
+    return when (date) {
+      is LocalDate -> date.format(DateTimeFormatter.ofPattern(removeQuotes(datePlaceholder.trim())))
+      is LocalDateTime -> date.format(DateTimeFormatter.ofPattern(removeQuotes(datePlaceholder.trim())))
       else -> throw IllegalArgumentException("Could not parse date: $date")
     }
   }
