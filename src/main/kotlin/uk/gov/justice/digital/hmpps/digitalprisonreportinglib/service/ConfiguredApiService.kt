@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -41,7 +42,7 @@ class ConfiguredApiService(
     const val INVALID_STATIC_OPTIONS_MESSAGE = "Invalid static options provided."
     const val INVALID_DYNAMIC_OPTIONS_MESSAGE = "Invalid dynamic options length provided."
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
-    private const val SCHEMA_REF_PREFIX = "\$ref:"
+    const val SCHEMA_REF_PREFIX = "\$ref:"
   }
 
   private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
@@ -60,29 +61,48 @@ class ConfiguredApiService(
     sortColumn: String?,
     sortedAsc: Boolean,
     userToken: DprAuthAwareAuthenticationToken?,
-    reportFieldId: String? = null,
+    reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
+    datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
+    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
     return configuredApiRepository
       .executeQuery(
-        query = productDefinition.dataset.query,
+        query = datasetForFilter?.query ?: productDefinition.reportDataset.query,
         filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
         selectedPage = selectedPage,
         pageSize = pageSize,
-        sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
+        sortColumn = datasetForFilter?.let { findSortColumn(sortColumn, it) } ?: sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
         reportId = reportId,
-        policyEngineResult = policyEngine.execute(),
+        policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = productDefinition.datasource.name,
       )
-      .let { formatColumnsAndApplyFormulas(it, productDefinition, formulaEngine) }
+      .let { records ->
+        applyFormulasSelectivelyAndFormatColumns(
+          records,
+          productDefinition,
+          formulaEngine,
+          datasetForFilter,
+        )
+      }
   }
+
+  private fun applyFormulasSelectivelyAndFormatColumns(
+    records: List<Map<String, Any?>>,
+    productDefinition: SingleReportProductDefinition,
+    formulaEngine: FormulaEngine,
+    datasetForFilter: Dataset?,
+  ) = datasetForFilter?.let {
+    records.map { row ->
+      formatColumnNamesToSchemaFieldNamesCasing(row, datasetForFilter.schema.field)
+    }
+  } ?: formatColumnsAndApplyFormulas(records, productDefinition.reportDataset.schema.field, formulaEngine)
 
   fun validateAndExecuteStatementAsync(
     reportId: String,
@@ -91,16 +111,16 @@ class ConfiguredApiService(
     sortColumn: String?,
     sortedAsc: Boolean,
     userToken: DprAuthAwareAuthenticationToken?,
-    reportFieldId: String? = null,
+    reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
   ): StatementExecutionResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId, prefix, productDefinition)
+    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
       .executeQueryAsync(
-        query = productDefinition.dataset.query,
+        query = productDefinition.reportDataset.query,
         filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
@@ -128,23 +148,23 @@ class ConfiguredApiService(
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
     return formatColumnsAndApplyFormulas(
       redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
-      productDefinition,
+      productDefinition.reportDataset.schema.field,
       formulaEngine,
     )
   }
 
   private fun formatColumnsAndApplyFormulas(
     records: List<Map<String, Any?>>,
-    productDefinition: SingleReportProductDefinition,
+    schemaFields: List<SchemaField>,
     formulaEngine: FormulaEngine,
   ) = records
-    .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, productDefinition) }
+    .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, schemaFields) }
     .map(formulaEngine::applyFormulas)
 
   private fun formatColumnNamesToSchemaFieldNamesCasing(
     row: Map<String, Any?>,
-    productDefinition: SingleReportProductDefinition,
-  ) = row.entries.associate { e -> transformKey(e.key, productDefinition.dataset.schema.field) to e.value }
+    schemaFields: List<SchemaField>,
+  ) = row.entries.associate { e -> transformKey(e.key, schemaFields) to e.value }
 
   private fun buildAndValidateDynamicFilter(
     reportFieldId: String?,
@@ -172,7 +192,7 @@ class ConfiguredApiService(
     return Count(
       configuredApiRepository.count(
         filters = validateAndMapFilters(productDefinition, filters),
-        query = productDefinition.dataset.query,
+        query = productDefinition.reportDataset.query,
         reportId = reportId,
         policyEngineResult = policyEngine.execute(),
         dataSourceName = productDefinition.datasource.name,
@@ -193,11 +213,18 @@ class ConfiguredApiService(
   }
 
   private fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String? {
+    return findSortColumn(sortColumn, productDefinition.reportDataset) ?: calculateDefaultSortColumn(productDefinition)
+  }
+
+  private fun findSortColumn(
+    sortColumn: String?,
+    dataset: Dataset,
+  ): String? {
     return sortColumn?.let {
-      productDefinition.dataset.schema.field.filter { schemaField -> schemaField.name == sortColumn }
+      dataset.schema.field.filter { schemaField -> schemaField.name == sortColumn }
         .ifEmpty { throw ValidationException("Invalid sortColumn provided: $sortColumn") }
         .first().name
-    } ?: calculateDefaultSortColumn(productDefinition)
+    }
   }
 
   private fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>): List<ConfiguredApiRepository.Filter> {
@@ -208,12 +235,12 @@ class ConfiguredApiService(
 
       val filterDefinition = findFilterDefinition(definition, truncatedKey)
 
-      validateValue(definition.dataset, filterDefinition, truncatedKey, it.value)
+      validateValue(definition.reportDataset, filterDefinition, truncatedKey, it.value)
 
       ConfiguredApiRepository.Filter(
         field = truncatedKey,
         value = it.value,
-        type = mapFilterType(filterDefinition, it.key, truncatedKey, definition.dataset.schema),
+        type = mapFilterType(filterDefinition, it.key, truncatedKey, definition.reportDataset.schema),
       )
     }
   }

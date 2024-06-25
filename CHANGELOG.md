@@ -1,7 +1,9 @@
 Below you can find the changes included in each release.
 
-## 4.3.1
+## 4.4.0
+Added ability to have filters which reference different datasets other than the main report dataset.
 
+## 4.3.1
 Allow dates (as well as datetimes) to be used as a source for format_date.
 
 ## 4.3.0

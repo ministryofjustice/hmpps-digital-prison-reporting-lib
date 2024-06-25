@@ -8,7 +8,8 @@ data class SingleReportProductDefinition(
   val description: String? = null,
   val metadata: MetaData,
   val datasource: Datasource,
-  val dataset: Dataset,
+  val reportDataset: Dataset,
   val report: Report,
   val policy: List<Policy>,
+  val filterDatasets: List<Dataset>? = null,
 )

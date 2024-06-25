@@ -16,7 +16,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
     sortedAsc: Boolean,
     reportId: String,
     policyEngineResult: String,
-    dynamicFilterFieldId: String? = null,
+    dynamicFilterFieldId: Set<String>? = null,
     dataSourceName: String,
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
@@ -42,7 +42,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
   }
 
   private fun buildFinalStageQueryWithPagination(
-    dynamicFilterFieldId: String?,
+    dynamicFilterFieldId: Set<String>?,
     sortColumn: String?,
     sortedAsc: Boolean,
     pageSize: Long,

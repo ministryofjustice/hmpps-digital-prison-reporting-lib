@@ -59,7 +59,7 @@ class ReportDefinitionServiceTest {
       dataset = "\$ref:10",
       render = HTML,
     ),
-    dataset = Dataset(
+    reportDataset = Dataset(
       id = "10",
       name = "11",
       query = "12",

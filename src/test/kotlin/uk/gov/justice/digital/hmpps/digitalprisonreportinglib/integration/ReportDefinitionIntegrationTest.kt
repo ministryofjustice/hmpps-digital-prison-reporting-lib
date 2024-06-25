@@ -305,7 +305,43 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "defaultsort": false,
                     "type": "string",
                     "mandatory": false,
-                    "visible": true
+                    "visible": true,
+                    "filter": {
+                      "type": "Radio",
+                      "staticOptions": [
+                        {
+                          "name": "DD105GF",
+                          "display": "LastName6, F"
+                        },
+                        {
+                          "name": "G2504UV",
+                          "display": "LastName1, F"
+                        },
+                        {
+                          "name": "G2927UV",
+                          "display": "LastName1, F"
+                        },
+                        {
+                          "name": "G3154UG",
+                          "display": "LastName5, F"
+                        },
+                        {
+                          "name": "G3411VR",
+                          "display": "LastName5, F"
+                        },
+                        {
+                          "name": "G3418VR",
+                          "display": "LastName3, F"
+                        }
+                      ],
+                      "dynamicOptions": {
+                        "minimumLength": 2,
+                        "returnAsStaticOptions": true
+                      },
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    }
                   },
                   {
                     "name": "name",
