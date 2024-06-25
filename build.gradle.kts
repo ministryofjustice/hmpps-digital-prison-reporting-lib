@@ -24,9 +24,9 @@ dependencies {
   implementation("com.google.code.gson:gson:2.10.1")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-  implementation("com.google.guava:guava:33.2.0-jre")
+  implementation("com.google.guava:guava:33.2.1-jre")
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
-  implementation("software.amazon.awssdk:redshiftdata:2.26.5")
+  implementation("software.amazon.awssdk:redshiftdata:2.26.8")
   implementation("software.amazon.awssdk:athena:2.25.61")
 
   // Swagger
