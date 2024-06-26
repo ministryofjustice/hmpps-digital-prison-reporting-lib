@@ -4,9 +4,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
+import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
@@ -78,6 +80,15 @@ class RedshiftDataApiRepository(
       error = describeStatementResponse.error(),
     )
   }
+
+  override fun cancelStatementExecution(statementId: String): StatementCancellationResponse {
+    val cancelStatementRequest = CancelStatementRequest.builder()
+      .id(statementId)
+      .build()
+    val cancelStatementResponse = redshiftDataClient.cancelStatement(cancelStatementRequest)
+    return StatementCancellationResponse(cancelStatementResponse.status())
+  }
+
   override fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
     val lowerCaseField = "lower(${filter.field})"
     return when (filter.type) {

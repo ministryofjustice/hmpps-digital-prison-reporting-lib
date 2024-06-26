@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -1374,6 +1375,43 @@ class ConfiguredApiServiceTest {
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionStatus, actual)
+  }
+
+  @Test
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when cancelStatementExecution is called`() {
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
+    val statementId = "statementId"
+    val statementCancellationResponse = StatementCancellationResponse(
+      true,
+    )
+    whenever(
+      redshiftDataApiRepository.cancelStatementExecution(statementId),
+    ).thenReturn(statementCancellationResponse)
+
+    val actual = configuredApiService.cancelStatementExecution(statementId, "external-movements", "last-month")
+    verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
+    verifyNoInteractions(athenaApiRepository)
+    assertEquals(statementCancellationResponse, actual)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["productDefinitionNomis.json", "productDefinitionBodmis.json"])
+  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when cancelStatementExecution is called`(definitionFile: String) {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf(definitionFile),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
+    val statementId = "statementId"
+    val statementCancellationResponse = StatementCancellationResponse(true)
+    whenever(
+      athenaApiRepository.cancelStatementExecution(statementId),
+    ).thenReturn(statementCancellationResponse)
+
+    val actual = configuredApiService.cancelStatementExecution(statementId, "external-movements", "last-month")
+    verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
+    verifyNoInteractions(redshiftDataApiRepository)
+    assertEquals(statementCancellationResponse, actual)
   }
 
   @Test
