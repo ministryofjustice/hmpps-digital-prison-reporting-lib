@@ -778,7 +778,7 @@ class ConfiguredApiServiceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = ["origin", "invalid field name"])
+  @ValueSource(strings = ["destination", "invalid field name"])
   fun `validateAndFetchData should throw an exception for invalid dynamic filter`(fieldId: String) {
     val selectedPage = 1L
     val pageSize = 10L

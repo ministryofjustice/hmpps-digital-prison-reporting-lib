@@ -147,6 +147,7 @@
         "name" : "$ref:date",
         "display" : "Date",
         "filter" : {
+          "mandatory": true,
           "type" : "dAtErAnGe",
           "default" : "today(-1,months) - today()"
         },
@@ -155,6 +156,11 @@
       }, {
         "name" : "$ref:origin",
         "display" : "From",
+        "filter" : {
+          "pattern": "[A-Z]{3,3}",
+          "type" : "text",
+          "default" : "today(-1,months) - today()"
+        },
         "wordWrap" : "none",
         "sortable" : true,
         "defaultsort" : false

@@ -96,6 +96,8 @@ class ReportDefinitionMapperTest {
                 display = "17",
               ),
             ),
+            mandatory = true,
+            pattern = ".+"
           ),
           sortable = true,
           defaultSort = true,
@@ -387,6 +389,8 @@ class ReportDefinitionMapperTest {
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
     assertThat(field.filter?.staticOptions).isNotEmpty
     assertThat(field.filter?.staticOptions).hasSize(1)
+    assertThat(field.filter?.mandatory).isEqualTo(sourceReportField.filter?.mandatory)
+    assertThat(field.filter?.pattern).isEqualTo(sourceReportField.filter?.pattern)
     assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
 
     val filterOption = field.filter?.staticOptions?.first()
