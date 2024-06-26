@@ -640,7 +640,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   fun `External movements returns 400 for missing mandatory filter query param`() {
     val params = mapOf(
       "${FILTERS_PREFIX}origin" to "AAA",
-      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to ""
+      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "",
     )
     requestWithQueryAndAssert400(params, "/reports/external-movements/last-year")
   }

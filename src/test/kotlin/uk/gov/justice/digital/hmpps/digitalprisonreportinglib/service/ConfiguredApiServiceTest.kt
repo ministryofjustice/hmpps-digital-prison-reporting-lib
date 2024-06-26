@@ -850,7 +850,7 @@ class ConfiguredApiServiceTest {
     val sortedAsc = true
     val filters = mapOf(
       "date.start" to "2000-01-02",
-      "origin" to "Invalid"
+      "origin" to "Invalid",
     )
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndFetchData(reportId, "last-year", filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
@@ -870,7 +870,7 @@ class ConfiguredApiServiceTest {
   fun `validateAndCount should throw an exception for a filter value that does not match the validation pattern`() {
     val filters = mapOf(
       "date.start" to "2000-01-02",
-      "origin" to "Invalid"
+      "origin" to "Invalid",
     )
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndCount(reportId, "last-year", filters, authToken)
@@ -895,7 +895,7 @@ class ConfiguredApiServiceTest {
     val sortedAsc = true
     val filters = mapOf(
       "date.start" to "2000-01-02",
-      "origin" to "Invalid"
+      "origin" to "Invalid",
     )
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, sortColumn, sortedAsc, authToken)
