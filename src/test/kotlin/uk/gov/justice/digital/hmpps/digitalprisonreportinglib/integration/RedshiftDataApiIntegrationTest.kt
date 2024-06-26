@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.Configu
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
@@ -185,6 +186,43 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           "resultRows": $resultRows,
           "resultSize": $resultSize,
           "error": null
+        }
+      """,
+      )
+  }
+
+  @Test
+  fun `Calling the report cancellation endpoint calls the cancelStatementExecution of the ConfiguredApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    val reportId = "external-movements"
+    val reportVariantId = "last-month"
+    val statementCancellationResponse = StatementCancellationResponse(
+      true,
+    )
+    given(
+      configuredApiService.cancelStatementExecution(
+        eq(queryExecutionId),
+        eq(reportId),
+        eq(reportVariantId),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      ),
+    )
+      .willReturn(statementCancellationResponse)
+
+    webTestClient.delete()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/$reportId/$reportVariantId/statements/$queryExecutionId")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """{
+          "cancellationSucceeded": true
         }
       """,
       )

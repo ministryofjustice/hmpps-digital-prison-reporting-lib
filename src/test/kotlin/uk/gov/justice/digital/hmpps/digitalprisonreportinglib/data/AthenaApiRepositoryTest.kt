@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
@@ -14,9 +15,12 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
+import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
+import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
@@ -149,6 +153,30 @@ SELECT *
       0L,
     )
     val actual = athenaApiRepository.getStatementStatus(statementId)
+
+    assertEquals(expected, actual)
+  }
+
+  @Test
+  fun `cancelStatementExecution should call the stopQueryExecution athena api with the correct statement ID and return a successful StatementCancellationResponse`() {
+    val athenaClient = mock<AthenaClient>()
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val athenaApiRepository = AthenaApiRepository(
+      athenaClient,
+      tableIdGenerator,
+    )
+    val statementId = "statementId"
+    val stopQueryExecutionRequest = StopQueryExecutionRequest.builder()
+      .queryExecutionId(statementId)
+      .build()
+    val stopQueryExecutionResponse = StopQueryExecutionResponse.builder().build()
+    whenever(
+      athenaClient.stopQueryExecution(
+        stopQueryExecutionRequest,
+      ),
+    ).thenReturn(stopQueryExecutionResponse)
+    val expected = StatementCancellationResponse(true)
+    val actual = athenaApiRepository.cancelStatementExecution(statementId)
 
     assertEquals(expected, actual)
   }

@@ -10,6 +10,8 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionContext
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
+import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
@@ -93,6 +95,15 @@ class AthenaApiRepository(
       errorCategory = error?.errorCategory(),
       stateChangeReason = stateChangeReason,
     )
+  }
+
+  override fun cancelStatementExecution(statementId: String): StatementCancellationResponse {
+    val cancelQueryExecutionRequest = StopQueryExecutionRequest.builder()
+      .queryExecutionId(statementId)
+      .build()
+
+    athenaClient.stopQueryExecution(cancelQueryExecutionRequest)
+    return StatementCancellationResponse(true)
   }
 
   private fun mapAthenaStateToRedshiftState(queryState: String): String {

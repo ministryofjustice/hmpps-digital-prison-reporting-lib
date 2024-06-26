@@ -5,6 +5,7 @@ Below you can find the changes included in each release.
 - Added Text filter type.
 - Added `mandatory` property for filter validation.
 - Added `pattern` property for filter validation using a regex.
+- Added an endpoint to stop asynchronous statements which are still running.
 
 ## 4.4.0
 Added ability to have filters which reference different datasets other than the main report dataset.

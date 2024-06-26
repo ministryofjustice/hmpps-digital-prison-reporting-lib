@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 
@@ -45,6 +46,8 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
   }
+
+  abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
 
   fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
     return jdbcTemplate.queryForList(
