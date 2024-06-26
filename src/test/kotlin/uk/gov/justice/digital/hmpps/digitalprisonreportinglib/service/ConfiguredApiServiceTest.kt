@@ -779,7 +779,7 @@ class ConfiguredApiServiceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = ["origin", "invalid field name"])
+  @ValueSource(strings = ["destination", "invalid field name"])
   fun `validateAndFetchData should throw an exception for invalid dynamic filter`(fieldId: String) {
     val selectedPage = 1L
     val pageSize = 10L
@@ -828,6 +828,80 @@ class ConfiguredApiServiceTest {
       any(),
       any(),
     )
+  }
+
+  @Test
+  fun `validateAndFetchData should throw an exception for a mandatory filter with no value`() {
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, "last-year", emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+  }
+
+  @Test
+  fun `validateAndFetchData should throw an exception for a filter value that does not match the validation pattern`() {
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val filters = mapOf(
+      "date.start" to "2000-01-02",
+      "origin" to "Invalid",
+    )
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, "last-year", filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
+  }
+
+  @Test
+  fun `validateAndCount should throw an exception for a mandatory filter with no value`() {
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndCount(reportId, "last-year", emptyMap(), authToken)
+    }
+    assertEquals(ConfiguredApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+  }
+
+  @Test
+  fun `validateAndCount should throw an exception for a filter value that does not match the validation pattern`() {
+    val filters = mapOf(
+      "date.start" to "2000-01-02",
+      "origin" to "Invalid",
+    )
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndCount(reportId, "last-year", filters, authToken)
+    }
+    assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
+  }
+
+  @Test
+  fun `validateAndExecuteStatementAsync should throw an exception for a mandatory filter with no value`() {
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+  }
+
+  @Test
+  fun `validateAndExecuteStatementAsync should throw an exception for a filter value that does not match the validation pattern`() {
+    val sortColumn = "date"
+    val sortedAsc = true
+    val filters = mapOf(
+      "date.start" to "2000-01-02",
+      "origin" to "Invalid",
+    )
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
   }
 
   @Test

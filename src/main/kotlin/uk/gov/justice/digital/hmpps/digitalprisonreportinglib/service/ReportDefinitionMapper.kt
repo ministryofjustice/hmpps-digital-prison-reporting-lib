@@ -211,6 +211,8 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       defaultValue = replaceTokens(filterDefinition.default),
       min = replaceTokens(filterDefinition.min),
       max = replaceTokens(filterDefinition.max),
+      mandatory = filterDefinition.mandatory,
+      pattern = filterDefinition.pattern,
     )
   }
 

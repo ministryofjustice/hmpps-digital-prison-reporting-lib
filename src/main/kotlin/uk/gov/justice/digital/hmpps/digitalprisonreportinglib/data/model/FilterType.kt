@@ -5,4 +5,5 @@ enum class FilterType {
   Select,
   DateRange,
   AutoComplete,
+  Text,
 }
