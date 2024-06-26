@@ -196,16 +196,6 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
       "Athena automatically retries your queries in cases of certain transient errors. " +
       "As a result, you may see the query state transition from STARTED or FAILED to SUBMITTED.\n",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
-    responses = [
-      ApiResponse(
-        headers = [
-          Header(
-            name = NO_DATA_WARNING_HEADER_NAME,
-            description = "Provides additional information about why no data has been returned.",
-          ),
-        ],
-      ),
-    ],
   )
   fun getQueryExecutionStatus(
     @PathVariable("reportId") reportId: String,
@@ -219,37 +209,17 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
-    return try {
-      ResponseEntity
+    return ResponseEntity
         .status(HttpStatus.OK)
         .body(
           configuredApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
         )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
-
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(null)
-    }
   }
 
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
   @Operation(
     description = "Cancels the execution of a running query.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
-    responses = [
-      ApiResponse(
-        headers = [
-          Header(
-            name = NO_DATA_WARNING_HEADER_NAME,
-            description = "Provides additional information about why no data has been returned.",
-          ),
-        ],
-      ),
-    ],
   )
   fun cancelQueryExecution(
     @PathVariable("reportId") reportId: String,
@@ -263,21 +233,11 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementCancellationResponse> {
-    return try {
-      ResponseEntity
+    return ResponseEntity
         .status(HttpStatus.OK)
         .body(
           configuredApiService.cancelStatementExecution(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
         )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
-
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(null)
-    }
   }
 
   @GetMapping("/report/tables/{tableId}/count")
@@ -321,16 +281,6 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     description = "Returns the resulting rows of the executed statement in a paginated " +
       "fashion which has been have been stored in a dedicated table.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
-    responses = [
-      ApiResponse(
-        headers = [
-          Header(
-            name = NO_DATA_WARNING_HEADER_NAME,
-            description = "Provides additional information about why no data has been returned.",
-          ),
-        ],
-      ),
-    ],
   )
   fun getQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
@@ -346,8 +296,7 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     pageSize: Long,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    return try {
-      ResponseEntity
+    return ResponseEntity
         .status(HttpStatus.OK)
         .body(
           configuredApiService.getStatementResult(
@@ -359,15 +308,6 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
             pageSize,
           ),
         )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
-
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(null)
-    }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
