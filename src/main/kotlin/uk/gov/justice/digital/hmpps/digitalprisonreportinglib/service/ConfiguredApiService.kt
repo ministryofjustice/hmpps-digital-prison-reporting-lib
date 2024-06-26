@@ -232,8 +232,8 @@ class ConfiguredApiService(
   private fun checkMandatoryFiltersAreProvided(definition: SingleReportProductDefinition, filters: Map<String, String>) {
     definition.report.specification!!.field
       .filter { it.filter?.mandatory == true }
-      .filter { !filters.keys.map(::truncateBasedOnSuffix).contains(it.name.removePrefix(SCHEMA_REF_PREFIX)) }
-      .forEach { throw ValidationException("$MISSING_MANDATORY_FILTER_MESSAGE ${it.display}") }
+      .firstOrNull { !filters.keys.map(::truncateBasedOnSuffix).contains(it.name.removePrefix(SCHEMA_REF_PREFIX)) }
+      ?.let { throw ValidationException("$MISSING_MANDATORY_FILTER_MESSAGE ${it.display}") }
   }
 
   private fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>): List<ConfiguredApiRepository.Filter> {
