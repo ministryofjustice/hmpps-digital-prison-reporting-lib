@@ -210,10 +210,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
     return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          configuredApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
-        )
+      .status(HttpStatus.OK)
+      .body(
+        configuredApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
+      )
   }
 
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
@@ -234,10 +234,10 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     authentication: Authentication,
   ): ResponseEntity<StatementCancellationResponse> {
     return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          configuredApiService.cancelStatementExecution(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
-        )
+      .status(HttpStatus.OK)
+      .body(
+        configuredApiService.cancelStatementExecution(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
+      )
   }
 
   @GetMapping("/report/tables/{tableId}/count")
@@ -297,17 +297,17 @@ class ConfiguredApiController(val configuredApiService: ConfiguredApiService) {
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
     return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          configuredApiService.getStatementResult(
-            tableId,
-            reportId,
-            reportVariantId,
-            dataProductDefinitionsPath,
-            selectedPage,
-            pageSize,
-          ),
-        )
+      .status(HttpStatus.OK)
+      .body(
+        configuredApiService.getStatementResult(
+          tableId,
+          reportId,
+          reportVariantId,
+          dataProductDefinitionsPath,
+          selectedPage,
+          pageSize,
+        ),
+      )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
