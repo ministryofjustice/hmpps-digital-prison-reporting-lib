@@ -60,9 +60,10 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(definition.name).isEqualTo("External Movements")
       assertThat(courtAndHospitalMovementsReport.name).isEqualTo("Court And Hospital Movement DPD")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-      assertThat(definition.variants).hasSize(2)
+      assertThat(definition.variants).hasSize(3)
       assertThat(definition.variants[0]).isNotNull
       assertThat(definition.variants[1]).isNotNull
+      assertThat(definition.variants[2]).isNotNull
 
       val lastMonthVariant = definition.variants[0]
 
@@ -74,6 +75,11 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastWeekVariant.id).isEqualTo("last-week")
       assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
       assertThat(lastWeekVariant.name).isEqualTo("Last week")
+
+      val lastYearVariant = definition.variants[2]
+      assertThat(lastYearVariant.id).isEqualTo("last-year")
+      assertThat(lastYearVariant.description).isEqualTo("All movements in the past year")
+      assertThat(lastYearVariant.name).isEqualTo("Last year")
     }
   }
 
@@ -111,7 +117,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
       assertThat(definition.name).isEqualTo("External Movements")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-      assertThat(definition.variants).hasSize(2)
+      assertThat(definition.variants).hasSize(3)
       assertThat(definition.variants[0]).isNotNull
       assertThat(definition.variants[1]).isNotNull
 
@@ -150,7 +156,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
     val definition = result.responseBody!!.first()
 
-    assertThat(definition.variants).hasSize(2)
+    assertThat(definition.variants).hasSize(3)
   }
 
   @Test
@@ -545,6 +551,11 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   "description": "All movements in the past week",
                   "id": "last-week",
                   "name": "Last week"
+              },
+              {
+                  "description": "All movements in the past year",
+                  "id": "last-year",
+                  "name": "Last year"
               }
           ]
       }

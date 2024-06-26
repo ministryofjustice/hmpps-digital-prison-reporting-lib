@@ -836,28 +836,10 @@ class ConfiguredApiServiceTest {
     val sortColumn = "date"
     val sortedAsc = true
 
-    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinitionWithMandatoryFilter.json"),
-      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-    )
-    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
-
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+      configuredApiService.validateAndFetchData(reportId, "last-year", emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
     }
     assertEquals(ConfiguredApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-    )
   }
 
   @Test
@@ -870,29 +852,55 @@ class ConfiguredApiServiceTest {
       "date.start" to "2000-01-02",
       "origin" to "Invalid"
     )
-
-    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinitionWithMandatoryFilter.json"),
-      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-    )
-    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
-
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+      configuredApiService.validateAndFetchData(reportId, "last-year", filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
     }
     assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
-    verify(configuredApiRepository, times(0)).executeQuery(
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
-      any(),
+  }
+
+  @Test
+  fun `validateAndCount should throw an exception for a mandatory filter with no value`() {
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndCount(reportId, "last-year", emptyMap(), authToken)
+    }
+    assertEquals(ConfiguredApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+  }
+
+  @Test
+  fun `validateAndCount should throw an exception for a filter value that does not match the validation pattern`() {
+    val filters = mapOf(
+      "date.start" to "2000-01-02",
+      "origin" to "Invalid"
     )
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndCount(reportId, "last-year", filters, authToken)
+    }
+    assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
+  }
+
+  @Test
+  fun `validateAndExecuteStatementAsync should throw an exception for a mandatory filter with no value`() {
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+  }
+
+  @Test
+  fun `validateAndExecuteStatementAsync should throw an exception for a filter value that does not match the validation pattern`() {
+    val sortColumn = "date"
+    val sortedAsc = true
+    val filters = mapOf(
+      "date.start" to "2000-01-02",
+      "origin" to "Invalid"
+    )
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
   }
 
   @Test
