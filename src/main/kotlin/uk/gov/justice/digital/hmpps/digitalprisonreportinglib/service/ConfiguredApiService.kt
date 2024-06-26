@@ -43,6 +43,7 @@ class ConfiguredApiService(
     const val INVALID_DYNAMIC_OPTIONS_MESSAGE = "Invalid dynamic options length provided."
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
     const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
+    const val FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE = "Filter value does not match pattern:"
     const val SCHEMA_REF_PREFIX = "\$ref:"
   }
 
@@ -304,6 +305,9 @@ class ConfiguredApiService(
     validateFilterSchemaFieldType(dataSet, filterName, filterValue)
     if (filterDefinition.staticOptions != null && filterDefinition.staticOptions.none { it.name.lowercase() == filterValue.lowercase() }) {
       throw ValidationException(INVALID_STATIC_OPTIONS_MESSAGE)
+    }
+    if (filterDefinition.pattern != null && !Regex("^${filterDefinition.pattern}\$").matches(filterValue)) {
+      throw ValidationException("$FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE $filterValue ${filterDefinition.pattern}")
     }
   }
 

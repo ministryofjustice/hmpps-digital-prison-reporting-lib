@@ -861,6 +861,41 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
+  fun `validateAndFetchData should throw an exception for a filter value that does not match the validation pattern`() {
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val filters = mapOf(
+      "date.start" to "2000-01-02",
+      "origin" to "Invalid"
+    )
+
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithMandatoryFilter.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+    )
+  }
+
+  @Test
   fun `validateAndCount should throw an exception for invalid filter`() {
     val filters = mapOf("non existent filter" to "blah")
 
