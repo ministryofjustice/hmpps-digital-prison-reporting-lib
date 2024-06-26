@@ -5,6 +5,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dynamic
 
 data class FilterDefinition(
   val type: FilterType,
+  val mandatory: Boolean = false,
+  val pattern: String? = null,
   val staticOptions: List<FilterOption>? = null,
   @SerializedName("dynamicoptions")
   val dynamicOptions: DynamicFilterOption? = null,

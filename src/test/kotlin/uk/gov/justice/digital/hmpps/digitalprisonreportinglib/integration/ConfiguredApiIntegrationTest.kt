@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.web.reactive.server.StatusAssertions
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_PREFIX
@@ -607,12 +608,12 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
 
   @Test
   fun `Configured API returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}origin", "some name", "/reports/external-movements/last-month")
+    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month")
   }
 
   @Test
   fun `Configured API count returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}origin", "some name", "/reports/external-movements/last-month/count")
+    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month/count")
   }
 
   @Test
@@ -635,17 +636,54 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     requestWithQueryAndAssert400("filters.endDate", "17-12-2050", "/reports/external-movements/last-month/count")
   }
 
+  @Test
+  fun `External movements returns 400 for missing mandatory filter query param`() {
+    val params = mapOf(
+      "${FILTERS_PREFIX}origin" to "AAA",
+      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "",
+    )
+    requestWithQueryAndAssert400(params, "/reports/external-movements/last-year")
+  }
+
+  @Test
+  fun `External movements returns 400 for filter query param that doesn't match pattern`() {
+    val params = mapOf(
+      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "2000-01-02",
+      "${FILTERS_PREFIX}origin" to "Invalid",
+    )
+    requestWithQueryAndAssert400(params, "/reports/external-movements/last-year")
+  }
+
+  @Test
+  fun `External movements returns 200 for filter query param that matches pattern`() {
+    val params = mapOf(
+      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "2000-01-02",
+      "${FILTERS_PREFIX}origin" to "AAA",
+    )
+    requestWithQueryAndAssert200(params, "/reports/external-movements/last-year")
+  }
+
   private fun requestWithQueryAndAssert400(paramName: String, paramValue: Any, path: String) {
-    webTestClient.get()
+    requestWithQueryAndAssert400(mapOf(paramName to paramValue), path)
+  }
+
+  private fun requestWithQueryAndAssert400(params: Map<String, Any>, path: String) {
+    requestWithQueryAndAssert(params, path).isBadRequest
+  }
+
+  private fun requestWithQueryAndAssert200(params: Map<String, Any>, path: String) {
+    requestWithQueryAndAssert(params, path).isOk
+  }
+
+  private fun requestWithQueryAndAssert(params: Map<String, Any>, path: String): StatusAssertions {
+    return webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path(path)
-          .queryParam(paramName, paramValue)
-          .build()
+        params.entries.forEach { uriBuilder.queryParam(it.key, it.value) }
+
+        uriBuilder.path(path).build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
-      .isBadRequest
   }
 }
