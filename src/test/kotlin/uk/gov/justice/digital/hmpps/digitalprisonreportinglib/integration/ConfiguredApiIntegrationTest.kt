@@ -608,12 +608,12 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
 
   @Test
   fun `Configured API returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}origin", "some name", "/reports/external-movements/last-month")
+    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month")
   }
 
   @Test
   fun `Configured API count returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}origin", "some name", "/reports/external-movements/last-month/count")
+    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month/count")
   }
 
   @Test
