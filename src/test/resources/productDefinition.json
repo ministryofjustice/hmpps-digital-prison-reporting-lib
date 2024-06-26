@@ -157,8 +157,7 @@
         "name" : "$ref:origin",
         "display" : "From",
         "filter" : {
-          "type" : "text",
-          "default" : "today(-1,months) - today()"
+          "type" : "text"
         },
         "wordWrap" : "none",
         "sortable" : true,
@@ -362,7 +361,6 @@
         "display" : "From",
         "filter" : {
           "type" : "text",
-          "default" : "today(-1,months) - today()",
           "mandatory": true,
           "pattern": "[A-Z]{3,3}"
         },
