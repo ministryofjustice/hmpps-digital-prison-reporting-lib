@@ -830,6 +830,37 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
+  fun `validateAndFetchData should throw an exception for a mandatory filter with no value`() {
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithMandatoryFilter.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
+
+    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+    }
+    assertEquals(ConfiguredApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+    verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+      any(),
+    )
+  }
+
+  @Test
   fun `validateAndCount should throw an exception for invalid filter`() {
     val filters = mapOf("non existent filter" to "blah")
 

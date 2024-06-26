@@ -373,7 +373,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                       "type": "daterange",
                       "staticOptions": null,
                       "dynamicOptions": null,
-                      "mandatory": true,
+                      "mandatory": false,
                       "min": null,
                       "max": null
                     },
@@ -388,8 +388,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "display": "From",
                     "wordWrap": "none",
                     "filter": {
-                      "type": "text",
-                      "pattern": "[A-Z]{3,3}"
+                      "type": "text"
                     },
                     "sortable": true,
                     "defaultsort": false,

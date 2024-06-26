@@ -42,6 +42,7 @@ class ConfiguredApiService(
     const val INVALID_STATIC_OPTIONS_MESSAGE = "Invalid static options provided."
     const val INVALID_DYNAMIC_OPTIONS_MESSAGE = "Invalid dynamic options length provided."
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
+    const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
     const val SCHEMA_REF_PREFIX = "\$ref:"
   }
 
@@ -227,7 +228,16 @@ class ConfiguredApiService(
     }
   }
 
+  private fun checkMandatoryFiltersAreProvided(definition: SingleReportProductDefinition, filters: Map<String, String>) {
+    definition.report.specification!!.field
+      .filter { it.filter?.mandatory == true }
+      .filter { !filters.keys.map(::truncateBasedOnSuffix).contains(it.name.removePrefix(SCHEMA_REF_PREFIX)) }
+      .forEach { throw ValidationException("$MISSING_MANDATORY_FILTER_MESSAGE ${it.display}") }
+  }
+
   private fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>): List<ConfiguredApiRepository.Filter> {
+    checkMandatoryFiltersAreProvided(definition, filters)
+
     filters.ifEmpty { return emptyList() }
 
     return filters.map {
