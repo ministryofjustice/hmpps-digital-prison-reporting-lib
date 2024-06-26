@@ -97,7 +97,7 @@ class ReportDefinitionMapperTest {
               ),
             ),
             mandatory = true,
-            pattern = ".+"
+            pattern = ".+",
           ),
           sortable = true,
           defaultSort = true,
