@@ -1,5 +1,11 @@
 Below you can find the changes included in each release.
 
+## 4.5.0
+
+- Added Text filter type.
+- Added `mandatory` property for filter validation.
+- Added `pattern` property for filter validation using a regex.
+
 ## 4.4.0
 Added ability to have filters which reference different datasets other than the main report dataset.
 
