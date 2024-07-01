@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.5.1
+Added `section` property for `list-section` report templates
+
 ## 4.5.0
 
 - Added Text filter type.
