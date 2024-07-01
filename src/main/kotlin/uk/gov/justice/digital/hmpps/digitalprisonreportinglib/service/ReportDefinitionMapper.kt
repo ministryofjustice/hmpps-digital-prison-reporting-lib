@@ -92,6 +92,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
 
     return Specification(
       template = specification.template,
+      sections = specification.section.map { it.removePrefix(SCHEMA_REF_PREFIX) },
       fields = specification.field.map {
         map(
           field = it,
