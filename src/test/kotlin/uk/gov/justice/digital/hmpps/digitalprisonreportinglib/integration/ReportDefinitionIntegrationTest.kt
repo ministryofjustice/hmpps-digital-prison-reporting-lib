@@ -567,4 +567,29 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
     }
   }
+
+  @Test
+  fun `Single definition with an empty section list is returned in expected format`() {
+    try {
+      prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+      externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements/last-week")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("variant.specification.sections").isArray()
+        .jsonPath("variant.specification.sections").isEmpty()
+    } finally {
+      externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+    }
+  }
 }

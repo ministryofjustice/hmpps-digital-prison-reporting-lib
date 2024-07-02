@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.5.2
+Fix issue with empty section properties.
+
 ## 4.5.1
 Added `section` property for `list-section` report templates
 

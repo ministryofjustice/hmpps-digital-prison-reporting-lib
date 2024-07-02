@@ -245,6 +245,7 @@ class ReportDefinitionMapperTest {
         schedule = "26",
         specification = Specification(
           template = "27",
+          section = null,
           field = listOf(
             ReportField(
               name = "\$ref:13",
@@ -677,6 +678,7 @@ class ReportDefinitionMapperTest {
     schedule = "26",
     specification = Specification(
       template = "27",
+      section = null,
       field = listOf(
         ReportField(
           name = "\$ref:13",
@@ -750,6 +752,7 @@ class ReportDefinitionMapperTest {
     schedule = "26",
     specification = Specification(
       template = "27",
+      section = null,
       field = listOf(
         ReportField(
           name = "\$ref:13",
@@ -809,6 +812,7 @@ class ReportDefinitionMapperTest {
         render = RenderMethod.HTML,
         specification = Specification(
           template = "19",
+          section = null,
           field = listOf(
             ReportField(
               name = "\$ref:13",

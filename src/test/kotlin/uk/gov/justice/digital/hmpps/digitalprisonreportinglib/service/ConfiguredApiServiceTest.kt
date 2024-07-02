@@ -1155,8 +1155,8 @@ class ConfiguredApiServiceTest {
       render = RenderMethod.SVG,
       classification = "someClassification",
       specification = Specification(
-        "list",
-        listOf(
+        template = "list",
+        field = listOf(
           ReportField(
             name = "\$ref:9",
             display = "Number 9",
@@ -1166,6 +1166,7 @@ class ConfiguredApiServiceTest {
             defaultSort = false,
           ),
         ),
+        section = null,
       ),
     )
     val policy = Policy(
