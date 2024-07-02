@@ -315,8 +315,9 @@ class ConfiguredApiService(
       throw ValidationException(INVALID_STATIC_OPTIONS_MESSAGE)
     }
     if (filterDefinition.pattern != null &&
-      (reportFieldId == null || !reportFieldId.contains(filterName))
-      && !Regex("^${filterDefinition.pattern}\$").matches(filterValue)) {
+      (reportFieldId == null || !reportFieldId.contains(filterName)) &&
+      !Regex("^${filterDefinition.pattern}\$").matches(filterValue)
+    ) {
       throw ValidationException("$FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE $filterValue ${filterDefinition.pattern}")
     }
   }

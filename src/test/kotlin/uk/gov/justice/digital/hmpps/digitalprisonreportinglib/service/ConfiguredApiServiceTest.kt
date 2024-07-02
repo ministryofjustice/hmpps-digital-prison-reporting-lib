@@ -859,7 +859,7 @@ class ConfiguredApiServiceTest {
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       userToken = authToken,
-      reportFieldId = setOf("name")
+      reportFieldId = setOf("name"),
     )
 
     assertThat(actual).isNotNull
@@ -901,7 +901,7 @@ class ConfiguredApiServiceTest {
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       userToken = authToken,
-      reportFieldId = setOf("origin")
+      reportFieldId = setOf("origin"),
     )
 
     assertThat(actual).isNotNull()
