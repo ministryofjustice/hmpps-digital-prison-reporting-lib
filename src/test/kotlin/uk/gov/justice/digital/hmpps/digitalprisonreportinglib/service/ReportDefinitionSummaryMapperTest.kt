@@ -55,6 +55,7 @@ class ReportDefinitionSummaryMapperTest {
     schedule = "26",
     specification = Specification(
       template = "27",
+      section = null,
       field = listOf(
         ReportField(
           name = "\$ref:13",
