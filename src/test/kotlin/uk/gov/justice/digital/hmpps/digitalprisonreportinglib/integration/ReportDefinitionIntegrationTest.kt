@@ -300,13 +300,13 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
               "resourceName": "reports/external-movements/last-month",
               "description": "All movements in the past month",
               "specification": {
-                "template": "list",
+                "template": "list-section",
+                "sections": [ "direction" ],
                 "fields": [
                   {
                     "name": "prisonNumber",
                     "display": "Prison Number",
                     "wordWrap": null,
-                    "filter": null,
                     "sortable": true,
                     "defaultsort": false,
                     "type": "string",

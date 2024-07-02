@@ -115,7 +115,8 @@
       "type": "print"
     }],
     "specification" : {
-      "template" : "list",
+      "template" : "list-section",
+      "section": [ "$ref:direction" ],
       "field" : [ {
         "name" : "$ref:prisonNumber",
         "sortable" : true,

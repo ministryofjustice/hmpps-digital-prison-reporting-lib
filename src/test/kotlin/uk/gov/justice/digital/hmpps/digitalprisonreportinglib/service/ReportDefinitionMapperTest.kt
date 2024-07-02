@@ -83,6 +83,7 @@ class ReportDefinitionMapperTest {
     schedule = "26",
     specification = Specification(
       template = "27",
+      section = listOf("30"),
       field = listOf(
         ReportField(
           name = "\$ref:13",
@@ -186,6 +187,9 @@ class ReportDefinitionMapperTest {
     assertThat(variant.classification).isEqualTo(singleReportProductDefinition.report.classification)
     assertThat(variant.printable).isEqualTo(singleReportProductDefinition.report.feature?.first()?.type == FeatureType.PRINT)
     assertThat(variant.specification?.template).isEqualTo(singleReportProductDefinition.report.specification?.template)
+    assertThat(variant.specification?.sections).hasSize(1)
+    assertThat(variant.specification?.sections?.first())
+      .isEqualTo(singleReportProductDefinition.report.specification?.section?.first()?.removePrefix(SCHEMA_REF_PREFIX))
     assertThat(variant.specification?.fields).isNotEmpty
     assertThat(variant.specification?.fields).hasSize(1)
 
