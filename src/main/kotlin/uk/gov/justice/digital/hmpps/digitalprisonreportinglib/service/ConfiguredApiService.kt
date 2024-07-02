@@ -76,7 +76,7 @@ class ConfiguredApiService(
     return configuredApiRepository
       .executeQuery(
         query = datasetForFilter?.query ?: productDefinition.reportDataset.query,
-        filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
+        filters = validateAndMapFilters(productDefinition, filters, reportFieldId) + dynamicFilter,
         selectedPage = selectedPage,
         pageSize = pageSize,
         sortColumn = datasetForFilter?.let { findSortColumn(sortColumn, it) } ?: sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
@@ -242,8 +242,10 @@ class ConfiguredApiService(
       ?.let { throw ValidationException("$MISSING_MANDATORY_FILTER_MESSAGE ${it.display}") }
   }
 
-  private fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>): List<ConfiguredApiRepository.Filter> {
-    checkMandatoryFiltersAreProvided(definition, filters)
+  private fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>, reportFieldId: Set<String>? = null): List<ConfiguredApiRepository.Filter> {
+    if (reportFieldId == null) {
+      checkMandatoryFiltersAreProvided(definition, filters)
+    }
 
     filters.ifEmpty { return emptyList() }
 
@@ -252,7 +254,7 @@ class ConfiguredApiService(
 
       val filterDefinition = findFilterDefinition(definition, truncatedKey)
 
-      validateValue(definition.reportDataset, filterDefinition, truncatedKey, it.value)
+      validateValue(definition.reportDataset, filterDefinition, truncatedKey, it.value, reportFieldId)
 
       ConfiguredApiRepository.Filter(
         field = truncatedKey,
@@ -307,12 +309,15 @@ class ConfiguredApiService(
     return field?.filter ?: throw ValidationException(INVALID_FILTERS_MESSAGE)
   }
 
-  private fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, filterName: String, filterValue: String) {
+  private fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, filterName: String, filterValue: String, reportFieldId: Set<String>?) {
     validateFilterSchemaFieldType(dataSet, filterName, filterValue)
     if (filterDefinition.staticOptions != null && filterDefinition.staticOptions.none { it.name.lowercase() == filterValue.lowercase() }) {
       throw ValidationException(INVALID_STATIC_OPTIONS_MESSAGE)
     }
-    if (filterDefinition.pattern != null && !Regex("^${filterDefinition.pattern}\$").matches(filterValue)) {
+    if (filterDefinition.pattern != null &&
+      (reportFieldId == null || !reportFieldId.contains(filterName)) &&
+      !Regex("^${filterDefinition.pattern}\$").matches(filterValue)
+    ) {
       throw ValidationException("$FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE $filterValue ${filterDefinition.pattern}")
     }
   }

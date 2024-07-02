@@ -844,6 +844,28 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
+  fun `validateAndFetchData should not throw an exception for a mandatory filter with no value if querying for a specific field`() {
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+
+    val actual = configuredApiService.validateAndFetchData(
+      reportId = reportId,
+      reportVariantId = "last-year",
+      filters = emptyMap(),
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      userToken = authToken,
+      reportFieldId = setOf("name"),
+    )
+
+    assertThat(actual).isNotNull
+  }
+
+  @Test
   fun `validateAndFetchData should throw an exception for a filter value that does not match the validation pattern`() {
     val selectedPage = 1L
     val pageSize = 10L
@@ -857,6 +879,32 @@ class ConfiguredApiServiceTest {
       configuredApiService.validateAndFetchData(reportId, "last-year", filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
     }
     assertEquals(ConfiguredApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
+  }
+
+  @Test
+  fun `validateAndFetchData should not throw an exception for a filter value that does not match the validation pattern if querying for a specific field`() {
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val filters = mapOf(
+      "date.start" to "2000-01-02",
+      "origin" to "Invalid",
+    )
+
+    val actual = configuredApiService.validateAndFetchData(
+      reportId = reportId,
+      reportVariantId = "last-year",
+      filters = filters,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      userToken = authToken,
+      reportFieldId = setOf("origin"),
+    )
+
+    assertThat(actual).isNotNull()
   }
 
   @Test

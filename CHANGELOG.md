@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.5.3
+Fix issue with dynamic filter options based on validated filter values. 
+
 ## 4.5.2
 Fix issue with empty section properties.
 
