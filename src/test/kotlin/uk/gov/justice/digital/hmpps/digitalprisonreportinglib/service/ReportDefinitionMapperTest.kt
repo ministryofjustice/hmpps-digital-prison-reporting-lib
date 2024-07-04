@@ -10,6 +10,7 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
@@ -667,6 +669,44 @@ class ReportDefinitionMapperTest {
     verifyNoInteractions(configuredApiService)
   }
 
+  @Test
+  fun `getting single report with parameters maps full data correctly and converts the parameters to filters`() {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      display = parameterDisplay,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Text,
+      mandatory = true,
+    )
+    val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
+
+    val mapper = ReportDefinitionMapper(configuredApiService)
+
+    val result = mapper.map(productDefinition, authToken)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedReportField = FieldDefinition(
+      type = FieldType.String,
+      name = parameterName,
+      display = parameterDisplay,
+      mandatory = true,
+      defaultsort = false,
+      sortable = false,
+      calculated = false,
+      filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
+        type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text,
+        mandatory = true,
+      ),
+    )
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
   private fun generateReport(dynamicFilterOption: DynamicFilterOption) = Report(
     id = "21",
     name = "22",
@@ -777,6 +817,7 @@ class ReportDefinitionMapperTest {
     datasetDisplay: String = "",
     reportFieldDisplay: String? = "20",
     formula: String? = null,
+    parameters: List<Parameter>? = null,
   ): SingleReportProductDefinition {
     return SingleReportProductDefinition(
       id = "1",
@@ -801,6 +842,7 @@ class ReportDefinitionMapperTest {
             ),
           ),
         ),
+        parameters = parameters,
       ),
       report =
       Report(

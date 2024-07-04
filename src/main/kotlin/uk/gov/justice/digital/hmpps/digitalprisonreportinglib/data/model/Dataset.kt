@@ -5,4 +5,5 @@ data class Dataset(
   val name: String,
   val query: String,
   val schema: Schema,
+  val parameters: List<Parameter>? = null,
 )
