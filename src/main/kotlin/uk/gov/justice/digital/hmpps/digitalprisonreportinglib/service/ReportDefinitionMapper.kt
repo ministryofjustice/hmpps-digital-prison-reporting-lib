@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.W
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
@@ -70,6 +71,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
         userToken = userToken,
         dataProductDefinitionsPath = dataProductDefinitionsPath,
         filterDatasets = filterDatasets,
+        parameters = dataSet.parameters,
       ),
       classification = report.classification,
       printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
@@ -85,25 +87,59 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     filterDatasets: List<Dataset>? = null,
+    parameters: List<Parameter>? = null,
   ): Specification? {
     if (specification == null) {
       return null
     }
-
     return Specification(
       template = specification.template,
       sections = specification.section?.map { it.removePrefix(SCHEMA_REF_PREFIX) } ?: emptyList(),
-      fields = specification.field.map {
-        map(
-          field = it,
-          schemaFields = schemaFields,
-          productDefinitionId = productDefinitionId,
-          reportVariantId = reportVariantId,
-          userToken = userToken,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          filterDatasets = filterDatasets,
-        )
-      },
+      fields = mapToReportFieldDefinitions(
+        specification,
+        schemaFields,
+        productDefinitionId,
+        reportVariantId,
+        userToken,
+        dataProductDefinitionsPath,
+        filterDatasets,
+      ) + maybeConvertToReportFields(parameters),
+    )
+  }
+
+  private fun maybeConvertToReportFields(parameters: List<Parameter>?) =
+    parameters?.map { convert(it) } ?: emptyList()
+
+  private fun mapToReportFieldDefinitions(
+    specification: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification,
+    schemaFields: List<SchemaField>,
+    productDefinitionId: String,
+    reportVariantId: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
+    filterDatasets: List<Dataset>?,
+  ) = specification.field.map {
+    map(
+      field = it,
+      schemaFields = schemaFields,
+      productDefinitionId = productDefinitionId,
+      reportVariantId = reportVariantId,
+      userToken = userToken,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filterDatasets = filterDatasets,
+    )
+  }
+
+  private fun convert(parameter: Parameter): FieldDefinition {
+    return FieldDefinition(
+      name = parameter.name,
+      display = parameter.display,
+      sortable = false,
+      defaultsort = false,
+      type = convertParameterTypeToFieldType(parameter.reportFieldType),
+      mandatory = parameter.mandatory,
+      visible = true,
+      filter = FilterDefinition(type = FilterType.valueOf(parameter.filterType.toString()), mandatory = parameter.mandatory),
     )
   }
 
@@ -173,7 +209,11 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
       return FieldType.HTML
     }
 
-    return when (schemaField.type) {
+    return convertParameterTypeToFieldType(schemaField.type)
+  }
+
+  private fun convertParameterTypeToFieldType(parameterType: ParameterType): FieldType {
+    return when (parameterType) {
       ParameterType.Boolean -> FieldType.Boolean
       ParameterType.Date -> FieldType.Date
       ParameterType.DateTime -> FieldType.Date

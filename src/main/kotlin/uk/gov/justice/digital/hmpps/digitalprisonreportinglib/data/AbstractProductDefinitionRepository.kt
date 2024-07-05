@@ -15,7 +15,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
     reportId: String,
     dataProductDefinitionsPath: String?,
   ): SingleReportProductDefinition {
-    val productDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
+    val productDefinition: ProductDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
     val reportDefinition = productDefinition.report
       .filter { it.id == reportId }
       .ifEmpty { throw ValidationException("Invalid report variant id provided: $reportId") }
