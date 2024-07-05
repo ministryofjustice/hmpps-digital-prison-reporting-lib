@@ -102,7 +102,7 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
         reportVariantId,
         userToken,
         dataProductDefinitionsPath,
-        filterDatasets
+        filterDatasets,
       ) + maybeConvertToReportFieldsFromParameters(parameters),
     )
   }
