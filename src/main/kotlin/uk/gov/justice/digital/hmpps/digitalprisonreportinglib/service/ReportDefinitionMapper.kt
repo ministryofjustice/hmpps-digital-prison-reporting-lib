@@ -92,22 +92,41 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
     if (specification == null) {
       return null
     }
-    val reportFieldsFromParameters: List<FieldDefinition> = parameters?.map { convert(it) } ?: emptyList()
-    val fields: List<FieldDefinition> = specification.field.map {
-      map(
-        field = it,
-        schemaFields = schemaFields,
-        productDefinitionId = productDefinitionId,
-        reportVariantId = reportVariantId,
-        userToken = userToken,
-        dataProductDefinitionsPath = dataProductDefinitionsPath,
-        filterDatasets = filterDatasets,
-      )
-    }
     return Specification(
       template = specification.template,
       sections = specification.section?.map { it.removePrefix(SCHEMA_REF_PREFIX) } ?: emptyList(),
-      fields = fields + reportFieldsFromParameters,
+      fields = mapToReportFieldDefinitions(
+        specification,
+        schemaFields,
+        productDefinitionId,
+        reportVariantId,
+        userToken,
+        dataProductDefinitionsPath,
+        filterDatasets
+      ) + maybeConvertToReportFieldsFromParameters(parameters),
+    )
+  }
+
+  private fun maybeConvertToReportFieldsFromParameters(parameters: List<Parameter>?) =
+    parameters?.map { convert(it) } ?: emptyList()
+
+  private fun mapToReportFieldDefinitions(
+    specification: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification,
+    schemaFields: List<SchemaField>,
+    productDefinitionId: String,
+    reportVariantId: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String?,
+    filterDatasets: List<Dataset>?,
+  ) = specification.field.map {
+    map(
+      field = it,
+      schemaFields = schemaFields,
+      productDefinitionId = productDefinitionId,
+      reportVariantId = reportVariantId,
+      userToken = userToken,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filterDatasets = filterDatasets,
     )
   }
 
