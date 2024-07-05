@@ -103,11 +103,11 @@ class ReportDefinitionMapper(val configuredApiService: ConfiguredApiService) {
         userToken,
         dataProductDefinitionsPath,
         filterDatasets,
-      ) + maybeConvertToReportFieldsFromParameters(parameters),
+      ) + maybeConvertToReportFields(parameters),
     )
   }
 
-  private fun maybeConvertToReportFieldsFromParameters(parameters: List<Parameter>?) =
+  private fun maybeConvertToReportFields(parameters: List<Parameter>?) =
     parameters?.map { convert(it) } ?: emptyList()
 
   private fun mapToReportFieldDefinitions(
