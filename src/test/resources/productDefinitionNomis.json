@@ -194,8 +194,7 @@
         }
       } ]
     },
-    "destination" : [ ],
-    "formula": "formula placeholder"
+    "destination" : [ ]
   }, {
     "id" : "last-week",
     "name" : "Last week",

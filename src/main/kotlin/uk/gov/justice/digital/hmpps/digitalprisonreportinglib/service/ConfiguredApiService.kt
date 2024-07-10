@@ -3,12 +3,13 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper
@@ -33,6 +34,8 @@ class ConfiguredApiService(
   val configuredApiRepository: ConfiguredApiRepository,
   val redshiftDataApiRepository: RedshiftDataApiRepository,
   val athenaApiRepository: AthenaApiRepository,
+  val tableIdGenerator: TableIdGenerator,
+  val datasetHelper: DatasetHelper,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) {
 
@@ -103,7 +106,7 @@ class ConfiguredApiService(
     datasetForFilter: Dataset?,
   ) = datasetForFilter?.let {
     records.map { row ->
-      formatColumnNamesToSchemaFieldNamesCasing(row, datasetForFilter.schema.field)
+      formatColumnNamesToSourceFieldNamesCasing(row, datasetForFilter.schema.field.map(SchemaField::name))
     }
   } ?: formatColumnsAndApplyFormulas(records, productDefinition.reportDataset.schema.field, formulaEngine)
 
@@ -131,14 +134,12 @@ class ConfiguredApiService(
     val promptsMap: Map<String, String> = prompts.associate { it.toPair() }
     return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
       .executeQueryAsync(
-        query = productDefinition.reportDataset.query,
+        productDefinition = productDefinition,
         filters = validateAndMapFilters(productDefinition, filtersMap) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
-        database = productDefinition.datasource.database,
-        catalog = productDefinition.datasource.catalog,
         prompts = promptsMap,
       )
   }
@@ -165,6 +166,35 @@ class ConfiguredApiService(
     )
   }
 
+  fun getSummaryResult(
+    tableId: String,
+    summaryId: String,
+    reportId: String,
+    reportVariantId: String,
+    dataProductDefinitionsPath: String? = null,
+  ): List<Map<String, Any?>> {
+    val productDefinition = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath)
+    val report = productDefinition.report.find { it.id == reportVariantId }
+
+    if (report == null) {
+      throw ValidationException("Invalid variant ID: $reportVariantId")
+    }
+
+    val summary = report.summary?.find { it.id == summaryId }
+
+    if (summary == null) {
+      throw ValidationException("Invalid summary ID: $summaryId")
+    }
+
+    val dataset = datasetHelper.findDataset(productDefinition.dataset, summary.dataset)
+    val summaryTableId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
+
+    return redshiftDataApiRepository.getFullExternalTableResult(summaryTableId)
+      .map {
+        formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
+      }
+  }
+
   fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository).cancelStatementExecution(statementId)
@@ -175,13 +205,13 @@ class ConfiguredApiService(
     schemaFields: List<SchemaField>,
     formulaEngine: FormulaEngine,
   ) = records
-    .map { row -> formatColumnNamesToSchemaFieldNamesCasing(row, schemaFields) }
+    .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, schemaFields.map(SchemaField::name)) }
     .map(formulaEngine::applyFormulas)
 
-  private fun formatColumnNamesToSchemaFieldNamesCasing(
+  private fun formatColumnNamesToSourceFieldNamesCasing(
     row: Map<String, Any?>,
-    schemaFields: List<SchemaField>,
-  ) = row.entries.associate { e -> transformKey(e.key, schemaFields) to e.value }
+    fieldNames: List<String>,
+  ) = row.entries.associate { e -> transformKey(e.key, fieldNames) to e.value }
 
   private fun buildAndValidateDynamicFilter(
     reportFieldId: String?,
@@ -364,7 +394,7 @@ class ConfiguredApiService(
     }
   }
 
-  private fun transformKey(key: String, schemaFields: List<SchemaField>): String {
-    return schemaFields.first { it.name.lowercase() == key.lowercase() }.name
+  private fun transformKey(key: String, fieldNames: List<String>): String {
+    return fieldNames.first { it.lowercase() == key.lowercase() }
   }
 }

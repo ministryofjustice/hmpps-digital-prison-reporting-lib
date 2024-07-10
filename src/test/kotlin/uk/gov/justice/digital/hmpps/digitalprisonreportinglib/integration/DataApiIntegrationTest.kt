@@ -17,10 +17,10 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.StatusAssertions
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.FILTERS_PREFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.NO_DATA_WARNING_HEADER_NAME
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DATE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DESTINATION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.DESTINATION_CODE
@@ -37,7 +37,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovem
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 import java.time.LocalDateTime
 
-class ConfiguredApiIntegrationTest : IntegrationTestBase() {
+class DataApiIntegrationTest : IntegrationTestBase() {
   companion object {
     fun dateTimeWithSeconds(dateTime: Any?) = """$dateTime:00"""
 
@@ -63,7 +63,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   """.trimIndent()
 
   @Test
-  fun `Configured API returns value from the repository`() {
+  fun `Data API returns value from the repository`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
@@ -102,7 +102,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Configured API returns value from the repository when the definitions are retrieved via the web client`() {
+    fun `Data API returns value from the repository when the definitions are retrieved via the web client`() {
       webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
           uriBuilder
@@ -131,7 +131,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Configured API count returns the number of records when the definitions are retrieved via the web client`() {
+    fun `Data API count returns the number of records when the definitions are retrieved via the web client`() {
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -143,7 +143,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Configured API calls the definitions service when the cache is disabled`() {
+    fun `Data API calls the definitions service when the cache is disabled`() {
       val expectedJson = """[
         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}:00", 
         "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
@@ -206,7 +206,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Configured API returns value from the cache when it is enabled`() {
+    fun `Data API returns value from the cache when it is enabled`() {
       val expectedJson = """[
         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}:00", 
         "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
@@ -268,7 +268,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Configured API returns value from the repository formatting the fields with formulas correctly`() {
+    fun `Data API returns value from the repository formatting the fields with formulas correctly`() {
       webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
           uriBuilder
@@ -299,7 +299,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Configured API returns empty String as the value from the repository for a field which has a formula and whose result set value is null`() {
+    fun `Data API returns empty String as the value from the repository for a field which has a formula and whose result set value is null`() {
       externalMovementRepository.delete(externalMovement4)
       val externalMovement4WithNullType = ExternalMovementEntity(
         4,
@@ -346,7 +346,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Configured API count returns the number of records`() {
+  fun `Data API count returns the number of records`() {
     webTestClient.get()
       .uri("/reports/external-movements/last-month/count")
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -363,7 +363,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     "Out, 1",
     ",    1",
   )
-  fun `Configured API count returns filtered value`(direction: String?, numberOfResults: Int) {
+  fun `Data API count returns filtered value`(direction: String?, numberOfResults: Int) {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
@@ -380,7 +380,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Configured API returns value matching the filters provided`() {
+  fun `Data API returns value matching the filters provided`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
@@ -406,7 +406,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Configured API returns value matching the dynamic filters provided`() {
+  fun `Data API returns value matching the dynamic filters provided`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
@@ -432,7 +432,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Configured API returns value matching the dynamic filters provided, with case insensitivity`() {
+  fun `Data API returns value matching the dynamic filters provided, with case insensitivity`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
@@ -458,7 +458,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Configured API call without query params defaults to preset query params`() {
+  fun `Data API call without query params defaults to preset query params`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
@@ -489,7 +489,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
     "Out, 1",
     ",    1",
   )
-  fun `Configured API returns filtered values`(direction: String?, numberOfResults: Int) {
+  fun `Data API returns filtered values`(direction: String?, numberOfResults: Int) {
     val results = webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
@@ -514,7 +514,7 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Configured API returns empty list and warning header if no active caseloads`() {
+  fun `Data API returns empty list and warning header if no active caseloads`() {
     wireMockServer.resetAll()
     wireMockServer.stubFor(
       WireMock.get("/me/caseloads").willReturn(
@@ -541,13 +541,13 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectHeader()
-      .valueEquals(NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
       .expectBody()
       .json("[]")
   }
 
   @Test
-  fun `Configured API count returns zero and warning header if no active caseloads`() {
+  fun `Data API count returns zero and warning header if no active caseloads`() {
     wireMockServer.resetAll()
     wireMockServer.stubFor(
       WireMock.get("/me/caseloads").willReturn(
@@ -566,58 +566,58 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectHeader()
-      .valueEquals(NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
       .expectBody()
       .jsonPath("count").isEqualTo("0")
   }
 
   @Test
-  fun `Configured API returns 400 for invalid selectedPage query param`() {
+  fun `Data API returns 400 for invalid selectedPage query param`() {
     requestWithQueryAndAssert400("selectedPage", 0, "/reports/external-movements/last-month")
   }
 
   @Test
-  fun `Configured API returns 400 for invalid pageSize query param`() {
+  fun `Data API returns 400 for invalid pageSize query param`() {
     requestWithQueryAndAssert400("pageSize", 0, "/reports/external-movements/last-month")
   }
 
   @Test
-  fun `Configured API returns 400 for invalid (wrong type) pageSize query param`() {
+  fun `Data API returns 400 for invalid (wrong type) pageSize query param`() {
     requestWithQueryAndAssert400("pageSize", "a", "/reports/external-movements/last-month")
   }
 
   @Test
-  fun `Configured API returns 400 for invalid sortColumn query param`() {
+  fun `Data API returns 400 for invalid sortColumn query param`() {
     requestWithQueryAndAssert400("sortColumn", "nonExistentColumn", "/reports/external-movements/last-month")
   }
 
   @Test
-  fun `Configured API returns 400 for invalid sortedAsc query param`() {
+  fun `Data API returns 400 for invalid sortedAsc query param`() {
     requestWithQueryAndAssert400("sortedAsc", "abc", "/reports/external-movements/last-month")
   }
 
   @Test
-  fun `Configured API returns 400 for non-existent filter`() {
+  fun `Data API returns 400 for non-existent filter`() {
     requestWithQueryAndAssert400("${FILTERS_PREFIX}abc", "abc", "/reports/external-movements/last-month")
   }
 
   @Test
-  fun `Configured API count returns 400 for non-existent filter`() {
+  fun `Data API count returns 400 for non-existent filter`() {
     requestWithQueryAndAssert400("${FILTERS_PREFIX}abc", "abc", "/reports/external-movements/last-month/count")
   }
 
   @Test
-  fun `Configured API returns 400 for a report field which is not a filter`() {
+  fun `Data API returns 400 for a report field which is not a filter`() {
     requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month")
   }
 
   @Test
-  fun `Configured API count returns 400 for a report field which is not a filter`() {
+  fun `Data API count returns 400 for a report field which is not a filter`() {
     requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month/count")
   }
 
   @Test
-  fun `Configured API returns 400 for invalid startDate query param`() {
+  fun `Data API returns 400 for invalid startDate query param`() {
     requestWithQueryAndAssert400("${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX", "abc", "/reports/external-movements/last-month")
   }
 
@@ -627,12 +627,12 @@ class ConfiguredApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Configured API count returns 400 for invalid startDate query param`() {
+  fun `Data API count returns 400 for invalid startDate query param`() {
     requestWithQueryAndAssert400("filters.startDate", "a", "/reports/external-movements/last-month/count")
   }
 
   @Test
-  fun `Configured API count returns 400 for invalid endDate query param`() {
+  fun `Data API count returns 400 for invalid endDate query param`() {
     requestWithQueryAndAssert400("filters.endDate", "17-12-2050", "/reports/external-movements/last-month/count")
   }
 

@@ -82,6 +82,19 @@
             "display": "Prisoner Name"
           }]
       }
+    },
+    {
+      "id": "summary-dataset",
+      "name": "Summary Dataset",
+      "datasource": "datamart",
+      "query": "SELECT COUNT(*) AS TOTAL FROM ${tableId}",
+      "schema": {
+        "field": [{
+          "name": "total",
+          "type": "int",
+          "display": "Total"
+        }]
+      }
     }
   ],
   "policy": [
@@ -228,7 +241,11 @@
       } ]
     },
     "destination" : [ ],
-    "formula": "formula placeholder"
+    "summary": [{
+      "id": "summaryId",
+      "template": "page-header",
+      "dataset": "$ref:summary-dataset"
+    }]
   }, {
     "id" : "last-week",
     "name" : "Last week",
@@ -432,7 +449,6 @@
         }
       } ]
     },
-    "destination" : [ ],
-    "formula": "formula placeholder"
+    "destination" : [ ]
   } ]
 }

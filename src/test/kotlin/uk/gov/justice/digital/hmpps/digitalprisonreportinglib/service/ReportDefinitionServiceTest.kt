@@ -48,6 +48,13 @@ class ReportDefinitionServiceTest {
     listOf(Rule(Effect.PERMIT, emptyList())),
   )
 
+  private val dataset = Dataset(
+    id = "10",
+    name = "11",
+    query = "12",
+    schema = Schema(emptyList()),
+  )
+
   private val minimalSingleDefinition = SingleReportProductDefinition(
     id = "1",
     name = "2",
@@ -59,12 +66,7 @@ class ReportDefinitionServiceTest {
       dataset = "\$ref:10",
       render = HTML,
     ),
-    reportDataset = Dataset(
-      id = "10",
-      name = "11",
-      query = "12",
-      schema = Schema(emptyList()),
-    ),
+    reportDataset = dataset,
     datasource = Datasource(
       id = "20",
       name = "21",
@@ -75,6 +77,7 @@ class ReportDefinitionServiceTest {
       owner = "32",
     ),
     policy = listOf(policy),
+    allDatasets = listOf(dataset),
   )
 
   @Test

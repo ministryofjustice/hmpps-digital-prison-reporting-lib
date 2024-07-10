@@ -12,6 +12,7 @@ on:
           - major
           - feature
           - bug
+          - alpha
 
 jobs:
   publish-package:

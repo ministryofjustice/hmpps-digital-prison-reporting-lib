@@ -11,5 +11,5 @@ data class SingleReportProductDefinition(
   val reportDataset: Dataset,
   val report: Report,
   val policy: List<Policy>,
-  val filterDatasets: List<Dataset>? = null,
+  val allDatasets: List<Dataset>,
 )

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
@@ -11,6 +10,7 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -20,29 +20,24 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 class AthenaApiRepository(
   val athenaClient: AthenaClient,
   val tableIdGenerator: TableIdGenerator,
+  datasetHelper: DatasetHelper,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : AthenaAndRedshiftCommonRepository() {
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
+) : AthenaAndRedshiftCommonRepository(tableIdGenerator, datasetHelper) {
 
   override fun executeQueryAsync(
-    query: String,
+    productDefinition: SingleReportProductDefinition,
     filters: List<ConfiguredApiRepository.Filter>,
     sortColumn: String?,
     sortedAsc: Boolean,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
-    database: String?,
-    catalog: String?,
     prompts: Map<String, String>?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val queryExecutionContext = QueryExecutionContext.builder()
-      .database(database)
-      .catalog(catalog)
+      .database(productDefinition.datasource.database)
+      .catalog(productDefinition.datasource.catalog)
       .build()
 
     val finalQuery = """
@@ -54,7 +49,7 @@ class AthenaApiRepository(
           SELECT * FROM TABLE(system.query(query =>
            '${
       buildFinalQuery(
-        buildReportQuery(query),
+        buildReportQuery(productDefinition.reportDataset.query),
         buildPolicyQuery(policyEngineResult),
         // The filters part will be replaced with the variables CTE
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
@@ -63,6 +58,7 @@ class AthenaApiRepository(
     }'
            )) 
           );
+          ${buildSummaryQueries(productDefinition, tableId)}
     """.trimIndent()
     val resultConfiguration = ResultConfiguration.builder()
       .outputLocation("s3://$s3location/$tableId/")
@@ -89,7 +85,6 @@ class AthenaApiRepository(
     return StatementExecutionStatus(
       status = mapAthenaStateToRedshiftState(status.state().toString()),
       duration = calculateDuration(status),
-      queryString = getQueryExecutionResponse.queryExecution().query(),
       resultRows = 0,
       resultSize = 0,
       error = error?.errorMessage(),
@@ -123,5 +118,13 @@ class AthenaApiRepository(
         completion.minusMillis(submission.toEpochMilli()).toEpochMilli() * 1000000
       } ?: 0
     } ?: 0
+  }
+
+  override fun buildSummaryQuery(query: String, summaryTableId: String): String {
+    return """
+          CREATE TABLE AwsDataCatalog.reports.$summaryTableId
+          WITH (format = 'PARQUET') 
+          AS (SELECT * FROM TABLE(system.query(query => '$query')));
+    """
   }
 }

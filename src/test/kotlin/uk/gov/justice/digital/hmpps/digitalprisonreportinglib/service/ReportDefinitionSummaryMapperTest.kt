@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
 import java.time.LocalDateTime
@@ -54,7 +55,7 @@ class ReportDefinitionSummaryMapperTest {
     render = RenderMethod.PDF,
     schedule = "26",
     specification = Specification(
-      template = "27",
+      template = Template.ListSection,
       section = null,
       field = listOf(
         ReportField(

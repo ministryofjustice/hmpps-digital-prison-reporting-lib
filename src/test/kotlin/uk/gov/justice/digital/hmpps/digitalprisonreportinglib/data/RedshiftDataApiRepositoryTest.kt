@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -20,6 +22,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -42,6 +47,7 @@ class RedshiftDataApiRepositoryTest {
         SELECT *
                   FROM filter_ ORDER BY date asc
                   );
+                  
       """.trimIndent()
 
     val movementPrisoner1 = mapOf("id" to "171034.12", "prisoner" to 171034L, "date" to LocalDateTime.of(2010, 12, 17, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 17, 7, 12, 0), "direction" to "OUT", "type" to "CRT", "origin_code" to "LFI", "origin" to "LANCASTER FARMS (HMPYOI)", "destination_code" to "STHEMC", "destination" to "St. Helens Magistrates Court", "reason" to "Production (Sentence/Civil Custody)")
@@ -49,18 +55,33 @@ class RedshiftDataApiRepositoryTest {
     private const val REDSHIFT_DATA_API_DB: String = "redshiftDB"
     private const val REDSHIFT_DATA_API_CLUSTER_ID: String = "redshiftClusterId"
     private const val REDSHIFT_DATA_API_SECRET_ARN: String = "redshiftSecretArn"
+    private const val TABLE_ID = "_a6227417_bdac_40bb_bc81_49c750daacd7"
+    private const val EXECUTION_ID = "someId"
+  }
+
+  private val redshiftDataClient = mock<RedshiftDataClient>()
+  private val tableIdGenerator = mock<TableIdGenerator>()
+  private val productDefinition = mock<SingleReportProductDefinition>()
+  private val dataset = mock<Dataset>()
+  private val executeStatementResponse = mock<ExecuteStatementResponse>()
+  private val report = mock<Report>()
+  private val datasetHelper = DatasetHelper()
+
+  @BeforeEach
+  fun setup() {
+    whenever(tableIdGenerator.generateNewExternalTableId()).thenReturn(TABLE_ID)
+    whenever(executeStatementResponse.id()).thenReturn(EXECUTION_ID)
+    whenever(productDefinition.reportDataset).thenReturn(dataset)
+    whenever(productDefinition.report).thenReturn(report)
+    whenever(dataset.query).thenReturn(REPOSITORY_TEST_QUERY)
   }
 
   @Test
   fun `executeQueryAsync should call the redshift data api with the correct query and return the execution id and table id`() {
-    val redshiftDataClient = mock<RedshiftDataClient>()
-    val executeStatementResponse = mock<ExecuteStatementResponse>()
-    val tableIdGenerator = mock<TableIdGenerator>()
-    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
-    val executionId = "someId"
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
+      datasetHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -69,14 +90,8 @@ class RedshiftDataApiRepositoryTest {
       .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
       .database(REDSHIFT_DATA_API_DB)
       .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
-      .sql(sqlStatement(tableId))
+      .sql(sqlStatement(TABLE_ID))
       .build()
-
-    whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      tableId,
-    )
 
     whenever(
       redshiftDataClient.executeStatement(
@@ -84,19 +99,15 @@ class RedshiftDataApiRepositoryTest {
       ),
     ).thenReturn(executeStatementResponse)
 
-    whenever(
-      executeStatementResponse.id(),
-    ).thenReturn(executionId)
-
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      query = REPOSITORY_TEST_QUERY,
+      productDefinition = productDefinition,
       filters = listOf(ConfiguredApiRepository.Filter("direction", "out")),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
     )
 
-    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    assertEquals(StatementExecutionResponse(TABLE_ID, EXECUTION_ID), actual)
   }
 
   @Test
@@ -107,12 +118,11 @@ class RedshiftDataApiRepositoryTest {
     val startDateFilter = ConfiguredApiRepository.Filter("date", startDate, FilterType.DATE_RANGE_START)
     val endDateFilter = ConfiguredApiRepository.Filter("date", endDate, FilterType.DATE_RANGE_END)
     val nameDynamicFilter = ConfiguredApiRepository.Filter("name", "LastNa", FilterType.DYNAMIC)
-    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
     val executionId = "someId"
     val sqlStatement =
-      """          CREATE EXTERNAL TABLE reports.$tableId 
+      """          CREATE EXTERNAL TABLE reports.$TABLE_ID 
           STORED AS parquet 
-          LOCATION 's3://dpr-working-development/reports/$tableId/' 
+          LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
           AS ( 
           WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
 FROM datamart.domain.movement_movement as movements
@@ -121,13 +131,12 @@ ON movements.prisoner = prisoners.id),policy_ AS (SELECT * FROM dataset_ WHERE (
 SELECT *
           FROM filter_ ORDER BY date asc
           );
+          
       """.trimIndent()
-    val redshiftDataClient = mock<RedshiftDataClient>()
-    val executeStatementResponse = mock<ExecuteStatementResponse>()
-    val tableIdGenerator = mock<TableIdGenerator>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
+      datasetHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -140,23 +149,13 @@ SELECT *
       .build()
 
     whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      tableId,
-    )
-
-    whenever(
       redshiftDataClient.executeStatement(
-        executeStatementRequest,
+        any<ExecuteStatementRequest>(),
       ),
     ).thenReturn(executeStatementResponse)
 
-    whenever(
-      executeStatementResponse.id(),
-    ).thenReturn(executionId)
-
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      query = REPOSITORY_TEST_QUERY,
+      productDefinition = productDefinition,
       filters = listOf(
         startDateFilter,
         endDateFilter,
@@ -168,16 +167,17 @@ SELECT *
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
     )
 
-    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
+    verify(redshiftDataClient).executeStatement(executeStatementRequest)
   }
 
   @Test
   fun `getStatementStatus should call the redshift data api with the correct statement ID and return the StatementExecutionStatus`() {
     val redshiftDataClient = mock<RedshiftDataClient>()
-    val tableIdGenerator = mock<TableIdGenerator>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
+      datasetHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -207,7 +207,6 @@ SELECT *
     val expected = StatementExecutionStatus(
       status,
       duration,
-      query,
       resultRows,
       resultSize,
     )
@@ -218,23 +217,19 @@ SELECT *
 
   @Test
   fun `executeQueryAsync should call the redshift data api and not error when no filters are provided`() {
-    val redshiftDataClient = mock<RedshiftDataClient>()
-    val executeStatementResponse = mock<ExecuteStatementResponse>()
-    val tableIdGenerator = mock<TableIdGenerator>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
+      datasetHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
     )
-    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
-    val executionId = "someId"
     val finalQuery =
       """
-                  CREATE EXTERNAL TABLE reports.$tableId 
+                  CREATE EXTERNAL TABLE reports.$TABLE_ID 
                   STORED AS parquet 
-                  LOCATION 's3://dpr-working-development/reports/$tableId/' 
+                  LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
                   AS ( 
                   WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
         FROM datamart.domain.movement_movement as movements
@@ -243,6 +238,7 @@ SELECT *
         SELECT *
                   FROM filter_ ORDER BY date asc
                   );
+                  
       """.trimIndent()
 
     val executeStatementRequest = ExecuteStatementRequest.builder()
@@ -253,30 +249,20 @@ SELECT *
       .build()
 
     whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      tableId,
-    )
-
-    whenever(
       redshiftDataClient.executeStatement(
         executeStatementRequest,
       ),
     ).thenReturn(executeStatementResponse)
 
-    whenever(
-      executeStatementResponse.id(),
-    ).thenReturn(executionId)
-
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      query = REPOSITORY_TEST_QUERY,
+      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
     )
 
-    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    assertEquals(StatementExecutionResponse(TABLE_ID, EXECUTION_ID), actual)
   }
 
   @ParameterizedTest
@@ -285,23 +271,19 @@ SELECT *
     "${PolicyResult.POLICY_DENY}, $FALSE_WHERE_CLAUSE",
   )
   fun `executeQueryAsync should call the redshift data api with the converted sql where clause for permit and denied policies`(policyEngineResult: String, queryWhereClause: String) {
-    val redshiftDataClient = mock<RedshiftDataClient>()
-    val executeStatementResponse = mock<ExecuteStatementResponse>()
-    val tableIdGenerator = mock<TableIdGenerator>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
+      datasetHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
     )
-    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
-    val executionId = "someId"
     val finalQuery =
       """
-                  CREATE EXTERNAL TABLE reports.$tableId 
+                  CREATE EXTERNAL TABLE reports.$TABLE_ID 
                   STORED AS parquet 
-                  LOCATION 's3://dpr-working-development/reports/$tableId/' 
+                  LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
                   AS ( 
                   WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
         FROM datamart.domain.movement_movement as movements
@@ -310,6 +292,7 @@ SELECT *
         SELECT *
                   FROM filter_ ORDER BY date asc
                   );
+                  
       """.trimIndent()
 
     val executeStatementRequest = ExecuteStatementRequest.builder()
@@ -320,41 +303,29 @@ SELECT *
       .build()
 
     whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      tableId,
-    )
-
-    whenever(
       redshiftDataClient.executeStatement(
         executeStatementRequest,
       ),
     ).thenReturn(executeStatementResponse)
 
-    whenever(
-      executeStatementResponse.id(),
-    ).thenReturn(executionId)
-
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      query = REPOSITORY_TEST_QUERY,
+      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
     )
 
-    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    assertEquals(StatementExecutionResponse(TABLE_ID, EXECUTION_ID), actual)
   }
 
   @Test
   fun `getStatementResult should make a paginated JDBC call and return the existing results`() {
-    val redshiftDataClient = mock<RedshiftDataClient>()
-    val tableIdGenerator = mock<TableIdGenerator>()
-    val tableId = "tableId"
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
+      datasetHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -365,23 +336,48 @@ SELECT *
 
     whenever(
       jdbcTemplate.queryForList(
-        eq("SELECT * FROM reports.$tableId limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+        eq("SELECT * FROM reports.$TABLE_ID limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
         any<MapSqlParameterSource>(),
       ),
     ).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, jdbcTemplate)
+    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, jdbcTemplate)
+
+    assertEquals(expected, actual)
+  }
+
+  @Test
+  fun `getFullExternalTableResult should make an unpaginated JDBC call and return the existing results`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      datasetHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
+
+    whenever(
+      jdbcTemplate.queryForList(
+        eq("SELECT * FROM reports.$TABLE_ID;"),
+        any<MapSqlParameterSource>(),
+      ),
+    ).thenReturn(expected)
+
+    val actual = redshiftDataApiRepository.getFullExternalTableResult(TABLE_ID, jdbcTemplate)
 
     assertEquals(expected, actual)
   }
 
   @Test
   fun `count should make a JDBC call and return the existing results`() {
-    val tableId = "tableId"
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       mock(),
       mock(),
+      datasetHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -390,12 +386,12 @@ SELECT *
 
     whenever(
       jdbcTemplate.queryForList(
-        eq("SELECT COUNT(1) as total FROM reports.$tableId;"),
+        eq("SELECT COUNT(1) as total FROM reports.$TABLE_ID;"),
         any<MapSqlParameterSource>(),
       ),
     ).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.count(tableId, jdbcTemplate)
+    val actual = redshiftDataApiRepository.count(TABLE_ID, jdbcTemplate)
 
     assertEquals(5L, actual)
   }

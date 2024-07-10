@@ -16,12 +16,14 @@ import java.util.UUID
 
 @Component
 class JwtAuthHelper {
-  private val keyPair: KeyPair
+  private val keyPair: KeyPair = createKeyPair()
 
-  init {
-    val gen = KeyPairGenerator.getInstance("RSA")
-    gen.initialize(2048)
-    keyPair = gen.generateKeyPair()
+  companion object {
+    fun createKeyPair(): KeyPair {
+      val gen = KeyPairGenerator.getInstance("RSA")
+      gen.initialize(2048)
+      return gen.generateKeyPair()
+    }
   }
 
   @Bean

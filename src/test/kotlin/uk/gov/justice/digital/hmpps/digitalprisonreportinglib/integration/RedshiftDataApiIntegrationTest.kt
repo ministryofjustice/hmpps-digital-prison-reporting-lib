@@ -10,8 +10,8 @@ import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
@@ -147,13 +147,11 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val reportVariantId = "last-month"
     val status = "FINISHED"
     val duration = 278109264L
-    val query = "SELECT * FROM datamart.domain.movement_movement limit 10;"
     val resultRows = 10L
     val resultSize = 100L
     val statementExecutionStatus = StatementExecutionStatus(
       status,
       duration,
-      query,
       resultRows,
       resultSize,
     )
@@ -182,7 +180,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         """{
           "status": "$status",
           "duration": $duration,
-          "queryString": "$query",
           "resultRows": $resultRows,
           "resultSize": $resultSize,
           "error": null
@@ -265,6 +262,42 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month/tables/$tableId/result")
           .queryParam("selectedPage", 2L)
           .queryParam("pageSize", 20L)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(Gson().toJson(expectedServiceResult))
+  }
+
+  @Test
+  fun `Calling the getSummaryResult endpoint calls the configuredApiService with the correct arguments`() {
+    val tableId = "tableId"
+    val summaryId = "summaryId"
+    val expectedServiceResult =
+      listOf(
+        mapOf(
+          "total" to "10",
+        ),
+      )
+
+    given(
+      configuredApiService.getSummaryResult(
+        eq(tableId),
+        eq(summaryId),
+        eq("external-movements"),
+        eq("last-month"),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      ),
+    )
+      .willReturn(expectedServiceResult)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month/tables/$tableId/result/summary/$summaryId")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))

@@ -1,10 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService.Companion.SCHEMA_REF_PREFIX
 
@@ -34,7 +31,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
       metadata = productDefinition.metadata,
       datasource = productDefinition.datasource.first(),
       reportDataset = dataSet,
-      filterDatasets = findDatasetsForDynamicOptionFilters(reportDefinition, productDefinition.dataset),
+      allDatasets = productDefinition.dataset,
       report = reportDefinition,
       policy = productDefinition.policy,
     )
@@ -44,17 +41,4 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
     .filter { it.id == definitionId }
     .ifEmpty { throw ValidationException("Invalid report id provided: $definitionId") }
     .first()
-
-  private fun findDatasetsForDynamicOptionFilters(
-    reportDefinition: Report,
-    productDefinitionDatasets: List<Dataset>,
-  ) = reportDefinition.specification?.field
-    ?.map { field: ReportField ->
-      field.filter?.dynamicOptions?.dataset?.removePrefix(SCHEMA_REF_PREFIX)
-    }?.flatMap { datasetIdForFilterWithoutPrefix ->
-      productDefinitionDatasets
-        .filter { productDefinitionDataset: Dataset ->
-          datasetIdForFilterWithoutPrefix == productDefinitionDataset.id
-        }
-    }
 }

@@ -19,6 +19,10 @@ import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -45,7 +49,10 @@ SELECT *
           FROM filter_ ORDER BY column_a asc'
            )) 
           );
+          
     """.trimIndent()
+
+  private val datasetHelper = DatasetHelper()
 
   @ParameterizedTest
   @CsvSource(
@@ -56,6 +63,10 @@ SELECT *
     val athenaClient = mock<AthenaClient>()
     val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
     val tableIdGenerator = mock<TableIdGenerator>()
+    val productDefinition = mock<SingleReportProductDefinition>()
+    val dataset = mock<Dataset>()
+    val datasource = mock<Datasource>()
+    val report = mock<Report>()
     val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
     val executionId = "someId"
     val testDb = "testdb"
@@ -63,6 +74,7 @@ SELECT *
     val athenaApiRepository = AthenaApiRepository(
       athenaClient,
       tableIdGenerator,
+      datasetHelper,
     )
     val queryExecutionContext = QueryExecutionContext.builder()
       .database(testDb)
@@ -81,6 +93,12 @@ SELECT *
     ).thenReturn(
       tableId,
     )
+    whenever(productDefinition.reportDataset).thenReturn(dataset)
+    whenever(productDefinition.datasource).thenReturn(datasource)
+    whenever(productDefinition.report).thenReturn(report)
+    whenever(dataset.query).thenReturn(dpdQuery)
+    whenever(datasource.database).thenReturn(testDb)
+    whenever(datasource.catalog).thenReturn(testCatalog)
 
     whenever(
       athenaClient.startQueryExecution(
@@ -93,13 +111,11 @@ SELECT *
     ).thenReturn(executionId)
 
     val actual = athenaApiRepository.executeQueryAsync(
-      query = dpdQuery,
+      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
-      database = testDb,
-      catalog = testCatalog,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -118,6 +134,7 @@ SELECT *
     val athenaApiRepository = AthenaApiRepository(
       athenaClient,
       tableIdGenerator,
+      datasetHelper,
     )
     val query = sqlStatement(tableId = "tableId")
     val statementId = "statementId"
@@ -148,7 +165,6 @@ SELECT *
     val expected = StatementExecutionStatus(
       redshiftStatus,
       tenMinutesInNanoseconds,
-      query,
       0L,
       0L,
     )
@@ -164,6 +180,7 @@ SELECT *
     val athenaApiRepository = AthenaApiRepository(
       athenaClient,
       tableIdGenerator,
+      datasetHelper,
     )
     val statementId = "statementId"
     val stopQueryExecutionRequest = StopQueryExecutionRequest.builder()
