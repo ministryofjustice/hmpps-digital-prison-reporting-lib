@@ -23,6 +23,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     dynamicFilterFieldId: Set<String>? = null,
     database: String? = null,
     catalog: String? = null,
+    prompts: Map<String, String>? = null,
   ): StatementExecutionResponse
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus
