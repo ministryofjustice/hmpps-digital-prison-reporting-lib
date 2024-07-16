@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-## 4.6.1
+## 4.7.0
 Filters converted from parameters are validated based on whether they have matching parameter names.
 
 ## 4.6.0
