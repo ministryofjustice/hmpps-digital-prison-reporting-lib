@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
@@ -1382,6 +1383,7 @@ class ConfiguredApiServiceTest {
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
+        prompts = emptyMap(),
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -1393,6 +1395,7 @@ class ConfiguredApiServiceTest {
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
+      prompts = emptyMap(),
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -1425,6 +1428,7 @@ class ConfiguredApiServiceTest {
         policyEngineResult = policyEngineResult,
         database = database,
         catalog = catalog,
+        prompts = emptyMap(),
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -1438,6 +1442,7 @@ class ConfiguredApiServiceTest {
       policyEngineResult = policyEngineResult,
       database = database,
       catalog = catalog,
+      prompts = emptyMap(),
     )
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionResponse, actual)
@@ -1535,6 +1540,57 @@ class ConfiguredApiServiceTest {
     verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementCancellationResponse, actual)
+  }
+
+  @Test
+  fun `validateAndExecuteStatementAsync should not fail validation for filters which were converted from DPD parameters`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithParameters.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
+    val parameterName = "prisoner_number"
+    val parameterValue = "somePrisonerNumber"
+    val filters = mapOf(
+      "origin" to "someOrigin",
+      parameterName to parameterValue,
+    )
+    val repositoryFilters = listOf(Filter("origin", "someOrigin", STANDARD))
+    val prompts = mapOf(parameterName to parameterValue)
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
+    val executionId = UUID.randomUUID().toString()
+    val tableId = executionId.replace("-", "_")
+    val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
+    val database = "datamart"
+    val catalog = "datamart"
+    whenever(
+      redshiftDataApiRepository.executeQueryAsync(
+        query = dataSet.query,
+        filters = repositoryFilters,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        policyEngineResult = policyEngineResult,
+        database = database,
+        catalog = catalog,
+        prompts = prompts,
+      ),
+    ).thenReturn(statementExecutionResponse)
+
+    val actual = configuredApiService.validateAndExecuteStatementAsync("external-movements-with-parameters", reportVariantId, filters, sortColumn, sortedAsc, authToken)
+
+    verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
+      query = dataSet.query,
+      filters = repositoryFilters,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      policyEngineResult = policyEngineResult,
+      database = database,
+      catalog = catalog,
+      prompts = prompts,
+    )
+    assertEquals(statementExecutionResponse, actual)
   }
 
   @Test

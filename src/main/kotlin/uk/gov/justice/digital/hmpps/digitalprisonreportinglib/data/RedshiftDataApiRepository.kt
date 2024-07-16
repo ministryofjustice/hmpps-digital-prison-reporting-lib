@@ -36,6 +36,7 @@ class RedshiftDataApiRepository(
     dynamicFilterFieldId: Set<String>?,
     database: String?,
     catalog: String?,
+    prompts: Map<String, String>?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """

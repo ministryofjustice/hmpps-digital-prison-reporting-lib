@@ -118,19 +118,28 @@ class ConfiguredApiService(
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
   ): StatementExecutionResponse {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
+      reportId,
+      reportVariantId,
+      dataProductDefinitionsPath,
+    )
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
+    val (prompts, filtersOnly) = filters.asIterable()
+      .partition { e -> productDefinition.reportDataset.parameters?.any { it.name == e.key } ?: false }
+    val filtersMap: Map<String, String> = filtersOnly.associate { it.toPair() }
+    val promptsMap: Map<String, String> = prompts.associate { it.toPair() }
     return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
       .executeQueryAsync(
         query = productDefinition.reportDataset.query,
-        filters = validateAndMapFilters(productDefinition, filters) + dynamicFilter,
+        filters = validateAndMapFilters(productDefinition, filtersMap) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         database = productDefinition.datasource.database,
         catalog = productDefinition.datasource.catalog,
+        prompts = promptsMap,
       )
   }
 
