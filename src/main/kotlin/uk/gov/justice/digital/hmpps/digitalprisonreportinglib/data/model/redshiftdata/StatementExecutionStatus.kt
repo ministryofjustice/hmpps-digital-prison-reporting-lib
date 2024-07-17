@@ -13,7 +13,6 @@ data class StatementExecutionStatus(
     description = "The amount of time in nanoseconds that the statement ran.",
   )
   val duration: Long,
-  val queryString: String,
   @Schema(
     example = "10",
     description = "The number of rows returned from the query.",

@@ -1,9 +1,12 @@
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.TokenConverterAutoConfig
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ConfiguredApiController
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.FilterHelper
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiAsyncController
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DprOpenApiConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.RedshiftDataApiConfig
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepositoryAutoConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadProviderAutoConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ResourceServerConfiguration

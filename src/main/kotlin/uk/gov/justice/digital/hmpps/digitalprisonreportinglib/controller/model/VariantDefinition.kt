@@ -8,4 +8,5 @@ data class VariantDefinition(
   val specification: Specification? = null,
   val classification: String? = null,
   val printable: Boolean? = true,
+  val summaries: List<ReportSummary>? = emptyList(),
 )

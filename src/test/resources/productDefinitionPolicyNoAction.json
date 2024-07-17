@@ -156,7 +156,6 @@
         }
       } ]
     },
-    "destination" : [ ],
-    "formula": "formula placeholder"
+    "destination" : [ ]
   } ]
 }

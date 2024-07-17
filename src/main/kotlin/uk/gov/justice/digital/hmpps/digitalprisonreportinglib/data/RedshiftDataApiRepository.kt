@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
@@ -8,6 +7,7 @@ import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -17,25 +17,20 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
   val tableIdGenerator: TableIdGenerator,
+  datasetHelper: DatasetHelper,
   @Value("\${dpr.lib.redshiftdataapi.database:db}") private val redshiftDataApiDb: String,
   @Value("\${dpr.lib.redshiftdataapi.clusterid:clusterId}") private val redshiftDataApiClusterId: String,
   @Value("\${dpr.lib.redshiftdataapi.secretarn:arn}") private val redshiftDataApiSecretArn: String,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : AthenaAndRedshiftCommonRepository() {
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
+) : AthenaAndRedshiftCommonRepository(tableIdGenerator, datasetHelper) {
   override fun executeQueryAsync(
-    query: String,
+    productDefinition: SingleReportProductDefinition,
     filters: List<ConfiguredApiRepository.Filter>,
     sortColumn: String?,
     sortedAsc: Boolean,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
-    database: String?,
-    catalog: String?,
     prompts: Map<String, String>?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
@@ -46,14 +41,16 @@ class RedshiftDataApiRepository(
           AS ( 
           ${
       buildFinalQuery(
-        buildReportQuery(query),
+        buildReportQuery(productDefinition.reportDataset.query),
         buildPolicyQuery(policyEngineResult),
         buildFiltersQuery(filters),
         buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
       )
     }
           );
+          ${buildSummaryQueries(productDefinition, tableId)}
     """.trimIndent()
+
     val statementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(redshiftDataApiClusterId)
       .database(redshiftDataApiDb)
@@ -75,7 +72,6 @@ class RedshiftDataApiRepository(
     return StatementExecutionStatus(
       status = describeStatementResponse.statusAsString(),
       duration = describeStatementResponse.duration(),
-      queryString = describeStatementResponse.queryString(),
       resultRows = describeStatementResponse.resultRows(),
       resultSize = describeStatementResponse.resultSize(),
       error = describeStatementResponse.error(),
@@ -101,5 +97,14 @@ class RedshiftDataApiRepository(
       FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
       FilterType.BOOLEAN -> "${filter.field} = ${filter.value.toBoolean()}"
     }
+  }
+
+  override fun buildSummaryQuery(query: String, summaryTableId: String): String {
+    return """
+          CREATE EXTERNAL TABLE reports.$summaryTableId 
+          STORED AS parquet 
+          LOCATION 's3://$s3location/$summaryTableId/' 
+          AS ($query);
+    """
   }
 }

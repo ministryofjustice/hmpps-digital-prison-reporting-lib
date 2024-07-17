@@ -5,10 +5,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -51,34 +47,5 @@ class JsonFileProductDefinitionRepositoryTest {
       )
     }
     assertThat(exception).message().isEqualTo("Invalid dataSetId in report: non-matching-dataset")
-  }
-
-  @Test
-  fun `getSingleReportProductDefinition returns the correct product definition which includes also the filterDatasets when they exist`() {
-    val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinition.json"),
-      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-    )
-    val productDefinition = jsonFileProductDefinitionRepository
-      .getSingleReportProductDefinition("external-movements", "last-month")
-
-    assertThat(productDefinition).isNotNull
-    assertThat(productDefinition.id).isEqualTo("external-movements")
-    assertThat(productDefinition.filterDatasets)
-      .isEqualTo(
-        listOf(
-          Dataset(
-            "prisoner-dataset",
-            "prisoner dataset",
-            "SELECT prisoners.number AS prisonNumber, CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name FROM datamart.domain.prisoner_prisoner as prisoners",
-            Schema(
-              listOf(
-                SchemaField("prisonNumber", ParameterType.String, "Prisoner Number"),
-                SchemaField("name", ParameterType.String, "Prisoner Name"),
-              ),
-            ),
-          ),
-        ),
-      )
   }
 }
