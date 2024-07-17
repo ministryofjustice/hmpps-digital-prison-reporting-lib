@@ -50,7 +50,7 @@ class RedshiftDataApiRepository(
           );
           ${buildSummaryQueries(productDefinition, tableId)}
     """.trimIndent()
-    log.info(generateSql)
+
     val statementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(redshiftDataApiClusterId)
       .database(redshiftDataApiDb)
