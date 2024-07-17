@@ -1537,7 +1537,7 @@ class ConfiguredApiServiceTest {
     )
     val productDefinition = productDefinitionRepository.getProductDefinitions().first()
     val singleReportProductDefinition = productDefinitionRepository.getSingleReportProductDefinition(productDefinition.id, productDefinition.report.first().id)
-    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository)
+    val configuredApiService = ConfiguredApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
     val parameterName = "prisoner_number"
     val parameterValue = "somePrisonerNumber"
     val filters = mapOf(
