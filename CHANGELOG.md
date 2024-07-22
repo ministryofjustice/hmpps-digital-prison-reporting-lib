@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.9.0
+Create the prompts_ CTE from the filters which originated from the DPD parameters and embed it into the Athena query.
+
 ## 4.8.0
 
 Support for Report Summary/Aggregate templates.
