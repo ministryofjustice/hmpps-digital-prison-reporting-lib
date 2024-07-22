@@ -57,7 +57,7 @@ class RedshiftDataApiRepository(
       .secretArn(redshiftDataApiSecretArn)
       .sql(generateSql)
       .build()
-
+    log.debug("Full async query: {}", generateSql)
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
     log.debug("Execution ID: {}", response.id())
     log.debug("External table ID: {}", tableId)

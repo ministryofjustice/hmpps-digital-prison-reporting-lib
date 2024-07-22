@@ -69,6 +69,7 @@ class AthenaApiRepository(
       .queryExecutionContext(queryExecutionContext)
       .resultConfiguration(resultConfiguration)
       .build()
+    log.debug("Full async query: {}", finalQuery)
     val queryExecutionId = athenaClient
       .startQueryExecution(startQueryExecutionRequest).queryExecutionId()
     return StatementExecutionResponse(tableId, queryExecutionId)
