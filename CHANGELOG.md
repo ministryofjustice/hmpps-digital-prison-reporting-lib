@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.10.1
+Fixed issue with reports that do not have summaries failing. 
+
 ## 4.10.0
 If the main dataset query has a dataset_ CTE embedded, then the query is used as is, without recreating the dataset_ CTE in the Athena queries.
 
