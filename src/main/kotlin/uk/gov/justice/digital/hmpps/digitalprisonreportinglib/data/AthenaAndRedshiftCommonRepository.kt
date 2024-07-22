@@ -80,7 +80,7 @@ abstract class AthenaAndRedshiftCommonRepository(
     ).first()?.get("total") as Long
   }
 
-  protected fun buildSummaryQueries(productDefinition: SingleReportProductDefinition, tableId: String): String? {
+  protected fun buildSummaryQueries(productDefinition: SingleReportProductDefinition, tableId: String): String {
     return productDefinition.report.summary?.joinToString(" ") {
       val summaryTableId = tableIdGenerator.getTableSummaryId(tableId, it.id)
       val query = datasetHelper.findDataset(productDefinition.allDatasets, it.dataset).query
@@ -90,6 +90,6 @@ abstract class AthenaAndRedshiftCommonRepository(
         substitutedQuery,
         summaryTableId,
       )
-    }
+    } ?: ""
   }
 }
