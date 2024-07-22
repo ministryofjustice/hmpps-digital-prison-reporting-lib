@@ -31,6 +31,10 @@ abstract class AthenaAndRedshiftCommonRepository(
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus
 
+  abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
+
+  protected abstract fun buildSummaryQuery(query: String, summaryTableId: String): String
+
   fun getPaginatedExternalTableResult(
     tableId: String,
     selectedPage: Long,
@@ -69,8 +73,6 @@ abstract class AthenaAndRedshiftCommonRepository(
     return result
   }
 
-  abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
-
   fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
     return jdbcTemplate.queryForList(
       "SELECT COUNT(1) as total FROM reports.$tableId;",
@@ -90,6 +92,4 @@ abstract class AthenaAndRedshiftCommonRepository(
       )
     }
   }
-
-  protected abstract fun buildSummaryQuery(query: String, summaryTableId: String): String
 }

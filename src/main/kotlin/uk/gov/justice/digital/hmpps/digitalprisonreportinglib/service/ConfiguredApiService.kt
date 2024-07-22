@@ -128,19 +128,16 @@ class ConfiguredApiService(
     )
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val (prompts, filtersOnly) = filters.asIterable()
-      .partition { e -> productDefinition.reportDataset.parameters?.any { it.name == e.key } ?: false }
-    val filtersMap: Map<String, String> = filtersOnly.associate { it.toPair() }
-    val promptsMap: Map<String, String> = prompts.associate { it.toPair() }
+    val (prompts, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition)
     return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
       .executeQueryAsync(
         productDefinition = productDefinition,
-        filters = validateAndMapFilters(productDefinition, filtersMap) + dynamicFilter,
+        filters = validateAndMapFilters(productDefinition, toMap(filtersOnly)) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
-        prompts = promptsMap,
+        prompts = toMap(prompts),
       )
   }
 
@@ -199,6 +196,19 @@ class ConfiguredApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository).cancelStatementExecution(statementId)
   }
+
+  private fun <K, V> toMap(entries: List<Map.Entry<K, V>>): Map<K, V> =
+    entries.associate { it.toPair() }
+
+  private fun partitionToPromptsAndFilters(
+    filters: Map<String, String>,
+    productDefinition: SingleReportProductDefinition,
+  ) = filters.asIterable().partition { e -> isPrompt(productDefinition, e) }
+
+  private fun isPrompt(
+    productDefinition: SingleReportProductDefinition,
+    e: Map.Entry<String, String>,
+  ) = productDefinition.reportDataset.parameters?.any { it.name == e.key } ?: false
 
   private fun formatColumnsAndApplyFormulas(
     records: List<Map<String, Any?>>,

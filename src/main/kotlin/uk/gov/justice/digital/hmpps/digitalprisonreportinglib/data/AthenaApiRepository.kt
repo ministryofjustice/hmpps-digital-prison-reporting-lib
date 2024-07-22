@@ -49,6 +49,7 @@ class AthenaApiRepository(
           SELECT * FROM TABLE(system.query(query =>
            '${
       buildFinalQuery(
+        buildPromptsQuery(prompts),
         buildReportQuery(productDefinition.reportDataset.query),
         buildPolicyQuery(policyEngineResult),
         // The filters part will be replaced with the variables CTE
@@ -100,6 +101,28 @@ class AthenaApiRepository(
 
     athenaClient.stopQueryExecution(cancelQueryExecutionRequest)
     return StatementCancellationResponse(true)
+  }
+
+  override fun buildReportQuery(query: String) = """$DATASET_ AS ($query)"""
+
+  private fun buildPromptsQuery(prompts: Map<String, String>?): String {
+    if (prompts.isNullOrEmpty()) {
+      return "WITH $PROMPTS AS (SELECT '' FROM DUAL)"
+    }
+    val promptsCte = prompts.map { e -> "'${e.value}' AS ${e.key}" }.joinToString(", ")
+    return "WITH $PROMPTS AS (SELECT $promptsCte FROM DUAL)"
+  }
+
+  private fun buildFinalQuery(
+    prompts: String,
+    reportQuery: String,
+    policiesQuery: String,
+    filtersQuery: String,
+    selectFromFinalStageQuery: String,
+  ): String {
+    val query = listOf(prompts, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    RepositoryHelper.log.debug("Database query: $query")
+    return query
   }
 
   private fun mapAthenaStateToRedshiftState(queryState: String): String {

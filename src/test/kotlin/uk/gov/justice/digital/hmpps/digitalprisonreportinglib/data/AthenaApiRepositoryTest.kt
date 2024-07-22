@@ -18,12 +18,14 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PROMPTS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -36,15 +38,16 @@ class AthenaApiRepositoryTest {
 
   companion object {
     val dpdQuery = "SELECT column_a,column_b FROM schema_a.table_a"
+    val emptyPromptsCte = "WITH $PROMPTS AS (SELECT '''' FROM DUAL)"
   }
-  fun sqlStatement(tableId: String, whereClauseCondition: String? = TRUE_WHERE_CLAUSE) =
+  fun sqlStatement(tableId: String, whereClauseCondition: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte) =
     """          CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           'WITH dataset_ AS ($dpdQuery),policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
+           '$promptsCte,dataset_ AS ($dpdQuery),policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
 SELECT *
           FROM filter_ ORDER BY column_a asc'
            )) 
@@ -56,8 +59,8 @@ SELECT *
 
   @ParameterizedTest
   @CsvSource(
-    "${PolicyResult.POLICY_PERMIT}, $TRUE_WHERE_CLAUSE",
-    "${PolicyResult.POLICY_DENY}, $FALSE_WHERE_CLAUSE",
+    "$POLICY_PERMIT, $TRUE_WHERE_CLAUSE",
+    "${POLICY_DENY}, $FALSE_WHERE_CLAUSE",
   )
   fun `executeQueryAsync should call the athena data api with the correct query and return the execution id and table id`(policyEngineResult: String, whereClauseCondition: String) {
     val athenaClient = mock<AthenaClient>()
@@ -116,6 +119,71 @@ SELECT *
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
+    )
+
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+  }
+
+  @Test
+  fun `executeQueryAsync should map prompts to the prompts_ CTE correctly`() {
+    val athenaClient = mock<AthenaClient>()
+    val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val productDefinition = mock<SingleReportProductDefinition>()
+    val dataset = mock<Dataset>()
+    val datasource = mock<Datasource>()
+    val report = mock<Report>()
+    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
+    val executionId = "someId"
+    val testDb = "testdb"
+    val testCatalog = "testcatalog"
+    val prompts = mapOf("filterName1" to "filterValue1", "filterName2" to "filterValue2")
+    val athenaApiRepository = AthenaApiRepository(
+      athenaClient,
+      tableIdGenerator,
+      datasetHelper,
+    )
+    val queryExecutionContext = QueryExecutionContext.builder()
+      .database(testDb)
+      .catalog(testCatalog)
+      .build()
+    val resultConfiguration = ResultConfiguration.builder()
+      .outputLocation("s3://dpr-working-development/reports/$tableId/")
+      .build()
+    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
+      .queryString(sqlStatement(tableId, TRUE_WHERE_CLAUSE, "WITH $PROMPTS AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)"))
+      .queryExecutionContext(queryExecutionContext)
+      .resultConfiguration(resultConfiguration)
+      .build()
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+    )
+    whenever(productDefinition.reportDataset).thenReturn(dataset)
+    whenever(productDefinition.datasource).thenReturn(datasource)
+    whenever(productDefinition.report).thenReturn(report)
+    whenever(dataset.query).thenReturn(dpdQuery)
+    whenever(datasource.database).thenReturn(testDb)
+    whenever(datasource.catalog).thenReturn(testCatalog)
+
+    whenever(
+      athenaClient.startQueryExecution(
+        startQueryExecutionRequest,
+      ),
+    ).thenReturn(startQueryExecutionResponse)
+
+    whenever(
+      startQueryExecutionResponse.queryExecutionId(),
+    ).thenReturn(executionId)
+
+    val actual = athenaApiRepository.executeQueryAsync(
+      productDefinition = productDefinition,
+      filters = emptyList(),
+      sortColumn = "column_a",
+      sortedAsc = true,
+      policyEngineResult = POLICY_PERMIT,
+      prompts = prompts,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
