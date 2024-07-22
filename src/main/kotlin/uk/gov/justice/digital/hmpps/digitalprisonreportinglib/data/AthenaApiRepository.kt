@@ -104,7 +104,8 @@ class AthenaApiRepository(
     return StatementCancellationResponse(true)
   }
 
-  override fun buildReportQuery(query: String) = """$DATASET_ AS ($query)"""
+  override fun buildReportQuery(query: String) =
+    if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
   private fun buildPromptsQuery(prompts: Map<String, String>?): String {
     if (prompts.isNullOrEmpty()) {
