@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.10.0
+If the main dataset query has a dataset_ CTE embedded, then the query is used as is, without recreating the dataset_ CTE in the Athena queries.
+
 ## 4.9.1
 Added debug logs for the async queries.
 

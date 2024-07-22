@@ -37,17 +37,22 @@ import java.time.temporal.ChronoUnit
 class AthenaApiRepositoryTest {
 
   companion object {
+    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
+    val executionId = "someId"
+    val testDb = "testdb"
+    val testCatalog = "testcatalog"
     val dpdQuery = "SELECT column_a,column_b FROM schema_a.table_a"
+    val defaultDatasetCte = "dataset_ AS (SELECT column_a,column_b FROM schema_a.table_a)"
     val emptyPromptsCte = "WITH $PROMPTS AS (SELECT '''' FROM DUAL)"
   }
-  fun sqlStatement(tableId: String, whereClauseCondition: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte) =
+  fun sqlStatement(tableId: String, whereClauseCondition: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte, datasetCte: String? = defaultDatasetCte) =
     """          CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           '$promptsCte,dataset_ AS ($dpdQuery),policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
+           '$promptsCte,$datasetCte,policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
 SELECT *
           FROM filter_ ORDER BY column_a asc'
            )) 
@@ -56,6 +61,18 @@ SELECT *
     """.trimIndent()
 
   private val datasetHelper = DatasetHelper()
+  private val athenaClient = mock<AthenaClient>()
+  private val tableIdGenerator = mock<TableIdGenerator>()
+  val productDefinition = mock<SingleReportProductDefinition>()
+  val athenaApiRepository = AthenaApiRepository(
+    athenaClient,
+    tableIdGenerator,
+    datasetHelper,
+  )
+  val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
+  val dataset = mock<Dataset>()
+  val datasource = mock<Datasource>()
+  val report = mock<Report>()
 
   @ParameterizedTest
   @CsvSource(
@@ -63,56 +80,8 @@ SELECT *
     "${POLICY_DENY}, $FALSE_WHERE_CLAUSE",
   )
   fun `executeQueryAsync should call the athena data api with the correct query and return the execution id and table id`(policyEngineResult: String, whereClauseCondition: String) {
-    val athenaClient = mock<AthenaClient>()
-    val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
-    val tableIdGenerator = mock<TableIdGenerator>()
-    val productDefinition = mock<SingleReportProductDefinition>()
-    val dataset = mock<Dataset>()
-    val datasource = mock<Datasource>()
-    val report = mock<Report>()
-    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
-    val executionId = "someId"
-    val testDb = "testdb"
-    val testCatalog = "testcatalog"
-    val athenaApiRepository = AthenaApiRepository(
-      athenaClient,
-      tableIdGenerator,
-      datasetHelper,
-    )
-    val queryExecutionContext = QueryExecutionContext.builder()
-      .database(testDb)
-      .catalog(testCatalog)
-      .build()
-    val resultConfiguration = ResultConfiguration.builder()
-      .outputLocation("s3://dpr-working-development/reports/$tableId/")
-      .build()
-    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
-      .queryString(sqlStatement(tableId, whereClauseCondition))
-      .queryExecutionContext(queryExecutionContext)
-      .resultConfiguration(resultConfiguration)
-      .build()
-    whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      tableId,
-    )
-    whenever(productDefinition.reportDataset).thenReturn(dataset)
-    whenever(productDefinition.datasource).thenReturn(datasource)
-    whenever(productDefinition.report).thenReturn(report)
+    setupMocks(whereClause = whereClauseCondition)
     whenever(dataset.query).thenReturn(dpdQuery)
-    whenever(datasource.database).thenReturn(testDb)
-    whenever(datasource.catalog).thenReturn(testCatalog)
-
-    whenever(
-      athenaClient.startQueryExecution(
-        startQueryExecutionRequest,
-      ),
-    ).thenReturn(startQueryExecutionResponse)
-
-    whenever(
-      startQueryExecutionResponse.queryExecutionId(),
-    ).thenReturn(executionId)
-
     val actual = athenaApiRepository.executeQueryAsync(
       productDefinition = productDefinition,
       filters = emptyList(),
@@ -126,57 +95,9 @@ SELECT *
 
   @Test
   fun `executeQueryAsync should map prompts to the prompts_ CTE correctly`() {
-    val athenaClient = mock<AthenaClient>()
-    val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
-    val tableIdGenerator = mock<TableIdGenerator>()
-    val productDefinition = mock<SingleReportProductDefinition>()
-    val dataset = mock<Dataset>()
-    val datasource = mock<Datasource>()
-    val report = mock<Report>()
-    val tableId = "_a6227417_bdac_40bb_bc81_49c750daacd7"
-    val executionId = "someId"
-    val testDb = "testdb"
-    val testCatalog = "testcatalog"
+    setupMocks(promptsCte = "WITH $PROMPTS AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
     val prompts = mapOf("filterName1" to "filterValue1", "filterName2" to "filterValue2")
-    val athenaApiRepository = AthenaApiRepository(
-      athenaClient,
-      tableIdGenerator,
-      datasetHelper,
-    )
-    val queryExecutionContext = QueryExecutionContext.builder()
-      .database(testDb)
-      .catalog(testCatalog)
-      .build()
-    val resultConfiguration = ResultConfiguration.builder()
-      .outputLocation("s3://dpr-working-development/reports/$tableId/")
-      .build()
-    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
-      .queryString(sqlStatement(tableId, TRUE_WHERE_CLAUSE, "WITH $PROMPTS AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)"))
-      .queryExecutionContext(queryExecutionContext)
-      .resultConfiguration(resultConfiguration)
-      .build()
-    whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      tableId,
-    )
-    whenever(productDefinition.reportDataset).thenReturn(dataset)
-    whenever(productDefinition.datasource).thenReturn(datasource)
-    whenever(productDefinition.report).thenReturn(report)
-    whenever(dataset.query).thenReturn(dpdQuery)
-    whenever(datasource.database).thenReturn(testDb)
-    whenever(datasource.catalog).thenReturn(testCatalog)
-
-    whenever(
-      athenaClient.startQueryExecution(
-        startQueryExecutionRequest,
-      ),
-    ).thenReturn(startQueryExecutionResponse)
-
-    whenever(
-      startQueryExecutionResponse.queryExecutionId(),
-    ).thenReturn(executionId)
-
+    whenever(dataset.query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
       productDefinition = productDefinition,
       filters = emptyList(),
@@ -184,6 +105,23 @@ SELECT *
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
+    )
+
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+  }
+
+  @Test
+  fun `executeQueryAsync should use the existing main report query when the dataset_ CTE is already embedded into the query`() {
+    val dpdQuery = "dataset_ as (SELECT column_c,column_d FROM schema_a.table_a)"
+    setupMocks(datasetCte = dpdQuery)
+
+    whenever(dataset.query).thenReturn(dpdQuery)
+    val actual = athenaApiRepository.executeQueryAsync(
+      productDefinition = productDefinition,
+      filters = emptyList(),
+      sortColumn = "column_a",
+      sortedAsc = true,
+      policyEngineResult = POLICY_PERMIT,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -197,13 +135,6 @@ SELECT *
     "CANCELLED, ABORTED",
   )
   fun `getStatementStatus should call the getQueryExecution athena api with the correct statement ID and return the StatementExecutionStatus mapped correctly`(athenaStatus: String, redshiftStatus: String) {
-    val athenaClient = mock<AthenaClient>()
-    val tableIdGenerator = mock<TableIdGenerator>()
-    val athenaApiRepository = AthenaApiRepository(
-      athenaClient,
-      tableIdGenerator,
-      datasetHelper,
-    )
     val query = sqlStatement(tableId = "tableId")
     val statementId = "statementId"
     val getQueryExecutionRequest = GetQueryExecutionRequest.builder()
@@ -243,13 +174,6 @@ SELECT *
 
   @Test
   fun `cancelStatementExecution should call the stopQueryExecution athena api with the correct statement ID and return a successful StatementCancellationResponse`() {
-    val athenaClient = mock<AthenaClient>()
-    val tableIdGenerator = mock<TableIdGenerator>()
-    val athenaApiRepository = AthenaApiRepository(
-      athenaClient,
-      tableIdGenerator,
-      datasetHelper,
-    )
     val statementId = "statementId"
     val stopQueryExecutionRequest = StopQueryExecutionRequest.builder()
       .queryExecutionId(statementId)
@@ -264,5 +188,47 @@ SELECT *
     val actual = athenaApiRepository.cancelStatementExecution(statementId)
 
     assertEquals(expected, actual)
+  }
+
+  private fun setupMocks(whereClause: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte, datasetCte: String? = defaultDatasetCte) {
+    val queryExecutionContext = QueryExecutionContext.builder()
+      .database(testDb)
+      .catalog(testCatalog)
+      .build()
+    val resultConfiguration = ResultConfiguration.builder()
+      .outputLocation("s3://dpr-working-development/reports/$tableId/")
+      .build()
+    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
+      .queryString(
+        sqlStatement(
+          tableId = tableId,
+          whereClauseCondition = whereClause,
+          promptsCte = promptsCte,
+          datasetCte = datasetCte,
+        ),
+      )
+      .queryExecutionContext(queryExecutionContext)
+      .resultConfiguration(resultConfiguration)
+      .build()
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+    )
+    whenever(productDefinition.reportDataset).thenReturn(dataset)
+    whenever(productDefinition.datasource).thenReturn(datasource)
+    whenever(productDefinition.report).thenReturn(report)
+    whenever(datasource.database).thenReturn(testDb)
+    whenever(datasource.catalog).thenReturn(testCatalog)
+
+    whenever(
+      athenaClient.startQueryExecution(
+        startQueryExecutionRequest,
+      ),
+    ).thenReturn(startQueryExecutionResponse)
+
+    whenever(
+      startQueryExecutionResponse.queryExecutionId(),
+    ).thenReturn(executionId)
   }
 }
