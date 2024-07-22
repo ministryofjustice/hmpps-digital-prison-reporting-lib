@@ -1536,7 +1536,7 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
-  fun `validateAndExecuteStatementAsync should not fail validation for filters which were converted from DPD parameters`() {
+  fun `validateAndExecuteStatementAsync should not fail validation for filters which were converted from DPD parameters and convert these filters to prompts`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithParameters.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),

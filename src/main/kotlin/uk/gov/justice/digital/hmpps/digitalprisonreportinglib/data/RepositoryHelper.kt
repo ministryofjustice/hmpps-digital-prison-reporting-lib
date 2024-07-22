@@ -22,6 +22,7 @@ abstract class RepositoryHelper {
     const val DATASET_ = """dataset_"""
     const val POLICY_ = """policy_"""
     const val FILTER_ = """filter_"""
+    const val PROMPTS = """prompts_"""
 
     const val TABLE_TOKEN_NAME = "\${tableId}"
   }
@@ -61,24 +62,10 @@ abstract class RepositoryHelper {
     return query
   }
 
-  protected fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
+  protected open fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
   protected fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
   protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) =
     """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
-
-  private fun convertPolicyResultToSql(policyEngineResult: String): String {
-    return policyEngineResult
-      .replace(PolicyResult.POLICY_PERMIT, TRUE_WHERE_CLAUSE)
-      .replace(PolicyResult.POLICY_DENY, FALSE_WHERE_CLAUSE)
-  }
-
-  private fun buildFiltersWhereClause(
-    filters: List<ConfiguredApiRepository.Filter>,
-  ): String {
-    val filterClause = filters.joinToString(" AND ") { this.buildCondition(it) }.ifEmpty { TRUE_WHERE_CLAUSE }
-    log.debug("Filter clause: {}", filterClause)
-    return filterClause
-  }
 
   protected fun buildFinalStageQuery(
     dynamicFilterFieldId: Set<String>?,
@@ -104,6 +91,20 @@ abstract class RepositoryHelper {
 
   protected fun maybeTransform(key: String, keyTransformer: ((s: String) -> String)?) =
     keyTransformer?.let { it(key) } ?: key
+
+  private fun convertPolicyResultToSql(policyEngineResult: String): String {
+    return policyEngineResult
+      .replace(PolicyResult.POLICY_PERMIT, TRUE_WHERE_CLAUSE)
+      .replace(PolicyResult.POLICY_DENY, FALSE_WHERE_CLAUSE)
+  }
+
+  private fun buildFiltersWhereClause(
+    filters: List<ConfiguredApiRepository.Filter>,
+  ): String {
+    val filterClause = filters.joinToString(" AND ") { this.buildCondition(it) }.ifEmpty { TRUE_WHERE_CLAUSE }
+    log.debug("Filter clause: {}", filterClause)
+    return filterClause
+  }
 
   private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) =
     dynamicFilterFieldId?.let { "DISTINCT ${dynamicFilterFieldId.joinToString(", ")}" } ?: "*"
