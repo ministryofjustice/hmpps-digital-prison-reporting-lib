@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.whenever
+import org.springframework.security.oauth2.jwt.Jwt
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionResponse
@@ -17,6 +18,7 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PROMPTS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
@@ -29,6 +31,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.Duration
 import java.time.Instant
@@ -43,7 +46,17 @@ class AthenaApiRepositoryTest {
     val testCatalog = "testcatalog"
     val dpdQuery = "SELECT column_a,column_b FROM schema_a.table_a"
     val defaultDatasetCte = "dataset_ AS (SELECT column_a,column_b FROM schema_a.table_a)"
-    val emptyPromptsCte = "WITH $PROMPTS AS (SELECT '''' FROM DUAL)"
+    val emptyPromptsCte = "$PROMPTS AS (SELECT '''' FROM DUAL)"
+    private val testUsername = "aUser"
+    private val testCaseload = "aCaseload"
+    private val testAccountType = "GENERAL"
+    private val contextCte = """WITH $CONTEXT AS (
+      SELECT 
+      ''$testUsername'' AS username, 
+      ''$testCaseload'' AS caseload, 
+      ''$testAccountType'' AS account_type 
+      FROM DUAL
+      )"""
   }
   fun sqlStatement(tableId: String, whereClauseCondition: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte, datasetCte: String? = defaultDatasetCte) =
     """          CREATE TABLE AwsDataCatalog.reports.$tableId 
@@ -52,7 +65,7 @@ class AthenaApiRepositoryTest {
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           '$promptsCte,$datasetCte,policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
+           '$contextCte,$promptsCte,$datasetCte,policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
 SELECT *
           FROM filter_ ORDER BY column_a asc'
            )) 
@@ -63,23 +76,24 @@ SELECT *
   private val datasetHelper = DatasetHelper()
   private val athenaClient = mock<AthenaClient>()
   private val tableIdGenerator = mock<TableIdGenerator>()
-  val productDefinition = mock<SingleReportProductDefinition>()
-  val athenaApiRepository = AthenaApiRepository(
+  private val productDefinition = mock<SingleReportProductDefinition>()
+  private val athenaApiRepository = AthenaApiRepository(
     athenaClient,
     tableIdGenerator,
     datasetHelper,
   )
-  val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
-  val dataset = mock<Dataset>()
-  val datasource = mock<Datasource>()
-  val report = mock<Report>()
+  private val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
+  private val dataset = mock<Dataset>()
+  private val datasource = mock<Datasource>()
+  private val report = mock<Report>()
+  private val userToken = mock<DprAuthAwareAuthenticationToken>()
 
   @ParameterizedTest
   @CsvSource(
     "$POLICY_PERMIT, $TRUE_WHERE_CLAUSE",
     "${POLICY_DENY}, $FALSE_WHERE_CLAUSE",
   )
-  fun `executeQueryAsync should call the athena data api with the correct query and return the execution id and table id`(policyEngineResult: String, whereClauseCondition: String) {
+  fun `executeQueryAsync should call the athena data api with the correct query which includes the context_ cte and return the execution id and table id`(policyEngineResult: String, whereClauseCondition: String) {
     setupMocks(whereClause = whereClauseCondition)
     whenever(dataset.query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
@@ -88,6 +102,7 @@ SELECT *
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
+      userToken = userToken,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -105,6 +120,7 @@ SELECT *
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
+      userToken = userToken,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -122,6 +138,7 @@ SELECT *
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
+      userToken = userToken,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -230,5 +247,10 @@ SELECT *
     whenever(
       startQueryExecutionResponse.queryExecutionId(),
     ).thenReturn(executionId)
+
+    val jwt = mock<Jwt>()
+    whenever(userToken.jwt).thenReturn(jwt)
+    whenever(jwt.subject).thenReturn(testUsername)
+    whenever(userToken.getCaseLoads()).thenReturn(listOf(testCaseload))
   }
 }
