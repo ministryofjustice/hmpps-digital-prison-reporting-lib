@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.11.0
+Prepended context_ CTE to the Athena queries. 
+
 ## 4.10.1
 Fixed issue with reports that do not have summaries failing. 
 
