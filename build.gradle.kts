@@ -30,7 +30,7 @@ dependencies {
   implementation("software.amazon.awssdk:athena:2.25.61")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
   // Testing
   testImplementation("com.h2database:h2")
