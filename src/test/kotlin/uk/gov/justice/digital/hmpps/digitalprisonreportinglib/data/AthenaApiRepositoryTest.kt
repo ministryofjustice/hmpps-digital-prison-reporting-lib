@@ -110,7 +110,7 @@ SELECT *
 
   @Test
   fun `executeQueryAsync should map prompts to the prompts_ CTE correctly`() {
-    setupMocks(promptsCte = "WITH $PROMPTS AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
+    setupMocks(promptsCte = "$PROMPTS AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
     val prompts = mapOf("filterName1" to "filterValue1", "filterName2" to "filterValue2")
     whenever(dataset.query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
