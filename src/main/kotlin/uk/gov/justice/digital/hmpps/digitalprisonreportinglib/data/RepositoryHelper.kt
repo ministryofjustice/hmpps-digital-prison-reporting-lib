@@ -23,6 +23,7 @@ abstract class RepositoryHelper {
     const val POLICY_ = """policy_"""
     const val FILTER_ = """filter_"""
     const val PROMPTS = """prompts_"""
+    const val CONTEXT = """context_"""
 
     const val TABLE_TOKEN_NAME = "\${tableId}"
   }

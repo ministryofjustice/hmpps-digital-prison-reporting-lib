@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
 @Service
@@ -33,6 +34,7 @@ class AthenaApiRepository(
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
     prompts: Map<String, String>?,
+    userToken: DprAuthAwareAuthenticationToken?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val queryExecutionContext = QueryExecutionContext.builder()
@@ -49,6 +51,7 @@ class AthenaApiRepository(
           SELECT * FROM TABLE(system.query(query =>
            '${
       buildFinalQuery(
+        buildContextQuery(userToken),
         buildPromptsQuery(prompts),
         buildReportQuery(productDefinition.reportDataset.query),
         buildPolicyQuery(policyEngineResult),
@@ -109,21 +112,31 @@ class AthenaApiRepository(
 
   private fun buildPromptsQuery(prompts: Map<String, String>?): String {
     if (prompts.isNullOrEmpty()) {
-      return "WITH $PROMPTS AS (SELECT '' FROM DUAL)"
+      return "$PROMPTS AS (SELECT '' FROM DUAL)"
     }
     val promptsCte = prompts.map { e -> "'${e.value}' AS ${e.key}" }.joinToString(", ")
-    return "WITH $PROMPTS AS (SELECT $promptsCte FROM DUAL)"
+    return "$PROMPTS AS (SELECT $promptsCte FROM DUAL)"
   }
 
+  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String =
+    """WITH $CONTEXT AS (
+      SELECT 
+      '${userToken?.jwt?.subject}' AS username, 
+      '${userToken?.getCaseLoads()?.first()}' AS caseload, 
+      'GENERAL' AS account_type 
+      FROM DUAL
+      )"""
+
   private fun buildFinalQuery(
+    context: String,
     prompts: String,
     reportQuery: String,
     policiesQuery: String,
     filtersQuery: String,
     selectFromFinalStageQuery: String,
   ): String {
-    val query = listOf(prompts, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
-    RepositoryHelper.log.debug("Database query: $query")
+    val query = listOf(context, prompts, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    log.debug("Database query: $query")
     return query
   }
 

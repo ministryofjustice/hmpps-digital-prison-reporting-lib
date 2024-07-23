@@ -1384,6 +1384,7 @@ class ConfiguredApiServiceTest {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
         prompts = emptyMap(),
+        userToken = authToken,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -1396,6 +1397,7 @@ class ConfiguredApiServiceTest {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
       prompts = emptyMap(),
+      userToken = authToken,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -1428,6 +1430,7 @@ class ConfiguredApiServiceTest {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
         prompts = emptyMap(),
+        userToken = authToken,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -1440,6 +1443,7 @@ class ConfiguredApiServiceTest {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
       prompts = emptyMap(),
+      userToken = authToken,
     )
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionResponse, actual)
@@ -1565,6 +1569,7 @@ class ConfiguredApiServiceTest {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
         prompts = prompts,
+        userToken = authToken,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -1577,6 +1582,7 @@ class ConfiguredApiServiceTest {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
       prompts = prompts,
+      userToken = authToken,
     )
     assertEquals(statementExecutionResponse, actual)
   }

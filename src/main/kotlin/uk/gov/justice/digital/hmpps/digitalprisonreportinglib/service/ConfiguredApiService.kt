@@ -138,6 +138,7 @@ class ConfiguredApiService(
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         prompts = toMap(prompts),
+        userToken = userToken,
       )
   }
 
