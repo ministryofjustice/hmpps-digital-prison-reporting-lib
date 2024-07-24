@@ -20,7 +20,7 @@ import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PROMPTS
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PROMPT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
@@ -46,7 +46,7 @@ class AthenaApiRepositoryTest {
     val testCatalog = "testcatalog"
     val dpdQuery = "SELECT column_a,column_b FROM schema_a.table_a"
     val defaultDatasetCte = "dataset_ AS (SELECT column_a,column_b FROM schema_a.table_a)"
-    val emptyPromptsCte = "$PROMPTS AS (SELECT '''' FROM DUAL)"
+    val emptyPromptsCte = "$PROMPT AS (SELECT '''' FROM DUAL)"
     private val testUsername = "aUser"
     private val testCaseload = "aCaseload"
     private val testAccountType = "GENERAL"
@@ -109,8 +109,8 @@ SELECT *
   }
 
   @Test
-  fun `executeQueryAsync should map prompts to the prompts_ CTE correctly`() {
-    setupMocks(promptsCte = "$PROMPTS AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
+  fun `executeQueryAsync should map prompts to the prompt_ CTE correctly`() {
+    setupMocks(promptsCte = "$PROMPT AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
     val prompts = mapOf("filterName1" to "filterValue1", "filterName2" to "filterValue2")
     whenever(dataset.query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(

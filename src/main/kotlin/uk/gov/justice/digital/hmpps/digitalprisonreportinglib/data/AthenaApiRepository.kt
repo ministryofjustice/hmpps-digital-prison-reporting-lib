@@ -112,10 +112,10 @@ class AthenaApiRepository(
 
   private fun buildPromptsQuery(prompts: Map<String, String>?): String {
     if (prompts.isNullOrEmpty()) {
-      return "$PROMPTS AS (SELECT '' FROM DUAL)"
+      return "$PROMPT AS (SELECT '' FROM DUAL)"
     }
     val promptsCte = prompts.map { e -> "'${e.value}' AS ${e.key}" }.joinToString(", ")
-    return "$PROMPTS AS (SELECT $promptsCte FROM DUAL)"
+    return "$PROMPT AS (SELECT $promptsCte FROM DUAL)"
   }
 
   private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String =
