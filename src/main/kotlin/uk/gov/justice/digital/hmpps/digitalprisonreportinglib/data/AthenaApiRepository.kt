@@ -135,7 +135,7 @@ class AthenaApiRepository(
     filtersQuery: String,
     selectFromFinalStageQuery: String,
   ): String {
-    val query = listOf(context, prompts, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    val query = listOf(context, prompts, reportQuery, policiesQuery, filtersQuery).joinToString(",") + " $selectFromFinalStageQuery"
     log.debug("Database query: $query")
     return query
   }

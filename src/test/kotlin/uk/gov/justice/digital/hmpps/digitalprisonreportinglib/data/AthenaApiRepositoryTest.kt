@@ -65,8 +65,7 @@ class AthenaApiRepositoryTest {
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           '$contextCte,$promptsCte,$datasetCte,policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
-SELECT *
+           '$contextCte,$promptsCte,$datasetCte,policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE) SELECT *
           FROM filter_ ORDER BY column_a asc'
            )) 
           );
