@@ -10,13 +10,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
-import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
+import org.springframework.jdbc.BadSqlGrammarException
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
@@ -59,6 +56,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import java.sql.SQLException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -1655,6 +1653,28 @@ class ConfiguredApiServiceTest {
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
+  }
+
+  @Test
+  fun `should create and query summary table when it doesn't exist`() = runTest {
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+    val summaryId = "summaryId"
+    whenever(
+      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
+    )
+      .thenThrow(BadSqlGrammarException("Query failed: table or view does not exist", "", SQLException()))
+      .thenReturn(listOf(mapOf("TOTAL" to 1)))
+
+    val actual = configuredApiService.getSummaryResult(
+      tableId,
+      summaryId,
+      reportId,
+      reportVariantId,
+    )
+
+    assertEquals(listOf(mapOf("total" to 1)), actual)
+    verify(redshiftDataApiRepository, times(2)).getFullExternalTableResult(anyString(), anyOrNull())
+    verify(redshiftDataApiRepository).createSummaryTable(any(), anyString(), anyString(), any())
   }
 
   @Test
