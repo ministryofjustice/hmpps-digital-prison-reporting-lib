@@ -10,9 +10,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito
-import org.mockito.kotlin.*
+import org.mockito.Mockito.any
+import org.mockito.Mockito.anyString
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.whenever
 import org.springframework.jdbc.BadSqlGrammarException
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
@@ -1318,7 +1323,7 @@ class ConfiguredApiServiceTest {
         authToken,
       )
     }
-    Mockito.verifyNoInteractions(configuredApiRepository)
+    verifyNoInteractions(configuredApiRepository)
     assertThat(exception).message().isEqualTo("Invalid value in for filter is_closed. Cannot be parsed as a boolean.")
   }
 
