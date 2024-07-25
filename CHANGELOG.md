@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.11.3
+Fix summary table check exception handling.
+
 ## 4.11.2
 Lazy loading of summary data to fix Athena restriction on statements.
 

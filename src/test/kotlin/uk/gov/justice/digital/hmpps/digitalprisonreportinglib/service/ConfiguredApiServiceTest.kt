@@ -17,7 +17,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import org.springframework.jdbc.BadSqlGrammarException
+import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
@@ -1666,7 +1666,7 @@ class ConfiguredApiServiceTest {
     whenever(
       redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
     )
-      .thenThrow(BadSqlGrammarException("Query failed: table or view does not exist", "", SQLException()))
+      .thenThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
       .thenReturn(listOf(mapOf("TOTAL" to 1)))
 
     val actual = configuredApiService.getSummaryResult(

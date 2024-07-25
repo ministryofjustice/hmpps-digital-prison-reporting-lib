@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.jdbc.BadSqlGrammarException
+import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -188,8 +188,8 @@ class ConfiguredApiService(
     // If it doesn't exist, create it (waiting for creation to complete).
     val results = try {
       redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
-    } catch (e: BadSqlGrammarException) {
-      if (e.message?.contains("table or view does not exist") == true) {
+    } catch (e: UncategorizedSQLException) {
+      if (e.message?.contains("Entity Not Found") == true) {
         requestRepo.createSummaryTable(productDefinition.datasource, tableId, summaryId, dataset)
         redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
       } else {
