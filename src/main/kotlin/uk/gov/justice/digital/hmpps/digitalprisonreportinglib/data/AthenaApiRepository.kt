@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -21,10 +22,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 class AthenaApiRepository(
   val athenaClient: AthenaClient,
   val tableIdGenerator: TableIdGenerator,
-  datasetHelper: DatasetHelper,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : AthenaAndRedshiftCommonRepository(tableIdGenerator, datasetHelper) {
+) : AthenaAndRedshiftCommonRepository(tableIdGenerator) {
 
   override fun executeQueryAsync(
     productDefinition: SingleReportProductDefinition,
@@ -37,11 +37,6 @@ class AthenaApiRepository(
     userToken: DprAuthAwareAuthenticationToken?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
-    val queryExecutionContext = QueryExecutionContext.builder()
-      .database(productDefinition.datasource.database)
-      .catalog(productDefinition.datasource.catalog)
-      .build()
-
     val finalQuery = """
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
@@ -62,8 +57,20 @@ class AthenaApiRepository(
     }'
            )) 
           );
-          ${buildSummaryQueries(productDefinition, tableId)}
     """.trimIndent()
+
+    return executeQueryAsync(productDefinition.datasource, tableId, finalQuery)
+  }
+
+  override fun executeQueryAsync(
+    datasource: Datasource,
+    tableId: String,
+    finalQuery: String,
+  ): StatementExecutionResponse {
+    val queryExecutionContext = QueryExecutionContext.builder()
+      .database(datasource.database)
+      .catalog(datasource.catalog)
+      .build()
     val resultConfiguration = ResultConfiguration.builder()
       .outputLocation("s3://$s3location/$tableId/")
       .build()

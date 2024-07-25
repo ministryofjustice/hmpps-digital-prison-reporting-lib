@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
@@ -62,6 +63,7 @@ class RedshiftDataApiRepositoryTest {
   private val redshiftDataClient = mock<RedshiftDataClient>()
   private val tableIdGenerator = mock<TableIdGenerator>()
   private val productDefinition = mock<SingleReportProductDefinition>()
+  private val datasource = mock<Datasource>()
   private val dataset = mock<Dataset>()
   private val executeStatementResponse = mock<ExecuteStatementResponse>()
   private val report = mock<Report>()
@@ -73,6 +75,7 @@ class RedshiftDataApiRepositoryTest {
     whenever(executeStatementResponse.id()).thenReturn(EXECUTION_ID)
     whenever(productDefinition.reportDataset).thenReturn(dataset)
     whenever(productDefinition.report).thenReturn(report)
+    whenever(productDefinition.datasource).thenReturn(datasource)
     whenever(dataset.query).thenReturn(REPOSITORY_TEST_QUERY)
   }
 

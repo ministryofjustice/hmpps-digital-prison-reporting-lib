@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.security.oauth2.jwt.Jwt
 import software.amazon.awssdk.services.athena.AthenaClient
@@ -70,17 +72,14 @@ SELECT *
           FROM filter_ ORDER BY column_a asc'
            )) 
           );
-          
     """.trimIndent()
 
-  private val datasetHelper = DatasetHelper()
   private val athenaClient = mock<AthenaClient>()
   private val tableIdGenerator = mock<TableIdGenerator>()
   private val productDefinition = mock<SingleReportProductDefinition>()
   private val athenaApiRepository = AthenaApiRepository(
     athenaClient,
     tableIdGenerator,
-    datasetHelper,
   )
   private val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
   private val dataset = mock<Dataset>()
@@ -94,7 +93,7 @@ SELECT *
     "${POLICY_DENY}, $FALSE_WHERE_CLAUSE",
   )
   fun `executeQueryAsync should call the athena data api with the correct query which includes the context_ cte and return the execution id and table id`(policyEngineResult: String, whereClauseCondition: String) {
-    setupMocks(whereClause = whereClauseCondition)
+    val startQueryExecutionRequest = setupMocks(whereClause = whereClauseCondition)
     whenever(dataset.query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
       productDefinition = productDefinition,
@@ -106,11 +105,12 @@ SELECT *
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
   }
 
   @Test
   fun `executeQueryAsync should map prompts to the prompt_ CTE correctly`() {
-    setupMocks(promptsCte = "$PROMPT AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
+    val startQueryExecutionRequest = setupMocks(promptsCte = "$PROMPT AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
     val prompts = mapOf("filterName1" to "filterValue1", "filterName2" to "filterValue2")
     whenever(dataset.query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
@@ -124,12 +124,13 @@ SELECT *
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
   }
 
   @Test
   fun `executeQueryAsync should use the existing main report query when the dataset_ CTE is already embedded into the query`() {
     val dpdQuery = "dataset_ as (SELECT column_c,column_d FROM schema_a.table_a)"
-    setupMocks(datasetCte = dpdQuery)
+    val startQueryExecutionRequest = setupMocks(datasetCte = dpdQuery)
 
     whenever(dataset.query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
@@ -142,6 +143,7 @@ SELECT *
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
   }
 
   @ParameterizedTest
@@ -207,7 +209,7 @@ SELECT *
     assertEquals(expected, actual)
   }
 
-  private fun setupMocks(whereClause: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte, datasetCte: String? = defaultDatasetCte) {
+  private fun setupMocks(whereClause: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte, datasetCte: String? = defaultDatasetCte): StartQueryExecutionRequest {
     val queryExecutionContext = QueryExecutionContext.builder()
       .database(testDb)
       .catalog(testCatalog)
@@ -240,7 +242,7 @@ SELECT *
 
     whenever(
       athenaClient.startQueryExecution(
-        startQueryExecutionRequest,
+        ArgumentMatchers.any(StartQueryExecutionRequest::class.java),
       ),
     ).thenReturn(startQueryExecutionResponse)
 
@@ -252,5 +254,7 @@ SELECT *
     whenever(userToken.jwt).thenReturn(jwt)
     whenever(jwt.subject).thenReturn(testUsername)
     whenever(userToken.getCaseLoads()).thenReturn(listOf(testCaseload))
+
+    return startQueryExecutionRequest
   }
 }

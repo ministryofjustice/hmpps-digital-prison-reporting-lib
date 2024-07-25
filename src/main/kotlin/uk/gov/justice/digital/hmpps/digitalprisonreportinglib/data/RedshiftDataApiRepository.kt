@@ -1,12 +1,16 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import org.apache.commons.lang3.time.StopWatch
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -17,14 +21,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 @Service
 class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
-  val tableIdGenerator: TableIdGenerator,
-  datasetHelper: DatasetHelper,
+  private val tableIdGenerator: TableIdGenerator,
+  private val datasetHelper: DatasetHelper,
   @Value("\${dpr.lib.redshiftdataapi.database:db}") private val redshiftDataApiDb: String,
   @Value("\${dpr.lib.redshiftdataapi.clusterid:clusterId}") private val redshiftDataApiClusterId: String,
   @Value("\${dpr.lib.redshiftdataapi.secretarn:arn}") private val redshiftDataApiSecretArn: String,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : AthenaAndRedshiftCommonRepository(tableIdGenerator, datasetHelper) {
+) : AthenaAndRedshiftCommonRepository(tableIdGenerator) {
   override fun executeQueryAsync(
     productDefinition: SingleReportProductDefinition,
     filters: List<ConfiguredApiRepository.Filter>,
@@ -53,13 +57,21 @@ class RedshiftDataApiRepository(
           ${buildSummaryQueries(productDefinition, tableId)}
     """.trimIndent()
 
+    return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
+  }
+
+  override fun executeQueryAsync(
+    datasource: Datasource,
+    tableId: String,
+    finalQuery: String,
+  ): StatementExecutionResponse {
     val statementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(redshiftDataApiClusterId)
       .database(redshiftDataApiDb)
       .secretArn(redshiftDataApiSecretArn)
-      .sql(generateSql)
+      .sql(finalQuery)
       .build()
-    log.debug("Full async query: {}", generateSql)
+    log.debug("Full async query: {}", finalQuery)
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
     log.debug("Execution ID: {}", response.id())
     log.debug("External table ID: {}", tableId)
@@ -101,6 +113,19 @@ class RedshiftDataApiRepository(
     }
   }
 
+  fun buildSummaryQueries(productDefinition: SingleReportProductDefinition, tableId: String): String {
+    return productDefinition.report.summary?.joinToString(" ") {
+      val summaryTableId = tableIdGenerator.getTableSummaryId(tableId, it.id)
+      val query = datasetHelper.findDataset(productDefinition.allDatasets, it.dataset).query
+      val substitutedQuery = query.replace(TABLE_TOKEN_NAME, "reports.$tableId")
+
+      buildSummaryQuery(
+        substitutedQuery,
+        summaryTableId,
+      )
+    } ?: ""
+  }
+
   override fun buildSummaryQuery(query: String, summaryTableId: String): String {
     return """
           CREATE EXTERNAL TABLE reports.$summaryTableId 
@@ -108,5 +133,30 @@ class RedshiftDataApiRepository(
           LOCATION 's3://$s3location/$summaryTableId/' 
           AS ($query);
     """
+  }
+
+  fun getFullExternalTableResult(
+    tableId: String,
+    jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),
+  ): List<Map<String, Any?>> {
+    val stopwatch = StopWatch.createStarted()
+    val result = jdbcTemplate
+      .queryForList(
+        "SELECT * FROM reports.$tableId;",
+        MapSqlParameterSource(),
+      )
+      .map {
+        transformTimestampToLocalDateTime(it)
+      }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return result
+  }
+
+  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
+    return jdbcTemplate.queryForList(
+      "SELECT COUNT(1) as total FROM reports.$tableId;",
+      MapSqlParameterSource(),
+    ).first()?.get("total") as Long
   }
 }

@@ -1,9 +1,12 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import kotlinx.coroutines.delay
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -13,11 +16,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 
 abstract class AthenaAndRedshiftCommonRepository(
   private val tableIdGenerator: TableIdGenerator,
-  private val datasetHelper: DatasetHelper,
 ) : RepositoryHelper() {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
+    private val END_STATES = listOf("FINISHED", "ABORTED", "FAILED")
   }
 
   abstract fun executeQueryAsync(
@@ -36,6 +39,12 @@ abstract class AthenaAndRedshiftCommonRepository(
   abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
 
   protected abstract fun buildSummaryQuery(query: String, summaryTableId: String): String
+
+  protected abstract fun executeQueryAsync(
+    datasource: Datasource,
+    tableId: String,
+    finalQuery: String,
+  ): StatementExecutionResponse
 
   fun getPaginatedExternalTableResult(
     tableId: String,
@@ -57,41 +66,32 @@ abstract class AthenaAndRedshiftCommonRepository(
     return result
   }
 
-  fun getFullExternalTableResult(
+  suspend fun createSummaryTable(
+    datasource: Datasource,
     tableId: String,
-    jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),
-  ): List<Map<String, Any?>> {
+    summaryId: String,
+    dataset: Dataset,
+  ) {
+    val substitutedQuery = dataset.query.replace(TABLE_TOKEN_NAME, "reports.$tableId")
+    val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
+    val createTableQuery = buildSummaryQuery(
+      substitutedQuery,
+      tableSummaryId,
+    )
     val stopwatch = StopWatch.createStarted()
-    val result = jdbcTemplate
-      .queryForList(
-        "SELECT * FROM reports.$tableId;",
-        MapSqlParameterSource(),
-      )
-      .map {
-        transformTimestampToLocalDateTime(it)
-      }
+    val executionResponse = executeQueryAsync(datasource, tableSummaryId, createTableQuery)
+
+    waitForTableToBeCreated(executionResponse)
+
     stopwatch.stop()
-    log.debug("Query Execution time in ms: {}", stopwatch.time)
-    return result
+    RepositoryHelper.log.debug("Create Summary Query Execution time in ms: {}", stopwatch.time)
   }
 
-  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
-    return jdbcTemplate.queryForList(
-      "SELECT COUNT(1) as total FROM reports.$tableId;",
-      MapSqlParameterSource(),
-    ).first()?.get("total") as Long
-  }
-
-  protected fun buildSummaryQueries(productDefinition: SingleReportProductDefinition, tableId: String): String {
-    return productDefinition.report.summary?.joinToString(" ") {
-      val summaryTableId = tableIdGenerator.getTableSummaryId(tableId, it.id)
-      val query = datasetHelper.findDataset(productDefinition.allDatasets, it.dataset).query
-      val substitutedQuery = query.replace(TABLE_TOKEN_NAME, "reports.$tableId")
-
-      buildSummaryQuery(
-        substitutedQuery,
-        summaryTableId,
-      )
-    } ?: ""
+  private suspend fun waitForTableToBeCreated(executionResponse: StatementExecutionResponse) {
+    var status: String
+    do {
+      delay(1000)
+      status = getStatementStatus(executionResponse.executionId).status
+    } while (!END_STATES.contains(status))
   }
 }

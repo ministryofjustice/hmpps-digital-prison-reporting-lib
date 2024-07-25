@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.11.2
+Lazy loading of summary data to fix Athena restriction on statements.
+
 ## 4.11.1
 Changed prompts_ to prompt_ CTE.
 

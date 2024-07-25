@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.jdbc.BadSqlGrammarException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -57,6 +58,9 @@ class ConfiguredApiService(
       "nomis" to athenaApiRepository,
       "bodmis" to athenaApiRepository,
     )
+
+  private fun getRepo(productDefinition: SingleReportProductDefinition): AthenaAndRedshiftCommonRepository =
+    datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
 
   fun validateAndFetchData(
     reportId: String,
@@ -129,7 +133,7 @@ class ConfiguredApiService(
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val (prompts, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition)
-    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
+    return getRepo(productDefinition)
       .executeQueryAsync(
         productDefinition = productDefinition,
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly)) + dynamicFilter,
@@ -144,7 +148,7 @@ class ConfiguredApiService(
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository).getStatementStatus(statementId)
+    return getRepo(productDefinition).getStatementStatus(statementId)
   }
 
   fun getStatementResult(
@@ -164,38 +168,43 @@ class ConfiguredApiService(
     )
   }
 
-  fun getSummaryResult(
+  suspend fun getSummaryResult(
     tableId: String,
     summaryId: String,
     reportId: String,
     reportVariantId: String,
     dataProductDefinitionsPath: String? = null,
   ): List<Map<String, Any?>> {
-    val productDefinition = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath)
-    val report = productDefinition.report.find { it.id == reportVariantId }
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
 
-    if (report == null) {
-      throw ValidationException("Invalid variant ID: $reportVariantId")
-    }
+    val summary = productDefinition.report.summary?.find { it.id == summaryId }
+      ?: throw ValidationException("Invalid summary ID: $summaryId")
 
-    val summary = report.summary?.find { it.id == summaryId }
+    val dataset = datasetHelper.findDataset(productDefinition.allDatasets, summary.dataset)
+    val requestRepo = getRepo(productDefinition)
+    val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
-    if (summary == null) {
-      throw ValidationException("Invalid summary ID: $summaryId")
-    }
-
-    val dataset = datasetHelper.findDataset(productDefinition.dataset, summary.dataset)
-    val summaryTableId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
-
-    return redshiftDataApiRepository.getFullExternalTableResult(summaryTableId)
-      .map {
-        formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
+    // Request data from the summary table.
+    // If it doesn't exist, create it (waiting for creation to complete).
+    val results = try {
+      redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+    } catch (e: BadSqlGrammarException) {
+      if (e.message?.contains("table or view does not exist") == true) {
+        requestRepo.createSummaryTable(productDefinition.datasource, tableId, summaryId, dataset)
+        redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+      } else {
+        throw e
       }
+    }
+
+    return results.map {
+      formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
+    }
   }
 
   fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    return datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository).cancelStatementExecution(statementId)
+    return getRepo(productDefinition).cancelStatementExecution(statementId)
   }
 
   private fun <K, V> toMap(entries: List<Map.Entry<K, V>>): Map<K, V> =
