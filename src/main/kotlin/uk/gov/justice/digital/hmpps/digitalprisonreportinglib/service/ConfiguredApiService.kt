@@ -35,6 +35,7 @@ class ConfiguredApiService(
   val configuredApiRepository: ConfiguredApiRepository,
   val redshiftDataApiRepository: RedshiftDataApiRepository,
   val athenaApiRepository: AthenaApiRepository,
+  val tableIdGenerator: TableIdGenerator,
   val datasetHelper: DatasetHelper,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) {
@@ -181,15 +182,16 @@ class ConfiguredApiService(
 
     val dataset = datasetHelper.findDataset(productDefinition.allDatasets, summary.dataset)
     val requestRepo = getRepo(productDefinition)
+    val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
     // Request data from the summary table.
     // If it doesn't exist, create it (waiting for creation to complete).
     val results = try {
-      redshiftDataApiRepository.getFullExternalTableResult(tableId)
+      redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } catch (e: BadSqlGrammarException) {
       if (e.message?.contains("table or view does not exist") == true) {
         requestRepo.createSummaryTable(productDefinition.datasource, tableId, summaryId, dataset)
-        redshiftDataApiRepository.getFullExternalTableResult(tableId)
+        redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
       } else {
         throw e
       }
