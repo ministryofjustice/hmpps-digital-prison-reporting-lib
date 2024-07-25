@@ -232,7 +232,7 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
     description = "Returns a summary of a request, which has been stored in a dedicated table.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
-  fun getSummaryQueryExecutionResult(
+  suspend fun getSummaryQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)

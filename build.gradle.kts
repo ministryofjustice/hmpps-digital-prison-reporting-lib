@@ -32,6 +32,10 @@ dependencies {
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
+  // Coroutines
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.1")
+
   // Testing
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
@@ -40,6 +44,7 @@ dependencies {
   testImplementation("org.postgresql:postgresql:42.7.3")
   testImplementation("org.testcontainers:postgresql:1.19.8")
   testImplementation("org.testcontainers:junit-jupiter:1.19.8")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 }
 
 java {
