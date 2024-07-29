@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
-abstract class AthenaAndRedshiftCommonRepository: RepositoryHelper() {
+abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

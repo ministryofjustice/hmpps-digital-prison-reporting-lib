@@ -121,7 +121,7 @@ class RedshiftDataApiRepository(
       redShiftSummaryTableHelper.buildSummaryQuery(
         query,
         tableId,
-        it.id
+        it.id,
       )
     } ?: ""
   }
