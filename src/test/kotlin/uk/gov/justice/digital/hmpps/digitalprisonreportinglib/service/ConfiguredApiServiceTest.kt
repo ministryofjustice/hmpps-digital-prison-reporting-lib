@@ -1678,7 +1678,7 @@ class ConfiguredApiServiceTest {
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
     verify(redshiftDataApiRepository, times(2)).getFullExternalTableResult(any(), anyOrNull())
-    verify(redshiftDataApiRepository).createSummaryTable(any(), any(), any(), any())
+    verify(configuredApiRepository).createSummaryTable(any(), any(), any(), any())
   }
 
   @Test
