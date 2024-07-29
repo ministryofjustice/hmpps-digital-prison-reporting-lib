@@ -1,26 +1,20 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import kotlinx.coroutines.delay
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
-abstract class AthenaAndRedshiftCommonRepository(
-  private val tableIdGenerator: TableIdGenerator,
-) : RepositoryHelper() {
+abstract class AthenaAndRedshiftCommonRepository: RepositoryHelper() {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
-    private val END_STATES = listOf("FINISHED", "ABORTED", "FAILED")
   }
 
   abstract fun executeQueryAsync(
@@ -38,8 +32,6 @@ abstract class AthenaAndRedshiftCommonRepository(
 
   abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
 
-  protected abstract fun buildSummaryQuery(query: String, summaryTableId: String): String
-
   protected abstract fun executeQueryAsync(
     datasource: Datasource,
     tableId: String,
@@ -50,7 +42,7 @@ abstract class AthenaAndRedshiftCommonRepository(
     tableId: String,
     selectedPage: Long,
     pageSize: Long,
-    jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),
+    jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate
@@ -64,40 +56,5 @@ abstract class AthenaAndRedshiftCommonRepository(
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
-  }
-
-  suspend fun createSummaryTable(
-    datasource: Datasource,
-    tableId: String,
-    summaryId: String,
-    dataset: Dataset,
-  ) {
-    val substitutedQuery = dataset.query.replace(TABLE_TOKEN_NAME, "reports.$tableId")
-    val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
-    val createTableQuery = buildSummaryQuery(
-      substitutedQuery,
-      tableSummaryId,
-    )
-    val stopwatch = StopWatch.createStarted()
-    val executionResponse = executeQueryAsync(datasource, tableSummaryId, createTableQuery)
-
-    waitForTableToBeCreated(executionResponse)
-
-    stopwatch.stop()
-    RepositoryHelper.log.debug("Create Summary Query Execution time in ms: {}", stopwatch.time)
-  }
-
-  private suspend fun waitForTableToBeCreated(executionResponse: StatementExecutionResponse) {
-    var response: StatementExecutionStatus
-    do {
-      delay(1000)
-      response = getStatementStatus(executionResponse.executionId)
-    } while (!END_STATES.contains(response.status))
-
-    log.debug("Summary table creation complete with status ${response.status}")
-
-    if (response.error != null) {
-      log.error("Error creating summary table: ${response.error})")
-    }
   }
 }

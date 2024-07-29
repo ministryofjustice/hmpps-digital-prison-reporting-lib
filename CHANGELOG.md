@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 4.12.2
+Create summary table synchronously via normal datasource.
+
 ## 4.12.1
 Add summary table creation logging and fix issue with quotes in query.
 
