@@ -162,7 +162,7 @@ class ConfiguredApiService(
     )
   }
 
-  suspend fun getSummaryResult(
+  fun getSummaryResult(
     tableId: String,
     summaryId: String,
     reportId: String,

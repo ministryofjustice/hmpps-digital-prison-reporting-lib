@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
-import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -1642,7 +1641,7 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with all provided arguments when getSummaryResult is called`() = runTest {
+  fun `should call the repository with all provided arguments when getSummaryResult is called`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
@@ -1660,7 +1659,7 @@ class ConfiguredApiServiceTest {
   }
 
   @Test
-  fun `should create and query summary table when it doesn't exist`() = runTest {
+  fun `should create and query summary table when it doesn't exist`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
