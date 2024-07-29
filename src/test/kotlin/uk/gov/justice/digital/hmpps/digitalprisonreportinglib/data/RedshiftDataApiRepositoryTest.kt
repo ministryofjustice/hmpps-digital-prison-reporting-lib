@@ -68,6 +68,7 @@ class RedshiftDataApiRepositoryTest {
   private val executeStatementResponse = mock<ExecuteStatementResponse>()
   private val report = mock<Report>()
   private val datasetHelper = DatasetHelper()
+  private val redShiftSummaryTableHelper = mock<RedShiftSummaryTableHelper>()
 
   @BeforeEach
   fun setup() {
@@ -85,6 +86,7 @@ class RedshiftDataApiRepositoryTest {
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -140,6 +142,7 @@ SELECT *
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -181,6 +184,7 @@ SELECT *
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -224,6 +228,7 @@ SELECT *
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -278,6 +283,7 @@ SELECT *
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -329,6 +335,7 @@ SELECT *
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -356,6 +363,7 @@ SELECT *
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
@@ -381,6 +389,7 @@ SELECT *
       mock(),
       mock(),
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
