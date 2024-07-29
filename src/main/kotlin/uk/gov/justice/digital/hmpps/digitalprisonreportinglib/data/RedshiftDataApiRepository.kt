@@ -63,15 +63,15 @@ class RedshiftDataApiRepository(
   override fun executeQueryAsync(
     datasource: Datasource,
     tableId: String,
-    finalQuery: String,
+    query: String,
   ): StatementExecutionResponse {
     val statementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(redshiftDataApiClusterId)
       .database(redshiftDataApiDb)
       .secretArn(redshiftDataApiSecretArn)
-      .sql(finalQuery)
+      .sql(query)
       .build()
-    log.debug("Full async query: {}", finalQuery)
+    log.debug("Full async query: {}", query)
     val response: ExecuteStatementResponse = redshiftDataClient.executeStatement(statementRequest)
     log.debug("Execution ID: {}", response.id())
     log.debug("External table ID: {}", tableId)
