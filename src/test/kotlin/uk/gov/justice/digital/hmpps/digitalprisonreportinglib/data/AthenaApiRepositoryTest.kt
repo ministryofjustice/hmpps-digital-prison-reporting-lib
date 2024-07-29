@@ -21,12 +21,17 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_PREFILTER_CTE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FILTER_
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.POLICY_
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PREFILTER_
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PROMPT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
@@ -60,16 +65,22 @@ class AthenaApiRepositoryTest {
       FROM DUAL
       )"""
   }
-  fun sqlStatement(tableId: String, whereClauseCondition: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte, datasetCte: String? = defaultDatasetCte) =
+  fun sqlStatement(
+    tableId: String,
+    whereClauseCondition: String? = TRUE_WHERE_CLAUSE,
+    promptsCte: String? = emptyPromptsCte,
+    datasetCte: String? = defaultDatasetCte,
+    prefilter: ReportFilter? = ReportFilter(name = PREFILTER_, query = DEFAULT_PREFILTER_CTE),
+  ) =
     """          CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           '$contextCte,$promptsCte,$datasetCte,policy_ AS (SELECT * FROM dataset_ WHERE $whereClauseCondition),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
+           '$contextCte,$promptsCte,$datasetCte,${prefilter?.query},policy_ AS (SELECT * FROM ${prefilter?.name} WHERE $whereClauseCondition),$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)
 SELECT *
-          FROM filter_ ORDER BY column_a asc'
+          FROM $FILTER_ ORDER BY column_a asc'
            )) 
           );
     """.trimIndent()
@@ -131,6 +142,25 @@ SELECT *
   fun `executeQueryAsync should use the existing main report query when the dataset_ CTE is already embedded into the query`() {
     val dpdQuery = "dataset_ as (SELECT column_c,column_d FROM schema_a.table_a)"
     val startQueryExecutionRequest = setupMocks(datasetCte = dpdQuery)
+
+    whenever(dataset.query).thenReturn(dpdQuery)
+    val actual = athenaApiRepository.executeQueryAsync(
+      productDefinition = productDefinition,
+      filters = emptyList(),
+      sortColumn = "column_a",
+      sortedAsc = true,
+      policyEngineResult = POLICY_PERMIT,
+      userToken = userToken,
+    )
+
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
+  }
+
+  @Test
+  fun `executeQueryAsync should use add the report filter CTE to the final query when it exists`() {
+    val reportFilter = ReportFilter(name = "someprefiltername_", query = "someprefiltername_ AS (SELECT a,b FROM dataset_)")
+    val startQueryExecutionRequest = setupMocks(reportFilter = reportFilter)
 
     whenever(dataset.query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
@@ -209,7 +239,12 @@ SELECT *
     assertEquals(expected, actual)
   }
 
-  private fun setupMocks(whereClause: String? = TRUE_WHERE_CLAUSE, promptsCte: String? = emptyPromptsCte, datasetCte: String? = defaultDatasetCte): StartQueryExecutionRequest {
+  private fun setupMocks(
+    whereClause: String? = TRUE_WHERE_CLAUSE,
+    promptsCte: String? = emptyPromptsCte,
+    datasetCte: String? = defaultDatasetCte,
+    reportFilter: ReportFilter? = ReportFilter(name = PREFILTER_, query = DEFAULT_PREFILTER_CTE),
+  ): StartQueryExecutionRequest {
     val queryExecutionContext = QueryExecutionContext.builder()
       .database(testDb)
       .catalog(testCatalog)
@@ -224,6 +259,7 @@ SELECT *
           whereClauseCondition = whereClause,
           promptsCte = promptsCte,
           datasetCte = datasetCte,
+          prefilter = reportFilter,
         ),
       )
       .queryExecutionContext(queryExecutionContext)
@@ -237,6 +273,7 @@ SELECT *
     whenever(productDefinition.reportDataset).thenReturn(dataset)
     whenever(productDefinition.datasource).thenReturn(datasource)
     whenever(productDefinition.report).thenReturn(report)
+    whenever(productDefinition.report.filter).thenReturn(reportFilter)
     whenever(datasource.database).thenReturn(testDb)
     whenever(datasource.catalog).thenReturn(testCatalog)
 

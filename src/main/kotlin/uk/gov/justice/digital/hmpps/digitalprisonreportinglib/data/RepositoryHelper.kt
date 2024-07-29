@@ -20,12 +20,14 @@ abstract class RepositoryHelper {
     const val FALSE_WHERE_CLAUSE = "0=1"
 
     const val DATASET_ = """dataset_"""
+    const val PREFILTER_ = """prefilter_"""
     const val POLICY_ = """policy_"""
     const val FILTER_ = """filter_"""
     const val PROMPT = """prompt_"""
     const val CONTEXT = """context_"""
 
     const val TABLE_TOKEN_NAME = "\${tableId}"
+    const val DEFAULT_PREFILTER_CTE = "prefilter_ AS (SELECT * FROM dataset_)"
   }
 
   @Autowired
@@ -64,7 +66,8 @@ abstract class RepositoryHelper {
   }
 
   protected open fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
-  protected fun buildPolicyQuery(policyEngineResult: String) = """$POLICY_ AS (SELECT * FROM $DATASET_ WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
+  protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) =
+    """$POLICY_ AS (SELECT * FROM $previousCteName WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
   protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) =
     """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
 

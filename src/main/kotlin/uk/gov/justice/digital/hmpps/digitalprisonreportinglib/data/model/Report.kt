@@ -16,4 +16,5 @@ data class Report(
   val classification: String? = null,
   val feature: List<Feature>? = emptyList(),
   val summary: List<ReportSummary>? = emptyList(),
+  val filter: ReportFilter? = null,
 )
