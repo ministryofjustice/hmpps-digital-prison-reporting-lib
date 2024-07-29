@@ -43,7 +43,7 @@ abstract class AthenaAndRedshiftCommonRepository(
   protected abstract fun executeQueryAsync(
     datasource: Datasource,
     tableId: String,
-    finalQuery: String,
+    query: String,
   ): StatementExecutionResponse
 
   fun getPaginatedExternalTableResult(
@@ -88,10 +88,16 @@ abstract class AthenaAndRedshiftCommonRepository(
   }
 
   private suspend fun waitForTableToBeCreated(executionResponse: StatementExecutionResponse) {
-    var status: String
+    var response: StatementExecutionStatus
     do {
       delay(1000)
-      status = getStatementStatus(executionResponse.executionId).status
-    } while (!END_STATES.contains(status))
+      response = getStatementStatus(executionResponse.executionId)
+    } while (!END_STATES.contains(response.status))
+
+    log.debug("Summary table creation complete with status ${response.status}")
+
+    if (response.error != null) {
+      log.error("Error creating summary table: ${response.error})")
+    }
   }
 }

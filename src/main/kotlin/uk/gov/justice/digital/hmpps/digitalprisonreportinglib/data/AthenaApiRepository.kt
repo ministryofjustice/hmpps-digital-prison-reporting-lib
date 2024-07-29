@@ -65,7 +65,7 @@ class AthenaApiRepository(
   override fun executeQueryAsync(
     datasource: Datasource,
     tableId: String,
-    finalQuery: String,
+    query: String,
   ): StatementExecutionResponse {
     val queryExecutionContext = QueryExecutionContext.builder()
       .database(datasource.database)
@@ -75,11 +75,11 @@ class AthenaApiRepository(
       .outputLocation("s3://$s3location/$tableId/")
       .build()
     val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
-      .queryString(finalQuery)
+      .queryString(query)
       .queryExecutionContext(queryExecutionContext)
       .resultConfiguration(resultConfiguration)
       .build()
-    log.debug("Full async query: {}", finalQuery)
+    log.debug("Full async query: {}", query)
     val queryExecutionId = athenaClient
       .startQueryExecution(startQueryExecutionRequest).queryExecutionId()
     return StatementExecutionResponse(tableId, queryExecutionId)
@@ -166,10 +166,11 @@ class AthenaApiRepository(
   }
 
   override fun buildSummaryQuery(query: String, summaryTableId: String): String {
+    val escapedQuery = query.replace("'", "''")
     return """
           CREATE TABLE AwsDataCatalog.reports.$summaryTableId
           WITH (format = 'PARQUET') 
-          AS (SELECT * FROM TABLE(system.query(query => '$query')));
+          AS (SELECT * FROM TABLE(system.query(query => '$escapedQuery')));
     """
   }
 }
