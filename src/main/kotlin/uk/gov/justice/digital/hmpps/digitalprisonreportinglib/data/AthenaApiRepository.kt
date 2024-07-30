@@ -48,8 +48,8 @@ class AthenaApiRepository(
       buildFinalQuery(
         buildContextQuery(userToken),
         buildPromptsQuery(prompts),
-        buildReportQuery(productDefinition.reportDataset.query),
-        buildReportPrefilterQuery(productDefinition.report.filter),
+        buildDatasetQuery(productDefinition.reportDataset.query),
+        buildReportQuery(productDefinition.report.filter),
         buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition)),
         // The filters part will be replaced with the variables CTE
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
@@ -115,7 +115,7 @@ class AthenaApiRepository(
     return StatementCancellationResponse(true)
   }
 
-  override fun buildReportQuery(query: String) =
+  override fun buildDatasetQuery(query: String) =
     if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
   private fun buildPromptsQuery(prompts: Map<String, String>?): String {
@@ -138,13 +138,13 @@ class AthenaApiRepository(
   private fun buildFinalQuery(
     context: String,
     prompts: String,
+    datasetQuery: String,
     reportQuery: String,
-    reportPrefilterQuery: String,
     policiesQuery: String,
     filtersQuery: String,
     selectFromFinalStageQuery: String,
   ): String {
-    val query = listOf(context, prompts, reportQuery, reportPrefilterQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    val query = listOf(context, prompts, datasetQuery, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
     log.debug("Database query: $query")
     return query
   }

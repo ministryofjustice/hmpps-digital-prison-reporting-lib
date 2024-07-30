@@ -30,8 +30,8 @@ class ConfiguredApiRepository(
     // while in reality it is List<Map<String, Any?>>.
     val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
       buildFinalQuery(
-        reportQuery = buildReportQuery(query),
-        reportPrefilterQuery = buildReportPrefilterQuery(productDefinition.report.filter),
+        datasetQuery = buildDatasetQuery(query),
+        reportQuery = buildReportQuery(productDefinition.report.filter),
         policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition)),
         filtersQuery = buildFiltersQuery(filters),
         selectFromFinalStageQuery = buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
@@ -69,8 +69,8 @@ class ConfiguredApiRepository(
     val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
     return jdbcTemplate.queryForList(
       buildFinalQuery(
-        reportQuery = buildReportQuery(query),
-        reportPrefilterQuery = buildReportPrefilterQuery(productDefinition?.report?.filter),
+        datasetQuery = buildDatasetQuery(query),
+        reportQuery = buildReportQuery(productDefinition?.report?.filter),
         policiesQuery = buildPolicyQuery(policyEngineResult),
         filtersQuery = buildFiltersQuery(filters),
         selectFromFinalStageQuery = "SELECT COUNT(1) as total FROM $FILTER_",

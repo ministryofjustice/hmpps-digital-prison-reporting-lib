@@ -21,12 +21,12 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_PREFILTER_CTE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_REPORT_CTE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FILTER_
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.POLICY_
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PREFILTER_
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PROMPT
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.REPORT_
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
@@ -70,7 +70,7 @@ class AthenaApiRepositoryTest {
     whereClauseCondition: String? = TRUE_WHERE_CLAUSE,
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
-    prefilter: ReportFilter? = ReportFilter(name = PREFILTER_, query = DEFAULT_PREFILTER_CTE),
+    prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
   ) =
     """          CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
@@ -243,7 +243,7 @@ SELECT *
     whereClause: String? = TRUE_WHERE_CLAUSE,
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
-    reportFilter: ReportFilter? = ReportFilter(name = PREFILTER_, query = DEFAULT_PREFILTER_CTE),
+    reportFilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
   ): StartQueryExecutionRequest {
     val queryExecutionContext = QueryExecutionContext.builder()
       .database(testDb)

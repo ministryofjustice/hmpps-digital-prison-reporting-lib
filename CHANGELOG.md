@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 5.0.1
+Renamed prefilter_ CTE to report_ CTE.
+
 ## 5.0.0
 Added prefilter_ CTE to Redshift synchronous and asynchronous queries.
 
