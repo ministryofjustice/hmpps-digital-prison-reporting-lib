@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.apache.commons.lang3.time.StopWatch
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 
 @Service
 class ConfiguredApiRepository(
@@ -20,6 +21,7 @@ class ConfiguredApiRepository(
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
     dataSourceName: String,
+    productDefinition: SingleReportProductDefinition,
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
@@ -28,10 +30,11 @@ class ConfiguredApiRepository(
     // while in reality it is List<Map<String, Any?>>.
     val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
       buildFinalQuery(
-        buildReportQuery(query),
-        buildPolicyQuery(policyEngineResult),
-        buildFiltersQuery(filters),
-        buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
+        reportQuery = buildReportQuery(query),
+        reportPrefilterQuery = buildReportPrefilterQuery(productDefinition.report.filter),
+        policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition)),
+        filtersQuery = buildFiltersQuery(filters),
+        selectFromFinalStageQuery = buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
       ) + ";",
       buildPreparedStatementNamedParams(filters),
     )
@@ -61,14 +64,16 @@ class ConfiguredApiRepository(
     reportId: String,
     policyEngineResult: String,
     dataSourceName: String,
+    productDefinition: SingleReportProductDefinition,
   ): Long {
     val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
     return jdbcTemplate.queryForList(
       buildFinalQuery(
-        buildReportQuery(query),
-        buildPolicyQuery(policyEngineResult),
-        buildFiltersQuery(filters),
-        "SELECT COUNT(1) as total FROM $FILTER_",
+        reportQuery = buildReportQuery(query),
+        reportPrefilterQuery = buildReportPrefilterQuery(productDefinition?.report?.filter),
+        policiesQuery = buildPolicyQuery(policyEngineResult),
+        filtersQuery = buildFiltersQuery(filters),
+        selectFromFinalStageQuery = "SELECT COUNT(1) as total FROM $FILTER_",
       ) + ";",
       buildPreparedStatementNamedParams(filters),
     ).first()?.get("total") as Long

@@ -6,6 +6,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.mockito.Mockito.RETURNS_DEEP_STUBS
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -37,6 +40,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import java.time.LocalDateTime
@@ -62,7 +68,8 @@ class ConfiguredApiRepositoryTest {
       "JOIN datamart.domain.prisoner_prisoner as prisoners\n" +
       "ON movements.prisoner = prisoners.id"
 
-    const val REPOSITORY_TEST_POLICY_ENGINE_RESULT = "(origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')"
+    const val REPOSITORY_TEST_POLICY_ENGINE_RESULT =
+      "(origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')"
     const val REPOSITORY_TEST_DATASOURCE_NAME = "datamart"
 
     @JvmStatic
@@ -71,6 +78,8 @@ class ConfiguredApiRepositoryTest {
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
     }
   }
+
+  val productDefinition = mock<SingleReportProductDefinition>()
 
   @Autowired
   lateinit var externalMovementRepository: ExternalMovementRepository
@@ -83,6 +92,7 @@ class ConfiguredApiRepositoryTest {
 
   @BeforeEach
   fun setup() {
+    whenever(productDefinition.report).thenReturn(mock<Report>())
     allExternalMovements.forEach {
       externalMovementRepository.save(it)
     }
@@ -103,6 +113,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(listOf(movementPrisoner3, movementPrisoner4), actual)
     Assertions.assertEquals(2, actual.size)
@@ -120,6 +131,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(listOf(movementPrisoner5), actual)
     Assertions.assertEquals(1, actual.size)
@@ -137,9 +149,48 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(listOf(movementPrisoner1, movementPrisoner2, movementPrisoner3, movementPrisoner4, movementPrisoner5), actual)
     Assertions.assertEquals(5, actual.size)
+  }
+
+  @Test
+  fun `should return 4 rows after applying the report filter`() {
+    val productDefinition = mock<SingleReportProductDefinition>(defaultAnswer = RETURNS_DEEP_STUBS)
+    val reportFilter = ReportFilter(
+      name = "prefilter_",
+      query = """
+        prefilter_ AS (
+        SELECT reason, destination_code, destination, origin_code, origin, type, direction, date, name, prisonNumber  
+        FROM dataset_
+        WHERE name='LastName1, F' OR name='LastName5, F')
+        """
+        .trimIndent(),
+    )
+    whenever(productDefinition.report.filter).thenReturn(reportFilter)
+    val actual = configuredApiRepository.executeQuery(
+      query = REPOSITORY_TEST_QUERY,
+      filters = emptyList(),
+      selectedPage = 1,
+      pageSize = 5,
+      sortColumn = "date",
+      sortedAsc = true,
+      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
+      policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
+    )
+    Assertions.assertEquals(
+      listOf(
+        movementPrisoner1,
+        movementPrisoner2,
+        movementPrisoner4,
+        movementPrisoner5,
+      ),
+      actual,
+    )
+    Assertions.assertEquals(4, actual.size)
   }
 
   @Test
@@ -154,6 +205,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -170,6 +222,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -228,6 +281,7 @@ class ConfiguredApiRepositoryTest {
         reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+        productDefinition = productDefinition,
       )
     }
     Assertions.assertEquals(1, actual.size)
@@ -245,6 +299,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(5, actual.size)
   }
@@ -261,6 +316,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -277,6 +333,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -293,6 +350,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -309,6 +367,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -325,6 +384,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3), actual)
   }
@@ -341,6 +401,7 @@ class ConfiguredApiRepositoryTest {
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(listOf(movementPrisoner2, movementPrisoner1), actual)
   }
@@ -357,6 +418,7 @@ class ConfiguredApiRepositoryTest {
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -373,6 +435,7 @@ class ConfiguredApiRepositoryTest {
       EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -395,6 +458,7 @@ class ConfiguredApiRepositoryTest {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dynamicFilterFieldId = setOf(NAME),
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(
       listOf(
@@ -422,6 +486,7 @@ class ConfiguredApiRepositoryTest {
         policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
         dynamicFilterFieldId = setOf(NAME, PRISON_NUMBER),
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+        productDefinition = productDefinition,
       )
       Assertions.assertEquals(
         listOf(
@@ -455,6 +520,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -471,6 +537,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -487,6 +554,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -503,13 +571,15 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
 
   @Test
   fun `should not throw an error when some columns are null`() {
-    val policyEngineResult = "(origin_code IN ('BOLTCC') AND lower(direction)='out') OR (destination_code IN ('BOLTCC') AND lower(direction)='in')"
+    val policyEngineResult =
+      "(origin_code IN ('BOLTCC') AND lower(direction)='out') OR (destination_code IN ('BOLTCC') AND lower(direction)='in')"
     val externalMovementNullValues = ExternalMovementEntity(
       6,
       9846,
@@ -550,6 +620,7 @@ class ConfiguredApiRepositoryTest {
         reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+        productDefinition = productDefinition,
       )
       Assertions.assertEquals(listOf(movementPrisonerNullValues), actual)
       Assertions.assertEquals(1, actual.size)
@@ -562,7 +633,8 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return only the rows whose origin code is in the caseloads list and its direction is "Out" or the destination code is in the caseloads list and its direction is "IN" for external-movements`() {
     try {
-      val policyEngineResult = "(origin_code IN ('LWSTMC') AND lower(direction)='out') OR (destination_code IN ('LWSTMC') AND lower(direction)='in')"
+      val policyEngineResult =
+        "(origin_code IN ('LWSTMC') AND lower(direction)='out') OR (destination_code IN ('LWSTMC') AND lower(direction)='in')"
       externalMovementRepository.save(externalMovementOriginCaseloadDirectionIn)
       externalMovementRepository.save(externalMovementDestinationCaseloadDirectionOut)
       externalMovementRepository.save(externalMovementDestinationCaseloadDirectionIn)
@@ -579,6 +651,7 @@ class ConfiguredApiRepositoryTest {
         reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+        productDefinition = productDefinition,
       )
       Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerDestinationCaseloadDirectionIn), actual)
       Assertions.assertEquals(2, actual.size)
@@ -604,6 +677,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = POLICY_DENY,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
@@ -621,6 +695,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = POLICY_DENY,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
@@ -638,6 +713,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = PolicyResult.POLICY_PERMIT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(5, actual.size)
   }
@@ -650,6 +726,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(5L, actual)
   }
@@ -662,6 +739,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(4L, actual)
   }
@@ -674,6 +752,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(1L, actual)
   }
@@ -686,6 +765,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(2, actual)
   }
@@ -698,6 +778,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(1, actual)
   }
@@ -710,6 +791,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(2, actual)
   }
@@ -722,6 +804,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(0, actual)
   }
@@ -734,6 +817,7 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(0, actual)
   }
@@ -746,11 +830,16 @@ class ConfiguredApiRepositoryTest {
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      productDefinition = productDefinition,
     )
     Assertions.assertEquals(0, actual)
   }
 
-  private fun assertExternalMovements(sortColumn: String, expectedForAscending: Map<String, Any>, expectedForDescending: Map<String, Any>): List<DynamicTest> {
+  private fun assertExternalMovements(
+    sortColumn: String,
+    expectedForAscending: Map<String, Any>,
+    expectedForDescending: Map<String, Any>,
+  ): List<DynamicTest> {
     return listOf(
       true to listOf(expectedForAscending),
       false to listOf(expectedForDescending),
@@ -767,6 +856,7 @@ class ConfiguredApiRepositoryTest {
             reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
             policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
             dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+            productDefinition = productDefinition,
           )
           Assertions.assertEquals(expected, actual)
           Assertions.assertEquals(1, actual.size)
@@ -913,15 +1003,70 @@ class ConfiguredApiRepositoryTest {
     const val DESTINATION_CODE = "DESTINATION_CODE"
     const val REASON = "REASON"
 
-    val movementPrisoner1 = mapOf(PRISON_NUMBER to "G2504UV", NAME to "LastName1, F", DATE to externalMovement1.time, DIRECTION to "In", TYPE to "Admission", ORIGIN to "KINGSTON (HMP)", ORIGIN_CODE to "PTI", DESTINATION to "THORN CROSS (HMPYOI)", DESTINATION_CODE to "TCI", REASON to "Unconvicted Remand")
+    val movementPrisoner1 = mapOf(
+      PRISON_NUMBER to "G2504UV",
+      NAME to "LastName1, F",
+      DATE to externalMovement1.time,
+      DIRECTION to "In",
+      TYPE to "Admission",
+      ORIGIN to "KINGSTON (HMP)",
+      ORIGIN_CODE to "PTI",
+      DESTINATION to "THORN CROSS (HMPYOI)",
+      DESTINATION_CODE to "TCI",
+      REASON to "Unconvicted Remand",
+    )
 
-    val movementPrisoner2 = mapOf(PRISON_NUMBER to "G2927UV", NAME to "LastName1, F", DATE to externalMovement2.time, DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Leicester Crown Court", ORIGIN_CODE to "LEICCC", DESTINATION to "LEICESTER (HMP)", DESTINATION_CODE to "LCI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner2 = mapOf(
+      PRISON_NUMBER to "G2927UV",
+      NAME to "LastName1, F",
+      DATE to externalMovement2.time,
+      DIRECTION to "In",
+      TYPE to "Transfer",
+      ORIGIN to "Leicester Crown Court",
+      ORIGIN_CODE to "LEICCC",
+      DESTINATION to "LEICESTER (HMP)",
+      DESTINATION_CODE to "LCI",
+      REASON to "Transfer In from Other Establishment",
+    )
 
-    val movementPrisoner3 = mapOf(PRISON_NUMBER to "G3418VR", NAME to "LastName3, F", DATE to externalMovement3.time, DIRECTION to "In", TYPE to "Transfer", ORIGIN to "BEDFORD (HMP)", ORIGIN_CODE to "BFI", DESTINATION to "NORTH SEA CAMP (HMP)", DESTINATION_CODE to "NSI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner3 = mapOf(
+      PRISON_NUMBER to "G3418VR",
+      NAME to "LastName3, F",
+      DATE to externalMovement3.time,
+      DIRECTION to "In",
+      TYPE to "Transfer",
+      ORIGIN to "BEDFORD (HMP)",
+      ORIGIN_CODE to "BFI",
+      DESTINATION to "NORTH SEA CAMP (HMP)",
+      DESTINATION_CODE to "NSI",
+      REASON to "Transfer In from Other Establishment",
+    )
 
-    val movementPrisoner4 = mapOf(PRISON_NUMBER to "G3411VR", NAME to "LastName5, F", DATE to externalMovement4.time, DIRECTION to "Out", TYPE to "Transfer", ORIGIN to "Lowestoft (North East Suffolk) Magistrat", ORIGIN_CODE to "LWSTMC", DESTINATION to "WANDSWORTH (HMP)", DESTINATION_CODE to "WWI", REASON to "Transfer Out to Other Establishment")
+    val movementPrisoner4 = mapOf(
+      PRISON_NUMBER to "G3411VR",
+      NAME to "LastName5, F",
+      DATE to externalMovement4.time,
+      DIRECTION to "Out",
+      TYPE to "Transfer",
+      ORIGIN to "Lowestoft (North East Suffolk) Magistrat",
+      ORIGIN_CODE to "LWSTMC",
+      DESTINATION to "WANDSWORTH (HMP)",
+      DESTINATION_CODE to "WWI",
+      REASON to "Transfer Out to Other Establishment",
+    )
 
-    val movementPrisoner5 = mapOf(PRISON_NUMBER to "G3154UG", NAME to "LastName5, F", DATE to externalMovement5.time, DIRECTION to "In", TYPE to "Transfer", ORIGIN to "Bolton Crown Court", ORIGIN_CODE to "BOLTCC", DESTINATION to "HMP HEWELL", DESTINATION_CODE to "HEI", REASON to "Transfer In from Other Establishment")
+    val movementPrisoner5 = mapOf(
+      PRISON_NUMBER to "G3154UG",
+      NAME to "LastName5, F",
+      DATE to externalMovement5.time,
+      DIRECTION to "In",
+      TYPE to "Transfer",
+      ORIGIN to "Bolton Crown Court",
+      ORIGIN_CODE to "BOLTCC",
+      DESTINATION to "HMP HEWELL",
+      DESTINATION_CODE to "HEI",
+      REASON to "Transfer In from Other Establishment",
+    )
 
     val movementPrisonerOriginCaseloadDirectionIn = mapOf(
       PRISON_NUMBER to "W2505GF",

@@ -92,6 +92,7 @@ class ConfiguredApiService(
         policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = productDefinition.datasource.name,
+        productDefinition = productDefinition,
       )
       .let { records ->
         applyFormulasSelectivelyAndFormatColumns(
@@ -262,6 +263,7 @@ class ConfiguredApiService(
         reportId = reportId,
         policyEngineResult = policyEngine.execute(),
         dataSourceName = productDefinition.datasource.name,
+        productDefinition = productDefinition,
       ),
     )
   }
