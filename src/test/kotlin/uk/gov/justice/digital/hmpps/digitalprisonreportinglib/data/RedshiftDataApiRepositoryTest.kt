@@ -341,6 +341,7 @@ SELECT *
       redshiftDataClient,
       tableIdGenerator,
       datasetHelper,
+      redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
