@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -12,6 +14,8 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDateTime
 
 @Testcontainers
@@ -105,6 +109,8 @@ class ConfiguredApiRepositoryTestContainersTest {
         ConfiguredApiRepositoryTest.AllMovementPrisoners.REASON.lowercase() to "Transfer In from Other Establishment",
         "is_closed" to true,
       )
+      val productDefinition = mock<SingleReportProductDefinition>()
+      whenever(productDefinition.report).thenReturn(mock<Report>())
       val actual = configuredApiRepository.executeQuery(
         query,
         listOf(ConfiguredApiRepository.Filter("is_closed", "true", RepositoryHelper.FilterType.BOOLEAN)),
@@ -115,6 +121,7 @@ class ConfiguredApiRepositoryTestContainersTest {
         EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
+        productDefinition = productDefinition,
       )
       Assertions.assertEquals(listOf(movementPrisoner), actual)
     } finally {

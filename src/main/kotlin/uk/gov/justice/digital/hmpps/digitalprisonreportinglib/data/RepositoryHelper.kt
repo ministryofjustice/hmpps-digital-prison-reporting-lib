@@ -7,6 +7,8 @@ import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import java.sql.Timestamp
 import javax.sql.DataSource
@@ -56,16 +58,25 @@ abstract class RepositoryHelper {
 
   protected fun buildFinalQuery(
     reportQuery: String,
+    reportPrefilterQuery: String,
     policiesQuery: String,
     filtersQuery: String,
     selectFromFinalStageQuery: String,
   ): String {
-    val query = listOf(reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    val query = listOf(reportQuery, reportPrefilterQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
     log.debug("Database query: $query")
     return query
   }
 
   protected open fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
+
+  protected fun buildReportPrefilterQuery(filter: ReportFilter?): String {
+    return filter?.query ?: DEFAULT_PREFILTER_CTE
+  }
+
+  protected fun determinePreviousCteName(productDefinition: SingleReportProductDefinition) =
+    productDefinition.report.filter?.name ?: PREFILTER_
+
   protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) =
     """$POLICY_ AS (SELECT * FROM $previousCteName WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
   protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) =

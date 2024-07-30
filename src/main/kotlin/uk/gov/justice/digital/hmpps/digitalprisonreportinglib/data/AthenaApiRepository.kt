@@ -11,7 +11,6 @@ import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -118,13 +117,6 @@ class AthenaApiRepository(
 
   override fun buildReportQuery(query: String) =
     if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
-
-  private fun determinePreviousCteName(productDefinition: SingleReportProductDefinition) =
-    productDefinition.report.filter?.name ?: PREFILTER_
-
-  private fun buildReportPrefilterQuery(filter: ReportFilter?): String {
-    return filter?.query ?: DEFAULT_PREFILTER_CTE
-  }
 
   private fun buildPromptsQuery(prompts: Map<String, String>?): String {
     if (prompts.isNullOrEmpty()) {
