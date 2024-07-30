@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
 ## 5.0.0
-Added prefilter_ CTE to Redshift synchronous and asynchronous queries. 
+Added prefilter_ CTE to Redshift synchronous and asynchronous queries.
+
+## 4.12.2
+Create summary table synchronously via normal datasource.
 
 ## 4.12.1
 Add summary table creation logging and fix issue with quotes in query.

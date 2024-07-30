@@ -24,7 +24,7 @@ class AthenaApiRepository(
   val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : AthenaAndRedshiftCommonRepository(tableIdGenerator) {
+) : AthenaAndRedshiftCommonRepository() {
 
   override fun executeQueryAsync(
     productDefinition: SingleReportProductDefinition,
@@ -165,14 +165,5 @@ class AthenaApiRepository(
         completion.minusMillis(submission.toEpochMilli()).toEpochMilli() * 1000000
       } ?: 0
     } ?: 0
-  }
-
-  override fun buildSummaryQuery(query: String, summaryTableId: String): String {
-    val escapedQuery = query.replace("'", "''")
-    return """
-          CREATE TABLE AwsDataCatalog.reports.$summaryTableId
-          WITH (format = 'PARQUET') 
-          AS (SELECT * FROM TABLE(system.query(query => '$escapedQuery')));
-    """
   }
 }

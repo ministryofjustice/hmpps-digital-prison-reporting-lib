@@ -169,7 +169,7 @@ class ConfiguredApiService(
     )
   }
 
-  suspend fun getSummaryResult(
+  fun getSummaryResult(
     tableId: String,
     summaryId: String,
     reportId: String,
@@ -182,7 +182,6 @@ class ConfiguredApiService(
       ?: throw ValidationException("Invalid summary ID: $summaryId")
 
     val dataset = datasetHelper.findDataset(productDefinition.allDatasets, summary.dataset)
-    val requestRepo = getRepo(productDefinition)
     val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
     // Request data from the summary table.
@@ -191,7 +190,7 @@ class ConfiguredApiService(
       redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } catch (e: UncategorizedSQLException) {
       if (e.message?.contains("Entity Not Found") == true) {
-        requestRepo.createSummaryTable(productDefinition.datasource, tableId, summaryId, dataset)
+        configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query, productDefinition.datasource.name)
         redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
       } else {
         throw e

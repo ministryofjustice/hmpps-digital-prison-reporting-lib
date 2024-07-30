@@ -23,12 +23,13 @@ class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
   private val tableIdGenerator: TableIdGenerator,
   private val datasetHelper: DatasetHelper,
+  private val redShiftSummaryTableHelper: RedShiftSummaryTableHelper,
   @Value("\${dpr.lib.redshiftdataapi.database:db}") private val redshiftDataApiDb: String,
   @Value("\${dpr.lib.redshiftdataapi.clusterid:clusterId}") private val redshiftDataApiClusterId: String,
   @Value("\${dpr.lib.redshiftdataapi.secretarn:arn}") private val redshiftDataApiSecretArn: String,
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String = "dpr-working-development/reports",
-) : AthenaAndRedshiftCommonRepository(tableIdGenerator) {
+) : AthenaAndRedshiftCommonRepository() {
   override fun executeQueryAsync(
     productDefinition: SingleReportProductDefinition,
     filters: List<ConfiguredApiRepository.Filter>,
@@ -116,29 +117,19 @@ class RedshiftDataApiRepository(
 
   fun buildSummaryQueries(productDefinition: SingleReportProductDefinition, tableId: String): String {
     return productDefinition.report.summary?.joinToString(" ") {
-      val summaryTableId = tableIdGenerator.getTableSummaryId(tableId, it.id)
       val query = datasetHelper.findDataset(productDefinition.allDatasets, it.dataset).query
-      val substitutedQuery = query.replace(TABLE_TOKEN_NAME, "reports.$tableId")
 
-      buildSummaryQuery(
-        substitutedQuery,
-        summaryTableId,
+      redShiftSummaryTableHelper.buildSummaryQuery(
+        query,
+        tableId,
+        it.id,
       )
     } ?: ""
   }
 
-  override fun buildSummaryQuery(query: String, summaryTableId: String): String {
-    return """
-          CREATE EXTERNAL TABLE reports.$summaryTableId 
-          STORED AS parquet 
-          LOCATION 's3://$s3location/$summaryTableId/' 
-          AS ($query);
-    """
-  }
-
   fun getFullExternalTableResult(
     tableId: String,
-    jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate(),
+    jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate
@@ -154,7 +145,7 @@ class RedshiftDataApiRepository(
     return result
   }
 
-  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateJdbcTemplate()): Long {
+  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Long {
     return jdbcTemplate.queryForList(
       "SELECT COUNT(1) as total FROM reports.$tableId;",
       MapSqlParameterSource(),

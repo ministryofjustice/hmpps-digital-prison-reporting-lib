@@ -4,6 +4,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -28,14 +29,23 @@ abstract class RepositoryHelper {
     const val PROMPT = """prompt_"""
     const val CONTEXT = """context_"""
 
-    const val TABLE_TOKEN_NAME = "\${tableId}"
     const val DEFAULT_PREFILTER_CTE = "prefilter_ AS (SELECT * FROM dataset_)"
   }
 
   @Autowired
   lateinit var context: ApplicationContext
 
-  protected fun populateJdbcTemplate(dataSourceName: String? = null): NamedParameterJdbcTemplate {
+  protected fun populateNamedParameterJdbcTemplate(dataSourceName: String? = null): NamedParameterJdbcTemplate {
+    val dataSource = findDataSource(dataSourceName)
+    return NamedParameterJdbcTemplate(dataSource)
+  }
+
+  protected fun populateJdbcTemplate(dataSourceName: String? = null): JdbcTemplate {
+    val dataSource = findDataSource(dataSourceName)
+    return JdbcTemplate(dataSource)
+  }
+
+  private fun findDataSource(dataSourceName: String?): DataSource {
     val dataSource = if (dataSourceName == null) {
       context.getBean(DataSource::class.java) as DataSource
     } else if (context.containsBean(dataSourceName)) {
@@ -44,8 +54,7 @@ abstract class RepositoryHelper {
       log.warn("No DataSource Bean found with name: {}", dataSourceName)
       context.getBean(DataSource::class.java) as DataSource
     }
-
-    return NamedParameterJdbcTemplate(dataSource)
+    return dataSource
   }
 
   protected fun transformTimestampToLocalDateTime(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->

@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 
 @Service
-class ConfiguredApiRepository : RepositoryHelper() {
+class ConfiguredApiRepository(
+  private val redShiftSummaryTableHelper: RedShiftSummaryTableHelper,
+) : RepositoryHelper() {
 
   fun executeQuery(
     query: String,
@@ -22,7 +24,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
     productDefinition: SingleReportProductDefinition,
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
-    val jdbcTemplate = populateJdbcTemplate(dataSourceName)
+    val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
     // The result of the query can contain null values.
     // This is coming from Java and if the returned type is not specified in Kotlin it will assume it is List<Map<String, Any>>
     // while in reality it is List<Map<String, Any?>>.
@@ -64,7 +66,7 @@ class ConfiguredApiRepository : RepositoryHelper() {
     dataSourceName: String,
     productDefinition: SingleReportProductDefinition,
   ): Long {
-    val jdbcTemplate = populateJdbcTemplate(dataSourceName)
+    val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
     return jdbcTemplate.queryForList(
       buildFinalQuery(
         reportQuery = buildReportQuery(query),
@@ -83,6 +85,12 @@ class ConfiguredApiRepository : RepositoryHelper() {
     filters.filter { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.toBoolean()) }
     log.debug("Prepared statement named parameters: {}", preparedStatementNamedParams)
     return preparedStatementNamedParams
+  }
+
+  fun createSummaryTable(tableId: String, summaryId: String, query: String, dataSourceName: String) {
+    val jdbcTemplate = populateJdbcTemplate(dataSourceName)
+    val createTableQuery = redShiftSummaryTableHelper.buildSummaryQuery(query, tableId, summaryId)
+    jdbcTemplate.execute(createTableQuery)
   }
 
   data class Filter(

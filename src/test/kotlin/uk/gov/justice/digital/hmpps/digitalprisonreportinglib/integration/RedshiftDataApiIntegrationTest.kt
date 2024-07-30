@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.google.gson.Gson
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -274,7 +273,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the getSummaryResult endpoint calls the configuredApiService with the correct arguments`() = runTest {
+  fun `Calling the getSummaryResult endpoint calls the configuredApiService with the correct arguments`() {
     val tableId = "tableId"
     val summaryId = "summaryId"
     val expectedServiceResult =
