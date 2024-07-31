@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 5.0.3
+Added comment with DPD and report details to the Athena query.
+
 ## 5.0.2
 Fixed issue with format_date formula when the date columns had names other than 'date'. 
 
