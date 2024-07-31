@@ -19,9 +19,9 @@ import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementReques
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_PREFILTER_CTE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_REPORT_CTE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PREFILTER_
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.REPORT_
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -41,7 +41,7 @@ class RedshiftDataApiRepositoryTest {
     fun sqlStatement(
       tableId: String,
       prefilter: ReportFilter? =
-        ReportFilter(name = PREFILTER_, query = DEFAULT_PREFILTER_CTE),
+        ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
     ) =
       """
                   CREATE EXTERNAL TABLE reports.$tableId 
@@ -139,7 +139,7 @@ class RedshiftDataApiRepositoryTest {
           WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
 FROM datamart.domain.movement_movement as movements
 JOIN datamart.domain.prisoner_prisoner as prisoners
-ON movements.prisoner = prisoners.id),$DEFAULT_PREFILTER_CTE,policy_ AS (SELECT * FROM $PREFILTER_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE date >= CAST('$startDate' AS timestamp) AND date < (CAST('$endDate' AS timestamp) + INTERVAL '1' day) AND lower(direction) = 'out' AND name ILIKE 'LastNa%')
+ON movements.prisoner = prisoners.id),$DEFAULT_REPORT_CTE,policy_ AS (SELECT * FROM $REPORT_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE date >= CAST('$startDate' AS timestamp) AND date < (CAST('$endDate' AS timestamp) + INTERVAL '1' day) AND lower(direction) = 'out' AND name ILIKE 'LastNa%')
 SELECT *
           FROM filter_ ORDER BY date asc
           );
@@ -249,7 +249,7 @@ SELECT *
                   WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
         FROM datamart.domain.movement_movement as movements
         JOIN datamart.domain.prisoner_prisoner as prisoners
-        ON movements.prisoner = prisoners.id),$DEFAULT_PREFILTER_CTE,policy_ AS (SELECT * FROM $PREFILTER_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
+        ON movements.prisoner = prisoners.id),$DEFAULT_REPORT_CTE,policy_ AS (SELECT * FROM $REPORT_ WHERE (origin_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='out') OR (destination_code IN ('HEI','LWSTMC','NSI','LCI','TCI') AND lower(direction)='in')),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
         SELECT *
                   FROM filter_ ORDER BY date asc
                   );
@@ -304,7 +304,7 @@ SELECT *
                   WITH dataset_ AS (SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason
         FROM datamart.domain.movement_movement as movements
         JOIN datamart.domain.prisoner_prisoner as prisoners
-        ON movements.prisoner = prisoners.id),$DEFAULT_PREFILTER_CTE,policy_ AS (SELECT * FROM $PREFILTER_ WHERE $queryWhereClause),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
+        ON movements.prisoner = prisoners.id),$DEFAULT_REPORT_CTE,policy_ AS (SELECT * FROM $REPORT_ WHERE $queryWhereClause),filter_ AS (SELECT * FROM policy_ WHERE $TRUE_WHERE_CLAUSE)
         SELECT *
                   FROM filter_ ORDER BY date asc
                   );
@@ -346,12 +346,12 @@ SELECT *
       REDSHIFT_DATA_API_CLUSTER_ID,
       REDSHIFT_DATA_API_SECRET_ARN,
     )
-    val prefilterQuery = "prefilter_ AS (SELECT * FROM dataset_ WHERE 1=1)"
+    val reportQuery = "report_ AS (SELECT * FROM dataset_ WHERE 1=1)"
     val executeStatementRequest = ExecuteStatementRequest.builder()
       .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
       .database(REDSHIFT_DATA_API_DB)
       .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
-      .sql(sqlStatement(tableId = TABLE_ID, prefilter = ReportFilter(name = PREFILTER_, query = prefilterQuery)))
+      .sql(sqlStatement(tableId = TABLE_ID, prefilter = ReportFilter(name = REPORT_, query = reportQuery)))
       .build()
 
     whenever(
@@ -360,7 +360,7 @@ SELECT *
       ),
     ).thenReturn(executeStatementResponse)
 
-    whenever(report.filter).thenReturn(ReportFilter(name = PREFILTER_, query = prefilterQuery))
+    whenever(report.filter).thenReturn(ReportFilter(name = REPORT_, query = reportQuery))
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
       productDefinition = productDefinition,

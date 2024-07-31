@@ -23,13 +23,13 @@ abstract class RepositoryHelper {
     const val FALSE_WHERE_CLAUSE = "0=1"
 
     const val DATASET_ = """dataset_"""
-    const val PREFILTER_ = """prefilter_"""
+    const val REPORT_ = """report_"""
     const val POLICY_ = """policy_"""
     const val FILTER_ = """filter_"""
     const val PROMPT = """prompt_"""
     const val CONTEXT = """context_"""
 
-    const val DEFAULT_PREFILTER_CTE = "prefilter_ AS (SELECT * FROM dataset_)"
+    const val DEFAULT_REPORT_CTE = "report_ AS (SELECT * FROM dataset_)"
   }
 
   @Autowired
@@ -66,25 +66,25 @@ abstract class RepositoryHelper {
   }
 
   protected fun buildFinalQuery(
+    datasetQuery: String,
     reportQuery: String,
-    reportPrefilterQuery: String,
     policiesQuery: String,
     filtersQuery: String,
     selectFromFinalStageQuery: String,
   ): String {
-    val query = listOf(reportQuery, reportPrefilterQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    val query = listOf(datasetQuery, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
     log.debug("Database query: $query")
     return query
   }
 
-  protected open fun buildReportQuery(query: String) = """WITH $DATASET_ AS ($query)"""
+  protected open fun buildDatasetQuery(query: String) = """WITH $DATASET_ AS ($query)"""
 
-  protected fun buildReportPrefilterQuery(filter: ReportFilter?): String {
-    return filter?.query ?: DEFAULT_PREFILTER_CTE
+  protected fun buildReportQuery(filter: ReportFilter?): String {
+    return filter?.query ?: DEFAULT_REPORT_CTE
   }
 
   protected fun determinePreviousCteName(productDefinition: SingleReportProductDefinition) =
-    productDefinition.report.filter?.name ?: PREFILTER_
+    productDefinition.report.filter?.name ?: REPORT_
 
   protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) =
     """$POLICY_ AS (SELECT * FROM $previousCteName WHERE ${convertPolicyResultToSql(policyEngineResult)})"""

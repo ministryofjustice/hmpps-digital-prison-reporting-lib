@@ -159,9 +159,9 @@ class ConfiguredApiRepositoryTest {
   fun `should return 4 rows after applying the report filter`() {
     val productDefinition = mock<SingleReportProductDefinition>(defaultAnswer = RETURNS_DEEP_STUBS)
     val reportFilter = ReportFilter(
-      name = "prefilter_",
+      name = "report_",
       query = """
-        prefilter_ AS (
+        report_ AS (
         SELECT reason, destination_code, destination, origin_code, origin, type, direction, date, name, prisonNumber  
         FROM dataset_
         WHERE name='LastName1, F' OR name='LastName5, F')
