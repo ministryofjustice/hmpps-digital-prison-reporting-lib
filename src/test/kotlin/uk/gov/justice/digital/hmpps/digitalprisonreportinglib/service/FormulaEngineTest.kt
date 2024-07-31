@@ -396,6 +396,38 @@ class FormulaEngineTest {
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    "dd/MM/yyyy, 01/06/2023",
+    "dd/MM/yyyy hh:mm, 01/06/2023 12:00",
+  )
+  fun `Formula engine formats the datetime based on the provided format in the format_date formula regardless of the date column name`(dateFormat: String, expectedDate: String) {
+    val formatDateFormula = "format_date(\${date1}, '$dateFormat')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      "date1" to externalMovementOriginCaseloadDirectionIn.time,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:date1",
+        display = "Date",
+        visible = Visible.TRUE,
+        formula = formatDateFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      "date1" to expectedDate,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
   @Test
   fun `Formula engine formats the date based on the provided format in the format_date formula`() {
     val formatDateFormula = "format_date(\${date}, 'dd/MM/yyyy')"
