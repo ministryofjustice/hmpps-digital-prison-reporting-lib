@@ -72,7 +72,8 @@ class AthenaApiRepositoryTest {
     datasetCte: String? = defaultDatasetCte,
     prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
   ) =
-    """          CREATE TABLE AwsDataCatalog.reports.$tableId 
+    """          /* dpdId dpdName reportId reportName */
+          CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
           ) 
@@ -270,9 +271,13 @@ SELECT *
     ).thenReturn(
       tableId,
     )
+    whenever(productDefinition.id).thenReturn("dpdId")
+    whenever(productDefinition.name).thenReturn("dpdName")
     whenever(productDefinition.reportDataset).thenReturn(dataset)
     whenever(productDefinition.datasource).thenReturn(datasource)
     whenever(productDefinition.report).thenReturn(report)
+    whenever(productDefinition.report.id).thenReturn("reportId")
+    whenever(productDefinition.report.name).thenReturn("reportName")
     whenever(productDefinition.report.filter).thenReturn(reportFilter)
     whenever(datasource.database).thenReturn(testDb)
     whenever(datasource.catalog).thenReturn(testCatalog)

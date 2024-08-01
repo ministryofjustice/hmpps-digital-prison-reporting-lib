@@ -38,6 +38,7 @@ class AthenaApiRepository(
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val finalQuery = """
+          /* ${productDefinition.id} ${productDefinition.name} ${productDefinition.report.id} ${productDefinition.report.name} */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
