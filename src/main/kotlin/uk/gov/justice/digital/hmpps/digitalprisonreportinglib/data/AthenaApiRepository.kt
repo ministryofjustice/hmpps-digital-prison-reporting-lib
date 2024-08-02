@@ -7,7 +7,6 @@ import software.amazon.awssdk.services.athena.model.AthenaError
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.QueryExecutionContext
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
-import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
@@ -22,8 +21,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 class AthenaApiRepository(
   val athenaClient: AthenaClient,
   val tableIdGenerator: TableIdGenerator,
-  @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
-  private val s3location: String = "dpr-working-development/reports",
+  @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn")
+  private val athenaWorkgroup: String,
 ) : AthenaAndRedshiftCommonRepository() {
 
   override fun executeQueryAsync(
@@ -73,13 +72,10 @@ class AthenaApiRepository(
       .database(datasource.database)
       .catalog(datasource.catalog)
       .build()
-    val resultConfiguration = ResultConfiguration.builder()
-      .outputLocation("s3://$s3location/$tableId/")
-      .build()
     val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
       .queryString(query)
       .queryExecutionContext(queryExecutionContext)
-      .resultConfiguration(resultConfiguration)
+      .workGroup(athenaWorkgroup)
       .build()
     log.debug("Full async query: {}", query)
     val queryExecutionId = athenaClient

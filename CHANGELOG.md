@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 5.1.0
+Athena queries use a workgroup.
+
 ## 5.0.3
 Added comment with DPD and report details to the Athena query.
 

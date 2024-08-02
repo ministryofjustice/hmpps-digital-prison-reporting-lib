@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.athena.model.GetQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.QueryExecution
 import software.amazon.awssdk.services.athena.model.QueryExecutionContext
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
-import software.amazon.awssdk.services.athena.model.ResultConfiguration
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
@@ -51,6 +50,7 @@ class AthenaApiRepositoryTest {
     val executionId = "someId"
     val testDb = "testdb"
     val testCatalog = "testcatalog"
+    val athenaWorkgroup = "athenaWorkgroup"
     val dpdQuery = "SELECT column_a,column_b FROM schema_a.table_a"
     val defaultDatasetCte = "dataset_ AS (SELECT column_a,column_b FROM schema_a.table_a)"
     val emptyPromptsCte = "$PROMPT AS (SELECT '''' FROM DUAL)"
@@ -92,6 +92,7 @@ SELECT *
   private val athenaApiRepository = AthenaApiRepository(
     athenaClient,
     tableIdGenerator,
+    athenaWorkgroup,
   )
   private val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
   private val dataset = mock<Dataset>()
@@ -250,9 +251,6 @@ SELECT *
       .database(testDb)
       .catalog(testCatalog)
       .build()
-    val resultConfiguration = ResultConfiguration.builder()
-      .outputLocation("s3://dpr-working-development/reports/$tableId/")
-      .build()
     val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
       .queryString(
         sqlStatement(
@@ -264,7 +262,7 @@ SELECT *
         ),
       )
       .queryExecutionContext(queryExecutionContext)
-      .resultConfiguration(resultConfiguration)
+      .workGroup(athenaWorkgroup)
       .build()
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
