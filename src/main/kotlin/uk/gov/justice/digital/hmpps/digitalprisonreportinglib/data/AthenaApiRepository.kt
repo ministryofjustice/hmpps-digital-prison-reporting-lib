@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 class AthenaApiRepository(
   val athenaClient: AthenaClient,
   val tableIdGenerator: TableIdGenerator,
-  @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn")
+  @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   private val athenaWorkgroup: String,
 ) : AthenaAndRedshiftCommonRepository() {
 
