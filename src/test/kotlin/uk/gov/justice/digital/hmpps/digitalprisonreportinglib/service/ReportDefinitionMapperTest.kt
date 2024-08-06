@@ -728,6 +728,7 @@ class ReportDefinitionMapperTest {
         type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text,
         mandatory = true,
       ),
+      visible = false,
     )
     assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
     assertThat(matchingField.size).isEqualTo(1)
