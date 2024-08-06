@@ -154,7 +154,7 @@ class ReportDefinitionMapper(
       defaultsort = false,
       type = convertParameterTypeToFieldType(parameter.reportFieldType),
       mandatory = parameter.mandatory,
-      visible = true,
+      visible = false,
       filter = FilterDefinition(type = FilterType.valueOf(parameter.filterType.toString()), mandatory = parameter.mandatory),
     )
   }
