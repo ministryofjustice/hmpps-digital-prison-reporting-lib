@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -133,7 +134,7 @@ class ConfiguredApiService(
     )
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val (prompts, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition)
+    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition)
     return getRepo(productDefinition)
       .executeQueryAsync(
         productDefinition = productDefinition,
@@ -142,10 +143,24 @@ class ConfiguredApiService(
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
-        prompts = toMap(prompts),
+        prompts = buildPrompts(promptsMap, productDefinition),
         userToken = userToken,
       )
   }
+
+  private fun buildPrompts(
+    prompts: List<Map.Entry<String, String>>,
+    productDefinition: SingleReportProductDefinition,
+  ): List<Prompt> =
+    prompts.mapNotNull { entry ->
+      mapToMatchingParameter(productDefinition, entry)
+        ?.let { Prompt(entry.key, entry.value, it.filterType) }
+    }
+
+  private fun mapToMatchingParameter(
+    productDefinition: SingleReportProductDefinition,
+    entry: Map.Entry<String, String>,
+  ) = productDefinition.reportDataset.parameters?.firstOrNull { parameter -> parameter.name == entry.key }
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)

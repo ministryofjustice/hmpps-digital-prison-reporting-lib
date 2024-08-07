@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -124,7 +126,26 @@ SELECT *
   @Test
   fun `executeQueryAsync should map prompts to the prompt_ CTE correctly`() {
     val startQueryExecutionRequest = setupMocks(promptsCte = "$PROMPT AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
-    val prompts = mapOf("filterName1" to "filterValue1", "filterName2" to "filterValue2")
+    val prompts = listOf(Prompt("filterName1", "filterValue1", FilterType.Text), Prompt("filterName2", "filterValue2", FilterType.Text))
+    whenever(dataset.query).thenReturn(defaultDatasetCte)
+    val actual = athenaApiRepository.executeQueryAsync(
+      productDefinition = productDefinition,
+      filters = emptyList(),
+      sortColumn = "column_a",
+      sortedAsc = true,
+      policyEngineResult = POLICY_PERMIT,
+      prompts = prompts,
+      userToken = userToken,
+    )
+
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
+  }
+
+  @Test
+  fun `executeQueryAsync should map prompts to the prompt_ CTE correctly for date prompts`() {
+    val startQueryExecutionRequest = setupMocks(promptsCte = "$PROMPT AS (SELECT TO_DATE(''01/01/2023'',''yyyy-mm-dd'') AS start_date FROM DUAL)")
+    val prompts = listOf(Prompt("start_date", "01/01/2023", FilterType.Date))
     whenever(dataset.query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
       productDefinition = productDefinition,

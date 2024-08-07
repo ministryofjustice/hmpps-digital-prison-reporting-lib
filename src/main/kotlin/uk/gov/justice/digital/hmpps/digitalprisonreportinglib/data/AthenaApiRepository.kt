@@ -10,12 +10,14 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
 @Service
 class AthenaApiRepository(
@@ -32,7 +34,7 @@ class AthenaApiRepository(
     sortedAsc: Boolean,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
-    prompts: Map<String, String>?,
+    prompts: List<Prompt>?,
     userToken: DprAuthAwareAuthenticationToken?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
@@ -115,12 +117,19 @@ class AthenaApiRepository(
   override fun buildDatasetQuery(query: String) =
     if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
-  private fun buildPromptsQuery(prompts: Map<String, String>?): String {
+  private fun buildPromptsQuery(prompts: List<Prompt>?): String {
     if (prompts.isNullOrEmpty()) {
       return "$PROMPT AS (SELECT '' FROM DUAL)"
     }
-    val promptsCte = prompts.map { e -> "'${e.value}' AS ${e.key}" }.joinToString(", ")
+    val promptsCte = prompts.joinToString(", ") { prompt -> buildPromptsQueryBasedOnType(prompt) }
     return "$PROMPT AS (SELECT $promptsCte FROM DUAL)"
+  }
+
+  private fun buildPromptsQueryBasedOnType(prompt: Prompt): String {
+    return when (prompt.type) {
+      Date -> "TO_DATE('${prompt.value}','yyyy-mm-dd') AS ${prompt.name}"
+      else -> "'${prompt.value}' AS ${prompt.name}"
+    }
   }
 
   private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String =
