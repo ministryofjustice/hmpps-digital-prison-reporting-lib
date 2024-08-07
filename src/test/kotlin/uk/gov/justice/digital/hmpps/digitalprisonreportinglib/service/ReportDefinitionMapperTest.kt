@@ -720,7 +720,7 @@ class ReportDefinitionMapperTest {
       type = FieldType.String,
       name = parameterName,
       display = parameterDisplay,
-      mandatory = true,
+      mandatory = false,
       defaultsort = false,
       sortable = false,
       calculated = false,
