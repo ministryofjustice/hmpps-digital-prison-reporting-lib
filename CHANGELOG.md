@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 5.1.3
+Defaulted mandatory to false for the report fields generated from DPD parameters (prompts).
+
 ## 5.1.2
 Defaulted visible to false for the report fields generated from DPD parameters (prompts).
 
