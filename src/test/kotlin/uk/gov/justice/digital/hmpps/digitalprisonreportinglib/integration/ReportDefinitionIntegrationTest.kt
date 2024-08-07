@@ -848,7 +848,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "sortable": false,
                     "defaultsort": false,
                     "type": "string",
-                    "mandatory": true,
+                    "mandatory": false,
                     "visible": false,
                     "calculated": false
                   } 
