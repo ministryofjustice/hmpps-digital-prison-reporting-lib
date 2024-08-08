@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
 abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
 
@@ -24,7 +25,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     sortedAsc: Boolean,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
-    prompts: Map<String, String>? = null,
+    prompts: List<Prompt>? = null,
     userToken: DprAuthAwareAuthenticationToken? = null,
   ): StatementExecutionResponse
 

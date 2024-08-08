@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
@@ -59,6 +60,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.SQLException
 import java.time.LocalDateTime
 import java.util.UUID
@@ -1459,7 +1461,7 @@ class ConfiguredApiServiceTest {
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
-        prompts = emptyMap(),
+        prompts = emptyList(),
         userToken = authToken,
       ),
     ).thenReturn(statementExecutionResponse)
@@ -1472,7 +1474,7 @@ class ConfiguredApiServiceTest {
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
-      prompts = emptyMap(),
+      prompts = emptyList(),
       userToken = authToken,
     )
     assertEquals(statementExecutionResponse, actual)
@@ -1505,7 +1507,7 @@ class ConfiguredApiServiceTest {
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
-        prompts = emptyMap(),
+        prompts = emptyList(),
         userToken = authToken,
       ),
     ).thenReturn(statementExecutionResponse)
@@ -1518,7 +1520,7 @@ class ConfiguredApiServiceTest {
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
-      prompts = emptyMap(),
+      prompts = emptyList(),
       userToken = authToken,
     )
     verifyNoInteractions(redshiftDataApiRepository)
@@ -1631,7 +1633,7 @@ class ConfiguredApiServiceTest {
       parameterName to parameterValue,
     )
     val repositoryFilters = listOf(Filter("origin", "someOrigin", STANDARD))
-    val prompts = mapOf(parameterName to parameterValue)
+    val prompts = listOf(Prompt(parameterName, parameterValue, FilterType.Text))
     val sortColumn = "date"
     val sortedAsc = true
     val executionId = UUID.randomUUID().toString()
