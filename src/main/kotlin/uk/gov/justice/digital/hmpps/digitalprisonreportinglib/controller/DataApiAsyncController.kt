@@ -55,7 +55,8 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
     @RequestParam sortColumn: String?,
     @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     @Parameter(
-      description = FILTERS_QUERY_DESCRIPTION,
+      description = "$FILTERS_QUERY_DESCRIPTION Note: For legacy nomis and bodmis reports, for filters deriving from DPD parameters(prompts)," +
+        "there is no need for these to be suffixed with .start and .end. For example, filters.start_date and filters.end_date are perfectly valid in this case.",
       example = FILTERS_QUERY_EXAMPLE,
     )
     @RequestParam
