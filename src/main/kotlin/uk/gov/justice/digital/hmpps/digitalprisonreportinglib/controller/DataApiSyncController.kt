@@ -36,7 +36,7 @@ class DataApiSyncController(val configuredApiService: ConfiguredApiService, val 
     const val RANGE_FILTER_START_SUFFIX = ".start"
     const val RANGE_FILTER_END_SUFFIX = ".end"
     const val FILTERS_QUERY_DESCRIPTION = """The filter query parameters have to start with the prefix "$FILTERS_PREFIX" followed by the name of the filter.
-      |For range filters, like date for instance, these need to be followed by a $RANGE_FILTER_START_SUFFIX or $RANGE_FILTER_END_SUFFIX suffix accordingly.
+      For range filters, like date for instance, these need to be followed by a $RANGE_FILTER_START_SUFFIX or $RANGE_FILTER_END_SUFFIX suffix accordingly.
     """
     const val FILTERS_QUERY_EXAMPLE = """{
         "filters.date$RANGE_FILTER_START_SUFFIX": "2023-04-25",
