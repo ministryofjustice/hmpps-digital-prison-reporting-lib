@@ -3,6 +3,9 @@ Below you can find the changes included in each release.
 ## 5.1.4
 Wrapped date prompts in toDate function while constructing the prompt_ CTE and defaulted the format to yyyy-mm-dd.
 
+## 5.1.4
+Amended swagger documentation regarding the use of filters deriving from prompts in the async API.
+
 ## 5.1.3
 Defaulted mandatory to false for the report fields generated from DPD parameters (prompts).
 
