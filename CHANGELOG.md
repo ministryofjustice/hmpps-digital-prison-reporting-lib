@@ -1,5 +1,12 @@
 Below you can find the changes included in each release.
 
+## 6.0.0
+
+Update to: 
+- Java 21 (from 19)
+- HMPPS Kotlin plugin version 6 (from 5)
+- Gradle 8.10 (from 8.1)
+
 ## 5.1.5
 Amended swagger documentation regarding the use of filters deriving from prompts in the async API.
 
