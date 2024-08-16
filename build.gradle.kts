@@ -1,8 +1,7 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "5.15.6"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.2"
   kotlin("jvm") version "2.0.0"
   kotlin("plugin.spring") version "2.0.0"
   kotlin("plugin.jpa") version "1.9.23"
@@ -18,12 +17,11 @@ configurations {
 }
 
 dependencies {
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.0.4")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.11.0")
-  implementation("org.springframework.boot:spring-boot-starter-security")
-  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("com.google.guava:guava:33.2.1-jre")
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
   implementation("software.amazon.awssdk:redshiftdata:2.26.22")
@@ -43,19 +41,11 @@ dependencies {
 }
 
 java {
-  toolchain.languageVersion.set(JavaLanguageVersion.of(19))
-}
-
-tasks {
-  withType<KotlinCompile> {
-    kotlinOptions {
-      jvmTarget = "19"
-    }
-  }
+  toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 kotlin {
-  jvmToolchain(19)
+  jvmToolchain(21)
 }
 
 tasks.test {
@@ -110,7 +100,7 @@ signing {
   useInMemoryPgpKeys(signingKey, signingPassword)
   sign(publishing.publications["digitalprisonreportinglib"])
 }
-java.sourceCompatibility = JavaVersion.VERSION_19
+java.sourceCompatibility = JavaVersion.VERSION_21
 
 tasks.bootJar {
   enabled = false
@@ -138,12 +128,6 @@ fun isNonStable(version: String): Boolean {
 }
 
 tasks {
-  withType<KotlinCompile> {
-    kotlinOptions {
-      jvmTarget = "19"
-    }
-  }
-
   withType<Test> {
     useJUnitPlatform()
   }

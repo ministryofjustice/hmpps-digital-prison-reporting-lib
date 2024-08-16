@@ -218,7 +218,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .expectBody<SingleVariantReportDefinition>()
         .returnResult()
 
-      assertThat(result.responseBody).isNotNull
+      assertThat(result.responseBody as SingleVariantReportDefinition).isNotNull
 
       val definition = result.responseBody!!
 
