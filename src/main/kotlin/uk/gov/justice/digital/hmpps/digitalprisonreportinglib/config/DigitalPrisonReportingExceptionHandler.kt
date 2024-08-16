@@ -33,7 +33,6 @@ class DigitalPrisonReportingExceptionHandler {
     return respondWithTooManyRequests(e)
   }
 
-  @Suppress("TYPE_MISMATCH")
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
   fun handleTypeMismatch(e: Exception): ResponseEntity<ErrorResponse> {
     return respondWithBadRequest(e)
