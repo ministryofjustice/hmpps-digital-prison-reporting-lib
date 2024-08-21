@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.0.1
+Added some logging when there are no matching schema fields for the projected columns of the query.
+
 ## 6.0.0
 
 Update to: 
