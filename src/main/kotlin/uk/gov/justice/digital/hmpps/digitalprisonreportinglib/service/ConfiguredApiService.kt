@@ -431,6 +431,7 @@ class ConfiguredApiService(
   }
 
   private fun transformKey(key: String, fieldNames: List<String>): String {
-    return fieldNames.first { it.lowercase() == key.lowercase() }
+    return fieldNames.firstOrNull { it.lowercase() == key.lowercase() }
+      ?: throw ValidationException("The DPD is missing schema field: $key.")
   }
 }
