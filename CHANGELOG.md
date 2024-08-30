@@ -1,10 +1,12 @@
 Below you can find the changes included in each release.
 
+## 6.0.2
+Support for Sectioned Summary reports.
+
 ## 6.0.1
 Added some logging when there are no matching schema fields for the projected columns of the query.
 
 ## 6.0.0
-
 Update to: 
 - Java 21 (from 19)
 - HMPPS Kotlin plugin version 6 (from 5)
@@ -74,7 +76,6 @@ Added debug logs for the async queries.
 Create the prompts_ CTE from the filters which originated from the DPD parameters and embed it into the Athena query.
 
 ## 4.8.0
-
 Support for Report Summary/Aggregate templates.
 
 ## 4.7.0

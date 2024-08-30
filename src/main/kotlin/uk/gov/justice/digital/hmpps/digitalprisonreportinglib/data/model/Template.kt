@@ -19,5 +19,8 @@ enum class Template {
   CrossTab,
 
   @SerializedName("summary")
-  ListSummary,
+  Summary,
+
+  @SerializedName("summary-section")
+  SectionedSummary,
 }

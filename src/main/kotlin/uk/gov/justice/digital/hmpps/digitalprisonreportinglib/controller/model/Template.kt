@@ -8,5 +8,6 @@ enum class Template(@JsonValue val template: String) {
   ListAggregate("list-aggregate"),
   ListTab("list-tab"),
   CrossTab("crosstab"),
-  ListSummary("summary"),
+  Summary("summary"),
+  SectionedSummary("summary-section"),
 }
