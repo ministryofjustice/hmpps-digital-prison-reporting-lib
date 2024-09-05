@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.0.3
+Support for section header summaries.
+
 ## 6.0.2
 Support for Sectioned Summary reports.
 
