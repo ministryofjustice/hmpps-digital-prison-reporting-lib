@@ -37,7 +37,7 @@ const val DEFAULT_MAX_STATIC_OPTIONS: Long = 30
 
 @Component
 class ReportDefinitionMapper(
-  val configuredApiService: SyncDataApiService,
+  val syncDataApiService: SyncDataApiService,
   val datasetHelper: DatasetHelper,
 ) {
 
@@ -314,7 +314,7 @@ class ReportDefinitionMapper(
     schemaFieldName: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
-  ) = configuredApiService.validateAndFetchData(
+  ) = syncDataApiService.validateAndFetchData(
     reportId = productDefinitionId,
     reportVariantId = reportVariantId,
     filters = emptyMap(),
@@ -349,7 +349,7 @@ class ReportDefinitionMapper(
       )
     val displaySchemaField = matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForDisplay }
       ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForDisplay'")
-    return configuredApiService.validateAndFetchData(
+    return syncDataApiService.validateAndFetchData(
       reportId = productDefinitionId,
       reportVariantId = reportVariantId,
       filters = emptyMap(),
