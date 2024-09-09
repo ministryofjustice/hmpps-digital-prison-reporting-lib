@@ -3,7 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService.Companion.SCHEMA_REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
 
 abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository {
 
@@ -39,6 +40,6 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
 
   override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition = getProductDefinitions(dataProductDefinitionsPath)
     .filter { it.id == definitionId }
-    .ifEmpty { throw ValidationException("Invalid report id provided: $definitionId") }
+    .ifEmpty { throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId") }
     .first()
 }

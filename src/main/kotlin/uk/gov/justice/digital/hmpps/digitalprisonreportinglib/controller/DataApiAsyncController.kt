@@ -26,13 +26,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import java.util.Collections.singletonList
 
 @Validated
 @RestController
 @Tag(name = "Data API - Asynchronous")
-class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val filterHelper: FilterHelper) {
+class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val filterHelper: FilterHelper) {
 
   @GetMapping("/async/reports/{reportId}/{reportVariantId}")
   @Operation(
@@ -75,7 +75,7 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndExecuteStatementAsync(
+          asyncDataApiService.validateAndExecuteStatementAsync(
             reportId = reportId,
             reportVariantId = reportVariantId,
             filters = filterHelper.filtersOnly(filters),
@@ -130,7 +130,7 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        configuredApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
+        asyncDataApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
       )
   }
 
@@ -154,7 +154,7 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        configuredApiService.cancelStatementExecution(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
+        asyncDataApiService.cancelStatementExecution(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
       )
   }
 
@@ -181,7 +181,7 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.count(tableId),
+          asyncDataApiService.count(tableId),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
@@ -217,7 +217,7 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        configuredApiService.getStatementResult(
+        asyncDataApiService.getStatementResult(
           tableId,
           reportId,
           reportVariantId,
@@ -245,7 +245,7 @@ class DataApiAsyncController(val configuredApiService: ConfiguredApiService, val
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        configuredApiService.getSummaryResult(
+        asyncDataApiService.getSummaryResult(
           tableId,
           summaryId,
           reportId,

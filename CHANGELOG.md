@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.0.3
+Refactor ConfiguredApiService and split into SyncDataApiService and AsyncDataApiService.
+
 ## 6.0.2
 Support for Sectioned Summary reports.
 

@@ -44,7 +44,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService.Companion.SCHEMA_REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -176,7 +176,7 @@ class ReportDefinitionMapperTest {
     allDatasets = listOf(fullDataset),
   )
 
-  private val configuredApiService: ConfiguredApiService = mock()
+  private val configuredApiService: SyncDataApiService = mock()
   private val authToken = mock<DprAuthAwareAuthenticationToken>()
   private val datasetHelper = DatasetHelper()
 
