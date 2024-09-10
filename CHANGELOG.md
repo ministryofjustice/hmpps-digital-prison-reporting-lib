@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.0.4
+Support for section header summaries.
+
 ## 6.0.3
 Refactor ConfiguredApiService and split into SyncDataApiService and AsyncDataApiService.
 

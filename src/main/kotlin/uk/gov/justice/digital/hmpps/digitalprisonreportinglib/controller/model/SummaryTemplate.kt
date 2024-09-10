@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 enum class SummaryTemplate(@JsonValue val template: String) {
   TableHeader("table-header"),
   TableFooter("table-footer"),
+  SectionHeader("section-header"),
   SectionFooter("section-footer"),
   PageHeader("page-header"),
   PageFooter("page-footer"),
