@@ -24,13 +24,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.C
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 import java.util.Collections.singletonList
 
 @Validated
 @RestController
 @Tag(name = "Data API - Synchronous")
-class DataApiSyncController(val configuredApiService: ConfiguredApiService, val filterHelper: FilterHelper) {
+class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filterHelper: FilterHelper) {
   object FiltersPrefix {
     const val FILTERS_PREFIX = "filters."
     const val RANGE_FILTER_START_SUFFIX = ".start"
@@ -88,7 +88,7 @@ class DataApiSyncController(val configuredApiService: ConfiguredApiService, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndFetchData(
+          dataApiSyncService.validateAndFetchData(
             reportId = reportId,
             reportVariantId = reportVariantId,
             filters = filterHelper.filtersOnly(filters),
@@ -165,7 +165,7 @@ class DataApiSyncController(val configuredApiService: ConfiguredApiService, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndFetchData(
+          dataApiSyncService.validateAndFetchData(
             reportId = reportId,
             reportVariantId = reportVariantId,
             filters = filterHelper.filtersOnly(filters),
@@ -230,7 +230,7 @@ class DataApiSyncController(val configuredApiService: ConfiguredApiService, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          configuredApiService.validateAndCount(
+          dataApiSyncService.validateAndCount(
             reportId = reportId,
             reportVariantId = reportVariantId,
             filters = filterHelper.filtersOnly(filters),

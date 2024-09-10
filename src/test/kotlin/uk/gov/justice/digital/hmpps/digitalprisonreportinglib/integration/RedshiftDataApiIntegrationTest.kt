@@ -19,12 +19,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @MockBean
-  private lateinit var configuredApiService: ConfiguredApiService
+  private lateinit var asyncDataApiService: AsyncDataApiService
 
   @MockBean
   lateinit var productDefinitionRepository: ProductDefinitionRepository
@@ -40,7 +40,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val startDate = "2024-02-20"
     val endDate = "2024-02-22"
     given(
-      configuredApiService.validateAndExecuteStatementAsync(
+      asyncDataApiService.validateAndExecuteStatementAsync(
         eq("external-movements"),
         eq("last-month"),
         eq(mapOf(dateStartFilter to startDate, dateEndFilter to endDate)),
@@ -81,7 +81,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `When a ValidationException is thrown the async execute statement endpoint responds with 400`() {
     given(
-      configuredApiService.validateAndExecuteStatementAsync(
+      asyncDataApiService.validateAndExecuteStatementAsync(
         eq("external-movements"),
         eq("last-month"),
         eq(emptyMap()),
@@ -112,7 +112,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `When an ActiveStatementsExceededException is thrown the async execute statement endpoint responds with 429`() {
     given(
-      configuredApiService.validateAndExecuteStatementAsync(
+      asyncDataApiService.validateAndExecuteStatementAsync(
         eq("external-movements"),
         eq("last-month"),
         eq(emptyMap()),
@@ -156,7 +156,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       resultSize,
     )
     given(
-      configuredApiService.getStatementStatus(
+      asyncDataApiService.getStatementStatus(
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
@@ -197,7 +197,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       true,
     )
     given(
-      configuredApiService.cancelStatementExecution(
+      asyncDataApiService.cancelStatementExecution(
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
@@ -245,7 +245,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       )
 
     given(
-      configuredApiService.getStatementResult(
+      asyncDataApiService.getStatementResult(
         eq(tableId),
         eq("external-movements"),
         eq("last-month"),
@@ -284,7 +284,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       )
 
     given(
-      configuredApiService.getSummaryResult(
+      asyncDataApiService.getSummaryResult(
         eq(tableId),
         eq(summaryId),
         eq("external-movements"),
@@ -314,7 +314,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val expectedServiceResult = Count(5)
 
     given(
-      configuredApiService.count(
+      asyncDataApiService.count(
         eq(tableId),
       ),
     )
