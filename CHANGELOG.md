@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.1.0
+Added three new APIs to retrieve Dashboard and metric definitions.
+
 ## 6.0.4
 Support for section header summaries.
 
