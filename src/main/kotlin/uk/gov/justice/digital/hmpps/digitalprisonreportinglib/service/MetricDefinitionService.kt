@@ -14,6 +14,13 @@ import java.lang.IllegalArgumentException
 
 @Service
 class MetricDefinitionService(val productDefinitionRepository: ProductDefinitionRepository) {
+
+  fun getAllDashboards(dataProductDefinitionsPath: String? = null): List<DashboardDefinition> {
+    return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
+      .flatMap { it.dashboard ?: emptyList() }
+      .map { toDashboardDefinition(it) }
+  }
+
   fun getDashboardDefinition(
     dataProductDefinitionId: String,
     dashboardId: String,
