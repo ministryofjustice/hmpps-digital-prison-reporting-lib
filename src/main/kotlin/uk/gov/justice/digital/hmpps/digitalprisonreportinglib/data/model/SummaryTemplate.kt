@@ -9,6 +9,9 @@ enum class SummaryTemplate {
   @SerializedName("table-footer")
   TableFooter,
 
+  @SerializedName("section-header")
+  SectionHeader,
+
   @SerializedName("section-footer")
   SectionFooter,
 

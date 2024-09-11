@@ -4,7 +4,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "6.0.4"
   kotlin("jvm") version "2.0.0"
   kotlin("plugin.spring") version "2.0.0"
-  kotlin("plugin.jpa") version "1.9.23"
+  kotlin("plugin.jpa") version "2.0.20"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "3.1.0"
   id("maven-publish")
@@ -24,7 +24,7 @@ dependencies {
   implementation("com.google.code.gson:gson:2.11.0")
   implementation("com.google.guava:guava:33.2.1-jre")
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
-  implementation("software.amazon.awssdk:redshiftdata:2.26.22")
+  implementation("software.amazon.awssdk:redshiftdata:2.27.23")
   implementation("software.amazon.awssdk:athena:2.25.61")
 
   // Swagger

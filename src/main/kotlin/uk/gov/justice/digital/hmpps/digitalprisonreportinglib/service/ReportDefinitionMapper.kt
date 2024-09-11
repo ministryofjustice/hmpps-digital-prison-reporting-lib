@@ -27,8 +27,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ConfiguredApiService.Companion.SCHEMA_REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
@@ -37,7 +37,7 @@ const val DEFAULT_MAX_STATIC_OPTIONS: Long = 30
 
 @Component
 class ReportDefinitionMapper(
-  val configuredApiService: ConfiguredApiService,
+  val syncDataApiService: SyncDataApiService,
   val datasetHelper: DatasetHelper,
 ) {
 
@@ -314,7 +314,7 @@ class ReportDefinitionMapper(
     schemaFieldName: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
-  ) = configuredApiService.validateAndFetchData(
+  ) = syncDataApiService.validateAndFetchData(
     reportId = productDefinitionId,
     reportVariantId = reportVariantId,
     filters = emptyMap(),
@@ -349,7 +349,7 @@ class ReportDefinitionMapper(
       )
     val displaySchemaField = matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForDisplay }
       ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForDisplay'")
-    return configuredApiService.validateAndFetchData(
+    return syncDataApiService.validateAndFetchData(
       reportId = productDefinitionId,
       reportVariantId = reportVariantId,
       filters = emptyMap(),
