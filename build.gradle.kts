@@ -24,7 +24,7 @@ dependencies {
   implementation("com.google.code.gson:gson:2.11.0")
   implementation("com.google.guava:guava:33.2.1-jre")
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
-  implementation("software.amazon.awssdk:redshiftdata:2.26.22")
+  implementation("software.amazon.awssdk:redshiftdata:2.27.23")
   implementation("software.amazon.awssdk:athena:2.25.61")
 
   // Swagger
