@@ -7,6 +7,8 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardChartTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -80,6 +82,54 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastYearVariant.id).isEqualTo("last-year")
       assertThat(lastYearVariant.description).isEqualTo("All movements in the past year")
       assertThat(lastYearVariant.name).isEqualTo("Last year")
+    }
+  }
+
+  class ReportDefinitionListWithMetricsTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithMetrics.json" }
+      }
+    }
+
+    @Test
+    fun `Definition list contains the dashboard definition`() {
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<ReportDefinitionSummary>()
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+      assertThat(result.responseBody).hasSize(1)
+      assertThat(result.responseBody).first().isNotNull
+      assertThat(result.responseBody!![0].dashboards).isNotNull
+      assertThat(result.responseBody!![0].dashboards).hasSize(1)
+      assertThat(result.responseBody!![0].dashboards).isEqualTo(
+        listOf(
+          DashboardDefinition(
+            id = "test-dashboard-1",
+            name = "Test Dashboard 1",
+            description = "Test Dashboard 1 Description",
+            metrics = listOf(
+              DashboardDefinition.DashboardMetricDefinition(
+                id = "test-metric-id-1",
+                listOf(DashboardChartTypeDefinition.BAR),
+              ),
+            ),
+          ),
+        ),
+      )
     }
   }
 

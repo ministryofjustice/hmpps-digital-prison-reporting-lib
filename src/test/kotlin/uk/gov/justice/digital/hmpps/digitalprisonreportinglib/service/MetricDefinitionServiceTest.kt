@@ -22,24 +22,6 @@ class MetricDefinitionServiceTest {
   private val metricDefinitionService = MetricDefinitionService(productDefinitionRepository)
 
   @Test
-  fun `getAllDashboards returns all the dashboard definitions`() {
-    val actual = metricDefinitionService.getAllDashboards()
-    assertEquals(
-      listOf(
-        DashboardDefinition(
-          id = "test-dashboard-1",
-          name = "Test Dashboard 1",
-          description = "Test Dashboard 1 Description",
-          metrics = listOf(
-            DashboardMetricDefinition(id = "test-metric-id-1", listOf(DashboardChartTypeDefinition.BAR)),
-          ),
-        ),
-      ),
-      actual,
-    )
-  }
-
-  @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
     val actual = metricDefinitionService.getDashboardDefinition(
       dataProductDefinitionId = "external-movements",
