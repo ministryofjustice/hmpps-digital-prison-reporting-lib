@@ -15,12 +15,6 @@ import java.lang.IllegalArgumentException
 @Service
 class MetricDefinitionService(val productDefinitionRepository: ProductDefinitionRepository) {
 
-  fun getAllDashboards(dataProductDefinitionsPath: String? = null): List<DashboardDefinition> {
-    return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
-      .flatMap { it.dashboard ?: emptyList() }
-      .map { toDashboardDefinition(it) }
-  }
-
   fun getDashboardDefinition(
     dataProductDefinitionId: String,
     dashboardId: String,
@@ -30,7 +24,7 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
       productDefinitionRepository.getProductDefinition(
         dataProductDefinitionId,
         dataProductDefinitionsPath,
-      ).dashboard?.firstOrNull { it.id == dashboardId }
+      ).dashboards?.firstOrNull { it.id == dashboardId }
         ?: throw IllegalArgumentException("Dashboard with ID: $dashboardId not found for DPD $dataProductDefinitionId"),
     )
   }
@@ -46,6 +40,15 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
         dataProductDefinitionsPath,
       ).metrics?.firstOrNull { it.id == metricId }
         ?: throw IllegalArgumentException("Metric with ID: $metricId not found for DPD $dataProductDefinitionId"),
+    )
+  }
+
+  fun toDashboardDefinition(dashboard: Dashboard): DashboardDefinition {
+    return DashboardDefinition(
+      id = dashboard.id,
+      name = dashboard.name,
+      description = dashboard.description,
+      metrics = dashboard.metrics.map { toDashboardMetricDefinition(it) },
     )
   }
 
@@ -65,15 +68,6 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
       metricSpecification.name,
       metricSpecification.display,
       metricSpecification.unit,
-    )
-  }
-
-  private fun toDashboardDefinition(dashboard: Dashboard): DashboardDefinition {
-    return DashboardDefinition(
-      id = dashboard.id,
-      name = dashboard.name,
-      description = dashboard.description,
-      metrics = dashboard.metrics.map { toDashboardMetricDefinition(it) },
     )
   }
 

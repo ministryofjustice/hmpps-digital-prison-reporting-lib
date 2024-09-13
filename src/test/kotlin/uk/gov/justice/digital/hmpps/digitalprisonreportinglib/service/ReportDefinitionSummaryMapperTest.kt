@@ -2,7 +2,17 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardChartTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition.DashboardMetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard.DashboardMetric
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardChartType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
@@ -99,9 +109,11 @@ class ReportDefinitionSummaryMapperTest {
     report = listOf(fullReport),
   )
 
+  private val metricDefinitionService: MetricDefinitionService = mock<MetricDefinitionService>()
+
   @Test
   fun `Getting report list for user maps full data correctly`() {
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
 
     val result = mapper.map(fullProductDefinition, null)
 
@@ -130,7 +142,7 @@ class ReportDefinitionSummaryMapperTest {
         version = "5",
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
 
     val result = mapper.map(productDefinition, null)
 
@@ -179,12 +191,52 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
 
     val result = mapper.map(productDefinition, HTML)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(1)
     assertThat(result.variants.first().id).isEqualTo("16")
+  }
+
+  @Test
+  fun `Getting report list with dashboards for user includes the dashboard definition in the mapped data`() {
+    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+
+    val dashboard = Dashboard(
+      id = "d1",
+      name = "n1",
+      description = "abc",
+      metrics = listOf(
+        DashboardMetric("m1", listOf(DashboardChartType.BAR)),
+      ),
+    )
+    val dashboardDefinition = DashboardDefinition(
+      id = "d1",
+      name = "n1",
+      description = "abc",
+      metrics = listOf(
+        DashboardMetricDefinition("m1", listOf(DashboardChartTypeDefinition.BAR)),
+      ),
+    )
+
+    whenever(metricDefinitionService.toDashboardDefinition(dashboard))
+      .thenReturn(dashboardDefinition)
+
+    val result = mapper.map(
+      fullProductDefinition
+        .copy(
+          dashboards = listOf(
+            dashboard,
+          ),
+        ),
+      null,
+    )
+
+    assertThat(result.dashboards).isEqualTo(
+      listOf(dashboardDefinition),
+    )
+    verify(metricDefinitionService, times(1)).toDashboardDefinition(dashboard)
   }
 }

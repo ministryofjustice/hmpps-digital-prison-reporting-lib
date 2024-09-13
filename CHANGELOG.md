@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.1.1
+Removed the /definitions/dashboards endpoint and added the dashboard definitions to the ReportDefinitionSummary.
+
 ## 6.1.0
 Added three new APIs to retrieve Dashboard and metric definitions.
 

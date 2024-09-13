@@ -21,24 +21,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.MetricDefi
 @Tag(name = "Metric Definition API")
 class MetricDefinitionController(val metricDefinitionService: MetricDefinitionService) {
 
-  @GetMapping("/definitions/dashboards")
-  @Operation(
-    description = "Gets a flattened list of all dashboard definitions across all data product definitions",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
-  )
-  fun definitions(
-    @Parameter(
-      description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
-      example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
-  ): List<DashboardDefinition> {
-    return metricDefinitionService.getAllDashboards(
-      dataProductDefinitionsPath,
-    )
-  }
-
   @GetMapping("/definitions/{dataProductDefinitionId}/dashboards/{dashboardId}")
   @Operation(
     description = "Gets the metric dashboard definition.",

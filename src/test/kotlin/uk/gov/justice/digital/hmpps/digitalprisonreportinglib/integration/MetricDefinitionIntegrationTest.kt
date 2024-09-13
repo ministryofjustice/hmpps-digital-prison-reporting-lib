@@ -15,36 +15,6 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `All Dashboard definitions are returned as expected`() {
-    webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/definitions/dashboards")
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        """
-          [{
-             "id": "test-dashboard-1",
-              "name": "Test Dashboard 1",
-              "description": "Test Dashboard 1 Description",
-              "metrics": [
-                {
-                  "id": "test-metric-id-1",
-                  "visualisationType": ["bar"]
-                }
-              ]
-          }]
-        """.trimIndent(),
-      )
-  }
-
-  @Test
   fun `Dashboard definition is returned as expected`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->

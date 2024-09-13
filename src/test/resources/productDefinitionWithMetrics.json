@@ -116,7 +116,7 @@
       }
     }
   ],
-  "dashboard": [
+  "dashboards": [
     {
     "id": "test-dashboard-1",
     "name": "Test Dashboard 1",
