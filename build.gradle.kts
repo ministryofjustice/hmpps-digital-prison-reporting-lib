@@ -22,7 +22,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.11.0")
-  implementation("com.google.guava:guava:33.2.1-jre")
+  implementation("com.google.guava:guava:33.3.0-jre")
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
   implementation("software.amazon.awssdk:redshiftdata:2.27.23")
   implementation("software.amazon.awssdk:athena:2.27.23")
