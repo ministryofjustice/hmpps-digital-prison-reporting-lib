@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.1.2
+Amended the dashboard and metric definitions by removing visualisationType from the dashboard. Added the optional boolean 'group' and list 'chart' fields to metrics.
+
 ## 6.1.1
 Removed the /definitions/dashboards endpoint and added the dashboard definitions to the ReportDefinitionSummary.
 
