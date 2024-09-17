@@ -6,13 +6,11 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardChartTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition.DashboardMetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard.DashboardMetric
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardChartType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
@@ -209,7 +207,7 @@ class ReportDefinitionSummaryMapperTest {
       name = "n1",
       description = "abc",
       metrics = listOf(
-        DashboardMetric("m1", listOf(DashboardChartType.BAR)),
+        DashboardMetric("m1"),
       ),
     )
     val dashboardDefinition = DashboardDefinition(
@@ -217,7 +215,7 @@ class ReportDefinitionSummaryMapperTest {
       name = "n1",
       description = "abc",
       metrics = listOf(
-        DashboardMetricDefinition("m1", listOf(DashboardChartTypeDefinition.BAR)),
+        DashboardMetricDefinition("m1"),
       ),
     )
 

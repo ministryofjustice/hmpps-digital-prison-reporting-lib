@@ -5,7 +5,6 @@ data class MetricDefinition(
   val name: String,
   val display: String,
   val description: String,
-  val visualisationType: List<DashboardChartTypeDefinition>,
   val specification: List<MetricSpecificationDefinition>,
 )
 
@@ -13,4 +12,6 @@ data class MetricSpecificationDefinition(
   val name: String,
   val display: String,
   val unit: String? = null,
+  val chart: List<DashboardChartTypeDefinition>? = null,
+  val group: Boolean? = null,
 )

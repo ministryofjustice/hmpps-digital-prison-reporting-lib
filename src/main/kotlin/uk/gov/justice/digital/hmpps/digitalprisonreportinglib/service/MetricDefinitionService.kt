@@ -58,24 +58,25 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
       name = metric.name,
       display = metric.display,
       description = metric.description,
-      visualisationType = metric.visualisationType.map { toDashboardChartTypeDefinition(it) },
       specification = metric.specification.map { toMetricSpecificationDefinition(it) },
     )
   }
 
   private fun toMetricSpecificationDefinition(metricSpecification: MetricSpecification): MetricSpecificationDefinition {
     return MetricSpecificationDefinition(
-      metricSpecification.name,
-      metricSpecification.display,
-      metricSpecification.unit,
+      name = metricSpecification.name,
+      display = metricSpecification.display,
+      unit = metricSpecification.unit,
+      chart = toDashboardChartTypeDefinition(metricSpecification.chart),
+      group = metricSpecification.group,
     )
   }
 
   private fun toDashboardMetricDefinition(metric: Dashboard.DashboardMetric): DashboardDefinition.DashboardMetricDefinition {
-    return DashboardDefinition.DashboardMetricDefinition(metric.id, metric.visualisationType.map { toDashboardChartTypeDefinition(it) })
+    return DashboardDefinition.DashboardMetricDefinition(metric.id)
   }
 
-  private fun toDashboardChartTypeDefinition(visualisationType: DashboardChartType): DashboardChartTypeDefinition {
-    return DashboardChartTypeDefinition.valueOf(visualisationType.toString())
+  private fun toDashboardChartTypeDefinition(chart: List<DashboardChartType>?): List<DashboardChartTypeDefinition>? {
+    return chart?.map { DashboardChartTypeDefinition.valueOf(it.toString()) }
   }
 }
