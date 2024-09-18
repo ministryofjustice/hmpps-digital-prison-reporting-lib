@@ -6,8 +6,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.D
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricSpecificationDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetricSpecification
 import java.lang.IllegalArgumentException
