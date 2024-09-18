@@ -12,6 +12,6 @@ data class MetricSpecificationDefinition(
   val name: String,
   val display: String,
   val unit: String? = null,
-  val chart: List<DashboardChartTypeDefinition>? = null,
+  val chart: List<ChartTypeDefinition>? = null,
   val group: Boolean? = null,
 )

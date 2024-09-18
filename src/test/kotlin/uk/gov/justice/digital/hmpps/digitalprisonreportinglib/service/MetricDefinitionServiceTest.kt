@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardChartTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition.DashboardMetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
@@ -61,24 +61,24 @@ class MetricDefinitionServiceTest {
           MetricSpecificationDefinition(
             name = "missing_ethnicity_percentage",
             display = "% Missing Ethnicity",
-            chart = listOf(DashboardChartTypeDefinition.DOUGHNUT),
+            chart = listOf(ChartTypeDefinition.DOUGHNUT),
             unit = "percentage",
           ),
           MetricSpecificationDefinition(
             name = "present_ethnicity_percentage",
             display = "% With Ethnicity",
-            chart = listOf(DashboardChartTypeDefinition.DOUGHNUT),
+            chart = listOf(ChartTypeDefinition.DOUGHNUT),
             unit = "percentage",
           ),
           MetricSpecificationDefinition(
             name = "no_of_prisoners",
             display = "No. of Prisoners with ethnicity",
-            chart = listOf(DashboardChartTypeDefinition.BAR),
+            chart = listOf(ChartTypeDefinition.BAR),
           ),
           MetricSpecificationDefinition(
             name = "no_of_prisoners_without",
             display = "No. of Prisoners without ethnicity",
-            chart = listOf(DashboardChartTypeDefinition.BAR),
+            chart = listOf(ChartTypeDefinition.BAR),
           ),
           MetricSpecificationDefinition(
             name = "random_data",

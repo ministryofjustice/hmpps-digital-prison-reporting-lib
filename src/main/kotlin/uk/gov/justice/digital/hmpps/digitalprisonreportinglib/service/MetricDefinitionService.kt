@@ -1,13 +1,13 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardChartTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricSpecificationDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardChartType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetricSpecification
 import java.lang.IllegalArgumentException
@@ -67,7 +67,7 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
       name = metricSpecification.name,
       display = metricSpecification.display,
       unit = metricSpecification.unit,
-      chart = toDashboardChartTypeDefinition(metricSpecification.chart),
+      chart = toChartTypeDefinition(metricSpecification.chart),
       group = metricSpecification.group,
     )
   }
@@ -76,7 +76,7 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
     return DashboardDefinition.DashboardMetricDefinition(metric.id)
   }
 
-  private fun toDashboardChartTypeDefinition(chart: List<DashboardChartType>?): List<DashboardChartTypeDefinition>? {
-    return chart?.map { DashboardChartTypeDefinition.valueOf(it.toString()) }
+  private fun toChartTypeDefinition(chart: List<ChartType>?): List<ChartTypeDefinition>? {
+    return chart?.map { ChartTypeDefinition.valueOf(it.toString()) }
   }
 }
