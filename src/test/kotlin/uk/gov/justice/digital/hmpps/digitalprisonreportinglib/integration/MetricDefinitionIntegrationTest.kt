@@ -35,8 +35,7 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
               "description": "Test Dashboard 1 Description",
               "metrics": [
                 {
-                  "id": "test-metric-id-1",
-                  "visualisationType": ["bar"]
+                  "id": "test-metric-id-1"
                 }
               ]
           }
@@ -62,22 +61,40 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
           {
             "id": "test-metric-id-1",
             "name": "testMetricId1",
-            "display": "Prisoner Images by Status Percentage",
-            "description": "Prisoner Images by Status Percentage",
-            "visualisationType": [
-              "bar",
-              "doughnut"
-            ],
+            "display": "Missing Ethnicity",
+            "description": "Missing Ethnicity",
             "specification":
             [
               {
-                "name": "status",
-                "display": "Status"
+                "name": "establishment_id",
+                "display": "Establishment ID",
+                "group": true
               },
               {
-                "name": "count",
-                "display": "Count",
+                "name": "missing_ethnicity_percentage",
+                "display": "% Missing Ethnicity",
+                "chart": ["doughnut"],
                 "unit": "percentage"
+              },
+              {
+                "name": "present_ethnicity_percentage",
+                "display": "% With Ethnicity",
+                "chart": ["doughnut"],
+                "unit": "percentage"
+              },
+              {
+                "name": "no_of_prisoners",
+                "display": "No. of Prisoners with ethnicity",
+                "chart": ["bar"]
+              },
+              {
+                "name": "no_of_prisoners_without",
+                "display": "No. of Prisoners without ethnicity",
+                "chart": ["bar"]
+              },
+              {
+                "name": "random_data",
+                "display": "Random Data"
               }
             ]
           }

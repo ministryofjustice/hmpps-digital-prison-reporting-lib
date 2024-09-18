@@ -8,6 +8,5 @@ data class Dashboard(
 ) {
   data class DashboardMetric(
     val id: String,
-    val visualisationType: List<DashboardChartType>,
   )
 }
