@@ -122,7 +122,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             description = "Test Dashboard 1 Description",
             metrics = listOf(
               DashboardDefinition.DashboardMetricDefinition(
-                id = "test-metric-id-1",
+                id = "missing-ethnicity-metric",
               ),
             ),
           ),

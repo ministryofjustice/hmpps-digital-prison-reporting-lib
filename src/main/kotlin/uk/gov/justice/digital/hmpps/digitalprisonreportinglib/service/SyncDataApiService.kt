@@ -56,11 +56,10 @@ class SyncDataApiService(
         pageSize = pageSize,
         sortColumn = datasetForFilter?.let { findSortColumn(sortColumn, it) } ?: sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
-        reportId = reportId,
         policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = productDefinition.datasource.name,
-        productDefinition = productDefinition,
+        reportFilter = productDefinition.report.filter,
       )
       .let { records ->
         applyFormulasSelectivelyAndFormatColumns(

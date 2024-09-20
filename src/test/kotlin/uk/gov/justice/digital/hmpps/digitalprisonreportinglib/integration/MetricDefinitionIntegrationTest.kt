@@ -19,7 +19,7 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
-          .path("/definitions/external-movements/dashboards/test-dashboard-1")
+          .path("/definitions/missing-ethnicity-metrics/dashboards/test-dashboard-1")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -35,7 +35,7 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
               "description": "Test Dashboard 1 Description",
               "metrics": [
                 {
-                  "id": "test-metric-id-1"
+                  "id": "missing-ethnicity-metric"
                 }
               ]
           }
@@ -48,7 +48,7 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
-          .path("/definitions/external-movements/metrics/test-metric-id-1")
+          .path("/definitions/missing-ethnicity-metrics/metrics/missing-ethnicity-metric")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -59,7 +59,7 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
       .json(
         """
           {
-            "id": "test-metric-id-1",
+            "id": "missing-ethnicity-metric",
             "name": "testMetricId1",
             "display": "Missing Ethnicity",
             "description": "Missing Ethnicity",

@@ -110,10 +110,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 2,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(listOf(movementPrisoner3, movementPrisoner4), actual)
     Assertions.assertEquals(2, actual.size)
@@ -128,10 +127,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 2,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(listOf(movementPrisoner5), actual)
     Assertions.assertEquals(1, actual.size)
@@ -146,10 +144,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 5,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(listOf(movementPrisoner1, movementPrisoner2, movementPrisoner3, movementPrisoner4, movementPrisoner5), actual)
     Assertions.assertEquals(5, actual.size)
@@ -176,10 +173,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 5,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(
       listOf(
@@ -202,10 +198,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 5,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -219,10 +214,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 1,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -278,10 +272,9 @@ class ConfiguredApiRepositoryTest {
         pageSize = 2,
         sortColumn = null,
         sortedAsc = true,
-        reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-        productDefinition = productDefinition,
+        reportFilter = productDefinition.report.filter,
       )
     }
     Assertions.assertEquals(1, actual.size)
@@ -296,10 +289,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(5, actual.size)
   }
@@ -313,10 +305,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -330,10 +321,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(4, actual.size)
   }
@@ -347,10 +337,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -364,10 +353,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(1, actual.size)
   }
@@ -381,10 +369,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3), actual)
   }
@@ -398,10 +385,9 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(listOf(movementPrisoner2, movementPrisoner1), actual)
   }
@@ -415,10 +401,9 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner4, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -432,10 +417,9 @@ class ConfiguredApiRepositoryTest {
       10,
       "date",
       false,
-      EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(listOf(movementPrisoner5, movementPrisoner3, movementPrisoner2), actual)
   }
@@ -454,11 +438,10 @@ class ConfiguredApiRepositoryTest {
       pageSize = 10,
       sortColumn = NAME,
       sortedAsc = false,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dynamicFilterFieldId = setOf(NAME),
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(
       listOf(
@@ -482,11 +465,10 @@ class ConfiguredApiRepositoryTest {
         pageSize = 10,
         sortColumn = NAME,
         sortedAsc = true,
-        reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
         dynamicFilterFieldId = setOf(NAME, PRISON_NUMBER),
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-        productDefinition = productDefinition,
+        reportFilter = productDefinition.report.filter,
       )
       Assertions.assertEquals(
         listOf(
@@ -517,10 +499,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -534,10 +515,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -551,10 +531,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -568,10 +547,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = false,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, Any>>(), actual)
   }
@@ -617,10 +595,9 @@ class ConfiguredApiRepositoryTest {
         pageSize = 1,
         sortColumn = "date",
         sortedAsc = true,
-        reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-        productDefinition = productDefinition,
+        reportFilter = productDefinition.report.filter,
       )
       Assertions.assertEquals(listOf(movementPrisonerNullValues), actual)
       Assertions.assertEquals(1, actual.size)
@@ -648,10 +625,9 @@ class ConfiguredApiRepositoryTest {
         pageSize = 10,
         sortColumn = "date",
         sortedAsc = true,
-        reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
         dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-        productDefinition = productDefinition,
+        reportFilter = productDefinition.report.filter,
       )
       Assertions.assertEquals(listOf(movementPrisoner4, movementPrisonerDestinationCaseloadDirectionIn), actual)
       Assertions.assertEquals(2, actual.size)
@@ -674,10 +650,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 5,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = POLICY_DENY,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
@@ -692,10 +667,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 5,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = POLICY_DENY,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(emptyList<Map<String, String>>(), actual)
     Assertions.assertEquals(0, actual.size)
@@ -710,10 +684,9 @@ class ConfiguredApiRepositoryTest {
       pageSize = 20,
       sortColumn = "date",
       sortedAsc = true,
-      reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = PolicyResult.POLICY_PERMIT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-      productDefinition = productDefinition,
+      reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(5, actual.size)
   }
@@ -853,10 +826,9 @@ class ConfiguredApiRepositoryTest {
             pageSize = 1,
             sortColumn = sortColumn,
             sortedAsc = sortedAsc,
-            reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
             policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
             dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-            productDefinition = productDefinition,
+            reportFilter = productDefinition.report.filter,
           )
           Assertions.assertEquals(expected, actual)
           Assertions.assertEquals(1, actual.size)
