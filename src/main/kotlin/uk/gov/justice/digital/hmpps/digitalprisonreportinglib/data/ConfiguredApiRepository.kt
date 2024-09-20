@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.apache.commons.lang3.time.StopWatch
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 
 @Service
@@ -17,11 +18,10 @@ class ConfiguredApiRepository(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean,
-    reportId: String,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
     dataSourceName: String,
-    productDefinition: SingleReportProductDefinition,
+    reportFilter: ReportFilter? = null,
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
@@ -31,8 +31,8 @@ class ConfiguredApiRepository(
     val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
       buildFinalQuery(
         datasetQuery = buildDatasetQuery(query),
-        reportQuery = buildReportQuery(productDefinition.report.filter),
-        policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition)),
+        reportQuery = buildReportQuery(reportFilter),
+        policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         filtersQuery = buildFiltersQuery(filters),
         selectFromFinalStageQuery = buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
       ) + ";",

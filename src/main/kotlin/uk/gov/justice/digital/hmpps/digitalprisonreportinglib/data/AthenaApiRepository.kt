@@ -52,7 +52,7 @@ class AthenaApiRepository(
         buildPromptsQuery(prompts),
         buildDatasetQuery(productDefinition.reportDataset.query),
         buildReportQuery(productDefinition.report.filter),
-        buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition)),
+        buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition.report.filter)),
         // The filters part will be replaced with the variables CTE
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),

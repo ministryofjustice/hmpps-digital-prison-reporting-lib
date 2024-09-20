@@ -13,7 +13,6 @@ import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDateTime
@@ -118,10 +117,9 @@ class ConfiguredApiRepositoryTestContainersTest {
         10,
         "date",
         false,
-        EXTERNAL_MOVEMENTS_PRODUCT_ID,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
-        productDefinition = productDefinition,
+        reportFilter = productDefinition.report.filter,
       )
       Assertions.assertEquals(listOf(movementPrisoner), actual)
     } finally {

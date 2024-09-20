@@ -21,7 +21,7 @@ class ReportDefinitionService(
   ): List<ReportDefinitionSummary> {
     return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
       .map { summaryMapper.map(it, renderMethod) }
-      .filter { it.variants.isNotEmpty() }
+      .filter { containsReportVariantsOrDashboards(it) }
   }
 
   fun getDefinition(
@@ -36,4 +36,9 @@ class ReportDefinitionService(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
   }
+
+  private fun containsReportVariantsOrDashboards(it: ReportDefinitionSummary) =
+    it.variants.isNotEmpty() || hasDashboards(it)
+  private fun hasDashboards(it: ReportDefinitionSummary) =
+    (it.dashboards?.isNotEmpty() ?: false)
 }

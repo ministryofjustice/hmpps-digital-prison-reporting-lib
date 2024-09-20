@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.2.0
+Added new metrics data API.
+
 ## 6.1.2
 Amended the dashboard and metric definitions by removing visualisationType from the dashboard. Added the optional boolean 'group' and list 'chart' fields to metrics.
 

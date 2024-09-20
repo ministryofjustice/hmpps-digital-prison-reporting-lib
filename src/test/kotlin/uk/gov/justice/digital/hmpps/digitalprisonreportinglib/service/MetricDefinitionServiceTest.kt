@@ -24,7 +24,7 @@ class MetricDefinitionServiceTest {
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
     val actual = metricDefinitionService.getDashboardDefinition(
-      dataProductDefinitionId = "external-movements",
+      dataProductDefinitionId = "missing-ethnicity-metrics",
       dashboardId = "test-dashboard-1",
     )
     assertEquals(
@@ -33,7 +33,7 @@ class MetricDefinitionServiceTest {
         name = "Test Dashboard 1",
         description = "Test Dashboard 1 Description",
         metrics = listOf(
-          DashboardMetricDefinition(id = "test-metric-id-1"),
+          DashboardMetricDefinition(id = "missing-ethnicity-metric"),
         ),
       ),
       actual,
@@ -43,12 +43,12 @@ class MetricDefinitionServiceTest {
   @Test
   fun `getMetricDefinition returns the metric definition`() {
     val actual = metricDefinitionService.getMetricDefinition(
-      dataProductDefinitionId = "external-movements",
-      metricId = "test-metric-id-1",
+      dataProductDefinitionId = "missing-ethnicity-metrics",
+      metricId = "missing-ethnicity-metric",
     )
     assertEquals(
       MetricDefinition(
-        id = "test-metric-id-1",
+        id = "missing-ethnicity-metric",
         name = "testMetricId1",
         display = "Missing Ethnicity",
         description = "Missing Ethnicity",
