@@ -21,8 +21,7 @@ class ReportDefinitionService(
   ): List<ReportDefinitionSummary> {
     return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
       .map { summaryMapper.map(it, renderMethod) }
-      // We might want to remove this filtering if we want to allow an empty list of variants for DPDs with metrics only
-      .filter { it.variants.isNotEmpty() }
+      .filter { containsReportVariantsOrDashboards(it) }
   }
 
   fun getDefinition(
@@ -37,4 +36,9 @@ class ReportDefinitionService(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
   }
+
+  private fun containsReportVariantsOrDashboards(it: ReportDefinitionSummary) =
+    it.variants.isNotEmpty() || hasDashboards(it)
+  private fun hasDashboards(it: ReportDefinitionSummary) =
+    (it.dashboards?.isNotEmpty() ?: false)
 }

@@ -126,53 +126,5 @@
       ]
     }
   ],
-  "report" : [
-    {
-      "id": "missing-ethnicity",
-      "name": "Missing Ethnicity",
-      "description": "Missing Ethnicity Report",
-      "created": "2024-09-16T09:00:00.000Z",
-      "classification": "report classification",
-      "version": "1.2.3",
-      "dataset": "$ref:test-metric-dataset-id-1",
-      "policy": [],
-      "render": "HTML",
-      "feature": [
-        {
-          "type": "print"
-        }
-      ],
-      "specification": {
-        "template": "list",
-        "field": [
-          {
-            "name": "$ref:establishment_id",
-            "sortable": true,
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:missing_ethnicity_percentage",
-            "sortable": true,
-            "defaultsort": true
-          },
-          {
-            "name": "$ref:present_ethnicity_percentage",
-            "sortable": true,
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:no_of_prisoners_without",
-            "sortable": true,
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:no_of_prisoners",
-            "sortable": true,
-            "defaultsort": false
-          }
-        ]
-      },
-      "destination": []
-    }
-  ]
+  "report" : []
 }
