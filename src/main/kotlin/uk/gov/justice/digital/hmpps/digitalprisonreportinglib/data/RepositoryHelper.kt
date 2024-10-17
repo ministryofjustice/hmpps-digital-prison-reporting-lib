@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import java.sql.Timestamp
 import javax.sql.DataSource
@@ -83,8 +82,8 @@ abstract class RepositoryHelper {
     return filter?.query ?: DEFAULT_REPORT_CTE
   }
 
-  protected fun determinePreviousCteName(productDefinition: SingleReportProductDefinition) =
-    productDefinition.report.filter?.name ?: REPORT_
+  protected fun determinePreviousCteName(reportFilter: ReportFilter?) =
+    reportFilter?.name ?: REPORT_
 
   protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) =
     """$POLICY_ AS (SELECT * FROM $previousCteName WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
