@@ -25,7 +25,7 @@ dependencies {
   implementation("com.google.guava:guava:33.3.1-jre")
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
   implementation("software.amazon.awssdk:redshiftdata:2.28.26")
-  implementation("software.amazon.awssdk:athena:2.28.1")
+  implementation("software.amazon.awssdk:athena:2.28.26")
 
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
