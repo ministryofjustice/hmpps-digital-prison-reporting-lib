@@ -31,7 +31,7 @@ class ClientDataProductDefinitionsRepository(
     val authentication = SecurityContextHolder.getContext().authentication as DprAuthAwareAuthenticationToken
     val respEntity: ResponseEntity<List<ProductDefinition>>? = path?.let {
       val headers: MultiValueMap<String, String> = HttpHeaders()
-        headers.add("Authorization", "Bearer ${authentication.jwt.tokenValue}")
+      headers.add("Authorization", "Bearer ${authentication.jwt.tokenValue}")
       val requestEntity = RequestEntity<List<ProductDefinition>>(headers, HttpMethod.GET, URI("$definitionsHost/$path"))
       dataProductDefinitionsClient
         .exchange(requestEntity, object : ParameterizedTypeReference<List<ProductDefinition>>() {})
