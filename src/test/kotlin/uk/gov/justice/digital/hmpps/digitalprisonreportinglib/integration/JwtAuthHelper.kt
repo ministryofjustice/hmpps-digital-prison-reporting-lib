@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.context.annotation.Bean
 import org.springframework.http.HttpHeaders
 import org.springframework.security.oauth2.jwt.JwtDecoder
@@ -30,17 +29,26 @@ class JwtAuthHelper {
   fun jwtDecoder(): JwtDecoder = NimbusJwtDecoder.withPublicKey(keyPair.public as RSAPublicKey).build()
 
   fun setAuthorisation(
-    user: String = "prison-reporting-mi-client",
-    roles: List<String> = listOf(),
-    scopes: List<String> = listOf(),
+    user: String,
+    roles: List<String>,
+    scopes: List<String>,
   ): (HttpHeaders) -> Unit {
+    val token = createToken(user, scopes, roles)
+    return { it.set(HttpHeaders.AUTHORIZATION, "Bearer $token") }
+  }
+
+  fun createToken(
+    user: String = "prison-reporting-mi-client",
+    scopes: List<String> = listOf(),
+    roles: List<String> = listOf(),
+  ): String {
     val token = createJwt(
       subject = user,
       scope = scopes,
       expiryTime = Duration.ofHours(1L),
       roles = roles,
     )
-    return { it.set(HttpHeaders.AUTHORIZATION, "Bearer $token") }
+    return token
   }
 
   internal fun createJwt(
@@ -58,11 +66,11 @@ class JwtAuthHelper {
     )
       .let {
         Jwts.builder()
-          .setId(jwtId)
-          .setSubject(subject)
-          .addClaims(it.toMap())
-          .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
-          .signWith(SignatureAlgorithm.RS256, keyPair.private)
+          .id(jwtId)
+          .subject(subject)
+          .claims(it.toMap())
+          .expiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+          .signWith(keyPair.private)
           .compact()
       }
 }

@@ -2,10 +2,13 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.mockito.Mockito.mock
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,13 +16,15 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDO
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
-@SpringBootTest(webEnvironment = RANDOM_PORT)
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
 
@@ -37,6 +42,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var prisonerRepository: PrisonerRepository
+
+  @Autowired
+  lateinit var authenticationHelper: TestAuthenticationHelper
 
   companion object {
 
@@ -56,6 +64,8 @@ abstract class IntegrationTestBase {
     fun teardownClass() {
       wireMockServer.stop()
     }
+
+    const val TEST_TOKEN = "TestToken"
   }
 
   @BeforeEach
@@ -69,17 +79,24 @@ abstract class IntegrationTestBase {
     ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners.forEach {
       prisonerRepository.save(it)
     }
+    val jwt = mock<Jwt>()
+    val authentication = mock<DprAuthAwareAuthenticationToken>()
+    whenever(jwt.tokenValue).then { TEST_TOKEN }
+    whenever(authentication.jwt).then { jwt }
+    authenticationHelper.authentication = authentication
   }
 
   protected fun stubDefinitionsResponse() {
     val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")?.readText()
     wireMockServer.stubFor(
-      WireMock.get("/definitions/prisons/orphanage").willReturn(
-        WireMock.aResponse()
-          .withStatus(HttpStatus.OK.value())
-          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody("""[$productDefinitionJson]"""),
-      ),
+      WireMock.get("/definitions/prisons/orphanage")
+        .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer $TEST_TOKEN"))
+        .willReturn(
+          WireMock.aResponse()
+            .withStatus(HttpStatus.OK.value())
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .withBody("""[$productDefinitionJson]"""),
+        ),
     )
   }
 
