@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 
 @Primary
 @Component
-class TestAuthenticationHelper: AuthenticationHelper {
+class TestAuthenticationHelper : AuthenticationHelper {
 
   lateinit var authentication: DprAuthAwareAuthenticationToken
 

@@ -65,7 +65,7 @@ abstract class IntegrationTestBase {
       wireMockServer.stop()
     }
 
-    const val testToken = "TestToken"
+    const val TEST_TOKEN = "TestToken"
   }
 
   @BeforeEach
@@ -81,7 +81,7 @@ abstract class IntegrationTestBase {
     }
     val jwt = mock(Jwt::class.java)
     val authentication = mock(DprAuthAwareAuthenticationToken::class.java)
-    `when`(jwt.tokenValue).then { testToken }
+    `when`(jwt.tokenValue).then { TEST_TOKEN }
     `when`(authentication.jwt).then { jwt }
     authenticationHelper.authentication = authentication
   }
@@ -90,13 +90,13 @@ abstract class IntegrationTestBase {
     val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")?.readText()
     wireMockServer.stubFor(
       WireMock.get("/definitions/prisons/orphanage")
-        .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer $testToken"))
+        .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer $TEST_TOKEN"))
         .willReturn(
-        WireMock.aResponse()
-          .withStatus(HttpStatus.OK.value())
-          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody("""[$productDefinitionJson]"""),
-      ),
+          WireMock.aResponse()
+            .withStatus(HttpStatus.OK.value())
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .withBody("""[$productDefinitionJson]"""),
+        ),
     )
   }
 

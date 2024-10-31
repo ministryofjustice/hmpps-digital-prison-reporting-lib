@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit
 class ProductDefinitionRepositoryAutoConfig(
   @Value("\${dpr.lib.definition.locations:#{null}}") private val definitionResourceLocations: List<String>?,
   @Value("\${dpr.lib.dataProductDefinitions.host:#{null}}") private val definitionsHost: String?,
-  @Value("\${dpr.lib.dataProductDefinitions.cache.enabled:#{false}}") private val cacheEnabled: Boolean,
   @Value("\${dpr.lib.dataProductDefinitions.cache.durationMinutes:#{30}}") private val cacheDurationMinutes: Long,
 ) {
 

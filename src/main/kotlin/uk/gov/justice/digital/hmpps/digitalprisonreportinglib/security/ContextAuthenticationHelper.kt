@@ -4,7 +4,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 
 @Component("dprContextHelper")
-class ContextAuthenticationHelper: AuthenticationHelper {
+class ContextAuthenticationHelper : AuthenticationHelper {
   override fun getCurrentAuthentication() =
     SecurityContextHolder.getContext().authentication as DprAuthAwareAuthenticationToken
 }

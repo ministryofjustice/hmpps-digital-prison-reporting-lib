@@ -47,7 +47,7 @@ class JwtAuthHelper {
       scope = scopes,
       expiryTime = Duration.ofHours(1L),
       roles = roles,
-      )
+    )
     return token
   }
 
