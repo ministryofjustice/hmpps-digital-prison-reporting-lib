@@ -80,7 +80,7 @@ abstract class IntegrationTestBase {
       prisonerRepository.save(it)
     }
     val jwt = mock<Jwt>()
-    val authentication = mock(DprAuthAwareAuthenticationToken::class.java)
+    val authentication = mock<DprAuthAwareAuthenticationToken>()
     whenever(jwt.tokenValue).then { TEST_TOKEN }
     whenever(authentication.jwt).then { jwt }
     authenticationHelper.authentication = authentication
