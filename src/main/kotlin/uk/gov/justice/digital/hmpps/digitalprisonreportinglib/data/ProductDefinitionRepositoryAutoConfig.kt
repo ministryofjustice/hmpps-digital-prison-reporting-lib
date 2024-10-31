@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.json.GsonHttpMessageConverter
 import org.springframework.web.client.RestTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthenticationHelper
 import java.util.concurrent.TimeUnit
 
 @Configuration
@@ -41,12 +42,14 @@ class ProductDefinitionRepositoryAutoConfig(
   fun dataProductDefinitionsRepository(
     dprDefinitionGson: Gson,
     definitionsCache: Cache<String, List<ProductDefinition>>? = null,
+    authenticationHelper: AuthenticationHelper,
   ): ProductDefinitionRepository = ClientDataProductDefinitionsRepository(
     RestTemplate(
       listOf(GsonHttpMessageConverter(dprDefinitionGson)),
     ),
     definitionsHost,
     definitionsCache,
+    authenticationHelper,
   )
 
   @Bean
