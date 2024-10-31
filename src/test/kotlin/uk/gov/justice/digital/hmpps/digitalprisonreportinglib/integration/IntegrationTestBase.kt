@@ -8,7 +8,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -79,10 +79,10 @@ abstract class IntegrationTestBase {
     ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners.forEach {
       prisonerRepository.save(it)
     }
-    val jwt = mock(Jwt::class.java)
+    val jwt = mock<Jwt>()
     val authentication = mock(DprAuthAwareAuthenticationToken::class.java)
-    `when`(jwt.tokenValue).then { TEST_TOKEN }
-    `when`(authentication.jwt).then { jwt }
+    whenever(jwt.tokenValue).then { TEST_TOKEN }
+    whenever(authentication.jwt).then { jwt }
     authenticationHelper.authentication = authentication
   }
 
