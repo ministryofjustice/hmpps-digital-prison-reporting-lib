@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
+## 6.3.1
+Add ContextAuthenticationHelper implementation to autoconfig.
+
 ## 6.3.0
-Added JWT authentication to Defnitions API call.
+Added JWT authentication to Definitions API call.
 
 ## 6.2.0
 Added new metrics data API.
