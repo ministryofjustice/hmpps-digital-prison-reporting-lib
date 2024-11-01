@@ -25,3 +25,4 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepos
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DigitalPrisonReportingExceptionHandler
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ContextAuthenticationHelper
