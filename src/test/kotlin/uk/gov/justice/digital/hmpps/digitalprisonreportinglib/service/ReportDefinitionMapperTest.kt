@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
@@ -121,6 +122,14 @@ class ReportDefinitionMapperTest {
         id = "30",
         dataset = "\$ref:10",
         template = SummaryTemplate.PageFooter,
+        field = listOf(
+          SummaryField(
+            name = "\$ref:13",
+            header = true,
+            mergeRows = false,
+            sortAsc = null,
+          ),
+        ),
       ),
     ),
   )
@@ -245,6 +254,9 @@ class ReportDefinitionMapperTest {
     val summaryField = summary.fields.first()
     assertThat(summaryField.name).isEqualTo(fullDataset.schema.field.first().name)
     assertThat(summaryField.display).isEqualTo(fullDataset.schema.field.first().display)
+    assertThat(summaryField.header).isEqualTo(sourceSummary.field?.first()?.header)
+    assertThat(summaryField.mergeRows).isEqualTo(sourceSummary.field?.first()?.mergeRows)
+    assertThat(summaryField.sortAsc).isEqualTo(sourceSummary.field?.first()?.sortAsc)
   }
 
   @Test
