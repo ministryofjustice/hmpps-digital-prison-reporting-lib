@@ -131,7 +131,7 @@ class ReportDefinitionMapper(
       type = convertParameterTypeToFieldType(field.type),
       header = summaryField?.header,
       mergeRows = summaryField?.mergeRows,
-      sortAsc = summaryField?.sortAsc
+      sortAsc = summaryField?.sortAsc,
     )
   }
 
