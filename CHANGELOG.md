@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 6.3.2
+Add Crosstab supporting properties
+
 ## 6.3.1
 Add ContextAuthenticationHelper implementation to autoconfig.
 
