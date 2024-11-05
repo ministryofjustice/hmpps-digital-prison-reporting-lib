@@ -9,14 +9,8 @@ enum class Template {
   @SerializedName("list-section")
   ListSection,
 
-  @SerializedName("list-aggregate")
-  ListAggregate,
-
   @SerializedName("list-tab")
   ListTab,
-
-  @SerializedName("crosstab")
-  CrossTab,
 
   @SerializedName("summary")
   Summary,

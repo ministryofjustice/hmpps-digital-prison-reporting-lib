@@ -15,29 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryTemplate
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -121,6 +99,12 @@ class ReportDefinitionMapperTest {
         id = "30",
         dataset = "\$ref:10",
         template = SummaryTemplate.PageFooter,
+        field = listOf(SummaryField(
+          name = "\$ref:13",
+          header = true,
+          mergeRows = false,
+          sortAsc = null
+        ))
       ),
     ),
   )
@@ -245,6 +229,9 @@ class ReportDefinitionMapperTest {
     val summaryField = summary.fields.first()
     assertThat(summaryField.name).isEqualTo(fullDataset.schema.field.first().name)
     assertThat(summaryField.display).isEqualTo(fullDataset.schema.field.first().display)
+    assertThat(summaryField.header).isEqualTo(sourceSummary.field?.first()?.header)
+    assertThat(summaryField.mergeRows).isEqualTo(sourceSummary.field?.first()?.mergeRows)
+    assertThat(summaryField.sortAsc).isEqualTo(sourceSummary.field?.first()?.sortAsc)
   }
 
   @Test

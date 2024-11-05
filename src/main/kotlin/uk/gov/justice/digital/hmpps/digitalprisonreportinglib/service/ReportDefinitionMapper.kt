@@ -120,8 +120,20 @@ class ReportDefinitionMapper(
     ReportSummary(
       id = summary.id,
       template = SummaryTemplate.valueOf(summary.template.toString()),
-      fields = datasetHelper.findDataset(allDatasets, summary.dataset).schema.field.map { SummaryField(it.name, it.display, convertParameterTypeToFieldType(it.type)) },
+      fields = datasetHelper.findDataset(allDatasets, summary.dataset).schema.field.map { map(it, summary.field) },
     )
+
+  private fun map(field: SchemaField, summaryFields: List<uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryField>?): SummaryField {
+    val summaryField = summaryFields?.find { it.name.removePrefix("\$ref:") == field.name }
+    return SummaryField(
+      name = field.name,
+      display = field.display,
+      type = convertParameterTypeToFieldType(field.type),
+      header = summaryField?.header,
+      mergeRows = summaryField?.mergeRows,
+      sortAsc = summaryField?.sortAsc
+    )
+  }
 
   private fun maybeConvertToReportFields(parameters: List<Parameter>?) =
     parameters?.map { convert(it) } ?: emptyList()
