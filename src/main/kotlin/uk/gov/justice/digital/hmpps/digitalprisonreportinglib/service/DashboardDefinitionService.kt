@@ -31,20 +31,6 @@ class DashboardDefinitionService(val productDefinitionRepository: ProductDefinit
     )
   }
 
-//  fun getMetricDefinition(
-//    dataProductDefinitionId: String,
-//    metricId: String,
-//    dataProductDefinitionsPath: String? = null,
-//  ): MetricDefinition {
-//    return toMetricDefinition(
-//      productDefinitionRepository.getProductDefinition(
-//        dataProductDefinitionId,
-//        dataProductDefinitionsPath,
-//      ).metrics?.firstOrNull { it.id == metricId }
-//        ?: throw IllegalArgumentException("Metric with ID: $metricId not found for DPD $dataProductDefinitionId"),
-//    )
-//  }
-
   fun toDashboardDefinition(dashboard: Dashboard): DashboardDefinition {
     return DashboardDefinition(
       id = dashboard.id,
