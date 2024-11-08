@@ -113,11 +113,11 @@ class ReportDefinitionSummaryMapperTest {
     report = listOf(fullReport),
   )
 
-  private val metricDefinitionService: MetricDefinitionService = mock<MetricDefinitionService>()
+  private val dashboardDefinitionService: DashboardDefinitionService = mock<DashboardDefinitionService>()
 
   @Test
   fun `Getting report list for user maps full data correctly`() {
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val result = mapper.map(fullProductDefinition, null)
 
@@ -146,7 +146,7 @@ class ReportDefinitionSummaryMapperTest {
         version = "5",
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val result = mapper.map(productDefinition, null)
 
@@ -195,7 +195,7 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val result = mapper.map(productDefinition, HTML)
 
@@ -206,7 +206,7 @@ class ReportDefinitionSummaryMapperTest {
 
   @Test
   fun `Getting report list with dashboards for user includes the dashboard definition in the mapped data`() {
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val dashboard = Dashboard(
       id = "d1",
@@ -255,7 +255,7 @@ class ReportDefinitionSummaryMapperTest {
       ),
     )
 
-    whenever(metricDefinitionService.toDashboardDefinition(dashboard))
+    whenever(dashboardDefinitionService.toDashboardDefinition(dashboard))
       .thenReturn(dashboardDefinition)
 
     val result = mapper.map(
@@ -271,6 +271,6 @@ class ReportDefinitionSummaryMapperTest {
     assertThat(result.dashboards).isEqualTo(
       listOf(dashboardDefinition),
     )
-    verify(metricDefinitionService, times(1)).toDashboardDefinition(dashboard)
+    verify(dashboardDefinitionService, times(1)).toDashboardDefinition(dashboard)
   }
 }

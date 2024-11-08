@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import java.lang.IllegalArgumentException
 
 @Service
-class MetricDefinitionService(val productDefinitionRepository: ProductDefinitionRepository) {
+class DashboardDefinitionService(val productDefinitionRepository: ProductDefinitionRepository) {
 
   fun getDashboardDefinition(
     dataProductDefinitionId: String,

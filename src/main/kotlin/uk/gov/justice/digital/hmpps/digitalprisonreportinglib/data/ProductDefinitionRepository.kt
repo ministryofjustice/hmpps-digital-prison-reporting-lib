@@ -10,8 +10,4 @@ interface ProductDefinitionRepository {
   fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String? = null): ProductDefinition
 
   fun getSingleReportProductDefinition(definitionId: String, reportId: String, dataProductDefinitionsPath: String? = null): SingleReportProductDefinition
-
-//  fun getSingleMetricProductDefinition(definitionId: String, metricId: String, dataProductDefinitionsPath: String? = null): SingleMetricProductDefinition
-
-//  fun getSingleDashboardProductDefinition(definitionId: String, metricId: String, dataProductDefinitionsPath: String? = null): SingleDashboardProductDefinition
 }
