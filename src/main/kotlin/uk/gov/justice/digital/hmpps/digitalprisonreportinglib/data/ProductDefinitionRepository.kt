@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleMetricProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 
 interface ProductDefinitionRepository {
@@ -12,5 +11,7 @@ interface ProductDefinitionRepository {
 
   fun getSingleReportProductDefinition(definitionId: String, reportId: String, dataProductDefinitionsPath: String? = null): SingleReportProductDefinition
 
-  fun getSingleMetricProductDefinition(definitionId: String, metricId: String, dataProductDefinitionsPath: String? = null): SingleMetricProductDefinition
+//  fun getSingleMetricProductDefinition(definitionId: String, metricId: String, dataProductDefinitionsPath: String? = null): SingleMetricProductDefinition
+
+//  fun getSingleDashboardProductDefinition(definitionId: String, metricId: String, dataProductDefinitionsPath: String? = null): SingleDashboardProductDefinition
 }

@@ -1,23 +1,24 @@
 {
-  "id" : "missing-ethnicity-metrics",
-  "name" : "Missing Ethnicity Metrics",
-  "description" : "Missing Ethnicity Metrics",
-  "metadata" : {
-    "author" : "Adam",
-    "version" : "1.2.3",
-    "owner" : "Eve"
+  "id": "missing-ethnicity-metrics",
+  "name": "Missing Ethnicity Metrics",
+  "description": "Reports about Missing Ethnicity Metrics",
+  "metadata": {
+    "author": "Adam",
+    "version": "1.2.3",
+    "owner": "Eve"
   },
-  "datasource" : [
+  "datasource": [
     {
       "id": "datamart",
       "name": "datamart"
-    }],
-  "dataset" : [
+    }
+  ],
+  "dataset": [
     {
-      "id": "test-metric-dataset-id-1",
-      "name": "Test metric dataset",
+      "id": "missing-ethnicity-dataset",
+      "name": "Missing Ethnicity By Establishment Dataset",
       "datasource": "datamart",
-      "query": "SELECT establishment_id, 'missing ethnicity percentage' AS missing_ethnicity_percentage, 'present ethnicity percentage' AS present_ethnicity_percentage, 196 AS no_of_prisoners, 4 AS no_of_prisoners_without",
+      "query": "SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality",
       "schema": {
         "field": [
           {
@@ -26,29 +27,14 @@
             "display": "Establishment ID"
           },
           {
-            "name": "missing_ethnicity_percentage",
-            "type": "string",
-            "display": "% Missing Ethnicity"
-          },
-          {
-            "name": "present_ethnicity_percentage",
-            "type": "string",
-            "display": "% With Ethnicity"
-          },
-          {
-            "name": "no_of_prisoners",
-            "type": "long",
-            "display": "No. of Prisoners with ethnicity"
-          },
-          {
-            "name": "no_of_prisoners_without",
+            "name": "has_ethnicity",
             "type": "long",
             "display": "No. of Prisoners without ethnicity"
           },
           {
-            "name": "random_data",
-            "type": "string",
-            "display": "Random Data"
+            "name": "ethnicity_is_missing",
+            "type": "long",
+            "display": "No. of Prisoners with ethnicity"
           }
         ]
       }
@@ -56,55 +42,32 @@
   ],
   "dashboards": [
     {
-    "id": "test-dashboard-1",
-    "name": "Test Dashboard 1",
-    "description": "Test Dashboard 1 Description",
-    "metrics": [
-      {
-        "id": "missing-ethnicity-metric"
-      }
-    ]
-    }
-  ],
-  "metrics": [
-    {
-      "id": "missing-ethnicity-metric",
-      "name": "testMetricId1",
-      "dataset": "test-metric-dataset-id-1",
-      "display": "Missing Ethnicity",
-      "description": "Missing Ethnicity",
-      "specification":
-      [
+      "id": "test-dashboard-1",
+      "name": "Test Dashboard 1",
+      "description": "Test Dashboard 1 Description",
+      "dataset": "missing-ethnicity-dataset",
+      "metrics": [
         {
-          "name": "establishment_id",
-          "display": "Establishment ID",
-          "group": true
-        },
-        {
-          "name": "missing_ethnicity_percentage",
-          "display": "% Missing Ethnicity",
-          "chart": ["doughnut"],
-          "unit": "percentage"
-        },
-        {
-          "name": "present_ethnicity_percentage",
-          "display": "% With Ethnicity",
-          "chart": ["doughnut"],
-          "unit": "percentage"
-        },
-        {
-          "name": "no_of_prisoners",
-          "display": "No. of Prisoners with ethnicity",
-          "chart": ["bar"]
-        },
-        {
-          "name": "no_of_prisoners_without",
-          "display": "No. of Prisoners without ethnicity",
-          "chart": ["bar"]
-        },
-        {
-          "name": "random_data",
-          "display": "Random Data"
+          "id": "missing-ethnicity-metric",
+          "name": "Missing Ethnicity By Establishment Metric",
+          "display": "Missing Ethnicity By Establishment Metric",
+          "description": "Missing Ethnicity By Establishment Metric",
+          "unit": "number",
+          "charts": [
+            { "type": ["bar"], "dimension": "establishment_id" }
+          ],
+          "data": [
+            [
+              {
+                "name": "$ref:ethnicity_is_missing",
+                "display": "No. of Prisoners without ethnicity"
+              },
+              {
+                "name": "$ref:has_ethnicity",
+                "display": "No. of Prisoners with ethnicity"
+              }
+            ]
+          ]
         }
       ]
     }
@@ -126,5 +89,5 @@
       ]
     }
   ],
-  "report" : []
+  "report": []
 }

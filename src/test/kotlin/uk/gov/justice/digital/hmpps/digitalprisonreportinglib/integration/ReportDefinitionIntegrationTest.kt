@@ -7,8 +7,12 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DataDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
@@ -121,8 +125,24 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             name = "Test Dashboard 1",
             description = "Test Dashboard 1 Description",
             metrics = listOf(
-              DashboardDefinition.DashboardMetricDefinition(
+              MetricDefinition(
                 id = "missing-ethnicity-metric",
+                name = "Missing Ethnicity By Establishment Metric",
+                display = "Missing Ethnicity By Establishment Metric",
+                description = "Missing Ethnicity By Establishment Metric",
+                unit = "number",
+                charts = listOf(
+                  ChartDefinition(
+                    listOf(ChartTypeDefinition.BAR),
+                    dimension = "establishment_id",
+                  ),
+                ),
+                data = listOf(
+                  listOf(
+                    DataDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity"),
+                    DataDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
+                  ),
+                ),
               ),
             ),
           ),

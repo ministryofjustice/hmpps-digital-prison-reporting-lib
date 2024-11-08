@@ -2,17 +2,20 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 data class Metric(
   val id: String,
-  val dataset: String,
   val name: String,
   val display: String,
   val description: String,
-  val specification: List<MetricSpecification>,
+  val unit: String? = null,
+  val charts: List<Chart>,
+  val data: List<List<Data>>,
 )
 
-data class MetricSpecification(
+data class Chart(
+  val type: List<ChartType>,
+  val dimension: String,
+)
+
+data class Data(
   val name: String,
   val display: String,
-  val unit: String? = null,
-  val chart: List<ChartType>? = null,
-  val group: Boolean? = null,
 )

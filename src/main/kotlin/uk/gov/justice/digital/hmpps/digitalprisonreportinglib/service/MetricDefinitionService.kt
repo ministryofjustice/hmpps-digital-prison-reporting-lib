@@ -1,15 +1,17 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DataDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricSpecificationDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Data
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetricSpecification
 import java.lang.IllegalArgumentException
 
 @Service
@@ -29,26 +31,26 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
     )
   }
 
-  fun getMetricDefinition(
-    dataProductDefinitionId: String,
-    metricId: String,
-    dataProductDefinitionsPath: String? = null,
-  ): MetricDefinition {
-    return toMetricDefinition(
-      productDefinitionRepository.getProductDefinition(
-        dataProductDefinitionId,
-        dataProductDefinitionsPath,
-      ).metrics?.firstOrNull { it.id == metricId }
-        ?: throw IllegalArgumentException("Metric with ID: $metricId not found for DPD $dataProductDefinitionId"),
-    )
-  }
+//  fun getMetricDefinition(
+//    dataProductDefinitionId: String,
+//    metricId: String,
+//    dataProductDefinitionsPath: String? = null,
+//  ): MetricDefinition {
+//    return toMetricDefinition(
+//      productDefinitionRepository.getProductDefinition(
+//        dataProductDefinitionId,
+//        dataProductDefinitionsPath,
+//      ).metrics?.firstOrNull { it.id == metricId }
+//        ?: throw IllegalArgumentException("Metric with ID: $metricId not found for DPD $dataProductDefinitionId"),
+//    )
+//  }
 
   fun toDashboardDefinition(dashboard: Dashboard): DashboardDefinition {
     return DashboardDefinition(
       id = dashboard.id,
       name = dashboard.name,
       description = dashboard.description,
-      metrics = dashboard.metrics.map { toDashboardMetricDefinition(it) },
+      metrics = dashboard.metrics.map { toMetricDefinition(it) },
     )
   }
 
@@ -58,22 +60,18 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
       name = metric.name,
       display = metric.display,
       description = metric.description,
-      specification = metric.specification.map { toMetricSpecificationDefinition(it) },
+      unit = metric.unit,
+      charts = metric.charts.map { toChartDefinition(it) },
+      data = metric.data.map { toDataDefinition(it) },
     )
   }
 
-  private fun toMetricSpecificationDefinition(metricSpecification: MetricSpecification): MetricSpecificationDefinition {
-    return MetricSpecificationDefinition(
-      name = metricSpecification.name,
-      display = metricSpecification.display,
-      unit = metricSpecification.unit,
-      chart = toChartTypeDefinition(metricSpecification.chart),
-      group = metricSpecification.group,
-    )
+  private fun toChartDefinition(chart: Chart): ChartDefinition {
+    return ChartDefinition(type = chart.type.map { ChartTypeDefinition.valueOf(it.toString()) }, dimension = chart.dimension)
   }
 
-  private fun toDashboardMetricDefinition(metric: Dashboard.DashboardMetric): DashboardDefinition.DashboardMetricDefinition {
-    return DashboardDefinition.DashboardMetricDefinition(metric.id)
+  private fun toDataDefinition(data: List<Data>): List<DataDefinition> {
+    return data.map { DataDefinition(it.name.removePrefix("\$ref:"), it.display) }
   }
 
   private fun toChartTypeDefinition(chart: List<ChartType>?): List<ChartTypeDefinition>? {
