@@ -39,19 +39,20 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
                 "name": "Missing Ethnicity By Establishment Metric",
                 "display": "Missing Ethnicity By Establishment Metric",
                 "description": "Missing Ethnicity By Establishment Metric",
-                "unit": "number",
                 "charts": [
-                  { "type": ["bar"], "dimension": "establishment_id" }
+                  { "type": "bar", "dimension": "establishment_id" }
                 ],
                 "data": [
                   [
                     {
                       "name": "ethnicity_is_missing",
-                      "display": "No. of Prisoners without ethnicity"
+                      "display": "No. of Prisoners without ethnicity",
+                      "unit": "number"
                     },
                     {
                       "name": "has_ethnicity",
-                      "display": "No. of Prisoners with ethnicity"
+                      "display": "No. of Prisoners with ethnicity",
+                      "unit": "number"
                     }
                   ]
                 ]

@@ -220,7 +220,7 @@ class ReportDefinitionSummaryMapperTest {
           display = "d1",
           description = "d2",
           charts = listOf(
-            Chart(type = listOf(ChartType.BAR), dimension = "dim_1"),
+            Chart(type = ChartType.BAR, dimension = "dim_1"),
           ),
           data = listOf(
             listOf(
@@ -240,10 +240,9 @@ class ReportDefinitionSummaryMapperTest {
           name = "n1",
           display = "d1",
           description = "d2",
-          unit = "number",
           charts = listOf(
             ChartDefinition(
-              listOf(ChartTypeDefinition.BAR),
+              ChartTypeDefinition.BAR,
               dimension = "dim_1",
             ),
           ),

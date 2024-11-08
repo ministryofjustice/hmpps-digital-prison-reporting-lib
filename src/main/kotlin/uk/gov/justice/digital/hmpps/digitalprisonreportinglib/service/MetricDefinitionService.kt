@@ -60,18 +60,17 @@ class MetricDefinitionService(val productDefinitionRepository: ProductDefinition
       name = metric.name,
       display = metric.display,
       description = metric.description,
-      unit = metric.unit,
       charts = metric.charts.map { toChartDefinition(it) },
       data = metric.data.map { toDataDefinition(it) },
     )
   }
 
   private fun toChartDefinition(chart: Chart): ChartDefinition {
-    return ChartDefinition(type = chart.type.map { ChartTypeDefinition.valueOf(it.toString()) }, dimension = chart.dimension)
+    return ChartDefinition(type = ChartTypeDefinition.valueOf(chart.type.toString()), dimension = chart.dimension)
   }
 
   private fun toDataDefinition(data: List<Data>): List<DataDefinition> {
-    return data.map { DataDefinition(it.name.removePrefix("\$ref:"), it.display) }
+    return data.map { DataDefinition(it.name.removePrefix("\$ref:"), it.display, it.unit) }
   }
 
   private fun toChartTypeDefinition(chart: List<ChartType>?): List<ChartTypeDefinition>? {

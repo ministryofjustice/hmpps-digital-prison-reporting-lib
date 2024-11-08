@@ -11,11 +11,12 @@ data class Metric(
 )
 
 data class Chart(
-  val type: List<ChartType>,
+  val type: ChartType,
   val dimension: String,
 )
 
 data class Data(
   val name: String,
   val display: String,
+  val unit: String? = null,
 )

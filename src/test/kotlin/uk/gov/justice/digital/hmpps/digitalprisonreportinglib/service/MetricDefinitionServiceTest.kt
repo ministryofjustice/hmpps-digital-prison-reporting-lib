@@ -38,17 +38,16 @@ class MetricDefinitionServiceTest {
             name = "Missing Ethnicity By Establishment Metric",
             display = "Missing Ethnicity By Establishment Metric",
             description = "Missing Ethnicity By Establishment Metric",
-            unit = "number",
             charts = listOf(
               ChartDefinition(
-                listOf(ChartTypeDefinition.BAR),
+                ChartTypeDefinition.BAR,
                 dimension = "establishment_id",
               ),
             ),
             data = listOf(
               listOf(
-                DataDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity"),
-                DataDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
+                DataDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity", unit = "number"),
+                DataDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity", unit = "number"),
               ),
             ),
           ),
