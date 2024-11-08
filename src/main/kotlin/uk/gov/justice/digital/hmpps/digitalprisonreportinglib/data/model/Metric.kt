@@ -5,7 +5,6 @@ data class Metric(
   val name: String,
   val display: String,
   val description: String,
-  val unit: String? = null,
   val charts: List<Chart>,
   val data: List<List<Data>>,
 )
