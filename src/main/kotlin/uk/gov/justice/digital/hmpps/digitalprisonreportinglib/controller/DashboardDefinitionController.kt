@@ -13,13 +13,12 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.MetricDefinitionService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionService
 
 @Validated
 @RestController
 @Tag(name = "Metric Definition API")
-class MetricDefinitionController(val metricDefinitionService: MetricDefinitionService) {
+class DashboardDefinitionController(val dashboardDefinitionService: DashboardDefinitionService) {
 
   @GetMapping("/definitions/{dataProductDefinitionId}/dashboards/{dashboardId}")
   @Operation(
@@ -47,42 +46,9 @@ class MetricDefinitionController(val metricDefinitionService: MetricDefinitionSe
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): DashboardDefinition {
-    return metricDefinitionService.getDashboardDefinition(
+    return dashboardDefinitionService.getDashboardDefinition(
       dataProductDefinitionId,
       dashboardId,
-      dataProductDefinitionsPath,
-    )
-  }
-
-  @GetMapping("/definitions/{dataProductDefinitionId}/metrics/{metricId}")
-  @Operation(
-    description = "Gets the metric definition.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
-  )
-  fun metricDefinition(
-    @Parameter(
-      description = "The ID of the Data Product Definition.",
-      example = "external-movements",
-    )
-    @PathVariable("dataProductDefinitionId")
-    dataProductDefinitionId: String,
-    @Parameter(
-      description = "The ID of the metric.",
-      example = "metricId",
-    )
-    @PathVariable("metricId")
-    metricId: String,
-    @Parameter(
-      description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
-      example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
-  ): MetricDefinition {
-    return metricDefinitionService.getMetricDefinition(
-      dataProductDefinitionId,
-      metricId,
       dataProductDefinitionsPath,
     )
   }

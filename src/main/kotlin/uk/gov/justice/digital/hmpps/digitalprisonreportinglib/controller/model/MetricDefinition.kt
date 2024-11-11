@@ -5,13 +5,16 @@ data class MetricDefinition(
   val name: String,
   val display: String,
   val description: String,
-  val specification: List<MetricSpecificationDefinition>,
+  val charts: List<ChartDefinition>,
+  val data: List<List<DataDefinition>>,
 )
 
-data class MetricSpecificationDefinition(
+data class ChartDefinition(
+  val type: ChartTypeDefinition,
+  val dimension: String,
+)
+data class DataDefinition(
   val name: String,
   val display: String,
   val unit: String? = null,
-  val chart: List<ChartTypeDefinition>? = null,
-  val group: Boolean? = null,
 )

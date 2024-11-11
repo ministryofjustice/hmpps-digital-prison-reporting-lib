@@ -29,72 +29,33 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
       .expectBody()
       .json(
         """
-          {
-             "id": "test-dashboard-1",
-              "name": "Test Dashboard 1",
-              "description": "Test Dashboard 1 Description",
-              "metrics": [
-                {
-                  "id": "missing-ethnicity-metric"
-                }
-              ]
-          }
-        """.trimIndent(),
-      )
-  }
-
-  @Test
-  fun `Metric definition is returned as expected`() {
-    webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/definitions/missing-ethnicity-metrics/metrics/missing-ethnicity-metric")
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .json(
-        """
-          {
-            "id": "missing-ethnicity-metric",
-            "name": "testMetricId1",
-            "display": "Missing Ethnicity",
-            "description": "Missing Ethnicity",
-            "specification":
-            [
+            {
+            "id": "test-dashboard-1",
+            "name": "Test Dashboard 1",
+            "description": "Test Dashboard 1 Description",
+            "metrics": [
               {
-                "name": "establishment_id",
-                "display": "Establishment ID",
-                "group": true
-              },
-              {
-                "name": "missing_ethnicity_percentage",
-                "display": "% Missing Ethnicity",
-                "chart": ["doughnut"],
-                "unit": "percentage"
-              },
-              {
-                "name": "present_ethnicity_percentage",
-                "display": "% With Ethnicity",
-                "chart": ["doughnut"],
-                "unit": "percentage"
-              },
-              {
-                "name": "no_of_prisoners",
-                "display": "No. of Prisoners with ethnicity",
-                "chart": ["bar"]
-              },
-              {
-                "name": "no_of_prisoners_without",
-                "display": "No. of Prisoners without ethnicity",
-                "chart": ["bar"]
-              },
-              {
-                "name": "random_data",
-                "display": "Random Data"
+                "id": "missing-ethnicity-metric",
+                "name": "Missing Ethnicity By Establishment Metric",
+                "display": "Missing Ethnicity By Establishment Metric",
+                "description": "Missing Ethnicity By Establishment Metric",
+                "charts": [
+                  { "type": "bar", "dimension": "establishment_id" }
+                ],
+                "data": [
+                  [
+                    {
+                      "name": "ethnicity_is_missing",
+                      "display": "No. of Prisoners without ethnicity",
+                      "unit": "number"
+                    },
+                    {
+                      "name": "has_ethnicity",
+                      "display": "No. of Prisoners with ethnicity",
+                      "unit": "number"
+                    }
+                  ]
+                ]
               }
             ]
           }

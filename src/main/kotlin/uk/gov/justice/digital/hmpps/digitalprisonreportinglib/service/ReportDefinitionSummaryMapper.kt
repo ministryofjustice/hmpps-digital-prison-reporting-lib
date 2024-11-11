@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Product
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 
 @Component
-class ReportDefinitionSummaryMapper(val metricDefinitionService: MetricDefinitionService) {
+class ReportDefinitionSummaryMapper(val dashboardDefinitionService: DashboardDefinitionService) {
 
   fun map(
     productDefinition: ProductDefinition,
@@ -26,7 +26,7 @@ class ReportDefinitionSummaryMapper(val metricDefinitionService: MetricDefinitio
   )
 
   private fun map(dashboards: List<Dashboard>?): List<DashboardDefinition>? =
-    dashboards?.map { metricDefinitionService.toDashboardDefinition(it) }
+    dashboards?.map { dashboardDefinitionService.toDashboardDefinition(it) }
 
   private fun map(
     report: Report,

@@ -6,16 +6,22 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition.DashboardMetricDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DataDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard.DashboardMetric
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Data
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
@@ -107,11 +113,11 @@ class ReportDefinitionSummaryMapperTest {
     report = listOf(fullReport),
   )
 
-  private val metricDefinitionService: MetricDefinitionService = mock<MetricDefinitionService>()
+  private val dashboardDefinitionService: DashboardDefinitionService = mock<DashboardDefinitionService>()
 
   @Test
   fun `Getting report list for user maps full data correctly`() {
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val result = mapper.map(fullProductDefinition, null)
 
@@ -140,7 +146,7 @@ class ReportDefinitionSummaryMapperTest {
         version = "5",
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val result = mapper.map(productDefinition, null)
 
@@ -189,7 +195,7 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val result = mapper.map(productDefinition, HTML)
 
@@ -200,14 +206,28 @@ class ReportDefinitionSummaryMapperTest {
 
   @Test
   fun `Getting report list with dashboards for user includes the dashboard definition in the mapped data`() {
-    val mapper = ReportDefinitionSummaryMapper(metricDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
 
     val dashboard = Dashboard(
       id = "d1",
       name = "n1",
       description = "abc",
+      dataset = "dataset1",
       metrics = listOf(
-        DashboardMetric("m1"),
+        Metric(
+          id = "m1",
+          name = "n1",
+          display = "d1",
+          description = "d2",
+          charts = listOf(
+            Chart(type = ChartType.BAR, dimension = "dim_1"),
+          ),
+          data = listOf(
+            listOf(
+              Data(name = "dataName1", display = "dataDisplay1"),
+            ),
+          ),
+        ),
       ),
     )
     val dashboardDefinition = DashboardDefinition(
@@ -215,11 +235,27 @@ class ReportDefinitionSummaryMapperTest {
       name = "n1",
       description = "abc",
       metrics = listOf(
-        DashboardMetricDefinition("m1"),
+        MetricDefinition(
+          id = "m1",
+          name = "n1",
+          display = "d1",
+          description = "d2",
+          charts = listOf(
+            ChartDefinition(
+              ChartTypeDefinition.BAR,
+              dimension = "dim_1",
+            ),
+          ),
+          data = listOf(
+            listOf(
+              DataDefinition(name = "dataName1", display = "dataDisplay1"),
+            ),
+          ),
+        ),
       ),
     )
 
-    whenever(metricDefinitionService.toDashboardDefinition(dashboard))
+    whenever(dashboardDefinitionService.toDashboardDefinition(dashboard))
       .thenReturn(dashboardDefinition)
 
     val result = mapper.map(
@@ -235,6 +271,6 @@ class ReportDefinitionSummaryMapperTest {
     assertThat(result.dashboards).isEqualTo(
       listOf(dashboardDefinition),
     )
-    verify(metricDefinitionService, times(1)).toDashboardDefinition(dashboard)
+    verify(dashboardDefinitionService, times(1)).toDashboardDefinition(dashboard)
   }
 }

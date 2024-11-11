@@ -12,5 +12,4 @@ data class ProductDefinition(
   val report: List<Report> = emptyList(),
   val policy: List<Policy> = emptyList(),
   val dashboards: List<Dashboard>? = null,
-  val metrics: List<Metric>? = null,
 )

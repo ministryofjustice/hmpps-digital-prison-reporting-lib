@@ -3,8 +3,7 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.FilterHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiAsyncController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.MetricDefinitionController
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.MetricsDataController
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DashboardDefinitionController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DprOpenApiConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.RedshiftDataApiConfig
@@ -15,8 +14,7 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadProvider
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ResourceServerConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.MetricDefinitionService
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.MetricsDataService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionMapper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionSummaryMapper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
