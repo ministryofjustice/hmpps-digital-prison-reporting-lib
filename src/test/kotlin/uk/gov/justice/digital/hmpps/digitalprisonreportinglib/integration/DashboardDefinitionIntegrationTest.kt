@@ -5,7 +5,7 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.web.util.UriBuilder
 
-class MetricDefinitionIntegrationTest : IntegrationTestBase() {
+class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
   companion object {
     @JvmStatic
     @DynamicPropertySource
@@ -40,21 +40,42 @@ class MetricDefinitionIntegrationTest : IntegrationTestBase() {
                 "display": "Missing Ethnicity By Establishment Metric",
                 "description": "Missing Ethnicity By Establishment Metric",
                 "charts": [
-                  { "type": "bar", "dimension": "establishment_id" }
-                ],
-                "data": [
-                  [
-                    {
-                      "name": "ethnicity_is_missing",
-                      "display": "No. of Prisoners without ethnicity",
-                      "unit": "number"
+                  {
+                    "type": "bar",
+                    "label": {
+                      "name": "establishment_id",
+                      "display": "Establishment ID"
                     },
-                    {
-                      "name": "has_ethnicity",
-                      "display": "No. of Prisoners with ethnicity",
-                      "unit": "number"
-                    }
-                  ]
+                    "unit": "number",
+                    "columns": [
+                      {
+                        "name": "has_ethnicity",
+                        "display": "No. of Prisoners with ethnicity"
+                      },
+                      {
+                        "name": "has_no_ethnicity",
+                        "display": "No. of Prisoners without ethnicity"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "doughnut",
+                    "label": {
+                      "name": "establishment_id",
+                      "display": "Establishment ID"
+                    },
+                    "unit": "percentage",
+                    "columns": [
+                      {
+                        "name": "has_ethnicity",
+                        "display": "No. of Prisoners with ethnicity"
+                      },
+                      {
+                        "name": "has_no_ethnicity",
+                        "display": "No. of Prisoners without ethnicity"
+                      }
+                    ]
+                  }
                 ]
               }
             ]

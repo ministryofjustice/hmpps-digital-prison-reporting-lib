@@ -5,8 +5,9 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DataDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -40,14 +41,22 @@ class DashboardDefinitionServiceTest {
             description = "Missing Ethnicity By Establishment Metric",
             charts = listOf(
               ChartDefinition(
-                ChartTypeDefinition.BAR,
-                dimension = "establishment_id",
+                type = ChartTypeDefinition.BAR,
+                label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
+                unit = "number",
+                columns = listOf(
+                  ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
+                  ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
+                ),
               ),
-            ),
-            data = listOf(
-              listOf(
-                DataDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity", unit = "number"),
-                DataDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity", unit = "number"),
+              ChartDefinition(
+                type = ChartTypeDefinition.DOUGHNUT,
+                label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
+                unit = "percentage",
+                columns = listOf(
+                  ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
+                  ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
+                ),
               ),
             ),
           ),

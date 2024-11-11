@@ -8,18 +8,20 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DataDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Column
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Data
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Label
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
@@ -220,11 +222,11 @@ class ReportDefinitionSummaryMapperTest {
           display = "d1",
           description = "d2",
           charts = listOf(
-            Chart(type = ChartType.BAR, dimension = "dim_1"),
-          ),
-          data = listOf(
-            listOf(
-              Data(name = "dataName1", display = "dataDisplay1"),
+            Chart(
+              type = ChartType.BAR,
+              unit = "dim_1",
+              label = Label(name = "label1", display = "Label 1"),
+              columns = listOf(Column(name = "column1", display = "Column 1")),
             ),
           ),
         ),
@@ -242,13 +244,10 @@ class ReportDefinitionSummaryMapperTest {
           description = "d2",
           charts = listOf(
             ChartDefinition(
-              ChartTypeDefinition.BAR,
-              dimension = "dim_1",
-            ),
-          ),
-          data = listOf(
-            listOf(
-              DataDefinition(name = "dataName1", display = "dataDisplay1"),
+              type = ChartTypeDefinition.BAR,
+              unit = "dim_1",
+              label = LabelDefinition(name = "label1", display = "Label 1"),
+              columns = listOf(ColumnDefinition(name = "column1", display = "Column 1")),
             ),
           ),
         ),
