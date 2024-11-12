@@ -6,16 +6,21 @@ data class Metric(
   val display: String,
   val description: String,
   val charts: List<Chart>,
-  val data: List<List<Data>>,
 )
 
 data class Chart(
   val type: ChartType,
-  val dimension: String,
+  val label: Label,
+  val unit: String,
+  val columns: List<Column>,
 )
 
-data class Data(
+data class Label(
   val name: String,
   val display: String,
-  val unit: String? = null,
+)
+
+data class Column(
+  val name: String,
+  val display: String,
 )

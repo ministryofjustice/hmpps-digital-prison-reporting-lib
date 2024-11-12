@@ -6,15 +6,20 @@ data class MetricDefinition(
   val display: String,
   val description: String,
   val charts: List<ChartDefinition>,
-  val data: List<List<DataDefinition>>,
 )
 
 data class ChartDefinition(
   val type: ChartTypeDefinition,
-  val dimension: String,
+  val label: LabelDefinition,
+  val unit: String,
+  val columns: List<ColumnDefinition>,
 )
-data class DataDefinition(
+
+data class LabelDefinition(
   val name: String,
   val display: String,
-  val unit: String? = null,
+)
+data class ColumnDefinition(
+  val name: String,
+  val display: String,
 )

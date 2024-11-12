@@ -3,14 +3,15 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DataDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Column
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Data
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Label
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import java.lang.IllegalArgumentException
 
@@ -47,19 +48,21 @@ class DashboardDefinitionService(val productDefinitionRepository: ProductDefinit
       display = metric.display,
       description = metric.description,
       charts = metric.charts.map { toChartDefinition(it) },
-      data = metric.data.map { toDataDefinition(it) },
     )
   }
 
   private fun toChartDefinition(chart: Chart): ChartDefinition {
-    return ChartDefinition(type = ChartTypeDefinition.valueOf(chart.type.toString()), dimension = chart.dimension)
+    return ChartDefinition(
+      type = ChartTypeDefinition.valueOf(chart.type.toString()),
+      label = toLabelDefinition(chart.label),
+      unit = chart.unit,
+      columns = chart.columns.map { toColumnDefinition(it) },
+    )
   }
 
-  private fun toDataDefinition(data: List<Data>): List<DataDefinition> {
-    return data.map { DataDefinition(it.name.removePrefix("\$ref:"), it.display, it.unit) }
-  }
+  private fun toColumnDefinition(it: Column) =
+    ColumnDefinition(it.name.removePrefix("\$ref:"), it.display)
 
-  private fun toChartTypeDefinition(chart: List<ChartType>?): List<ChartTypeDefinition>? {
-    return chart?.map { ChartTypeDefinition.valueOf(it.toString()) }
-  }
+  private fun toLabelDefinition(label: Label) =
+    LabelDefinition(label.name.removePrefix("\$ref:"), label.display)
 }
