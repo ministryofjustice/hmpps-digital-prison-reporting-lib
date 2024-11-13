@@ -127,7 +127,6 @@ class ReportDefinitionMapperTest {
             name = "\$ref:13",
             header = true,
             mergeRows = false,
-            sortAsc = null,
           ),
         ),
       ),
@@ -256,7 +255,6 @@ class ReportDefinitionMapperTest {
     assertThat(summaryField.display).isEqualTo(fullDataset.schema.field.first().display)
     assertThat(summaryField.header).isEqualTo(sourceSummary.field?.first()?.header)
     assertThat(summaryField.mergeRows).isEqualTo(sourceSummary.field?.first()?.mergeRows)
-    assertThat(summaryField.sortAsc).isEqualTo(sourceSummary.field?.first()?.sortAsc)
   }
 
   @Test
