@@ -91,8 +91,8 @@ abstract class RepositoryHelper {
     """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
 
   protected fun buildFinalStageQuery(
-    dynamicFilterFieldId: Set<String>?,
-    sortColumn: String?,
+    dynamicFilterFieldId: Set<String>? = null,
+    sortColumn: String? = null,
     sortedAsc: Boolean,
   ) = """SELECT ${constructProjectedColumns(dynamicFilterFieldId)}
           FROM $FILTER_ ${buildOrderByClause(sortColumn, sortedAsc)}"""

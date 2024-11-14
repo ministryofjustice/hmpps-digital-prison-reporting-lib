@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -178,6 +179,57 @@ SELECT *
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+    )
+
+    assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
+    verify(redshiftDataClient).executeStatement(executeStatementRequest)
+  }
+
+  @Test
+  fun `executeQueryAsync for a dashboard should call the redshift data api with the correct query and return the execution id and table id`() {
+    val productDefinition = mock<SingleDashboardProductDefinition>()
+    val dataset = mock<Dataset>()
+    whenever(productDefinition.dataset).thenReturn(dataset)
+    whenever(dataset.query).thenReturn("SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality")
+    whenever(productDefinition.dashboard).thenReturn(mock())
+    whenever(productDefinition.datasource).thenReturn(datasource)
+    val policyEngineResult = "(establishment_id='ABC')"
+    val executionId = "someId"
+    val sqlStatement =
+      """          CREATE EXTERNAL TABLE reports.$TABLE_ID 
+          STORED AS parquet 
+          LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
+          AS ( 
+            WITH dataset_ AS (SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality),report_ AS (SELECT * FROM dataset_),policy_ AS (SELECT * FROM report_ AS (SELECT * FROM dataset_) WHERE (establishment_id='ABC')),filter_ AS (SELECT * FROM policy_ WHERE 1=1)
+SELECT *
+          FROM filter_ 
+          );
+      """.trimIndent()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      datasetHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val executeStatementRequest = ExecuteStatementRequest.builder()
+      .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
+      .database(REDSHIFT_DATA_API_DB)
+      .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
+      .sql(sqlStatement)
+      .build()
+
+    whenever(
+      redshiftDataClient.executeStatement(
+        eq(executeStatementRequest),
+      ),
+    ).thenReturn(executeStatementResponse)
+
+    val actual = redshiftDataApiRepository.executeQueryAsync(
+      productDefinition = productDefinition,
+      policyEngineResult = policyEngineResult,
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
