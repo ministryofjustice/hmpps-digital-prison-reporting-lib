@@ -30,7 +30,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   lateinit var productDefinitionRepository: ProductDefinitionRepository
 
   @Test
-  fun `Calling the async execute statement endpoint calls the configuredApiService with the correct arguments`() {
+  fun `Calling the report async execute statement endpoint calls the asyncDataApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
     val tableId = "tableId"
     val statementExecutionResponse = StatementExecutionResponse(tableId, queryExecutionId)
@@ -62,6 +62,41 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam(filtersPrefix + dateEndFilter, endDate)
           .queryParam("sortColumn", "date")
           .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """{
+          "tableId": "$tableId",
+          "executionId": "$queryExecutionId"
+        }
+      """,
+      )
+  }
+
+  @Test
+  fun `Calling the dashboard async execute statement endpoint calls the asyncDataApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    val tableId = "tableId"
+    val statementExecutionResponse = StatementExecutionResponse(tableId, queryExecutionId)
+    given(
+      asyncDataApiService.validateAndExecuteStatementAsync(
+        reportId = eq("some-metrics-dpd"),
+        dashboardId = eq("some-dashboard-id"),
+        userToken = any<DprAuthAwareAuthenticationToken>(),
+        dataProductDefinitionsPath = eq("definitions/prisons/orphanage"),
+      ),
+    )
+      .willReturn(statementExecutionResponse)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/async/dashboards/some-metrics-dpd/some-dashboard-id")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))

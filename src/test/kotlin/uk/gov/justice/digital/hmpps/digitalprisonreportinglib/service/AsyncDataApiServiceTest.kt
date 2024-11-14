@@ -15,6 +15,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.jdbc.UncategorizedSQLException
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -193,6 +194,38 @@ class AsyncDataApiServiceTest {
       userToken = authToken,
     )
     verifyNoInteractions(redshiftDataApiRepository)
+    assertEquals(statementExecutionResponse, actual)
+  }
+
+  @Test
+  fun `should make the dashboard async call to the RedshiftDataApiRepository with all provided arguments when validateAndExecuteStatementAsync is called`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithMetrics.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
+    val productDefinition = productDefinitionRepository.getProductDefinitions().first()
+    val singleDashboardProductDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinition.id, productDefinition.dashboards!!.first().id)
+    val executionId = UUID.randomUUID().toString()
+    val tableId = executionId.replace("-", "_")
+    val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
+    val caseload = "caseloadA"
+    whenever(authToken.getCaseLoads()).thenReturn(listOf(caseload))
+    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
+    val policyEngineResult = "(establishment_id='$caseload')"
+    whenever(
+      redshiftDataApiRepository.executeQueryAsync(
+        productDefinition = singleDashboardProductDefinition,
+        policyEngineResult = policyEngineResult,
+      ),
+    ).thenReturn(statementExecutionResponse)
+
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync("missing-ethnicity-metrics", "test-dashboard-1", authToken)
+
+    verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
+      productDefinition = singleDashboardProductDefinition,
+      policyEngineResult = policyEngineResult,
+    )
     assertEquals(statementExecutionResponse, actual)
   }
 

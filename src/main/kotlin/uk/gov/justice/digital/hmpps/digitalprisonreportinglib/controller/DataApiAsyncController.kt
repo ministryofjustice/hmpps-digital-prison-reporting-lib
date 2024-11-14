@@ -96,6 +96,55 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     }
   }
 
+  @GetMapping("/async/dashboards/{reportId}/{dashboardId}")
+  @Operation(
+    description = "Executes asynchronously the dataset query for the given dashboard and stores the result into an external table." +
+      "The response returned contains the table ID and the execution ID. ",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = ResponseHeader.NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun asyncExecuteDashboard(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("dashboardId") dashboardId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
+    authentication: Authentication,
+  ): ResponseEntity<StatementExecutionResponse> {
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService.validateAndExecuteStatementAsync(
+            reportId = reportId,
+            dashboardId = dashboardId,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
+          ),
+        )
+    } catch (exception: NoDataAvailableException) {
+      val headers = HttpHeaders()
+      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .headers(headers)
+        .body(null)
+    }
+  }
+
   @GetMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}/status")
   @Operation(
     description = "Returns the status of the statement execution based on the statement ID provided." +

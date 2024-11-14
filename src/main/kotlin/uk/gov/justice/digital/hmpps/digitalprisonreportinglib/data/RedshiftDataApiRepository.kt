@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -151,5 +152,28 @@ class RedshiftDataApiRepository(
       "SELECT COUNT(1) as total FROM reports.$tableId;",
       MapSqlParameterSource(),
     ).first()?.get("total") as Long
+  }
+
+  fun executeQueryAsync(
+    productDefinition: SingleDashboardProductDefinition,
+    policyEngineResult: String,
+  ): StatementExecutionResponse {
+    val tableId = tableIdGenerator.generateNewExternalTableId()
+    val generateSql = """
+          CREATE EXTERNAL TABLE reports.$tableId 
+          STORED AS parquet 
+          LOCATION 's3://$s3location/$tableId/' 
+          AS ( 
+            ${buildFinalQuery(
+      datasetQuery = buildDatasetQuery(productDefinition.dataset.query),
+      reportQuery = DEFAULT_REPORT_CTE,
+      policiesQuery = buildPolicyQuery(policyEngineResult, DEFAULT_REPORT_CTE),
+      filtersQuery = buildFiltersQuery(emptyList()),
+      selectFromFinalStageQuery = buildFinalStageQuery(sortedAsc = true),
+    )}
+          );
+    """.trimIndent()
+
+    return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
   }
 }

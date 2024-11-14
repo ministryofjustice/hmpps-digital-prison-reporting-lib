@@ -79,6 +79,25 @@ class AsyncDataApiService(
       )
   }
 
+  fun validateAndExecuteStatementAsync(
+    reportId: String,
+    dashboardId: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
+  ): StatementExecutionResponse {
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(
+      definitionId = reportId,
+      dashboardId = dashboardId,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+    )
+    val policyEngine = PolicyEngine(productDefinition.policy, userToken)
+    return redshiftDataApiRepository
+      .executeQueryAsync(
+        productDefinition = productDefinition,
+        policyEngineResult = policyEngine.execute(),
+      )
+  }
+
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     return getRepo(productDefinition).getStatementStatus(statementId)
