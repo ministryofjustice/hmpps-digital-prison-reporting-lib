@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.0.1
+Added async dashboard execution endpoint.
+
 ## 7.0.0 
 Removed the metrics definition and metrics data endpoints.
 Updated the DPD with regard to dashboards and metrics.
