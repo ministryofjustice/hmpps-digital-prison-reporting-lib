@@ -183,6 +183,33 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       )
   }
 
+  @GetMapping("/statements/{statementId}/status")
+  @Operation(
+    description = "Returns the status of the statement execution based on the statement ID provided." +
+      "The following status values can be returned: \n" +
+      "ABORTED - The query run was stopped by the user.\n" +
+      "ALL - A status value that includes all query statuses. This value can be used to filter results.\n" +
+      "FAILED - The query run failed.\n" +
+      "FINISHED - The query has finished running.\n" +
+      "PICKED - The query has been chosen to be run.\n" +
+      "STARTED - The query run has started.\n" +
+      "SUBMITTED - The query was submitted, but not yet processed.\n" +
+      "Note: When the status is FAILED the error field of the response will be populated." +
+      "ResultRows is the number of rows returned from the SQL statement. A -1 indicates the value is null." +
+      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.\n",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+  )
+  fun getQueryExecutionStatus(
+    @PathVariable("statementId") statementId: String,
+    authentication: Authentication,
+  ): ResponseEntity<StatementExecutionStatus> {
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.getStatementStatus(statementId),
+      )
+  }
+
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
   @Operation(
     description = "Cancels the execution of a running query.",

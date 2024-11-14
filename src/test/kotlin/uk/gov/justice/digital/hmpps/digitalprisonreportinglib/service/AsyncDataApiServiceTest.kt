@@ -299,6 +299,29 @@ class AsyncDataApiServiceTest {
     assertEquals(statementCancellationResponse, actual)
   }
 
+  @Test
+  fun `should call the RedshiftDataApiRepository with the statement execution ID when getStatementStatus is called`() {
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
+    val statementId = "statementId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val resultRows = 10L
+    val resultSize = 100L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      resultRows,
+      resultSize,
+    )
+    whenever(
+      redshiftDataApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+
+    val actual = asyncDataApiService.getStatementStatus(statementId)
+    verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
+    assertEquals(statementExecutionStatus, actual)
+  }
+
   @ParameterizedTest
   @ValueSource(strings = ["productDefinitionNomis.json", "productDefinitionBodmis.json"])
   fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when cancelStatementExecution is called`(definitionFile: String) {

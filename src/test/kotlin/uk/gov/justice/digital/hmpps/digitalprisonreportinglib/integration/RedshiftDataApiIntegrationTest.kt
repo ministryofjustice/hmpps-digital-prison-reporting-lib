@@ -224,6 +224,49 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Calling the statement status endpoint calls the getStatementStatus of the ConfiguredApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val resultRows = 10L
+    val resultSize = 100L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      resultRows,
+      resultSize,
+    )
+    given(
+      asyncDataApiService.getStatementStatus(
+        eq(queryExecutionId),
+      ),
+    )
+      .willReturn(statementExecutionStatus)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/statements/$queryExecutionId/status")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """{
+          "status": "$status",
+          "duration": $duration,
+          "resultRows": $resultRows,
+          "resultSize": $resultSize,
+          "error": null
+        }
+      """,
+      )
+  }
+
+  @Test
   fun `Calling the report cancellation endpoint calls the cancelStatementExecution of the ConfiguredApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
     val reportId = "external-movements"

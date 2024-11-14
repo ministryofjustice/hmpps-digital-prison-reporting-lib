@@ -103,6 +103,10 @@ class AsyncDataApiService(
     return getRepo(productDefinition).getStatementStatus(statementId)
   }
 
+  fun getStatementStatus(statementId: String): StatementExecutionStatus {
+    return redshiftDataApiRepository.getStatementStatus(statementId)
+  }
+
   fun getStatementResult(
     tableId: String,
     reportId: String,
