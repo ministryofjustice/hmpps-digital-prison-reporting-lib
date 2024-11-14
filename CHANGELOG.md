@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
-## 7.0.1
+## 7.0.2
 Added async dashboard execution endpoint.
+
+## 7.0.1
+Removed unused property
 
 ## 7.0.0 
 Removed the metrics definition and metrics data endpoints.
