@@ -46,6 +46,6 @@ class JsonFileProductDefinitionRepositoryTest {
         "report003-hospital-movement",
       )
     }
-    assertThat(exception).message().isEqualTo("Invalid dataSetId in report: non-matching-dataset")
+    assertThat(exception).message().isEqualTo("Invalid dataSetId: non-matching-dataset")
   }
 }

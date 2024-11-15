@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -439,6 +441,79 @@ class AsyncDataApiServiceTest {
     )
 
     assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `should call the repository with all provided arguments when getDashboardStatementResult is called`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithMetrics.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val expectedRepositoryResult = listOf(
+      mapOf(
+        "ESTABLISHMENT_ID" to "1",
+        "HAS_ETHNICITY" to "100",
+        "ETHNICITY_IS_MISSING" to "30",
+      ),
+    )
+    val expectedServiceResult = listOf(
+      mapOf(
+        "establishment_id" to "1",
+        "has_ethnicity" to "100",
+        "ethnicity_is_missing" to "30",
+      ),
+    )
+    val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+    val selectedPage = 1L
+    val pageSize = 20L
+    whenever(
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.getDashboardStatementResult(
+      tableId,
+      "missing-ethnicity-metrics",
+      "test-dashboard-1",
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+    )
+
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `getDashboardStatementResult throws an exception when the result columns are not in the dataset schema`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithMetrics.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val expectedRepositoryResult = listOf(
+      mapOf(
+        "ESTABLISHMENT_ID" to "1",
+        "HAS_ETHNICITY" to "100",
+        "ETHNICITY_IS_MISSING" to "30",
+        "RANDOM_ROW" to "abc",
+      ),
+    )
+    val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+    val selectedPage = 1L
+    val pageSize = 20L
+    whenever(
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+    ).thenReturn(expectedRepositoryResult)
+
+    val exception = Assertions.assertThrows(ValidationException::class.java) {
+      configuredApiService.getDashboardStatementResult(
+        tableId,
+        "missing-ethnicity-metrics",
+        "test-dashboard-1",
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+      )
+    }
+    assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")
   }
 
   @Test

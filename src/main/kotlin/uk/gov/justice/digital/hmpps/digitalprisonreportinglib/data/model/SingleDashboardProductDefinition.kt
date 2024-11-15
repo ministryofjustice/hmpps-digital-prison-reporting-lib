@@ -9,6 +9,6 @@ data class SingleDashboardProductDefinition(
   val metadata: MetaData,
   val datasource: Datasource,
   val policy: List<Policy>,
-  val dataset: Dataset,
+  val dashboardDataset: Dataset,
   val dashboard: Dashboard,
 )

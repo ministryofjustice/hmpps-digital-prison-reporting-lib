@@ -165,7 +165,7 @@ class RedshiftDataApiRepository(
           LOCATION 's3://$s3location/$tableId/' 
           AS ( 
             ${buildFinalQuery(
-      datasetQuery = buildDatasetQuery(productDefinition.dataset.query),
+      datasetQuery = buildDatasetQuery(productDefinition.dashboardDataset.query),
       reportQuery = DEFAULT_REPORT_CTE,
       policiesQuery = buildPolicyQuery(policyEngineResult, DEFAULT_REPORT_CTE),
       filtersQuery = buildFiltersQuery(emptyList()),
