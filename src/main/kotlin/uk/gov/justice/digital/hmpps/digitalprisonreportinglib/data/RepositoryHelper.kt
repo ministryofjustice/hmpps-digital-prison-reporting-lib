@@ -121,7 +121,7 @@ abstract class RepositoryHelper {
       .replace(PolicyResult.POLICY_DENY, FALSE_WHERE_CLAUSE)
   }
 
-  private fun buildFiltersWhereClause(
+  protected fun buildFiltersWhereClause(
     filters: List<ConfiguredApiRepository.Filter>,
   ): String {
     val filterClause = filters.joinToString(" AND ") { this.buildCondition(it) }.ifEmpty { TRUE_WHERE_CLAUSE }

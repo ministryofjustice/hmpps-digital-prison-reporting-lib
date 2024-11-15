@@ -166,7 +166,11 @@ class ReportDefinitionMapper(
       type = convertParameterTypeToFieldType(parameter.reportFieldType),
       mandatory = false,
       visible = false,
-      filter = FilterDefinition(type = FilterType.valueOf(parameter.filterType.toString()), mandatory = parameter.mandatory),
+      filter = FilterDefinition(
+        type = FilterType.valueOf(parameter.filterType.toString()),
+        mandatory = parameter.mandatory,
+        interactive = false,
+      ),
     )
   }
 
@@ -187,7 +191,7 @@ class ReportDefinitionMapper(
       name = schemaField.name,
       display = populateDisplay(field.display, schemaField.display),
       wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
-      filter = field.filter?.let {
+      filter = (schemaField.filter ?: field.filter)?.let {
         map(
           filterDefinition = it,
           productDefinitionId = productDefinitionId,
@@ -281,6 +285,7 @@ class ReportDefinitionMapper(
       max = replaceTokens(filterDefinition.max),
       mandatory = filterDefinition.mandatory,
       pattern = filterDefinition.pattern,
+      interactive = filterDefinition.interactive
     )
   }
 

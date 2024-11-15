@@ -43,12 +43,14 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     tableId: String,
     selectedPage: Long,
     pageSize: Long,
+    filters: List<ConfiguredApiRepository.Filter>,
     jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
+    val whereClause = buildFiltersWhereClause(filters)
     val result = jdbcTemplate
       .queryForList(
-        "SELECT * FROM reports.$tableId limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;",
+        "SELECT * FROM reports.$tableId WHERE $whereClause LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;",
         MapSqlParameterSource(),
       )
       .map {

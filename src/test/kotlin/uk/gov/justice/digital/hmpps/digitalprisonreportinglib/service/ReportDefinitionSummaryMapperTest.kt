@@ -51,6 +51,7 @@ class ReportDefinitionSummaryMapperTest {
           name = "13",
           type = ParameterType.Long,
           display = "",
+          filter = null,
         ),
       ),
     ),

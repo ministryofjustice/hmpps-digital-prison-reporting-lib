@@ -65,6 +65,7 @@ class ReportDefinitionMapperTest {
           name = "13",
           type = ParameterType.Long,
           display = "14",
+          filter = null,
         ),
       ),
     ),
@@ -106,6 +107,7 @@ class ReportDefinitionMapperTest {
             ),
             mandatory = true,
             pattern = ".+",
+            interactive = true,
           ),
           sortable = true,
           defaultSort = true,
@@ -435,6 +437,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.filter?.staticOptions).hasSize(1)
     assertThat(field.filter?.mandatory).isEqualTo(sourceReportField.filter?.mandatory)
     assertThat(field.filter?.pattern).isEqualTo(sourceReportField.filter?.pattern)
+    assertThat(field.filter?.interactive).isEqualTo(sourceReportField.filter?.interactive)
     assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
 
     val filterOption = field.filter?.staticOptions?.first()
@@ -479,9 +482,9 @@ class ReportDefinitionMapperTest {
   @Test
   fun `getting single report with dynamic options which have a dataset maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
     val estCodeSchemaFieldName = "establishment_code"
-    val establishmentCodeSchemaField = SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code")
+    val establishmentCodeSchemaField = SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code", null)
     val estNameSchemaFieldName = "establishment_name"
-    val establishmentNameSchemaField = SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name")
+    val establishmentNameSchemaField = SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name", null)
     val estDatasetId = "establishment-dataset-id"
     val establishmentDataset = Dataset(
       estDatasetId,
@@ -624,6 +627,7 @@ class ReportDefinitionMapperTest {
                 name = "13",
                 type = ParameterType.Date,
                 display = "",
+                filter = null,
               ),
             ),
           ),
@@ -877,6 +881,7 @@ class ReportDefinitionMapperTest {
               name = "13",
               type = ParameterType.Date,
               display = datasetDisplay,
+              filter = null,
             ),
           ),
         ),
@@ -919,5 +924,59 @@ class ReportDefinitionMapperTest {
       ),
       allDatasets = listOf(fullDataset),
     )
+  }
+
+  @Test
+  fun `Field filter falls back to dataset filter when the report field filter is not specified `() {
+    val sourceDataset = Dataset(
+      id = "10",
+      name = "11",
+      query = "12",
+      schema = Schema(
+        field = listOf(
+          SchemaField(
+            name = "13",
+            type = ParameterType.Long,
+            display = "14",
+            filter = FilterDefinition(
+              type = FilterType.Text,
+              mandatory = true
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val sourceDefinition = SingleReportProductDefinition(
+      id = "1",
+      name = "2",
+      description = "3",
+      metadata = MetaData(
+        author = "4",
+        version = "5",
+        owner = "6",
+        purpose = "7",
+        profile = "8",
+        dqri = "9",
+      ),
+      reportDataset = sourceDataset,
+      datasource = fullDatasource,
+      report = fullReport,
+      policy = listOf(
+        Policy(
+          id = "caseload",
+          type = PolicyType.ACCESS,
+          rule = listOf(Rule(Effect.PERMIT, emptyList())),
+        ),
+      ),
+      allDatasets = listOf(sourceDataset),
+    )
+
+    val result = ReportDefinitionMapper(configuredApiService, datasetHelper).map(definition = sourceDefinition, userToken = authToken)
+
+    assertThat(result.variant.specification!!.fields[0].filter?.type.toString()).isEqualTo("Text")
+    assertThat(result.variant.specification!!.fields[0].filter?.mandatory).isTrue()
+
+    verifyNoInteractions(configuredApiService)
   }
 }
