@@ -124,6 +124,19 @@ class AsyncDataApiService(
     )
   }
 
+  fun getDashboardStatementResult(
+    tableId: String,
+    reportId: String,
+    dashboardId: String,
+    dataProductDefinitionsPath: String? = null,
+    selectedPage: Long,
+    pageSize: Long,
+  ): List<Map<String, Any?>> {
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
+    return redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize)
+      .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, productDefinition.dashboardDataset.schema.field.map(SchemaField::name)) }
+  }
+
   fun getSummaryResult(
     tableId: String,
     summaryId: String,

@@ -55,7 +55,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
       metadata = productDefinition.metadata,
       datasource = productDefinition.datasource.first(),
       policy = productDefinition.policy,
-      dataset = dataSet,
+      dashboardDataset = dataSet,
       dashboard = dashboard,
     )
   }
@@ -70,6 +70,6 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
     dataSetId: String,
   ) = productDefinition.dataset
     .filter { it.id == dataSetId }
-    .ifEmpty { throw ValidationException("Invalid dataSetId in report: $dataSetId") }
+    .ifEmpty { throw ValidationException("Invalid dataSetId: $dataSetId") }
     .first()
 }

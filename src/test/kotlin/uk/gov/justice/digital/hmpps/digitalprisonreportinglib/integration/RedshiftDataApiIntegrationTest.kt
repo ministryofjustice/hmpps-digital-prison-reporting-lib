@@ -304,7 +304,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
+  fun `Calling the report getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
     val tableId = "tableId"
     val selectedPage = 2L
     val pageSize = 20L
@@ -340,6 +340,50 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month/tables/$tableId/result")
           .queryParam("selectedPage", 2L)
           .queryParam("pageSize", 20L)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(Gson().toJson(expectedServiceResult))
+  }
+
+  @Test
+  fun `Calling the dashboard getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
+    val tableId = "tableId"
+    val dpdId = "external-movements"
+    val dashboardId = "dashboardId"
+    val selectedPage = 2L
+    val pageSize = 20L
+    val expectedServiceResult =
+      listOf(
+        mapOf(
+          "establishment_id" to "KMI",
+          "has_ethnicity" to "10",
+          "ethnicity_is_missing" to "30",
+        ),
+      )
+
+    given(
+      asyncDataApiService.getDashboardStatementResult(
+        eq(tableId),
+        eq(dpdId),
+        eq(dashboardId),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        eq(selectedPage),
+        eq(pageSize),
+      ),
+    )
+      .willReturn(expectedServiceResult)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("reports/$dpdId/dashboards/$dashboardId/tables/$tableId/result")
+          .queryParam("selectedPage", selectedPage)
+          .queryParam("pageSize", pageSize)
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))

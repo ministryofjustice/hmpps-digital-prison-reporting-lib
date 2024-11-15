@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.0.4
+Added get dashboard results endpoint.
+
 ## 7.0.3
 Added statement execution status endpoint.
 

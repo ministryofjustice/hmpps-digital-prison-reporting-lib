@@ -189,7 +189,7 @@ SELECT *
   fun `executeQueryAsync for a dashboard should call the redshift data api with the correct query and return the execution id and table id`() {
     val productDefinition = mock<SingleDashboardProductDefinition>()
     val dataset = mock<Dataset>()
-    whenever(productDefinition.dataset).thenReturn(dataset)
+    whenever(productDefinition.dashboardDataset).thenReturn(dataset)
     whenever(dataset.query).thenReturn("SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality")
     whenever(productDefinition.dashboard).thenReturn(mock())
     whenever(productDefinition.datasource).thenReturn(datasource)

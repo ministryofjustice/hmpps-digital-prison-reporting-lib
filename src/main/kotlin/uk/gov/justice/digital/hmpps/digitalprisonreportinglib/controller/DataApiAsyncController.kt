@@ -304,6 +304,40 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       )
   }
 
+  @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result")
+  @Operation(
+    description = "Returns the resulting rows of the executed statement in a paginated " +
+      "fashion which has been stored in a dedicated table.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+  )
+  fun getDashboardQueryExecutionResult(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("dashboardId") dashboardId: String,
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
+    @PathVariable("tableId") tableId: String,
+    @RequestParam(defaultValue = "1")
+    @Min(1)
+    selectedPage: Long,
+    @RequestParam(defaultValue = "10")
+    @Min(1)
+    pageSize: Long,
+    authentication: Authentication,
+  ): ResponseEntity<List<Map<String, Any?>>> {
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.getDashboardStatementResult(
+          tableId,
+          reportId,
+          dashboardId,
+          dataProductDefinitionsPath,
+          selectedPage,
+          pageSize,
+        ),
+      )
+  }
+
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/summary/{summaryId}")
   @Operation(
     description = "Returns a summary of a request, which has been stored in a dedicated table.",
