@@ -304,6 +304,38 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Calling the statement cancellation endpoint calls the cancelStatementExecution of the ConfiguredApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    val statementCancellationResponse = StatementCancellationResponse(
+      true,
+    )
+    given(
+      asyncDataApiService.cancelStatementExecution(
+        eq(queryExecutionId),
+      ),
+    )
+      .willReturn(statementCancellationResponse)
+
+    webTestClient.delete()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/statements/$queryExecutionId")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """{
+          "cancellationSucceeded": true
+        }
+      """,
+      )
+  }
+
+  @Test
   fun `Calling the report getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
     val tableId = "tableId"
     val selectedPage = 2L
