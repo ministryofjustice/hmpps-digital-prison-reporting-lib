@@ -421,9 +421,8 @@ class AsyncDataApiServiceTest {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
-    whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
-    ).thenReturn(expectedRepositoryResult)
+    whenever(redshiftDataApiRepository.getPaginatedExternalTableResult(any(), any(), any(), any()))
+      .thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getStatementResult(
       tableId,
@@ -431,10 +430,12 @@ class AsyncDataApiServiceTest {
       reportVariantId,
       selectedPage = selectedPage,
       pageSize = pageSize,
-      filters = emptyMap(),
+      filters = mapOf("direction" to "in"),
     )
 
     assertEquals(expectedServiceResult, actual)
+
+    verify(redshiftDataApiRepository).getPaginatedExternalTableResult(tableId, selectedPage, pageSize, listOf(Filter("direction", "in")))
   }
 
   @Test
