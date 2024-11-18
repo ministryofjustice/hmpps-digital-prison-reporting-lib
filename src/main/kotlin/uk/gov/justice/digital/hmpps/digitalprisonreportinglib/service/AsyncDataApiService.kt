@@ -175,6 +175,10 @@ class AsyncDataApiService(
     return getRepo(productDefinition).cancelStatementExecution(statementId)
   }
 
+  fun cancelStatementExecution(statementId: String): StatementCancellationResponse {
+    return redshiftDataApiRepository.cancelStatementExecution(statementId)
+  }
+
   fun count(tableId: String): Count {
     return Count(redshiftDataApiRepository.count(tableId))
   }

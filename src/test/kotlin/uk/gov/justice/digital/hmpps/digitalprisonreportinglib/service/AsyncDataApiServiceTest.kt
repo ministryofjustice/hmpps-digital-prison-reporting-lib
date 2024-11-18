@@ -285,7 +285,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when cancelStatementExecution is called`() {
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when report cancelStatementExecution is called`() {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
     val statementId = "statementId"
     val statementCancellationResponse = StatementCancellationResponse(
@@ -296,6 +296,23 @@ class AsyncDataApiServiceTest {
     ).thenReturn(statementCancellationResponse)
 
     val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month")
+    verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
+    verifyNoInteractions(athenaApiRepository)
+    assertEquals(statementCancellationResponse, actual)
+  }
+
+  @Test
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when cancelStatementExecution is called`() {
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
+    val statementId = "statementId"
+    val statementCancellationResponse = StatementCancellationResponse(
+      true,
+    )
+    whenever(
+      redshiftDataApiRepository.cancelStatementExecution(statementId),
+    ).thenReturn(statementCancellationResponse)
+
+    val actual = asyncDataApiService.cancelStatementExecution(statementId)
     verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementCancellationResponse, actual)

@@ -215,7 +215,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     description = "Cancels the execution of a running query.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
-  fun cancelQueryExecution(
+  fun cancelReportQueryExecution(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("statementId") statementId: String,
@@ -231,6 +231,22 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       .status(HttpStatus.OK)
       .body(
         asyncDataApiService.cancelStatementExecution(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
+      )
+  }
+
+  @DeleteMapping("/statements/{statementId}")
+  @Operation(
+    description = "Cancels the execution of a running query.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+  )
+  fun cancelQueryExecution(
+    @PathVariable("statementId") statementId: String,
+    authentication: Authentication,
+  ): ResponseEntity<StatementCancellationResponse> {
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.cancelStatementExecution(statementId),
       )
   }
 
