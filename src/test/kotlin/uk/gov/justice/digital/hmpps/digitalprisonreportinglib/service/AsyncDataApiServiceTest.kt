@@ -421,7 +421,7 @@ class AsyncDataApiServiceTest {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
-    whenever(redshiftDataApiRepository.getPaginatedExternalTableResult(any(), any(), any(), any()))
+    whenever(redshiftDataApiRepository.getPaginatedExternalTableResult(any(), any(), any(), any(), anyOrNull()))
       .thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getStatementResult(
