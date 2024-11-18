@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.given
+import org.mockito.kotlin.verify
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.web.util.UriBuilder
@@ -89,6 +90,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         dashboardId = eq("some-dashboard-id"),
         userToken = any<DprAuthAwareAuthenticationToken>(),
         dataProductDefinitionsPath = eq("definitions/prisons/orphanage"),
+        filters = eq(emptyMap()),
       ),
     )
       .willReturn(statementExecutionResponse)
@@ -362,6 +364,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(selectedPage),
         eq(pageSize),
+        eq(emptyMap())
       ),
     )
       .willReturn(expectedServiceResult)
@@ -398,16 +401,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(
-      asyncDataApiService.getDashboardStatementResult(
-        eq(tableId),
-        eq(dpdId),
-        eq(dashboardId),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        eq(selectedPage),
-        eq(pageSize),
-      ),
-    )
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -424,6 +418,16 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .isOk()
       .expectBody()
       .json(Gson().toJson(expectedServiceResult))
+
+    verify(asyncDataApiService).getDashboardStatementResult(
+      eq(tableId),
+      eq(dpdId),
+      eq(dashboardId),
+      eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      eq(selectedPage),
+      eq(pageSize),
+      eq(emptyMap()),
+    )
   }
 
   @Test
@@ -444,6 +448,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        eq(emptyMap()),
       ),
     )
       .willReturn(expectedServiceResult)

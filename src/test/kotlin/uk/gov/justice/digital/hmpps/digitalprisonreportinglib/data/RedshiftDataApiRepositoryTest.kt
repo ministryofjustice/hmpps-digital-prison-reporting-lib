@@ -230,6 +230,7 @@ SELECT *
     val actual = redshiftDataApiRepository.executeQueryAsync(
       productDefinition = productDefinition,
       policyEngineResult = policyEngineResult,
+      filters = emptyList(),
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
@@ -441,16 +442,15 @@ SELECT *
     val pageSize = 10L
     val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
 
-    whenever(
-      jdbcTemplate.queryForList(
-        eq("SELECT * FROM reports.$TABLE_ID limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
-        any<MapSqlParameterSource>(),
-      ),
-    ).thenReturn(expected)
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, jdbcTemplate)
+    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, emptyList(), jdbcTemplate)
 
     assertEquals(expected, actual)
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT * FROM reports.$TABLE_ID WHERE 1=1 LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+      any<MapSqlParameterSource>(),
+    )
   }
 
   @Test

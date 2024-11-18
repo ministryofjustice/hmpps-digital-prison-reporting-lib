@@ -323,12 +323,12 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       .status(HttpStatus.OK)
       .body(
         asyncDataApiService.getStatementResult(
-          tableId,
-          reportId,
-          reportVariantId,
-          dataProductDefinitionsPath,
-          selectedPage,
-          pageSize,
+          tableId = tableId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
           filters = filterHelper.filtersOnly(filters),
         ),
       )
@@ -364,13 +364,13 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       .status(HttpStatus.OK)
       .body(
         asyncDataApiService.getDashboardStatementResult(
-          tableId,
-          reportId,
-          dashboardId,
-          dataProductDefinitionsPath,
-          selectedPage,
-          pageSize,
-          filters,
+          tableId = tableId,
+          reportId = reportId,
+          dashboardId = dashboardId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
         ),
       )
   }
@@ -399,11 +399,11 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       .status(HttpStatus.OK)
       .body(
         asyncDataApiService.getSummaryResult(
-          tableId,
-          summaryId,
-          reportId,
-          reportVariantId,
-          dataProductDefinitionsPath,
+          tableId = tableId,
+          summaryId = summaryId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
         ),
       )

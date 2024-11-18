@@ -219,14 +219,21 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.executeQueryAsync(
         productDefinition = singleDashboardProductDefinition,
         policyEngineResult = policyEngineResult,
+        filters = emptyList(),
       ),
     ).thenReturn(statementExecutionResponse)
 
-    val actual = asyncDataApiService.validateAndExecuteStatementAsync("missing-ethnicity-metrics", "test-dashboard-1", authToken)
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync(
+      reportId = "missing-ethnicity-metrics",
+      dashboardId = "test-dashboard-1",
+      userToken = authToken,
+      filters = emptyMap(),
+      )
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
       productDefinition = singleDashboardProductDefinition,
       policyEngineResult = policyEngineResult,
+      filters = emptyList(),
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -415,7 +422,7 @@ class AsyncDataApiServiceTest {
     val selectedPage = 1L
     val pageSize = 20L
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getStatementResult(
@@ -424,6 +431,7 @@ class AsyncDataApiServiceTest {
       reportVariantId,
       selectedPage = selectedPage,
       pageSize = pageSize,
+      filters = emptyMap(),
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -446,7 +454,7 @@ class AsyncDataApiServiceTest {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
     val executionID = UUID.randomUUID().toString()
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = asyncDataApiService.getStatementResult(
@@ -455,6 +463,7 @@ class AsyncDataApiServiceTest {
       reportVariantId = reportVariantId,
       selectedPage = selectedPage,
       pageSize = pageSize,
+      filters = emptyMap(),
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -485,7 +494,7 @@ class AsyncDataApiServiceTest {
     val selectedPage = 1L
     val pageSize = 20L
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getDashboardStatementResult(
@@ -494,6 +503,7 @@ class AsyncDataApiServiceTest {
       "test-dashboard-1",
       selectedPage = selectedPage,
       pageSize = pageSize,
+      filters = emptyMap(),
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -518,7 +528,7 @@ class AsyncDataApiServiceTest {
     val selectedPage = 1L
     val pageSize = 20L
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val exception = Assertions.assertThrows(ValidationException::class.java) {
@@ -528,6 +538,7 @@ class AsyncDataApiServiceTest {
         "test-dashboard-1",
         selectedPage = selectedPage,
         pageSize = pageSize,
+        filters = emptyMap(),
       )
     }
     assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")
@@ -546,6 +557,7 @@ class AsyncDataApiServiceTest {
       summaryId,
       reportId,
       reportVariantId,
+      filters = emptyMap(),
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -566,6 +578,7 @@ class AsyncDataApiServiceTest {
       summaryId,
       reportId,
       reportVariantId,
+      filters = emptyMap(),
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
