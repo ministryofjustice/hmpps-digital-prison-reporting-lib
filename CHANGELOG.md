@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.1.0
+Added filters to getStatementResults endpoint.
+
 ## 7.0.5
 Added endpoint to cancel running dashboard queries.
 
