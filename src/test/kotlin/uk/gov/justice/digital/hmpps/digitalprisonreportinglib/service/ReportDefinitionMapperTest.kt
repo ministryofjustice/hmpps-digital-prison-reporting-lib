@@ -940,7 +940,7 @@ class ReportDefinitionMapperTest {
             display = "14",
             filter = FilterDefinition(
               type = FilterType.Text,
-              mandatory = true
+              mandatory = true,
             ),
           ),
         ),

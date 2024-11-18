@@ -364,7 +364,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(selectedPage),
         eq(pageSize),
-        eq(emptyMap())
+        eq(emptyMap()),
       ),
     )
       .willReturn(expectedServiceResult)

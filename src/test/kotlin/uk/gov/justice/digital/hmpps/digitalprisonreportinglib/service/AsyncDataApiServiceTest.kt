@@ -228,7 +228,7 @@ class AsyncDataApiServiceTest {
       dashboardId = "test-dashboard-1",
       userToken = authToken,
       filters = emptyMap(),
-      )
+    )
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
       productDefinition = singleDashboardProductDefinition,

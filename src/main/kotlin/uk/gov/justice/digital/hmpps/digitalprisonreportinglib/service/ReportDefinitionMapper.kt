@@ -285,7 +285,7 @@ class ReportDefinitionMapper(
       max = replaceTokens(filterDefinition.max),
       mandatory = filterDefinition.mandatory,
       pattern = filterDefinition.pattern,
-      interactive = filterDefinition.interactive
+      interactive = filterDefinition.interactive,
     )
   }
 
