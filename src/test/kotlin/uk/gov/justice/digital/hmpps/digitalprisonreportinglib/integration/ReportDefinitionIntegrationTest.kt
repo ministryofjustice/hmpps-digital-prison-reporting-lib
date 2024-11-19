@@ -7,15 +7,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import java.time.LocalDate.now
 import java.time.format.DateTimeFormatter
@@ -121,38 +113,10 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(result.responseBody!![0].dashboards).hasSize(1)
       assertThat(result.responseBody!![0].dashboards).isEqualTo(
         listOf(
-          DashboardDefinition(
+          DashboardDefinitionSummary(
             id = "test-dashboard-1",
             name = "Test Dashboard 1",
             description = "Test Dashboard 1 Description",
-            metrics = listOf(
-              MetricDefinition(
-                id = "missing-ethnicity-metric",
-                name = "Missing Ethnicity By Establishment Metric",
-                display = "Missing Ethnicity By Establishment Metric",
-                description = "Missing Ethnicity By Establishment Metric",
-                charts = listOf(
-                  ChartDefinition(
-                    type = ChartTypeDefinition.BAR,
-                    label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
-                    unit = "number",
-                    columns = listOf(
-                      ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                      ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
-                    ),
-                  ),
-                  ChartDefinition(
-                    type = ChartTypeDefinition.DOUGHNUT,
-                    label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
-                    unit = "percentage",
-                    columns = listOf(
-                      ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                      ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ),
         ),
       )
