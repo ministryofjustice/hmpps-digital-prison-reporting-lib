@@ -384,8 +384,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         }
                       ],
                       "dynamicOptions": {
-                        "minimumLength": 2,
-                        "returnAsStaticOptions": true
+                        "minimumLength": 2
                       },
                       "defaultValue": null,
                       "min": null,
@@ -400,9 +399,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                       "type": "autocomplete",
                       "staticOptions": null,
                       "dynamicOptions": {
-                        "minimumLength": 2,
-                        "returnAsStaticOptions": false,
-                        "maximumOptions": null
+                        "minimumLength": 2
                       },
                       "defaultValue": null,
                       "min": null,
@@ -507,9 +504,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         }
                       ],
                       "dynamicOptions": {
-                        "minimumLength": 2,
-                        "returnAsStaticOptions": true,
-                        "maximumOptions": 1
+                        "minimumLength": 2
                       },
                       "defaultValue": null,
                       "min": null,
@@ -716,8 +711,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         }
                       ],
                       "dynamicOptions": {
-                        "minimumLength": 2,
-                        "returnAsStaticOptions": true
+                        "minimumLength": 2
                       },
                       "defaultValue": null,
                       "min": null,
@@ -732,9 +726,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                       "type": "autocomplete",
                       "staticOptions": null,
                       "dynamicOptions": {
-                        "minimumLength": 2,
-                        "returnAsStaticOptions": false,
-                        "maximumOptions": null
+                        "minimumLength": 2
                       },
                       "defaultValue": null,
                       "min": null,
@@ -839,9 +831,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                         }
                       ],
                       "dynamicOptions": {
-                        "minimumLength": 2,
-                        "returnAsStaticOptions": true,
-                        "maximumOptions": 1
+                        "minimumLength": 2
                       },
                       "defaultValue": null,
                       "min": null,

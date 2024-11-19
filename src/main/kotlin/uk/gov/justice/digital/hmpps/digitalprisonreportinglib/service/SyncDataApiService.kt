@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 
 @Service
 class SyncDataApiService(
-  val productDefinitionRepository: ProductDefinitionRepository,
-  val configuredApiRepository: ConfiguredApiRepository,
+  private val productDefinitionRepository: ProductDefinitionRepository,
+  private val configuredApiRepository: ConfiguredApiRepository,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) : CommonDataApiService() {
 
@@ -67,6 +67,32 @@ class SyncDataApiService(
           productDefinition,
           formulaEngine,
           datasetForFilter,
+        )
+      }
+  }
+
+  fun validateAndFetchDataForFilterWithDataset(
+    pageSize: Long,
+    sortColumn: String,
+    dataset: Dataset,
+  ): List<Map<String, Any?>> {
+    val formulaEngine = FormulaEngine(emptyList(), env)
+    return configuredApiRepository
+      .executeQuery(
+        query = dataset.query,
+        filters = emptyList(),
+        selectedPage = 1,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = true,
+        policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
+        dataSourceName = dataset.datasource,
+      )
+      .let { records ->
+        formatColumnsAndApplyFormulas(
+          records,
+          dataset.schema.field,
+          formulaEngine,
         )
       }
   }

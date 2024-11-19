@@ -9,6 +9,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DefinitionMapper.Companion.DEFAULT_MAX_STATIC_OPTIONS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -59,6 +61,7 @@ class ReportDefinitionMapperTest {
     id = "10",
     name = "11",
     query = "12",
+    datasource = "12A",
     schema = Schema(
       field = listOf(
         SchemaField(
@@ -489,6 +492,7 @@ class ReportDefinitionMapperTest {
     val establishmentDataset = Dataset(
       estDatasetId,
       "establishment-dataset-name",
+      "12A",
       "select * from table",
       Schema(
         listOf(
@@ -507,18 +511,7 @@ class ReportDefinitionMapperTest {
     val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper)
 
     whenever(
-      configuredApiService.validateAndFetchData(
-        reportId = fullSingleProductDefinition.id,
-        reportVariantId = reportWithDynamicFilter.id,
-        filters = emptyMap(),
-        selectedPage = 1,
-        pageSize = DEFAULT_MAX_STATIC_OPTIONS,
-        sortColumn = estCodeSchemaFieldName,
-        sortedAsc = true,
-        userToken = authToken,
-        reportFieldId = linkedSetOf(estCodeSchemaFieldName, estNameSchemaFieldName),
-        datasetForFilter = establishmentDataset,
-      ),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
@@ -538,6 +531,12 @@ class ReportDefinitionMapperTest {
         FilterOption("code1", "name1"),
         FilterOption("code2", "name2"),
       ),
+    )
+
+    verify(configuredApiService).validateAndFetchDataForFilterWithDataset(
+      pageSize = DEFAULT_MAX_STATIC_OPTIONS,
+      sortColumn = estCodeSchemaFieldName,
+      dataset = establishmentDataset,
     )
   }
 
@@ -566,7 +565,7 @@ class ReportDefinitionMapperTest {
 
     val field = result.variant.specification!!.fields.first()
     assertThat(field.filter?.staticOptions).isNull()
-    assertThat(field.filter?.dynamicOptions).isEqualTo(DynamicFilterOption(2, false))
+    assertThat(field.filter?.dynamicOptions?.minimumLength).isEqualTo(2)
     verifyNoInteractions(configuredApiService)
   }
 
@@ -621,6 +620,7 @@ class ReportDefinitionMapperTest {
           id = "10",
           name = "11",
           query = "12",
+          datasource = "12A",
           schema = Schema(
             field = listOf(
               SchemaField(
@@ -875,6 +875,7 @@ class ReportDefinitionMapperTest {
         id = "10",
         name = "11",
         query = "12",
+        datasource = "12A",
         schema = Schema(
           field = listOf(
             SchemaField(
@@ -932,6 +933,7 @@ class ReportDefinitionMapperTest {
       id = "10",
       name = "11",
       query = "12",
+      datasource = "12A",
       schema = Schema(
         field = listOf(
           SchemaField(

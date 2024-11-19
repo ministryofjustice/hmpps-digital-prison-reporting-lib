@@ -36,6 +36,7 @@ class ReportDefinitionSummaryMapperTest {
     id = "10",
     name = "11",
     query = "12",
+    datasource = "12A",
     schema = Schema(
       field = listOf(
         SchemaField(
@@ -161,6 +162,7 @@ class ReportDefinitionSummaryMapperTest {
           id = "10",
           name = "11",
           query = "12",
+          datasource = "12A",
           schema = Schema(
             field = emptyList(),
           ),

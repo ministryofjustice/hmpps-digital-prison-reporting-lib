@@ -211,10 +211,11 @@ class SyncDataApiServiceTest {
     val estNameSchemaFieldName = "establishment_name"
     val estCodeSchemaFieldName = "establishment_code"
     val filterDataset = Dataset(
-      "establishment-dataset",
-      "establishment-dataset-name",
-      "select * from table",
-      Schema(
+      id = "establishment-dataset",
+      name = "establishment-dataset-name",
+      query = "select * from table",
+      datasource = "redshift",
+      schema = Schema(
         listOf(
           SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code", null),
           SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name", null),
@@ -1195,7 +1196,7 @@ class SyncDataApiServiceTest {
   @Test
   fun `should call the configuredApiRepository with no sort column if none is provided and there is no default`() {
     val dataSet =
-      Dataset("datasetId", "datasetname", "select *", Schema(listOf(SchemaField("9", ParameterType.String, display = "", filter = null))))
+      Dataset("datasetId", "datasetname", "redshift", "select *", Schema(listOf(SchemaField("9", ParameterType.String, display = "", filter = null))))
     val report = Report(
       id = "6",
       name = "7",

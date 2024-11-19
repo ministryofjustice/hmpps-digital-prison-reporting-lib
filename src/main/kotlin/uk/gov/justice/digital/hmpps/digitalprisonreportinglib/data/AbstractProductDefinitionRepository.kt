@@ -57,6 +57,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
       policy = productDefinition.policy,
       dashboardDataset = dataSet,
       dashboard = dashboard,
+      allDatasets = productDefinition.dataset,
     )
   }
 

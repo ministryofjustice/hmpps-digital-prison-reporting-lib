@@ -15,6 +15,7 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ResourceServerCo
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionMapper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionMapper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionSummaryMapper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService

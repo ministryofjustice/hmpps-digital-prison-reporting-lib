@@ -1,68 +1,48 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 
 class DashboardDefinitionServiceTest {
 
-  private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-    listOf("productDefinitionWithMetrics.json"),
-    DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-  )
+  private val productDefinitionRepository: ProductDefinitionRepository = Mockito.mock()
+  private val dashboardDefinitionMapper: DashboardDefinitionMapper = Mockito.mock()
 
-  private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository)
+  private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository, dashboardDefinitionMapper)
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
+    val dashboardDefinition: DashboardDefinition = Mockito.mock()
+    val productDefinition: SingleDashboardProductDefinition = Mockito.mock()
+    val dashboard: Dashboard = Mockito.mock()
+    val allDatasets: List<Dataset> = listOf(Mockito.mock())
+    val definitionId = "missing-ethnicity-metrics"
+    val dashboardId = "test-dashboard-1"
+
+    whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any())).doReturn(dashboardDefinition)
+    whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any(), anyOrNull())).doReturn(productDefinition)
+    whenever(productDefinition.dashboard).doReturn(dashboard)
+    whenever(productDefinition.allDatasets).doReturn(allDatasets)
+
     val actual = dashboardDefinitionService.getDashboardDefinition(
-      dataProductDefinitionId = "missing-ethnicity-metrics",
-      dashboardId = "test-dashboard-1",
+      dataProductDefinitionId = definitionId,
+      dashboardId = dashboardId,
     )
-    assertEquals(
-      DashboardDefinition(
-        id = "test-dashboard-1",
-        name = "Test Dashboard 1",
-        description = "Test Dashboard 1 Description",
-        metrics = listOf(
-          MetricDefinition(
-            id = "missing-ethnicity-metric",
-            name = "Missing Ethnicity By Establishment Metric",
-            display = "Missing Ethnicity By Establishment Metric",
-            description = "Missing Ethnicity By Establishment Metric",
-            charts = listOf(
-              ChartDefinition(
-                type = ChartTypeDefinition.BAR,
-                label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
-                unit = "number",
-                columns = listOf(
-                  ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                  ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
-                ),
-              ),
-              ChartDefinition(
-                type = ChartTypeDefinition.DOUGHNUT,
-                label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
-                unit = "percentage",
-                columns = listOf(
-                  ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                  ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      actual,
-    )
+
+    assertThat(dashboardDefinition).isEqualTo(actual)
+
+    verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
+    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets)
   }
 }

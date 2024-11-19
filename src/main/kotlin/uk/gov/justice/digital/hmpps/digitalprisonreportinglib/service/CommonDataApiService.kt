@@ -28,7 +28,7 @@ abstract class CommonDataApiService {
   ) = reportFieldId
     ?.let {
       prefix
-        ?.let { listOf(validateAndMapFieldIdDynamicFilter(productDefinition, reportFieldId, prefix)) }
+        ?.let { listOf(validateAndMapFieldIdDynamicFilter(findFilterDefinition(productDefinition, reportFieldId), reportFieldId, prefix)) }
     } ?: emptyList()
 
   protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? {
@@ -148,8 +148,7 @@ abstract class CommonDataApiService {
     }
   }
 
-  protected fun validateAndMapFieldIdDynamicFilter(definition: SingleReportProductDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
-    val filterDefinition = findFilterDefinition(definition, fieldId)
+  protected fun validateAndMapFieldIdDynamicFilter(filterDefinition: FilterDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
     if (filterDefinition.dynamicOptions == null) {
       throw ValidationException(AsyncDataApiService.INVALID_DYNAMIC_FILTER_MESSAGE)
     }
