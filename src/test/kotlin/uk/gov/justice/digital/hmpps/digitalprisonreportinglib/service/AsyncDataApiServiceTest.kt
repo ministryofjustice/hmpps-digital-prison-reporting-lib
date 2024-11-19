@@ -97,7 +97,7 @@ class AsyncDataApiServiceTest {
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
     }
-    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
 
   @Test

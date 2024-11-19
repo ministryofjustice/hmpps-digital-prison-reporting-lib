@@ -51,7 +51,7 @@ class SyncDataApiService(
     return configuredApiRepository
       .executeQuery(
         query = datasetForFilter?.query ?: productDefinition.reportDataset.query,
-        filters = validateAndMapFilters(productDefinition, filters, reportFieldId) + dynamicFilter,
+        filters = validateAndMapFilters(productDefinition, filters, null, reportFieldId) + dynamicFilter,
         selectedPage = selectedPage,
         pageSize = pageSize,
         sortColumn = datasetForFilter?.let { findSortColumn(sortColumn, it) } ?: sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
@@ -86,7 +86,7 @@ class SyncDataApiService(
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(
       configuredApiRepository.count(
-        filters = validateAndMapFilters(productDefinition, filters),
+        filters = validateAndMapFilters(productDefinition, filters, null),
         query = productDefinition.reportDataset.query,
         reportId = reportId,
         policyEngineResult = policyEngine.execute(),

@@ -69,7 +69,7 @@ class AsyncDataApiService(
     return getRepo(productDefinition)
       .executeQueryAsync(
         productDefinition = productDefinition,
-        filters = validateAndMapFilters(productDefinition, toMap(filtersOnly)) + dynamicFilter,
+        filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngine.execute(),
@@ -121,7 +121,7 @@ class AsyncDataApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
     return formatColumnsAndApplyFormulas(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, validateAndMapFilters(productDefinition, filters)),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, validateAndMapFilters(productDefinition, filters, true)),
       productDefinition.reportDataset.schema.field,
       formulaEngine,
     )

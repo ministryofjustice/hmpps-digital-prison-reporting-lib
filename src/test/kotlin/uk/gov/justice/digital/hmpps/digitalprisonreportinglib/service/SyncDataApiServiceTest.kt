@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
@@ -86,8 +85,6 @@ class SyncDataApiServiceTest {
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
-  private val tableIdGenerator: TableIdGenerator = TableIdGenerator()
-  private val datasetHelper: DatasetHelper = DatasetHelper()
   private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository)
 
   @BeforeEach
@@ -870,7 +867,7 @@ class SyncDataApiServiceTest {
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndFetchData(reportId, "last-year", emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
     }
-    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
 
   @Test
@@ -942,7 +939,7 @@ class SyncDataApiServiceTest {
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndCount(reportId, "last-year", emptyMap(), authToken)
     }
-    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
 
   @Test
