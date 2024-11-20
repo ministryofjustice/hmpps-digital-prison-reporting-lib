@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.1.1
+Fix issue with dashboard query execution.
+
 ## 7.1.0
 Added filters to getStatementResults endpoint and dashboard definition.
 

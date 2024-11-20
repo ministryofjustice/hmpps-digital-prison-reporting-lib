@@ -201,7 +201,7 @@ SELECT *
           STORED AS parquet 
           LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
           AS ( 
-            WITH dataset_ AS (SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality),report_ AS (SELECT * FROM dataset_),policy_ AS (SELECT * FROM report_ AS (SELECT * FROM dataset_) WHERE (establishment_id='ABC')),filter_ AS (SELECT * FROM policy_ WHERE 1=1)
+            WITH dataset_ AS (SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality),report_ AS (SELECT * FROM dataset_),policy_ AS (SELECT * FROM report_ WHERE (establishment_id='ABC')),filter_ AS (SELECT * FROM policy_ WHERE 1=1)
 SELECT *
           FROM filter_ 
           );

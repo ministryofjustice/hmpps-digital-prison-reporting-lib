@@ -82,7 +82,7 @@ abstract class RepositoryHelper {
     return filter?.query ?: DEFAULT_REPORT_CTE
   }
 
-  protected fun determinePreviousCteName(reportFilter: ReportFilter?) =
+  protected fun determinePreviousCteName(reportFilter: ReportFilter? = null) =
     reportFilter?.name ?: REPORT_
 
   protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) =
