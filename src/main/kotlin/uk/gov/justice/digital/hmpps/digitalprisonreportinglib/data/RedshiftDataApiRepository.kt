@@ -168,7 +168,7 @@ class RedshiftDataApiRepository(
             ${buildFinalQuery(
       datasetQuery = buildDatasetQuery(productDefinition.dashboardDataset.query),
       reportQuery = DEFAULT_REPORT_CTE,
-      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(null)),
+      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName()),
       filtersQuery = buildFiltersQuery(filters),
       selectFromFinalStageQuery = buildFinalStageQuery(sortedAsc = true),
     )}
