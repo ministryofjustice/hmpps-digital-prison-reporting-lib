@@ -78,7 +78,38 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                   }
                 ]
               }
-            ]
+            ],
+            "filterFields": [
+              {
+                "name":"establishment_id",
+                "display":"Establishment ID",
+                "filter": {
+                  "type":"Select",
+                  "mandatory":false,
+                  "staticOptions": [
+                    {
+                      "name":"AAA",
+                      "display":"Aardvark"
+                    },
+                    {
+                      "name":"BBB",
+                      "display":"Bumblebee"
+                    }
+                  ],
+                  "dynamicOptions": {
+                    "minimumLength":null
+                  },
+                  "interactive":false
+                },
+                "sortable":true,
+                "defaultsort":false,
+                "type":"string",
+                "mandatory":false,
+                "visible":true,
+                "calculated":false,
+                "header":false
+              }
+            ] 
           }
         """.trimIndent(),
       )

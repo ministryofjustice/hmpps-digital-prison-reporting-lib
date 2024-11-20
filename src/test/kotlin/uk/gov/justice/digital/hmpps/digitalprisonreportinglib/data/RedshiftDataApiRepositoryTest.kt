@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_REPORT_CTE
@@ -114,7 +115,7 @@ class RedshiftDataApiRepositoryTest {
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
       productDefinition = productDefinition,
-      filters = listOf(ConfiguredApiRepository.Filter("direction", "out")),
+      filters = listOf(Filter("direction", "out")),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -127,10 +128,10 @@ class RedshiftDataApiRepositoryTest {
   fun `executeQueryAsync should call the redshift data api with the correct query including all filters and return the execution id and table id`() {
     val startDate = "2024-02-16"
     val endDate = "2024-02-17"
-    val directionFilter = ConfiguredApiRepository.Filter("direction", "out")
-    val startDateFilter = ConfiguredApiRepository.Filter("date", startDate, FilterType.DATE_RANGE_START)
-    val endDateFilter = ConfiguredApiRepository.Filter("date", endDate, FilterType.DATE_RANGE_END)
-    val nameDynamicFilter = ConfiguredApiRepository.Filter("name", "LastNa", FilterType.DYNAMIC)
+    val directionFilter = Filter("direction", "out")
+    val startDateFilter = Filter("date", startDate, FilterType.DATE_RANGE_START)
+    val endDateFilter = Filter("date", endDate, FilterType.DATE_RANGE_END)
+    val nameDynamicFilter = Filter("name", "LastNa", FilterType.DYNAMIC)
     val executionId = "someId"
     val sqlStatement =
       """          CREATE EXTERNAL TABLE reports.$TABLE_ID 
@@ -230,6 +231,7 @@ SELECT *
     val actual = redshiftDataApiRepository.executeQueryAsync(
       productDefinition = productDefinition,
       policyEngineResult = policyEngineResult,
+      filters = emptyList(),
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
@@ -416,7 +418,7 @@ SELECT *
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
       productDefinition = productDefinition,
-      filters = listOf(ConfiguredApiRepository.Filter("direction", "out")),
+      filters = listOf(Filter("direction", "out")),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -441,16 +443,46 @@ SELECT *
     val pageSize = 10L
     val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
 
-    whenever(
-      jdbcTemplate.queryForList(
-        eq("SELECT * FROM reports.$TABLE_ID limit $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
-        any<MapSqlParameterSource>(),
-      ),
-    ).thenReturn(expected)
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, jdbcTemplate)
+    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, emptyList(), jdbcTemplate)
 
     assertEquals(expected, actual)
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT * FROM reports.$TABLE_ID WHERE 1=1 LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+      any<MapSqlParameterSource>(),
+    )
+  }
+
+  @Test
+  fun `getStatementResult with filters should make a paginated JDBC call and return the existing results`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      datasetHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
+
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(expected)
+
+    val filters = listOf(
+      Filter("filterName1", "filterValue1"),
+      Filter("filterName2", "filterValue2"),
+    )
+    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, filters, jdbcTemplate)
+
+    assertEquals(expected, actual)
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT * FROM reports.$TABLE_ID WHERE lower(filterName1) = 'filtervalue1' AND lower(filterName2) = 'filtervalue2' LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+      any<MapSqlParameterSource>(),
+    )
   }
 
   @Test

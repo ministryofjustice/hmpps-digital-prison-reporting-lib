@@ -11,4 +11,5 @@ data class SingleDashboardProductDefinition(
   val policy: List<Policy>,
   val dashboardDataset: Dataset,
   val dashboard: Dashboard,
+  val allDatasets: List<Dataset>,
 )

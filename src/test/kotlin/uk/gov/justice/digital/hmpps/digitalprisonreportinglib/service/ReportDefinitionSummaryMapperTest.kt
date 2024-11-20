@@ -2,16 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.times
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
@@ -45,12 +36,14 @@ class ReportDefinitionSummaryMapperTest {
     id = "10",
     name = "11",
     query = "12",
+    datasource = "12A",
     schema = Schema(
       field = listOf(
         SchemaField(
           name = "13",
           type = ParameterType.Long,
           display = "",
+          filter = null,
         ),
       ),
     ),
@@ -115,11 +108,9 @@ class ReportDefinitionSummaryMapperTest {
     report = listOf(fullReport),
   )
 
-  private val dashboardDefinitionService: DashboardDefinitionService = mock<DashboardDefinitionService>()
-
   @Test
   fun `Getting report list for user maps full data correctly`() {
-    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper()
 
     val result = mapper.map(fullProductDefinition, null)
 
@@ -148,7 +139,7 @@ class ReportDefinitionSummaryMapperTest {
         version = "5",
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper()
 
     val result = mapper.map(productDefinition, null)
 
@@ -171,6 +162,7 @@ class ReportDefinitionSummaryMapperTest {
           id = "10",
           name = "11",
           query = "12",
+          datasource = "12A",
           schema = Schema(
             field = emptyList(),
           ),
@@ -197,7 +189,7 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper()
 
     val result = mapper.map(productDefinition, HTML)
 
@@ -208,7 +200,7 @@ class ReportDefinitionSummaryMapperTest {
 
   @Test
   fun `Getting report list with dashboards for user includes the dashboard definition in the mapped data`() {
-    val mapper = ReportDefinitionSummaryMapper(dashboardDefinitionService)
+    val mapper = ReportDefinitionSummaryMapper()
 
     val dashboard = Dashboard(
       id = "d1",
@@ -232,30 +224,11 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     )
-    val dashboardDefinition = DashboardDefinition(
+    val dashboardDefinition = DashboardDefinitionSummary(
       id = "d1",
       name = "n1",
       description = "abc",
-      metrics = listOf(
-        MetricDefinition(
-          id = "m1",
-          name = "n1",
-          display = "d1",
-          description = "d2",
-          charts = listOf(
-            ChartDefinition(
-              type = ChartTypeDefinition.BAR,
-              unit = "dim_1",
-              label = LabelDefinition(name = "label1", display = "Label 1"),
-              columns = listOf(ColumnDefinition(name = "column1", display = "Column 1")),
-            ),
-          ),
-        ),
-      ),
     )
-
-    whenever(dashboardDefinitionService.toDashboardDefinition(dashboard))
-      .thenReturn(dashboardDefinition)
 
     val result = mapper.map(
       fullProductDefinition
@@ -267,9 +240,6 @@ class ReportDefinitionSummaryMapperTest {
       null,
     )
 
-    assertThat(result.dashboards).isEqualTo(
-      listOf(dashboardDefinition),
-    )
-    verify(dashboardDefinitionService, times(1)).toDashboardDefinition(dashboard)
+    assertThat(result.dashboards!![0]).isEqualTo(dashboardDefinition)
   }
 }

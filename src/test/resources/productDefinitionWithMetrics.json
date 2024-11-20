@@ -15,6 +15,26 @@
   ],
   "dataset": [
     {
+      "id": "establishments",
+      "name": "Establishments",
+      "datasource": "datamart",
+      "query": "SELECT 'AAA' AS establishment_id, 'Aardvark' AS establishment_name UNION SELECT 'BBB' AS establishment_id, 'Bumblebee' AS establishment_name",
+      "schema": {
+        "field": [
+          {
+            "name": "establishment_id",
+            "type": "string",
+            "display": "Establishment ID"
+          },
+          {
+            "name": "establishment_name",
+            "type": "string",
+            "display": "Establishment Name"
+          }
+        ]
+      }
+    },
+    {
       "id": "missing-ethnicity-dataset",
       "name": "Missing Ethnicity By Establishment Dataset",
       "datasource": "datamart",
@@ -24,7 +44,17 @@
           {
             "name": "establishment_id",
             "type": "string",
-            "display": "Establishment ID"
+            "display": "Establishment ID",
+            "filter": {
+              "type": "select",
+              "dynamicoptions": {
+                "returnAsStaticOptions": true,
+                "dataset": "establishments",
+                "name": "establishment_id",
+                "display": "establishment_name",
+                "maximumOptions": 123
+              }
+            }
           },
           {
             "name": "has_ethnicity",

@@ -9,6 +9,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DefinitionMapper.Companion.DEFAULT_MAX_STATIC_OPTIONS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -59,12 +61,14 @@ class ReportDefinitionMapperTest {
     id = "10",
     name = "11",
     query = "12",
+    datasource = "12A",
     schema = Schema(
       field = listOf(
         SchemaField(
           name = "13",
           type = ParameterType.Long,
           display = "14",
+          filter = null,
         ),
       ),
     ),
@@ -106,6 +110,7 @@ class ReportDefinitionMapperTest {
             ),
             mandatory = true,
             pattern = ".+",
+            interactive = true,
           ),
           sortable = true,
           defaultSort = true,
@@ -435,6 +440,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.filter?.staticOptions).hasSize(1)
     assertThat(field.filter?.mandatory).isEqualTo(sourceReportField.filter?.mandatory)
     assertThat(field.filter?.pattern).isEqualTo(sourceReportField.filter?.pattern)
+    assertThat(field.filter?.interactive).isEqualTo(sourceReportField.filter?.interactive)
     assertThat(field.type.toString()).isEqualTo(sourceSchemaField.type.toString())
 
     val filterOption = field.filter?.staticOptions?.first()
@@ -479,13 +485,14 @@ class ReportDefinitionMapperTest {
   @Test
   fun `getting single report with dynamic options which have a dataset maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
     val estCodeSchemaFieldName = "establishment_code"
-    val establishmentCodeSchemaField = SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code")
+    val establishmentCodeSchemaField = SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code", null)
     val estNameSchemaFieldName = "establishment_name"
-    val establishmentNameSchemaField = SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name")
+    val establishmentNameSchemaField = SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name", null)
     val estDatasetId = "establishment-dataset-id"
     val establishmentDataset = Dataset(
       estDatasetId,
       "establishment-dataset-name",
+      "12A",
       "select * from table",
       Schema(
         listOf(
@@ -504,18 +511,7 @@ class ReportDefinitionMapperTest {
     val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper)
 
     whenever(
-      configuredApiService.validateAndFetchData(
-        reportId = fullSingleProductDefinition.id,
-        reportVariantId = reportWithDynamicFilter.id,
-        filters = emptyMap(),
-        selectedPage = 1,
-        pageSize = DEFAULT_MAX_STATIC_OPTIONS,
-        sortColumn = estCodeSchemaFieldName,
-        sortedAsc = true,
-        userToken = authToken,
-        reportFieldId = linkedSetOf(estCodeSchemaFieldName, estNameSchemaFieldName),
-        datasetForFilter = establishmentDataset,
-      ),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
@@ -535,6 +531,12 @@ class ReportDefinitionMapperTest {
         FilterOption("code1", "name1"),
         FilterOption("code2", "name2"),
       ),
+    )
+
+    verify(configuredApiService).validateAndFetchDataForFilterWithDataset(
+      pageSize = DEFAULT_MAX_STATIC_OPTIONS,
+      sortColumn = estCodeSchemaFieldName,
+      dataset = establishmentDataset,
     )
   }
 
@@ -563,7 +565,7 @@ class ReportDefinitionMapperTest {
 
     val field = result.variant.specification!!.fields.first()
     assertThat(field.filter?.staticOptions).isNull()
-    assertThat(field.filter?.dynamicOptions).isEqualTo(DynamicFilterOption(2, false))
+    assertThat(field.filter?.dynamicOptions?.minimumLength).isEqualTo(2)
     verifyNoInteractions(configuredApiService)
   }
 
@@ -618,12 +620,14 @@ class ReportDefinitionMapperTest {
           id = "10",
           name = "11",
           query = "12",
+          datasource = "12A",
           schema = Schema(
             field = listOf(
               SchemaField(
                 name = "13",
                 type = ParameterType.Date,
                 display = "",
+                filter = null,
               ),
             ),
           ),
@@ -871,12 +875,14 @@ class ReportDefinitionMapperTest {
         id = "10",
         name = "11",
         query = "12",
+        datasource = "12A",
         schema = Schema(
           field = listOf(
             SchemaField(
               name = "13",
               type = ParameterType.Date,
               display = datasetDisplay,
+              filter = null,
             ),
           ),
         ),
@@ -919,5 +925,60 @@ class ReportDefinitionMapperTest {
       ),
       allDatasets = listOf(fullDataset),
     )
+  }
+
+  @Test
+  fun `Field filter falls back to dataset filter when the report field filter is not specified `() {
+    val sourceDataset = Dataset(
+      id = "10",
+      name = "11",
+      query = "12",
+      datasource = "12A",
+      schema = Schema(
+        field = listOf(
+          SchemaField(
+            name = "13",
+            type = ParameterType.Long,
+            display = "14",
+            filter = FilterDefinition(
+              type = FilterType.Text,
+              mandatory = true,
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val sourceDefinition = SingleReportProductDefinition(
+      id = "1",
+      name = "2",
+      description = "3",
+      metadata = MetaData(
+        author = "4",
+        version = "5",
+        owner = "6",
+        purpose = "7",
+        profile = "8",
+        dqri = "9",
+      ),
+      reportDataset = sourceDataset,
+      datasource = fullDatasource,
+      report = fullReport,
+      policy = listOf(
+        Policy(
+          id = "caseload",
+          type = PolicyType.ACCESS,
+          rule = listOf(Rule(Effect.PERMIT, emptyList())),
+        ),
+      ),
+      allDatasets = listOf(sourceDataset),
+    )
+
+    val result = ReportDefinitionMapper(configuredApiService, datasetHelper).map(definition = sourceDefinition, userToken = authToken)
+
+    assertThat(result.variant.specification!!.fields[0].filter?.type.toString()).isEqualTo("Text")
+    assertThat(result.variant.specification!!.fields[0].filter?.mandatory).isTrue()
+
+    verifyNoInteractions(configuredApiService)
   }
 }

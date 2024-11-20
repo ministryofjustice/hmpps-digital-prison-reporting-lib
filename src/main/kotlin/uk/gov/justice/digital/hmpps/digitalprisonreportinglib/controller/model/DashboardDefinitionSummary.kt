@@ -1,8 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model
 
-data class ReportDefinition(
+data class DashboardDefinitionSummary(
   val id: String,
   val name: String,
-  val description: String? = null,
-  val variants: List<VariantDefinition>,
+  val description: String,
 )

@@ -4,4 +4,5 @@ data class SchemaField(
   val name: String,
   val type: ParameterType,
   val display: String,
+  val filter: FilterDefinition?,
 )

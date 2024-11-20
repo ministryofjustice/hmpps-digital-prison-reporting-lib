@@ -69,7 +69,7 @@ class AsyncDataApiService(
     return getRepo(productDefinition)
       .executeQueryAsync(
         productDefinition = productDefinition,
-        filters = validateAndMapFilters(productDefinition, toMap(filtersOnly)) + dynamicFilter,
+        filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngine.execute(),
@@ -84,6 +84,7 @@ class AsyncDataApiService(
     dashboardId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
+    filters: Map<String, String>,
   ): StatementExecutionResponse {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(
       definitionId = reportId,
@@ -95,6 +96,7 @@ class AsyncDataApiService(
       .executeQueryAsync(
         productDefinition = productDefinition,
         policyEngineResult = policyEngine.execute(),
+        filters = validateAndMapFilters(productDefinition, filters, false),
       )
   }
 
@@ -114,11 +116,12 @@ class AsyncDataApiService(
     dataProductDefinitionsPath: String? = null,
     selectedPage: Long,
     pageSize: Long,
+    filters: Map<String, String>,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
     return formatColumnsAndApplyFormulas(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, validateAndMapFilters(productDefinition, filters, true)),
       productDefinition.reportDataset.schema.field,
       formulaEngine,
     )
@@ -131,9 +134,10 @@ class AsyncDataApiService(
     dataProductDefinitionsPath: String? = null,
     selectedPage: Long,
     pageSize: Long,
+    filters: Map<String, String>,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
-    return redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize)
+    return redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, validateAndMapFilters(productDefinition, filters, true))
       .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, productDefinition.dashboardDataset.schema.field.map(SchemaField::name)) }
   }
 
@@ -143,6 +147,7 @@ class AsyncDataApiService(
     reportId: String,
     reportVariantId: String,
     dataProductDefinitionsPath: String? = null,
+    filters: Map<String, String>,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
 
@@ -154,6 +159,7 @@ class AsyncDataApiService(
 
     // Request data from the summary table.
     // If it doesn't exist, create it (waiting for creation to complete).
+    // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
     val results = try {
       redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } catch (e: UncategorizedSQLException) {

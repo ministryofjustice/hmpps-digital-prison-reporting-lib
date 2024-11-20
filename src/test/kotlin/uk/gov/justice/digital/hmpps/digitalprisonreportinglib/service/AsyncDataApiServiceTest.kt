@@ -97,7 +97,7 @@ class AsyncDataApiServiceTest {
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
     }
-    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " Date", e.message)
+    assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
 
   @Test
@@ -219,14 +219,21 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.executeQueryAsync(
         productDefinition = singleDashboardProductDefinition,
         policyEngineResult = policyEngineResult,
+        filters = emptyList(),
       ),
     ).thenReturn(statementExecutionResponse)
 
-    val actual = asyncDataApiService.validateAndExecuteStatementAsync("missing-ethnicity-metrics", "test-dashboard-1", authToken)
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync(
+      reportId = "missing-ethnicity-metrics",
+      dashboardId = "test-dashboard-1",
+      userToken = authToken,
+      filters = emptyMap(),
+    )
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
       productDefinition = singleDashboardProductDefinition,
       policyEngineResult = policyEngineResult,
+      filters = emptyList(),
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -414,9 +421,8 @@ class AsyncDataApiServiceTest {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
-    whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
-    ).thenReturn(expectedRepositoryResult)
+    whenever(redshiftDataApiRepository.getPaginatedExternalTableResult(any(), any(), any(), any(), anyOrNull()))
+      .thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getStatementResult(
       tableId,
@@ -424,9 +430,12 @@ class AsyncDataApiServiceTest {
       reportVariantId,
       selectedPage = selectedPage,
       pageSize = pageSize,
+      filters = mapOf("direction" to "in"),
     )
 
     assertEquals(expectedServiceResult, actual)
+
+    verify(redshiftDataApiRepository).getPaginatedExternalTableResult(tableId, selectedPage, pageSize, listOf(Filter("direction", "in")))
   }
 
   @Test
@@ -446,7 +455,7 @@ class AsyncDataApiServiceTest {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
     val executionID = UUID.randomUUID().toString()
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = asyncDataApiService.getStatementResult(
@@ -455,6 +464,7 @@ class AsyncDataApiServiceTest {
       reportVariantId = reportVariantId,
       selectedPage = selectedPage,
       pageSize = pageSize,
+      filters = emptyMap(),
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -485,7 +495,7 @@ class AsyncDataApiServiceTest {
     val selectedPage = 1L
     val pageSize = 20L
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getDashboardStatementResult(
@@ -494,6 +504,7 @@ class AsyncDataApiServiceTest {
       "test-dashboard-1",
       selectedPage = selectedPage,
       pageSize = pageSize,
+      filters = emptyMap(),
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -518,7 +529,7 @@ class AsyncDataApiServiceTest {
     val selectedPage = 1L
     val pageSize = 20L
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val exception = Assertions.assertThrows(ValidationException::class.java) {
@@ -528,6 +539,7 @@ class AsyncDataApiServiceTest {
         "test-dashboard-1",
         selectedPage = selectedPage,
         pageSize = pageSize,
+        filters = emptyMap(),
       )
     }
     assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")
@@ -546,6 +558,7 @@ class AsyncDataApiServiceTest {
       summaryId,
       reportId,
       reportVariantId,
+      filters = emptyMap(),
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -566,6 +579,7 @@ class AsyncDataApiServiceTest {
       summaryId,
       reportId,
       reportVariantId,
+      filters = emptyMap(),
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)

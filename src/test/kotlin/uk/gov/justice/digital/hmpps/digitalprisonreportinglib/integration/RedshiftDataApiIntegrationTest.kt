@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.given
+import org.mockito.kotlin.verify
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
@@ -89,6 +91,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         dashboardId = eq("some-dashboard-id"),
         userToken = any<DprAuthAwareAuthenticationToken>(),
         dataProductDefinitionsPath = eq("definitions/prisons/orphanage"),
+        filters = eq(emptyMap()),
       ),
     )
       .willReturn(statementExecutionResponse)
@@ -362,6 +365,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(selectedPage),
         eq(pageSize),
+        eq(emptyMap()),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -383,6 +387,56 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Calling the report getStatementResult endpoint with filters calls the configuredApiService with the correct arguments`() {
+    val tableId = "tableId"
+    val selectedPage = 2L
+    val pageSize = 20L
+    val expectedServiceResult =
+      listOf(
+        mapOf(
+          "prisonNumber" to "1",
+          "name" to "FirstName",
+          "date" to "2023-05-20",
+          "origin" to "OriginLocation",
+          "destination" to "DestinationLocation",
+          "direction" to "in",
+          "type" to "trn",
+          "reason" to "normal transfer",
+        ),
+      )
+
+    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any()))
+      .willReturn(expectedServiceResult)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month/tables/$tableId/result")
+          .queryParam("selectedPage", 2L)
+          .queryParam("pageSize", 20L)
+          .queryParam("${DataApiSyncController.FiltersPrefix.FILTERS_PREFIX}direction", "out")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(Gson().toJson(expectedServiceResult))
+
+    verify(asyncDataApiService)
+      .getStatementResult(
+        eq(tableId),
+        eq("external-movements"),
+        eq("last-month"),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        eq(selectedPage),
+        eq(pageSize),
+        eq(mapOf("direction" to "out")),
+      )
+  }
+
+  @Test
   fun `Calling the dashboard getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
     val tableId = "tableId"
     val dpdId = "external-movements"
@@ -398,16 +452,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(
-      asyncDataApiService.getDashboardStatementResult(
-        eq(tableId),
-        eq(dpdId),
-        eq(dashboardId),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        eq(selectedPage),
-        eq(pageSize),
-      ),
-    )
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -424,6 +469,62 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .isOk()
       .expectBody()
       .json(Gson().toJson(expectedServiceResult))
+
+    verify(asyncDataApiService).getDashboardStatementResult(
+      eq(tableId),
+      eq(dpdId),
+      eq(dashboardId),
+      eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      eq(selectedPage),
+      eq(pageSize),
+      eq(emptyMap()),
+    )
+  }
+
+  @Test
+  fun `Calling the dashboard getStatementResult endpoint with filters calls the configuredApiService with the correct arguments`() {
+    val tableId = "tableId"
+    val dpdId = "external-movements"
+    val dashboardId = "dashboardId"
+    val selectedPage = 2L
+    val pageSize = 20L
+    val expectedServiceResult =
+      listOf(
+        mapOf(
+          "establishment_id" to "KMI",
+          "has_ethnicity" to "10",
+          "ethnicity_is_missing" to "30",
+        ),
+      )
+
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
+      .willReturn(expectedServiceResult)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("reports/$dpdId/dashboards/$dashboardId/tables/$tableId/result")
+          .queryParam("selectedPage", selectedPage)
+          .queryParam("pageSize", pageSize)
+          .queryParam("${DataApiSyncController.FiltersPrefix.FILTERS_PREFIX}direction", "out")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(Gson().toJson(expectedServiceResult))
+
+    verify(asyncDataApiService).getDashboardStatementResult(
+      eq(tableId),
+      eq(dpdId),
+      eq(dashboardId),
+      eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      eq(selectedPage),
+      eq(pageSize),
+      eq(mapOf("direction" to "out")),
+    )
   }
 
   @Test
@@ -444,6 +545,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        eq(emptyMap()),
       ),
     )
       .willReturn(expectedServiceResult)

@@ -5,4 +5,5 @@ data class DashboardDefinition(
   val name: String,
   val description: String,
   val metrics: List<MetricDefinition>,
+  val filterFields: List<FieldDefinition>?,
 )
