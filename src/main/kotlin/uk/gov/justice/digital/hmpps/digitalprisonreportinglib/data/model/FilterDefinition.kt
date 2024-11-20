@@ -13,4 +13,5 @@ data class FilterDefinition(
   val default: String? = null,
   val min: String? = null,
   val max: String? = null,
+  val interactive: Boolean? = false,
 )

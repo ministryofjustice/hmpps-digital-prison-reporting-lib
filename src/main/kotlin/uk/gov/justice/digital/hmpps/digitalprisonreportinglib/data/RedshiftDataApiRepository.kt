@@ -157,6 +157,7 @@ class RedshiftDataApiRepository(
   fun executeQueryAsync(
     productDefinition: SingleDashboardProductDefinition,
     policyEngineResult: String,
+    filters: List<ConfiguredApiRepository.Filter>,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
@@ -168,7 +169,7 @@ class RedshiftDataApiRepository(
       datasetQuery = buildDatasetQuery(productDefinition.dashboardDataset.query),
       reportQuery = DEFAULT_REPORT_CTE,
       policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(null)),
-      filtersQuery = buildFiltersQuery(emptyList()),
+      filtersQuery = buildFiltersQuery(filters),
       selectFromFinalStageQuery = buildFinalStageQuery(sortedAsc = true),
     )}
           );

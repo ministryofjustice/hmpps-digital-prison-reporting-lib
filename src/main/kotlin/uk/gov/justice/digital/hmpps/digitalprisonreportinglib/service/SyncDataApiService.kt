@@ -13,8 +13,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 
 @Service
 class SyncDataApiService(
-  val productDefinitionRepository: ProductDefinitionRepository,
-  val configuredApiRepository: ConfiguredApiRepository,
+  private val productDefinitionRepository: ProductDefinitionRepository,
+  private val configuredApiRepository: ConfiguredApiRepository,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) : CommonDataApiService() {
 
@@ -51,7 +51,7 @@ class SyncDataApiService(
     return configuredApiRepository
       .executeQuery(
         query = datasetForFilter?.query ?: productDefinition.reportDataset.query,
-        filters = validateAndMapFilters(productDefinition, filters, reportFieldId) + dynamicFilter,
+        filters = validateAndMapFilters(productDefinition, filters, null, reportFieldId) + dynamicFilter,
         selectedPage = selectedPage,
         pageSize = pageSize,
         sortColumn = datasetForFilter?.let { findSortColumn(sortColumn, it) } ?: sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
@@ -71,6 +71,32 @@ class SyncDataApiService(
       }
   }
 
+  fun validateAndFetchDataForFilterWithDataset(
+    pageSize: Long,
+    sortColumn: String,
+    dataset: Dataset,
+  ): List<Map<String, Any?>> {
+    val formulaEngine = FormulaEngine(emptyList(), env)
+    return configuredApiRepository
+      .executeQuery(
+        query = dataset.query,
+        filters = emptyList(),
+        selectedPage = 1,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = true,
+        policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
+        dataSourceName = dataset.datasource,
+      )
+      .let { records ->
+        formatColumnsAndApplyFormulas(
+          records,
+          dataset.schema.field,
+          formulaEngine,
+        )
+      }
+  }
+
   fun validateAndCount(
     reportId: String,
     reportVariantId: String,
@@ -86,7 +112,7 @@ class SyncDataApiService(
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(
       configuredApiRepository.count(
-        filters = validateAndMapFilters(productDefinition, filters),
+        filters = validateAndMapFilters(productDefinition, filters, null),
         query = productDefinition.reportDataset.query,
         reportId = reportId,
         policyEngineResult = policyEngine.execute(),

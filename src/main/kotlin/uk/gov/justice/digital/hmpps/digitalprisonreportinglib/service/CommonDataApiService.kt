@@ -8,7 +8,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -26,7 +28,7 @@ abstract class CommonDataApiService {
   ) = reportFieldId
     ?.let {
       prefix
-        ?.let { listOf(validateAndMapFieldIdDynamicFilter(productDefinition, reportFieldId, prefix)) }
+        ?.let { listOf(validateAndMapFieldIdDynamicFilter(findFilterDefinition(productDefinition, reportFieldId), reportFieldId, prefix)) }
     } ?: emptyList()
 
   protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? {
@@ -52,16 +54,61 @@ abstract class CommonDataApiService {
     }
   }
 
-  protected fun checkMandatoryFiltersAreProvided(definition: SingleReportProductDefinition, filters: Map<String, String>) {
-    definition.report.specification!!.field
-      .filter { it.filter?.mandatory == true }
-      .firstOrNull { !filters.keys.map(::truncateBasedOnSuffix).contains(it.name.removePrefix(AsyncDataApiService.SCHEMA_REF_PREFIX)) }
-      ?.let { throw ValidationException("${AsyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE} ${it.display}") }
+  private fun checkCorrectFiltersAreProvided(definition: SingleReportProductDefinition, filters: Map<String, String>, interactive: Boolean?) {
+    val fieldFilters = definition.report.specification!!.field
+      .map {
+        val name = it.name.removePrefix(AsyncDataApiService.SCHEMA_REF_PREFIX)
+        name to findFilterDefinitionFromFieldsAndDataset(definition.report.specification.field, definition.reportDataset, name)
+      }
+      .toMap()
+
+    checkMandatoryFiltersAreProvided(fieldFilters, interactive, filters)
+    checkCorrectFiltersAreProvidedForStage(fieldFilters, interactive, filters)
   }
 
-  protected fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>, reportFieldId: Set<String>? = null): List<ConfiguredApiRepository.Filter> {
+  private fun checkCorrectFiltersAreProvided(definition: SingleDashboardProductDefinition, filters: Map<String, String>, interactive: Boolean) {
+    val fieldFilters = definition.dashboardDataset.schema.field
+      .map { it.name.removePrefix(AsyncDataApiService.SCHEMA_REF_PREFIX) to findFilterDefinitionFromFieldsAndDataset(null, definition.dashboardDataset, it.name) }
+      .toMap()
+
+    checkMandatoryFiltersAreProvided(fieldFilters, interactive, filters)
+    checkCorrectFiltersAreProvidedForStage(fieldFilters, interactive, filters)
+  }
+
+  private fun checkMandatoryFiltersAreProvided(
+    fieldFilters: Map<String, FilterDefinition?>,
+    interactive: Boolean?,
+    filters: Map<String, String>,
+  ) {
+    fieldFilters.keys
+      .firstOrNull {
+        fieldFilters[it] != null &&
+          fieldFilters[it]?.mandatory == true &&
+          (interactive == null || (fieldFilters[it]?.interactive ?: false) == interactive) &&
+          !filters.keys.map(::truncateBasedOnSuffix).contains(it)
+      }
+      ?.let { throw ValidationException("${AsyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE} $it") }
+  }
+
+  private fun checkCorrectFiltersAreProvidedForStage(
+    fieldFilters: Map<String, FilterDefinition?>,
+    interactive: Boolean?,
+    filters: Map<String, String>,
+  ) {
+    if (interactive != null) {
+      fieldFilters.keys
+        .firstOrNull {
+          fieldFilters[it] != null &&
+            filters.keys.map(::truncateBasedOnSuffix).contains(it) &&
+            (fieldFilters[it]!!.interactive ?: false) != interactive
+        }
+        ?.let { throw ValidationException("Filter provided for wrong stage. Expected stage: interactive=$interactive, filter stage: interactive=${fieldFilters[it]!!.interactive ?: false}, field name: $it") }
+    }
+  }
+
+  protected fun validateAndMapFilters(definition: SingleReportProductDefinition, filters: Map<String, String>, interactive: Boolean?, reportFieldId: Set<String>? = null): List<ConfiguredApiRepository.Filter> {
     if (reportFieldId == null) {
-      checkMandatoryFiltersAreProvided(definition, filters)
+      checkCorrectFiltersAreProvided(definition, filters, interactive)
     }
 
     filters.ifEmpty { return emptyList() }
@@ -81,8 +128,27 @@ abstract class CommonDataApiService {
     }
   }
 
-  protected fun validateAndMapFieldIdDynamicFilter(definition: SingleReportProductDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
-    val filterDefinition = findFilterDefinition(definition, fieldId)
+  protected fun validateAndMapFilters(definition: SingleDashboardProductDefinition, filters: Map<String, String>, interactive: Boolean): List<ConfiguredApiRepository.Filter> {
+    checkCorrectFiltersAreProvided(definition, filters, interactive)
+
+    filters.ifEmpty { return emptyList() }
+
+    return filters.map {
+      val truncatedKey = truncateBasedOnSuffix(it.key)
+
+      val filterDefinition = findFilterDefinition(definition, truncatedKey)
+
+      validateValue(definition.dashboardDataset, filterDefinition, truncatedKey, it.value, null)
+
+      ConfiguredApiRepository.Filter(
+        field = truncatedKey,
+        value = it.value,
+        type = mapFilterType(filterDefinition, it.key, truncatedKey, definition.dashboardDataset.schema),
+      )
+    }
+  }
+
+  protected fun validateAndMapFieldIdDynamicFilter(filterDefinition: FilterDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
     if (filterDefinition.dynamicOptions == null) {
       throw ValidationException(AsyncDataApiService.INVALID_DYNAMIC_FILTER_MESSAGE)
     }
@@ -119,11 +185,29 @@ abstract class CommonDataApiService {
   }
 
   fun findFilterDefinition(definition: SingleReportProductDefinition, filterName: String): FilterDefinition {
-    val field =
-      definition.report.specification?.field
-        ?.firstOrNull { it.filter != null && filterName == it.name.removePrefix(AsyncDataApiService.SCHEMA_REF_PREFIX) }
+    val filter = findFilterDefinitionFromFieldsAndDataset(definition.report.specification?.field, definition.reportDataset, filterName)
 
-    return field?.filter ?: throw ValidationException(AsyncDataApiService.INVALID_FILTERS_MESSAGE)
+    return filter ?: throw ValidationException(AsyncDataApiService.INVALID_FILTERS_MESSAGE)
+  }
+
+  fun findFilterDefinition(definition: SingleDashboardProductDefinition, filterName: String): FilterDefinition {
+    val filter = findFilterDefinitionFromFieldsAndDataset(null, definition.dashboardDataset, filterName)
+
+    return filter ?: throw ValidationException(AsyncDataApiService.INVALID_FILTERS_MESSAGE)
+  }
+
+  fun findFilterDefinitionFromFieldsAndDataset(fields: List<ReportField>?, dataset: Dataset, filterName: String): FilterDefinition? {
+    val fieldFilter = fields?.firstOrNull { it.filter != null && filterName == it.name.removePrefix(AsyncDataApiService.SCHEMA_REF_PREFIX) }?.filter
+
+    val datasetFilter = findFilterDefinitionFromDataset(dataset, filterName)
+
+    return fieldFilter ?: datasetFilter
+  }
+
+  private fun findFilterDefinitionFromDataset(dataset: Dataset, filterName: String): FilterDefinition? {
+    val datasetFilter = dataset.schema.field.firstOrNull { it.filter != null && filterName == it.name }?.filter
+
+    return datasetFilter
   }
 
   protected fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, filterName: String, filterValue: String, reportFieldId: Set<String>?) {

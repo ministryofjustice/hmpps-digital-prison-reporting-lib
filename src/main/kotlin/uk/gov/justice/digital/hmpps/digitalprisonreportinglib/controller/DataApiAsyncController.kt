@@ -121,6 +121,12 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionResponse> {
     return try {
@@ -132,6 +138,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
             dashboardId = dashboardId,
             userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
             dataProductDefinitionsPath = dataProductDefinitionsPath,
+            filters = filterHelper.filtersOnly(filters),
           ),
         )
     } catch (exception: NoDataAvailableException) {
@@ -304,18 +311,25 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam(defaultValue = "10")
     @Min(1)
     pageSize: Long,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
         asyncDataApiService.getStatementResult(
-          tableId,
-          reportId,
-          reportVariantId,
-          dataProductDefinitionsPath,
-          selectedPage,
-          pageSize,
+          tableId = tableId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
         ),
       )
   }
@@ -338,18 +352,25 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam(defaultValue = "10")
     @Min(1)
     pageSize: Long,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
         asyncDataApiService.getDashboardStatementResult(
-          tableId,
-          reportId,
-          dashboardId,
-          dataProductDefinitionsPath,
-          selectedPage,
-          pageSize,
+          tableId = tableId,
+          reportId = reportId,
+          dashboardId = dashboardId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
         ),
       )
   }
@@ -366,17 +387,24 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @PathVariable("summaryId") summaryId: String,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
         asyncDataApiService.getSummaryResult(
-          tableId,
-          summaryId,
-          reportId,
-          reportVariantId,
-          dataProductDefinitionsPath,
+          tableId = tableId,
+          summaryId = summaryId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          filters = filterHelper.filtersOnly(filters),
         ),
       )
   }

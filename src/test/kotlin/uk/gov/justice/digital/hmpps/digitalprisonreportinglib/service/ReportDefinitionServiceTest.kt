@@ -52,6 +52,7 @@ class ReportDefinitionServiceTest {
     id = "10",
     name = "11",
     query = "12",
+    datasource = "12A",
     schema = Schema(emptyList()),
   )
 

@@ -189,6 +189,7 @@
         "wordWrap" : "break-words",
         "filter" : {
           "type" : "Radio",
+          "interactive": true,
           "staticoptions" : [ {
             "name" : "in",
             "display" : "In"
