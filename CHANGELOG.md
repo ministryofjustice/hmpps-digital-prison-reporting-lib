@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.2.0
+Added interactive count endpoint.
+
 ## 7.1.1
 Fix issue with dashboard query execution.
 

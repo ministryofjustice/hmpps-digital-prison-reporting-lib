@@ -84,11 +84,19 @@ abstract class CommonDataApiService {
       .firstOrNull {
         fieldFilters[it] != null &&
           fieldFilters[it]?.mandatory == true &&
-          (interactive == null || (fieldFilters[it]?.interactive ?: false) == interactive) &&
-          !filters.keys.map(::truncateBasedOnSuffix).contains(it)
+          isAtTheSameInteractiveStage(interactive, fieldFilters[it]) &&
+          isNotInTheProvidedFilters(filters, it)
       }
       ?.let { throw ValidationException("${AsyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE} $it") }
   }
+
+  private fun isNotInTheProvidedFilters(filters: Map<String, String>, it: String) =
+    !filters.keys.map(::truncateBasedOnSuffix).contains(it)
+
+  private fun isAtTheSameInteractiveStage(
+    interactive: Boolean?,
+    fieldFilterDefinition: FilterDefinition?,
+  ) = (interactive == null || (fieldFilterDefinition?.interactive ?: false) == interactive)
 
   private fun checkCorrectFiltersAreProvidedForStage(
     fieldFilters: Map<String, FilterDefinition?>,

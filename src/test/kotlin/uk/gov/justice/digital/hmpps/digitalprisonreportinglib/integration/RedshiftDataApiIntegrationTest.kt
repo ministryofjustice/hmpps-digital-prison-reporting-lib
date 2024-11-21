@@ -589,4 +589,36 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .expectBody()
       .json(Gson().toJson(expectedServiceResult))
   }
+
+  @Test
+  fun `Calling the getInteractiveExternalTableRowCount endpoint with filters calls the configuredApiService with the correct arguments`() {
+    val tableId = "tableId"
+    val expectedServiceResult = Count(10)
+
+    given(asyncDataApiService.count(any(), any(), any(), any(), any()))
+      .willReturn(expectedServiceResult)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month/tables/$tableId/count")
+          .queryParam("${DataApiSyncController.FiltersPrefix.FILTERS_PREFIX}direction", "out")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(Gson().toJson(expectedServiceResult))
+
+    verify(asyncDataApiService)
+      .count(
+        eq(tableId),
+        eq("external-movements"),
+        eq("last-month"),
+        eq(mapOf("direction" to "out")),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      )
+  }
 }
