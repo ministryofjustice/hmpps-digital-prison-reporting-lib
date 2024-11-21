@@ -293,6 +293,49 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     }
   }
 
+  @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/count")
+  @Operation(
+    description = "Returns the number of rows of the table which contains the result of a previously executed query. " +
+      "Allows filtering and it is aimed at supporting the interactive journey.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = ResponseHeader.NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun getInteractiveExternalTableRowCount(
+    @PathVariable("tableId") tableId: String,
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @RequestParam
+    filters: Map<String, String>,
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
+    authentication: Authentication,
+  ): ResponseEntity<Count> {
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService.count(tableId, reportId, reportVariantId, filterHelper.filtersOnly(filters), dataProductDefinitionsPath),
+        )
+    } catch (exception: NoDataAvailableException) {
+      val headers = HttpHeaders()
+      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .headers(headers)
+        .body(null)
+    }
+  }
+
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result")
   @Operation(
     description = "Returns the resulting rows of the executed statement in a paginated " +

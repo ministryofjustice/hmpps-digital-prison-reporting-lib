@@ -189,6 +189,15 @@ class AsyncDataApiService(
     return Count(redshiftDataApiRepository.count(tableId))
   }
 
+  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, dataProductDefinitionsPath: String? = null): Count {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
+      reportId,
+      reportVariantId,
+      dataProductDefinitionsPath,
+    )
+    return Count(redshiftDataApiRepository.count(tableId, validateAndMapFilters(productDefinition, filters, true)))
+  }
+
   private fun getRepo(productDefinition: SingleReportProductDefinition): AthenaAndRedshiftCommonRepository =
     datasourceNameToRepo.getOrDefault(productDefinition.datasource.name.lowercase(), redshiftDataApiRepository)
 

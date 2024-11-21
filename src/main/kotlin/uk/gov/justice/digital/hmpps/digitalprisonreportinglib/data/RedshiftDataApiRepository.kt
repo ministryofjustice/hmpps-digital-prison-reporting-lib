@@ -147,9 +147,14 @@ class RedshiftDataApiRepository(
     return result
   }
 
-  fun count(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Long {
+  fun count(
+    tableId: String,
+    filters: List<ConfiguredApiRepository.Filter> = emptyList(),
+    jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
+  ): Long {
+    val whereClause = buildFiltersWhereClause(filters)
     return jdbcTemplate.queryForList(
-      "SELECT COUNT(1) as total FROM reports.$tableId;",
+      "SELECT COUNT(1) as total FROM reports.$tableId WHERE $whereClause;",
       MapSqlParameterSource(),
     ).first()?.get("total") as Long
   }

@@ -99,7 +99,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                   "dynamicOptions": {
                     "minimumLength":null
                   },
-                  "interactive":false
+                  "interactive":true
                 },
                 "sortable":true,
                 "defaultsort":false,

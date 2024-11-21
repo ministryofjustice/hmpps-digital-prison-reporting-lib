@@ -84,6 +84,7 @@ abstract class CommonDataApiService {
       .firstOrNull {
         fieldFilters[it] != null &&
           fieldFilters[it]?.mandatory == true &&
+          // If they are at different (interactive) stages don't check if it's in the filters map
           (interactive == null || (fieldFilters[it]?.interactive ?: false) == interactive) &&
           !filters.keys.map(::truncateBasedOnSuffix).contains(it)
       }

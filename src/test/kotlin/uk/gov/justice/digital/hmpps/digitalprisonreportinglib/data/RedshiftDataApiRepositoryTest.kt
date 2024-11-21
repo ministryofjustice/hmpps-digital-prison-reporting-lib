@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
@@ -527,13 +528,48 @@ SELECT *
 
     whenever(
       jdbcTemplate.queryForList(
-        eq("SELECT COUNT(1) as total FROM reports.$TABLE_ID;"),
+        any<String>(),
         any<MapSqlParameterSource>(),
       ),
     ).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.count(TABLE_ID, jdbcTemplate)
+    val actual = redshiftDataApiRepository.count(tableId = TABLE_ID, jdbcTemplate = jdbcTemplate)
 
+    verify(jdbcTemplate, times(1)).queryForList(
+      eq("SELECT COUNT(1) as total FROM reports.$TABLE_ID WHERE 1=1;"),
+      any<MapSqlParameterSource>(),
+    )
+    assertEquals(5L, actual)
+  }
+
+  @Test
+  fun `count should make a JDBC call with the filters in the where clause and return the existing results`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val filters = listOf(Filter("direction", "out"))
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      mock(),
+      mock(),
+      datasetHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val expected = listOf<Map<String, Any?>>(mapOf("total" to 5L))
+
+    whenever(
+      jdbcTemplate.queryForList(
+        any<String>(),
+        any<MapSqlParameterSource>(),
+      ),
+    ).thenReturn(expected)
+
+    val actual = redshiftDataApiRepository.count(tableId = TABLE_ID, jdbcTemplate = jdbcTemplate, filters = filters)
+
+    verify(jdbcTemplate, times(1)).queryForList(
+      eq("SELECT COUNT(1) as total FROM reports.$TABLE_ID WHERE lower(direction) = 'out';"),
+      any<MapSqlParameterSource>(),
+    )
     assertEquals(5L, actual)
   }
 }

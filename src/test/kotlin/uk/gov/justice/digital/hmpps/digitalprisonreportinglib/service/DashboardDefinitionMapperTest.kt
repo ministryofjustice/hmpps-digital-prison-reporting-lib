@@ -95,6 +95,7 @@ class DashboardDefinitionMapperTest {
                 FilterOption(name = "BBB", display = "Bumblebee"),
               ),
               dynamicOptions = DynamicFilterOption(minimumLength = null),
+              interactive = true,
             ),
             sortable = true,
             defaultsort = false,

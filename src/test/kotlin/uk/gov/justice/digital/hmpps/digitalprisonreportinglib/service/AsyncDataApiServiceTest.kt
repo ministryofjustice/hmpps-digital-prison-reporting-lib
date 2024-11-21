@@ -599,4 +599,18 @@ class AsyncDataApiServiceTest {
 
     assertEquals(Count(expectedRepositoryResult), actual)
   }
+
+  @Test
+  fun `should call the repository with all provided arguments when the interactive count is called`() {
+    val tableId = "123"
+    val filters = mapOf("direction" to "in")
+    val expectedRepositoryResult = 5L
+    whenever(
+      redshiftDataApiRepository.count(tableId, listOf(Filter("direction", "in"))),
+    ).thenReturn(expectedRepositoryResult)
+
+    val actual = configuredApiService.count(tableId, "external-movements", "last-month", filters)
+
+    assertEquals(Count(expectedRepositoryResult), actual)
+  }
 }

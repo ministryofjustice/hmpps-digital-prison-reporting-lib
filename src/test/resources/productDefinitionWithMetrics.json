@@ -53,7 +53,8 @@
                 "name": "establishment_id",
                 "display": "establishment_name",
                 "maximumOptions": 123
-              }
+              },
+              "interactive": true
             }
           },
           {
