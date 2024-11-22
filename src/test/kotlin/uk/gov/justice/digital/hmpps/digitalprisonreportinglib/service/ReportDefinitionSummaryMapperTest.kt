@@ -101,7 +101,6 @@ class ReportDefinitionSummaryMapperTest {
       owner = "6",
       purpose = "7",
       profile = "8",
-      dqri = "9",
     ),
     dataset = listOf(fullDataset),
     datasource = listOf(fullDatasource),

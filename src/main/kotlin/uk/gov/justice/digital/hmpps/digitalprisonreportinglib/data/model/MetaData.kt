@@ -6,5 +6,4 @@ data class MetaData(
   val owner: String,
   val purpose: String? = null,
   val profile: String? = null,
-  val dqri: String? = null,
 )

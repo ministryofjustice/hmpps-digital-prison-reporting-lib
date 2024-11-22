@@ -17,4 +17,5 @@ data class Report(
   val feature: List<Feature>? = emptyList(),
   val summary: List<ReportSummary>? = emptyList(),
   val filter: ReportFilter? = null,
+  val metadata: ReportMetadata? = null,
 )

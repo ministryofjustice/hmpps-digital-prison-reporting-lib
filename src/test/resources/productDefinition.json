@@ -118,6 +118,9 @@
     "id" : "last-month",
     "name" : "Last month",
     "description" : "All movements in the past month",
+    "metadata" : {
+      "hints" : ["interactive"]
+    },
     "created" : "2023-09-20T14:41:00.000Z",
     "classification": "report classification",
     "version" : "1.2.3",

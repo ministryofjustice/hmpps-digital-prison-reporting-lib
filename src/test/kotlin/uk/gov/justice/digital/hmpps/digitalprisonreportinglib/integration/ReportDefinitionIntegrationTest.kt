@@ -340,6 +340,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             "variant": {
               "id": "last-month",
               "name": "Last month",
+              "interactive": true,
               "resourceName": "reports/external-movements/last-month",
               "description": "All movements in the past month",
               "specification": {

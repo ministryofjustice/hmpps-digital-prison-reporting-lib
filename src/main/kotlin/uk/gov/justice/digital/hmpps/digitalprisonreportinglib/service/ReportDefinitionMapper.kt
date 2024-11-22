@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadataHint
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
@@ -74,6 +75,7 @@ class ReportDefinitionMapper(
       printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
       resourceName = "reports/$productDefinitionId/${report.id}",
       summaries = report.summary?.map { map(it, allDatasets) },
+      interactive = report.metadata?.hints?.contains(ReportMetadataHint.INTERACTIVE),
     )
   }
 
