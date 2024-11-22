@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.2.1
+Added report metadata with support for the interactive hint.
+
 ## 7.2.0
 Added interactive count endpoint.
 

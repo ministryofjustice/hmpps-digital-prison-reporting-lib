@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadata
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadataHint
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
@@ -148,7 +150,6 @@ class ReportDefinitionMapperTest {
       owner = "6",
       purpose = "7",
       profile = "8",
-      dqri = "9",
     ),
     reportDataset = fullDataset,
     datasource = fullDatasource,
@@ -180,7 +181,6 @@ class ReportDefinitionMapperTest {
       owner = "6",
       purpose = "7",
       profile = "8",
-      dqri = "9",
     ),
     datasource = fullDatasource,
     reportDataset = fullDataset,
@@ -448,6 +448,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(filterOption?.name).isEqualTo(sourceFilterOption?.name)
     assertThat(filterOption?.display).isEqualTo(sourceFilterOption?.display)
+    assertThat(variant.interactive).isNull()
 
     verifyNoInteractions(configuredApiService)
   }
@@ -749,6 +750,69 @@ class ReportDefinitionMapperTest {
     assertThat(matchingField[0]).isEqualTo(expectedReportField)
   }
 
+  @Test
+  fun `Interactive report metadata hint is mapped to the report correctly`() {
+    val defaultValue = createProductDefinition("today(-2,DAYS)", interactive = true)
+
+    val result = ReportDefinitionMapper(configuredApiService, datasetHelper).map(definition = defaultValue, userToken = authToken)
+
+    assertThat(result.variant.interactive).isEqualTo(true)
+  }
+
+  @Test
+  fun `Field filter falls back to dataset filter when the report field filter is not specified `() {
+    val sourceDataset = Dataset(
+      id = "10",
+      name = "11",
+      query = "12",
+      datasource = "12A",
+      schema = Schema(
+        field = listOf(
+          SchemaField(
+            name = "13",
+            type = ParameterType.Long,
+            display = "14",
+            filter = FilterDefinition(
+              type = FilterType.Text,
+              mandatory = true,
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val sourceDefinition = SingleReportProductDefinition(
+      id = "1",
+      name = "2",
+      description = "3",
+      metadata = MetaData(
+        author = "4",
+        version = "5",
+        owner = "6",
+        purpose = "7",
+        profile = "8",
+      ),
+      reportDataset = sourceDataset,
+      datasource = fullDatasource,
+      report = fullReport,
+      policy = listOf(
+        Policy(
+          id = "caseload",
+          type = PolicyType.ACCESS,
+          rule = listOf(Rule(Effect.PERMIT, emptyList())),
+        ),
+      ),
+      allDatasets = listOf(sourceDataset),
+    )
+
+    val result = ReportDefinitionMapper(configuredApiService, datasetHelper).map(definition = sourceDefinition, userToken = authToken)
+
+    assertThat(result.variant.specification!!.fields[0].filter?.type.toString()).isEqualTo("Text")
+    assertThat(result.variant.specification!!.fields[0].filter?.mandatory).isTrue()
+
+    verifyNoInteractions(configuredApiService)
+  }
+
   private fun generateReport(dynamicFilterOption: DynamicFilterOption) = Report(
     id = "21",
     name = "22",
@@ -860,6 +924,7 @@ class ReportDefinitionMapperTest {
     reportFieldDisplay: String? = "20",
     formula: String? = null,
     parameters: List<Parameter>? = null,
+    interactive: Boolean? = null,
   ): SingleReportProductDefinition {
     return SingleReportProductDefinition(
       id = "1",
@@ -915,6 +980,7 @@ class ReportDefinitionMapperTest {
           ),
         ),
         classification = "someClassification",
+        metadata = interactive?.takeIf { it }?.let { ReportMetadata(hints = listOf(ReportMetadataHint.INTERACTIVE)) },
       ),
       policy = listOf(
         Policy(
@@ -925,60 +991,5 @@ class ReportDefinitionMapperTest {
       ),
       allDatasets = listOf(fullDataset),
     )
-  }
-
-  @Test
-  fun `Field filter falls back to dataset filter when the report field filter is not specified `() {
-    val sourceDataset = Dataset(
-      id = "10",
-      name = "11",
-      query = "12",
-      datasource = "12A",
-      schema = Schema(
-        field = listOf(
-          SchemaField(
-            name = "13",
-            type = ParameterType.Long,
-            display = "14",
-            filter = FilterDefinition(
-              type = FilterType.Text,
-              mandatory = true,
-            ),
-          ),
-        ),
-      ),
-    )
-
-    val sourceDefinition = SingleReportProductDefinition(
-      id = "1",
-      name = "2",
-      description = "3",
-      metadata = MetaData(
-        author = "4",
-        version = "5",
-        owner = "6",
-        purpose = "7",
-        profile = "8",
-        dqri = "9",
-      ),
-      reportDataset = sourceDataset,
-      datasource = fullDatasource,
-      report = fullReport,
-      policy = listOf(
-        Policy(
-          id = "caseload",
-          type = PolicyType.ACCESS,
-          rule = listOf(Rule(Effect.PERMIT, emptyList())),
-        ),
-      ),
-      allDatasets = listOf(sourceDataset),
-    )
-
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper).map(definition = sourceDefinition, userToken = authToken)
-
-    assertThat(result.variant.specification!!.fields[0].filter?.type.toString()).isEqualTo("Text")
-    assertThat(result.variant.specification!!.fields[0].filter?.mandatory).isTrue()
-
-    verifyNoInteractions(configuredApiService)
   }
 }
