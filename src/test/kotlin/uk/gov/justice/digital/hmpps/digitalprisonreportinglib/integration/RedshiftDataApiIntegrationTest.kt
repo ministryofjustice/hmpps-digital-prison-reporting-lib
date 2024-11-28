@@ -359,13 +359,15 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
 
     given(
       asyncDataApiService.getStatementResult(
-        eq(tableId),
-        eq("external-movements"),
-        eq("last-month"),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        eq(selectedPage),
-        eq(pageSize),
-        eq(emptyMap()),
+        tableId = eq(tableId),
+        reportId = eq("external-movements"),
+        reportVariantId = eq("last-month"),
+        dataProductDefinitionsPath = eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        selectedPage = eq(selectedPage),
+        pageSize = eq(pageSize),
+        filters = eq(emptyMap()),
+        sortedAsc = eq(false),
+        sortColumn = eq(null),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -387,10 +389,11 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the report getStatementResult endpoint with filters calls the configuredApiService with the correct arguments`() {
+  fun `Calling the report getStatementResult endpoint with filters and sorting calls the configuredApiService with the correct arguments`() {
     val tableId = "tableId"
     val selectedPage = 2L
     val pageSize = 20L
+    val sortColumn = "columnA"
     val expectedServiceResult =
       listOf(
         mapOf(
@@ -405,7 +408,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -414,6 +417,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month/tables/$tableId/result")
           .queryParam("selectedPage", 2L)
           .queryParam("pageSize", 20L)
+          .queryParam("sortColumn", sortColumn)
+          .queryParam("sortedAsc", true)
           .queryParam("${DataApiSyncController.FiltersPrefix.FILTERS_PREFIX}direction", "out")
           .build()
       }
@@ -433,6 +438,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(selectedPage),
         eq(pageSize),
         eq(mapOf("direction" to "out")),
+        eq(true),
+        eq(sortColumn),
       )
   }
 

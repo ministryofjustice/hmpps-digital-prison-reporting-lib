@@ -421,7 +421,20 @@ class AsyncDataApiServiceTest {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
-    whenever(redshiftDataApiRepository.getPaginatedExternalTableResult(any(), any(), any(), any(), anyOrNull()))
+    val sortColumn = "columnA"
+    val sortedAsc = true
+
+    whenever(
+      redshiftDataApiRepository.getPaginatedExternalTableResult(
+        tableId = any(),
+        selectedPage = any(),
+        pageSize = any(),
+        filters = any(),
+        sortedAsc = any(),
+        sortColumn = anyOrNull(),
+        jdbcTemplate = anyOrNull(),
+      ),
+    )
       .thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getStatementResult(
@@ -431,11 +444,20 @@ class AsyncDataApiServiceTest {
       selectedPage = selectedPage,
       pageSize = pageSize,
       filters = mapOf("direction" to "in"),
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
     )
 
     assertEquals(expectedServiceResult, actual)
 
-    verify(redshiftDataApiRepository).getPaginatedExternalTableResult(tableId, selectedPage, pageSize, listOf(Filter("direction", "in")))
+    verify(redshiftDataApiRepository).getPaginatedExternalTableResult(
+      tableId = tableId,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      filters = listOf(Filter("direction", "in")),
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+    )
   }
 
   @Test
@@ -455,7 +477,7 @@ class AsyncDataApiServiceTest {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper)
     val executionID = UUID.randomUUID().toString()
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList()),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList(), false),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = asyncDataApiService.getStatementResult(
@@ -465,6 +487,7 @@ class AsyncDataApiServiceTest {
       selectedPage = selectedPage,
       pageSize = pageSize,
       filters = emptyMap(),
+      sortedAsc = false,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -495,7 +518,8 @@ class AsyncDataApiServiceTest {
     val selectedPage = 1L
     val pageSize = 20L
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
+      redshiftDataApiRepository
+        .getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
     val actual = configuredApiService.getDashboardStatementResult(
