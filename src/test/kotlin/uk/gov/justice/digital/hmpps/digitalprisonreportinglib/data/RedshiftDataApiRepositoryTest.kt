@@ -446,18 +446,29 @@ SELECT *
 
     whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, emptyList(), jdbcTemplate)
+    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(
+      tableId = TABLE_ID,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      filters = emptyList(),
+      jdbcTemplate = jdbcTemplate,
+    )
 
     assertEquals(expected, actual)
     verify(jdbcTemplate).queryForList(
-      eq("SELECT * FROM reports.$TABLE_ID WHERE 1=1 LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+      eq("SELECT * FROM reports.$TABLE_ID WHERE 1=1  LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
       any<MapSqlParameterSource>(),
     )
   }
 
-  @Test
-  fun `getStatementResult with filters should make a paginated JDBC call and return the existing results`() {
+  @ParameterizedTest
+  @CsvSource(
+    "true,asc",
+    "false,desc",
+  )
+  fun `getStatementResult with filters and sorting should make a paginated JDBC call and return the existing results`(sortedAsc: Boolean, ascOrDesc: String) {
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val sortColumn = "columnA"
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
@@ -477,11 +488,19 @@ SELECT *
       Filter("filterName1", "filterValue1"),
       Filter("filterName2", "filterValue2"),
     )
-    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(TABLE_ID, selectedPage, pageSize, filters, jdbcTemplate)
+    val actual = redshiftDataApiRepository.getPaginatedExternalTableResult(
+      tableId = TABLE_ID,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      filters = filters,
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+      jdbcTemplate = jdbcTemplate,
+    )
 
     assertEquals(expected, actual)
     verify(jdbcTemplate).queryForList(
-      eq("SELECT * FROM reports.$TABLE_ID WHERE lower(filterName1) = 'filtervalue1' AND lower(filterName2) = 'filtervalue2' LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+      eq("SELECT * FROM reports.$TABLE_ID WHERE lower(filterName1) = 'filtervalue1' AND lower(filterName2) = 'filtervalue2' ORDER BY $sortColumn $ascOrDesc LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
       any<MapSqlParameterSource>(),
     )
   }

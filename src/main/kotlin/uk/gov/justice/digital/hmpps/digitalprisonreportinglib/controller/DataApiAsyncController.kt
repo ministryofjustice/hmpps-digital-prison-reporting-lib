@@ -360,6 +360,8 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     @RequestParam
     filters: Map<String, String>,
+    @RequestParam sortColumn: String?,
+    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
     return ResponseEntity
@@ -373,6 +375,8 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           selectedPage = selectedPage,
           pageSize = pageSize,
           filters = filterHelper.filtersOnly(filters),
+          sortedAsc = sortedAsc,
+          sortColumn = sortColumn,
         ),
       )
   }

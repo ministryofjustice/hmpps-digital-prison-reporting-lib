@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.2.2
+Added sortColumn and sortAsc query parameter to the async results endpoint to support the interactive journey.
+
 ## 7.2.1
 Added report metadata with support for the interactive hint.
 

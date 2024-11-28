@@ -132,7 +132,7 @@ abstract class RepositoryHelper {
   private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) =
     dynamicFilterFieldId?.let { "DISTINCT ${dynamicFilterFieldId.joinToString(", ")}" } ?: "*"
 
-  private fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
+  protected fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
     sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
 
   private fun calculateSortingDirection(sortedAsc: Boolean): String {

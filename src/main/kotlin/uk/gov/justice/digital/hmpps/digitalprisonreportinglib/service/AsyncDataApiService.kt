@@ -117,11 +117,20 @@ class AsyncDataApiService(
     selectedPage: Long,
     pageSize: Long,
     filters: Map<String, String>,
+    sortedAsc: Boolean,
+    sortColumn: String? = null,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
     return formatColumnsAndApplyFormulas(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, validateAndMapFilters(productDefinition, filters, true)),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(
+        tableId,
+        selectedPage,
+        pageSize,
+        validateAndMapFilters(productDefinition, filters, true),
+        sortedAsc = sortedAsc,
+        sortColumn = sortColumn,
+      ),
       productDefinition.reportDataset.schema.field,
       formulaEngine,
     )
@@ -137,7 +146,12 @@ class AsyncDataApiService(
     filters: Map<String, String>,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
-    return redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, validateAndMapFilters(productDefinition, filters, true))
+    return redshiftDataApiRepository.getPaginatedExternalTableResult(
+      tableId = tableId,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      filters = validateAndMapFilters(productDefinition, filters, true),
+    )
       .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, productDefinition.dashboardDataset.schema.field.map(SchemaField::name)) }
   }
 
