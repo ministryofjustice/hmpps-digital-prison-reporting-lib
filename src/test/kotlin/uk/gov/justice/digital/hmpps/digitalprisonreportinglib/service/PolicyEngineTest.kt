@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -275,7 +274,7 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole, "RANDOM-ROLE", "GLOBAL-SEARCH"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    ssertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
