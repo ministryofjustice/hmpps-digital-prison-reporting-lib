@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.mock
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
@@ -27,10 +28,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDateTime
 import java.util.Collections.singletonMap
 
 class ReportDefinitionSummaryMapperTest {
+
+  val authToken = mock<DprAuthAwareAuthenticationToken>()
 
   private val fullDataset = Dataset(
     id = "10",
@@ -111,7 +115,7 @@ class ReportDefinitionSummaryMapperTest {
   fun `Getting report list for user maps full data correctly`() {
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(fullProductDefinition, null)
+    val result = mapper.map(fullProductDefinition, null, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullProductDefinition.id)
@@ -140,7 +144,7 @@ class ReportDefinitionSummaryMapperTest {
     )
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(productDefinition, null)
+    val result = mapper.map(productDefinition, null, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(0)
@@ -190,7 +194,7 @@ class ReportDefinitionSummaryMapperTest {
     )
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(productDefinition, HTML)
+    val result = mapper.map(productDefinition, HTML, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(1)
@@ -237,6 +241,7 @@ class ReportDefinitionSummaryMapperTest {
           ),
         ),
       null,
+      authToken,
     )
 
     assertThat(result.dashboards!![0]).isEqualTo(dashboardDefinition)

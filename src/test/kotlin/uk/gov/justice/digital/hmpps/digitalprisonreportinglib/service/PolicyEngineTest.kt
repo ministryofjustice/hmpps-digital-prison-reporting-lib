@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -29,13 +30,13 @@ class PolicyEngineTest {
     whenever(authToken.getCaseLoads()).thenReturn(listOf("ABC"))
     val policyEngine = PolicyEngine(listOf(policy), authToken)
     val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in')"
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(expected)
+    assertThat(policyEngine.execute()).isEqualTo(expected)
   }
 
   @Test
   fun `policy engine denies given action for no policies`() {
     val policyEngine = PolicyEngine(emptyList())
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -47,7 +48,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
     val policyEngine = PolicyEngine(listOf(policy))
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -60,7 +61,7 @@ class PolicyEngineTest {
     )
     whenever(authToken.getCaseLoads()).thenReturn(emptyList())
     val policyEngine = PolicyEngine(listOf(policy), authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -73,7 +74,7 @@ class PolicyEngineTest {
     )
     whenever(authToken.getCaseLoads()).thenReturn(emptyList())
     val policyEngine = PolicyEngine(listOf(policy), authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -85,7 +86,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
     val policyEngine = PolicyEngine(listOf(policy))
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
@@ -97,7 +98,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
     val policyEngine = PolicyEngine(listOf(policy))
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -109,7 +110,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.DENY, emptyList())),
     )
     val policyEngine = PolicyEngine(listOf(policy))
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -121,7 +122,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${token}"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
@@ -133,7 +134,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${token}"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = null)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -148,7 +149,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
@@ -162,7 +163,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", "B_ROLE"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -182,7 +183,7 @@ class PolicyEngineTest {
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
     val policyEngine = PolicyEngine(listOf(policy1, policy2), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -202,7 +203,7 @@ class PolicyEngineTest {
     whenever(authToken.getCaseLoads()).thenReturn(listOf("ABC"))
     val policyEngine = PolicyEngine(listOf(policy1, policy2), authToken)
     val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in') AND ${PolicyResult.POLICY_PERMIT}"
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(expected)
+    assertThat(policyEngine.execute()).isEqualTo(expected)
   }
 
   @Test
@@ -213,7 +214,7 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.PERMIT, emptyList())),
     )
     val policyEngine = PolicyEngine(listOf(policy))
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
@@ -224,7 +225,7 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.DENY, emptyList())),
     )
     val policyEngine = PolicyEngine(listOf(policy))
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -235,7 +236,7 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${token}"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
@@ -246,7 +247,7 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${token}"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = null)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 
   @Test
@@ -260,7 +261,7 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
@@ -274,7 +275,7 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", userRole, "RANDOM-ROLE", "GLOBAL-SEARCH"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
+    ssertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
   @Test
@@ -287,6 +288,6 @@ class PolicyEngineTest {
       rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${role}", "DPR-USER", "RANDOM-ROLE", "GLOBAL-SEARCH"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
-    Assertions.assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
 }
