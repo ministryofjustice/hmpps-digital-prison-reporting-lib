@@ -20,7 +20,7 @@ class ReportDefinitionService(
     dataProductDefinitionsPath: String? = null,
   ): List<ReportDefinitionSummary> {
     return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
-      .map { summaryMapper.map(it, renderMethod) }
+      .map { summaryMapper.map(it, renderMethod, userToken) }
       .filter { containsReportVariantsOrDashboards(it) }
   }
 

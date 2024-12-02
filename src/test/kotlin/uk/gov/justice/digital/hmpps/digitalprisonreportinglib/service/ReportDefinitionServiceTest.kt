@@ -92,6 +92,7 @@ class ReportDefinitionServiceTest {
           name = "2",
         ),
       ),
+      authorised = true,
     )
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
@@ -101,14 +102,14 @@ class ReportDefinitionServiceTest {
     val mapper = mock<ReportDefinitionMapper> {}
 
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
-      on { map(any(), any()) } doReturn expectedResult
+      on { map(any(), any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, summaryMapper)
 
     val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
 
     then(repository).should().getProductDefinitions()
-    then(summaryMapper).should().map(minimalDefinition, RenderMethod.HTML)
+    then(summaryMapper).should().map(minimalDefinition, RenderMethod.HTML, authToken)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -159,13 +160,14 @@ class ReportDefinitionServiceTest {
       id = "1",
       name = "2",
       variants = emptyList(),
+      authorised = true,
     )
     val repository = mock<ProductDefinitionRepository> {
       on { getProductDefinitions() } doReturn listOf(minimalDefinition)
     }
     val mapper = mock<ReportDefinitionMapper> {}
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
-      on { map(any(), any()) } doReturn definitionWithNoVariants
+      on { map(any(), any(), any()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper, summaryMapper)
 
