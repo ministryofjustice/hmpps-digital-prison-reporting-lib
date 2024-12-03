@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import java.util.Collections.singletonList
@@ -92,6 +93,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .headers(headers)
+        .body(null)
+    } catch (authException: UserAuthorisationException) {
+      ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
         .body(null)
     }
   }
