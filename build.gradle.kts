@@ -27,6 +27,8 @@ dependencies {
   implementation("software.amazon.awssdk:redshiftdata:2.29.20")
   implementation("software.amazon.awssdk:athena:2.29.20")
 
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 

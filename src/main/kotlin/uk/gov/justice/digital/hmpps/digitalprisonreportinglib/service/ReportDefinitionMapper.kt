@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -22,15 +23,18 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadataHint
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SpecialType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 
 @Component
 class ReportDefinitionMapper(
   syncDataApiService: SyncDataApiService,
   datasetHelper: DatasetHelper,
+  val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, datasetHelper) {
 
   fun map(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
@@ -103,7 +107,7 @@ class ReportDefinitionMapper(
         userToken,
         dataProductDefinitionsPath,
         allDatasets,
-      ) + maybeConvertToReportFields(parameters),
+      ) + maybeConvertToReportFields(parameters, allDatasets),
     )
   }
 
@@ -125,8 +129,8 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun maybeConvertToReportFields(parameters: List<Parameter>?) =
-    parameters?.map { convert(it) } ?: emptyList()
+  private fun maybeConvertToReportFields(parameters: List<Parameter>?, allDatasets: List<Dataset>) =
+    parameters?.map { convert(it, allDatasets) } ?: emptyList()
 
   private fun mapToReportFieldDefinitions(
     specification: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification,
@@ -148,7 +152,7 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun convert(parameter: Parameter): FieldDefinition {
+  private fun convert(parameter: Parameter, allDatasets: List<Dataset>): FieldDefinition {
     return FieldDefinition(
       name = parameter.name,
       display = parameter.display,
@@ -161,8 +165,21 @@ class ReportDefinitionMapper(
         type = FilterType.valueOf(parameter.filterType.toString()),
         mandatory = parameter.mandatory,
         interactive = false,
+        staticOptions = populateStaticOptionsForParameter(parameter),
       ),
     )
+  }
+
+  private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? {
+    return parameter.specialType
+      ?.takeIf { it == SpecialType.ESTABLISHMENT_CODE }
+      ?.let { mapEstablishmentsToFilterOptions() }
+      ?.takeIf { it.isNotEmpty() }
+  }
+
+  private fun mapEstablishmentsToFilterOptions(): List<FilterOption> {
+    return establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded()
+      .map { FilterOption(it.key, it.value.first().description) }
   }
 
   private fun map(
