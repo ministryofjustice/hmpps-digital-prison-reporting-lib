@@ -4,18 +4,18 @@ import com.google.common.cache.Cache
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentAndWing
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsAndWingsRepository
 
 @Service
 class EstablishmentCodesToWingsCacheService(
-  private val establishmentsAndWingsRepository: EstablishmentsAndWingsRepository,
-  private val establishmentCodesCache: Cache<String, List<EstablishmentAndWing>>,
+    private val establishmentsAndWingsRepository: EstablishmentsAndWingsRepository,
+    private val establishmentCodesCache: Cache<String, List<EstablishmentToWing>>,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
   }
-  fun getEstablishmentsAndPopulateCacheIfNeeded(): Map<String, List<EstablishmentAndWing>> {
+  fun getEstablishmentsAndPopulateCacheIfNeeded(): Map<String, List<EstablishmentToWing>> {
     if (establishmentCodesCache.size() == 0L) {
       refresh()
     }

@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentAndWing
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
@@ -778,12 +778,12 @@ class ReportDefinitionMapperTest {
     ).thenReturn(
       mapOf(
         bfiEstCode to listOf(
-          EstablishmentAndWing(bfiEstCode, bfiDescription, "G"),
-          EstablishmentAndWing(bfiEstCode, bfiDescription, "E"),
+          EstablishmentToWing(bfiEstCode, bfiDescription, "G"),
+          EstablishmentToWing(bfiEstCode, bfiDescription, "E"),
         ),
         bsiEstCode to listOf(
-          EstablishmentAndWing(bsiEstCode, bsiDescription, "R"),
-          EstablishmentAndWing(bsiDescription, bsiDescription, "I"),
+          EstablishmentToWing(bsiEstCode, bsiDescription, "R"),
+          EstablishmentToWing(bsiDescription, bsiDescription, "I"),
         ),
       ),
     )

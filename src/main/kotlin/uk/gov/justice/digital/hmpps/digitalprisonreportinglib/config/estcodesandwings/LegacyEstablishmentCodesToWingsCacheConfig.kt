@@ -5,7 +5,7 @@ import com.google.common.cache.CacheBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentAndWing
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 
 @Configuration
 class LegacyEstablishmentCodesToWingsCacheConfig {
@@ -13,7 +13,7 @@ class LegacyEstablishmentCodesToWingsCacheConfig {
   fun refreshCacheTaskScheduler() = ThreadPoolTaskScheduler().apply { initialize() }
 
   @Bean
-  fun establishmentCodesCache(): Cache<String, List<EstablishmentAndWing>> = CacheBuilder.newBuilder()
+  fun establishmentCodesCache(): Cache<String, List<EstablishmentToWing>> = CacheBuilder.newBuilder()
     .concurrencyLevel(Runtime.getRuntime().availableProcessors())
     .build()
 }

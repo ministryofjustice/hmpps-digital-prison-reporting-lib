@@ -25,7 +25,7 @@ class EstablishmentsAndWingsRepository(
   companion object {
     const val ESTABLISHMENTS_TO_WINGS_QUERY = "SELECT DISTINCT LIVING_UNITS.agy_loc_id as establishment_code, AGENCY_LOCATIONS.description as establishment_name, LIVING_UNITS.level_1_code as wing FROM OMS_OWNER.LIVING_UNITS JOIN OMS_OWNER.AGENCY_LOCATIONS ON LIVING_UNITS.agy_loc_id = AGENCY_LOCATIONS.agy_loc_id;"
   }
-  fun executeStatementWaitAndGetResult(): MutableMap<String, List<EstablishmentAndWing>> {
+  fun executeStatementWaitAndGetResult(): MutableMap<String, List<EstablishmentToWing>> {
     return try {
       val stopwatch = StopWatch.createStarted()
       val executionId = executeQueryAsync(
@@ -68,13 +68,13 @@ class EstablishmentsAndWingsRepository(
     }
   }
 
-  private fun fetchAllResults(queryExecutionId: String): MutableMap<String, List<EstablishmentAndWing>> {
+  private fun fetchAllResults(queryExecutionId: String): MutableMap<String, List<EstablishmentToWing>> {
     val getQueryResultsRequest: GetQueryResultsRequest =
       GetQueryResultsRequest.builder()
         .queryExecutionId(queryExecutionId)
         .build()
     var getQueryResultsResponse: GetQueryResultsResponse = athenaClient.getQueryResults(getQueryResultsRequest)
-    val establishmentToWings: MutableMap<String, List<EstablishmentAndWing>> = mutableMapOf()
+    val establishmentToWings: MutableMap<String, List<EstablishmentToWing>> = mutableMapOf()
     var page = 1
     while (true) {
       establishmentToWings.putAll(groupWingsByEstablishment(getQueryResultsResponse, page))
@@ -97,7 +97,7 @@ class EstablishmentsAndWingsRepository(
   private fun groupWingsByEstablishment(
     getQueryResultsResponse: GetQueryResultsResponse,
     page: Int,
-  ): Map<String, List<EstablishmentAndWing>> {
+  ): Map<String, List<EstablishmentToWing>> {
     return getQueryResultsResponse
       .resultSet()
       .rows()
@@ -109,12 +109,12 @@ class EstablishmentsAndWingsRepository(
       .groupBy { it.establishmentCode }
   }
 
-  private fun mapRow(page: Int, index: Int, row: Row): EstablishmentAndWing? {
+  private fun mapRow(page: Int, index: Int, row: Row): EstablishmentToWing? {
     if (page == 1 && index == 0) {
       // first row contains the table headers
       return null
     }
-    return EstablishmentAndWing(
+    return EstablishmentToWing(
       row.data()[0].varCharValue(),
       row.data()[1].varCharValue(),
       row.data()[2].varCharValue(),
