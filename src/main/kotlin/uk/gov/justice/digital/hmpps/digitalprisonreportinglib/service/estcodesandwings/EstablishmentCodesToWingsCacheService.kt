@@ -9,8 +9,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishment
 
 @Service
 class EstablishmentCodesToWingsCacheService(
-    private val establishmentsAndWingsRepository: EstablishmentsAndWingsRepository,
-    private val establishmentCodesCache: Cache<String, List<EstablishmentToWing>>,
+  private val establishmentsAndWingsRepository: EstablishmentsAndWingsRepository,
+  private val establishmentCodesCache: Cache<String, List<EstablishmentToWing>>,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
