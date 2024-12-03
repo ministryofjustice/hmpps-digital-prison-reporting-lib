@@ -27,14 +27,7 @@
         "display": "Enter NOMS Number",
         "description": "@Prompt('Enter NOMS Number',,,mono,free,Not_Persistent,User:1)",
         "mandatory": "true",
-        "specialType": "establishment_code",
-        "dynamicoptions":{
-          "returnAsStaticOptions": true,
-          "dataset": "$ref:dataset-id",
-          "name": "$ref:schemaField1",
-          "display": "$ref:schemaField2",
-          "maxStaticOptions": 10
-        }
+        "specialType": "establishment_code"
       }
     ],
     "schema" : {
