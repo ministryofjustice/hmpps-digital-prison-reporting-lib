@@ -33,6 +33,5 @@ class EstablishmentCodesToWingsCacheService(
       stopWatch.stop()
       log.info("Establishments and wings cache refreshed in ${stopWatch.duration.seconds} sec.")
     }
-
   }
 }
