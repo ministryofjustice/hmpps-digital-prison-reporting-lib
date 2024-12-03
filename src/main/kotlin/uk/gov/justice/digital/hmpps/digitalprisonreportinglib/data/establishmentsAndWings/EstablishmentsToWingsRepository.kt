@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasou
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
 @Service
-class EstablishmentsAndWingsRepository(
+class EstablishmentsToWingsRepository(
   override val athenaClient: AthenaClient,
   override val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
