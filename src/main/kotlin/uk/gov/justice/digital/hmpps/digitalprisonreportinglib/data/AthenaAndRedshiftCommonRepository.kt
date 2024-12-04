@@ -33,7 +33,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
 
   abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
 
-  protected abstract fun executeQueryAsync(
+  abstract fun executeQueryAsync(
     datasource: Datasource,
     tableId: String,
     query: String,

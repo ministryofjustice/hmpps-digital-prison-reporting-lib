@@ -8,6 +8,7 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DprOpenApiConfigur
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.RedshiftDataApiConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepositoryAutoConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedShiftSummaryTableHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadProviderAutoConfig
@@ -25,3 +26,5 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DigitalPrisonReportingExceptionHandler
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ContextAuthenticationHelper
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.estcodesandwings.LegacyEstablishmentCodesToWingsCacheConfig

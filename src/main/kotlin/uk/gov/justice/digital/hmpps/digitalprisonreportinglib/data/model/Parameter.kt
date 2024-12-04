@@ -7,4 +7,5 @@ data class Parameter(
   val filterType: FilterType,
   val display: String,
   val mandatory: Boolean,
+  val specialType: SpecialType? = null,
 )
