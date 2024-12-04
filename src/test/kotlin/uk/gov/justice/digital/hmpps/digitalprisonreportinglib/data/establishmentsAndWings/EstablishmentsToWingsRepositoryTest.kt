@@ -3,6 +3,9 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmen
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.any
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import software.amazon.awssdk.services.athena.AthenaClient
@@ -18,6 +21,7 @@ import software.amazon.awssdk.services.athena.model.ResultSet
 import software.amazon.awssdk.services.athena.model.Row
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FAILED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository.Companion.ESTABLISHMENTS_TO_WINGS_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.Duration
@@ -25,6 +29,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 class EstablishmentsToWingsRepositoryTest {
+
 
   @Test
   fun `should execute the statement, poll for the status and get the results`() {
@@ -34,7 +39,7 @@ class EstablishmentsToWingsRepositoryTest {
     val athenaWorkgroup = "workgroup-1"
     val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup)
     setupMocksForStartQueryExecution(athenaWorkgroup, athenaClient, statementId)
-    setupMocksForGetStatus(statementId, athenaClient)
+    setupMocksForGetStatus(statementId, athenaClient, "SUCCEEDED")
 
     val row1 = buildRow("establishment_code", "establishment_name", "wing")
     val row2 = buildRow("AKI", "ACKLINGTON (HMP)", "L")
@@ -72,6 +77,24 @@ class EstablishmentsToWingsRepositoryTest {
     assertEquals(expected, executeStatementWaitAndGetResult)
   }
 
+  @Test
+  fun `should return empty map if the status is not successful`() {
+    val athenaClient = mock<AthenaClient>()
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val statementId = "statementId"
+    val athenaWorkgroup = "workgroup-1"
+    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup)
+    setupMocksForStartQueryExecution(athenaWorkgroup, athenaClient, statementId)
+    setupMocksForGetStatus(statementId, athenaClient, QUERY_FAILED)
+
+    val executeStatementWaitAndGetResult = establishmentsToWingsRepository.executeStatementWaitAndGetResult()
+
+    verify(athenaClient, times(0)).getQueryResults(any(GetQueryResultsRequest::class.java),
+    )
+
+    assertEquals(mapOf<String,List<EstablishmentToWing>>(), executeStatementWaitAndGetResult)
+  }
+
   private fun buildRow(column1: String, column2: String, column3: String): Row? =
     Row.builder().data(
       listOf(
@@ -81,7 +104,7 @@ class EstablishmentsToWingsRepositoryTest {
       ),
     ).build()
 
-  private fun setupMocksForGetStatus(statementId: String, athenaClient: AthenaClient) {
+  private fun setupMocksForGetStatus(statementId: String, athenaClient: AthenaClient, status: String) {
     val getQueryExecutionRequest = GetQueryExecutionRequest.builder()
       .queryExecutionId(statementId)
       .build()
@@ -93,7 +116,7 @@ class EstablishmentsToWingsRepositoryTest {
           .query(ESTABLISHMENTS_TO_WINGS_QUERY)
           .status(
             QueryExecutionStatus.builder().state(
-              "SUCCEEDED",
+              status,
             )
               .submissionDateTime(submissionTime)
               .completionDateTime(completionTime)
