@@ -2,8 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmen
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.any
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.kotlin.eq
@@ -29,7 +29,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 class EstablishmentsToWingsRepositoryTest {
-
 
   @Test
   fun `should execute the statement, poll for the status and get the results`() {
@@ -89,10 +88,11 @@ class EstablishmentsToWingsRepositoryTest {
 
     val executeStatementWaitAndGetResult = establishmentsToWingsRepository.executeStatementWaitAndGetResult()
 
-    verify(athenaClient, times(0)).getQueryResults(any(GetQueryResultsRequest::class.java),
+    verify(athenaClient, times(0)).getQueryResults(
+      any(GetQueryResultsRequest::class.java),
     )
 
-    assertEquals(mapOf<String,List<EstablishmentToWing>>(), executeStatementWaitAndGetResult)
+    assertEquals(mapOf<String, List<EstablishmentToWing>>(), executeStatementWaitAndGetResult)
   }
 
   private fun buildRow(column1: String, column2: String, column3: String): Row? =
