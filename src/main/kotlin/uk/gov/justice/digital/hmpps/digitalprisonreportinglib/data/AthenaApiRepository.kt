@@ -19,12 +19,17 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
+const val QUERY_STARTED = "STARTED"
+const val QUERY_FINISHED = "FINISHED"
+const val QUERY_ABORTED = "ABORTED"
+const val QUERY_FAILED = "FAILED"
+
 @Service
 class AthenaApiRepository(
   val athenaClient: AthenaClient,
   val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
-  private val athenaWorkgroup: String,
+  val athenaWorkgroup: String,
 ) : AthenaAndRedshiftCommonRepository() {
 
   override fun executeQueryAsync(
@@ -158,9 +163,9 @@ class AthenaApiRepository(
   private fun mapAthenaStateToRedshiftState(queryState: String): String {
     val athenaToRedshiftStateMappings = mapOf(
       "QUEUED" to "SUBMITTED",
-      "RUNNING" to "STARTED",
-      "SUCCEEDED" to "FINISHED",
-      "CANCELLED" to "ABORTED",
+      "RUNNING" to QUERY_STARTED,
+      "SUCCEEDED" to QUERY_FINISHED,
+      "CANCELLED" to QUERY_ABORTED,
     )
     return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }
