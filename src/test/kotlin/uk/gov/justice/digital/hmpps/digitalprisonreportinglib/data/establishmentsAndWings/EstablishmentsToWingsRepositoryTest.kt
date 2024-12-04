@@ -22,7 +22,9 @@ import software.amazon.awssdk.services.athena.model.Row
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FAILED
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository.Companion.DIGITAL_PRISON_REPORTING_DB
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository.Companion.ESTABLISHMENTS_TO_WINGS_QUERY
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository.Companion.NOMIS_CATALOG
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.Duration
 import java.time.Instant
@@ -136,8 +138,8 @@ class EstablishmentsToWingsRepositoryTest {
     statementId: String,
   ) {
     val queryExecutionContext = QueryExecutionContext.builder()
-      .database("DIGITAL_PRISON_REPORTING")
-      .catalog("nomis")
+      .database(DIGITAL_PRISON_REPORTING_DB)
+      .catalog(NOMIS_CATALOG)
       .build()
     val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
     val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
