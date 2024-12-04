@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.AthenaError
@@ -25,6 +26,7 @@ const val QUERY_ABORTED = "ABORTED"
 const val QUERY_FAILED = "FAILED"
 
 @Service
+@Primary
 class AthenaApiRepository(
   val athenaClient: AthenaClient,
   val tableIdGenerator: TableIdGenerator,

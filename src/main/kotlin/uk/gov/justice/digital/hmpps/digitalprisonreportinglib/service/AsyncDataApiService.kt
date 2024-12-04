@@ -24,6 +24,7 @@ class AsyncDataApiService(
   val productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,
   val redshiftDataApiRepository: RedshiftDataApiRepository,
+//  @Qualifier("athenaApiRepository")
   val athenaApiRepository: AthenaApiRepository,
   val tableIdGenerator: TableIdGenerator,
   val datasetHelper: DatasetHelper,
