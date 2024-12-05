@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 
 data class SingleReportProductDefinition(
   val id: String,
@@ -10,6 +11,6 @@ data class SingleReportProductDefinition(
   val datasource: Datasource,
   val reportDataset: Dataset,
   val report: Report,
-  val policy: List<Policy>,
+  override val policy: List<Policy>,
   val allDatasets: List<Dataset>,
-)
+) : WithPolicy

@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.2.6
+Added user authorisation check against report policy for async report definition endpoints.
+
 ## 7.2.5
 Fixed issue with application startup due to AthenaApiRepository bean ambiguity on autowiring.
 
