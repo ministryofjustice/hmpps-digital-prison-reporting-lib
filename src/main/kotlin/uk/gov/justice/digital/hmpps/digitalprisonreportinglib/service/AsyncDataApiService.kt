@@ -47,7 +47,7 @@ class AsyncDataApiService(
       "bodmis" to athenaApiRepository,
     )
 
-  fun validateAndExecuteStatementAsync(
+  suspend fun validateAndExecuteStatementAsync(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
@@ -79,7 +79,7 @@ class AsyncDataApiService(
       )
   }
 
-  fun validateAndExecuteStatementAsync(
+  suspend fun validateAndExecuteStatementAsync(
     reportId: String,
     dashboardId: String,
     userToken: DprAuthAwareAuthenticationToken?,
@@ -100,7 +100,7 @@ class AsyncDataApiService(
       )
   }
 
-  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
+  suspend fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     return getRepo(productDefinition).getStatementStatus(statementId)
   }
@@ -109,7 +109,7 @@ class AsyncDataApiService(
     return redshiftDataApiRepository.getStatementStatus(statementId)
   }
 
-  fun getStatementResult(
+  suspend fun getStatementResult(
     tableId: String,
     reportId: String,
     reportVariantId: String,
@@ -136,7 +136,7 @@ class AsyncDataApiService(
     )
   }
 
-  fun getDashboardStatementResult(
+  suspend fun getDashboardStatementResult(
     tableId: String,
     reportId: String,
     dashboardId: String,
@@ -155,7 +155,7 @@ class AsyncDataApiService(
       .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, productDefinition.dashboardDataset.schema.field.map(SchemaField::name)) }
   }
 
-  fun getSummaryResult(
+  suspend fun getSummaryResult(
     tableId: String,
     summaryId: String,
     reportId: String,
@@ -190,7 +190,7 @@ class AsyncDataApiService(
     }
   }
 
-  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
+  suspend fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     return getRepo(productDefinition).cancelStatementExecution(statementId)
   }
@@ -203,7 +203,7 @@ class AsyncDataApiService(
     return Count(redshiftDataApiRepository.count(tableId))
   }
 
-  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, dataProductDefinitionsPath: String? = null): Count {
+  suspend fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, dataProductDefinitionsPath: String? = null): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,

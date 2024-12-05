@@ -143,7 +143,7 @@ class RedshiftDataApiRepository(
         transformTimestampToLocalDateTime(it)
       }
     stopwatch.stop()
-    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    log.debug("Query Execution time in ms: {}", stopwatch.duration.toMillis())
     return result
   }
 
