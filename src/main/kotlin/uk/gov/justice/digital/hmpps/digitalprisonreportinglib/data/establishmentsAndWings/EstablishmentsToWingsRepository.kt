@@ -38,7 +38,7 @@ class EstablishmentsToWingsRepository(
       waitForQueryToComplete(executionId)
       val results = fetchAllResults(executionId)
       stopwatch.stop()
-      log.info("List of establishments and wings retrieved successfully in ${stopwatch.duration.seconds} sec.")
+      log.info("List of establishments and wings retrieved successfully in ${stopwatch.time}.")
       results
     } catch (e: Exception) {
       log.error("Error retrieving list of establishments and wings: ", e)
