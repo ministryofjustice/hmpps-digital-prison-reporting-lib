@@ -42,7 +42,7 @@ class ConfiguredApiRepository(
         transformTimestampToLocalDateTime(it)
       }
     stopwatch.stop()
-    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    log.debug("Query Execution time in ms: {}", stopwatch.duration.toMillis())
     return result
   }
 
@@ -70,7 +70,7 @@ class ConfiguredApiRepository(
     return jdbcTemplate.queryForList(
       buildFinalQuery(
         datasetQuery = buildDatasetQuery(query),
-        reportQuery = buildReportQuery(productDefinition?.report?.filter),
+        reportQuery = buildReportQuery(productDefinition.report.filter),
         policiesQuery = buildPolicyQuery(policyEngineResult),
         filtersQuery = buildFiltersQuery(filters),
         selectFromFinalStageQuery = "SELECT COUNT(1) as total FROM $FILTER_",

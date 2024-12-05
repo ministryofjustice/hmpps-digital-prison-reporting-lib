@@ -9,7 +9,7 @@ class DashboardDefinitionService(
   val productDefinitionRepository: ProductDefinitionRepository,
   val dashboardDefinitionMapper: DashboardDefinitionMapper,
 ) {
-  fun getDashboardDefinition(
+  suspend fun getDashboardDefinition(
     dataProductDefinitionId: String,
     dashboardId: String,
     dataProductDefinitionsPath: String? = null,

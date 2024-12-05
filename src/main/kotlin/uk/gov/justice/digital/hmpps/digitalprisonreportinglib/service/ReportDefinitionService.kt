@@ -14,7 +14,7 @@ class ReportDefinitionService(
   val summaryMapper: ReportDefinitionSummaryMapper,
 ) {
 
-  fun getListForUser(
+  suspend fun getListForUser(
     renderMethod: RenderMethod?,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
@@ -24,7 +24,7 @@ class ReportDefinitionService(
       .filter { containsReportVariantsOrDashboards(it) }
   }
 
-  fun getDefinition(
+  suspend fun getDefinition(
     reportId: String,
     variantId: String,
     userToken: DprAuthAwareAuthenticationToken?,
