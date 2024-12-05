@@ -15,7 +15,7 @@ class DynamoDbConfig {
   @ConditionalOnMissingBean(DynamoDbClient::class)
   fun dynamoDbClient(
     @Value("\${dpr.lib.dataProductDefinitions.dynamoDbTable}") dynamoDbTable: String,
-    ): DynamoDbClient {
+  ): DynamoDbClient {
     return DynamoDbClient.builder()
       .build()
   }
