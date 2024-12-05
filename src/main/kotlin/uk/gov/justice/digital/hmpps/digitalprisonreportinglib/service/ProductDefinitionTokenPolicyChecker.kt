@@ -13,6 +13,6 @@ class ProductDefinitionTokenPolicyChecker {
   ): Boolean {
     val policyEngine = PolicyEngine(withPolicy.policy, userToken)
     val result = policyEngine.execute()
-    return if (result == Policy.PolicyResult.POLICY_PERMIT) true else false
+    return result == Policy.PolicyResult.POLICY_PERMIT
   }
 }
