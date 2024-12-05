@@ -198,6 +198,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
+        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )

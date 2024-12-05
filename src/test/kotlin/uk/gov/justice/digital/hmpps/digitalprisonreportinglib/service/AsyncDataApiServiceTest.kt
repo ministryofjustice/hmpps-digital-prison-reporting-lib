@@ -286,7 +286,14 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.getStatementStatus(statementId),
     ).thenReturn(statementExecutionStatus)
 
-    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month")
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month", authToken)
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementExecutionStatus, actual)
@@ -315,7 +322,14 @@ class AsyncDataApiServiceTest {
       athenaApiRepository.getStatementStatus(statementId),
     ).thenReturn(statementExecutionStatus)
 
-    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month")
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month", authToken)
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionStatus, actual)

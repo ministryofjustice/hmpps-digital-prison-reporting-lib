@@ -40,7 +40,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     description = "Executes asynchronously the dataset query for the given report and stores the result into an external table." +
       "The response returned contains the table ID and the execution ID. " +
       "This is the asynchronous version of the /reports/{reportId}/{reportVariantId} API.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
     responses = [
       ApiResponse(
         headers = [
@@ -68,7 +68,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionResponse> {
@@ -105,7 +108,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   @Operation(
     description = "Executes asynchronously the dataset query for the given dashboard and stores the result into an external table." +
       "The response returned contains the table ID and the execution ID. ",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
     responses = [
       ApiResponse(
         headers = [
@@ -124,7 +127,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
@@ -174,7 +180,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "For Athena: \n" +
       "Athena automatically retries your queries in cases of certain transient errors. " +
       "As a result, you may see the query state transition from STARTED or FAILED to SUBMITTED.\n",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getQueryExecutionStatus(
     @PathVariable("reportId") reportId: String,
@@ -184,15 +190,30 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getStatementStatus(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService.getStatementStatus(
+            statementId = statementId,
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            dataProductDefinitionsPath,
+          ),
+        )
+    } catch (authException: UserAuthorisationException) {
+      ResponseEntity
+        .status(HttpStatus.FORBIDDEN)
+        .body(null)
+    }
   }
 
   @GetMapping("/statements/{statementId}/status")
@@ -209,7 +230,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "Note: When the status is FAILED the error field of the response will be populated." +
       "ResultRows is the number of rows returned from the SQL statement. A -1 indicates the value is null." +
       "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.\n",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getQueryExecutionStatus(
     @PathVariable("statementId") statementId: String,
@@ -225,7 +246,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
   @Operation(
     description = "Cancels the execution of a running query.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun cancelReportQueryExecution(
     @PathVariable("reportId") reportId: String,
@@ -235,21 +256,29 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementCancellationResponse> {
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService.cancelStatementExecution(statementId, reportId, reportVariantId, dataProductDefinitionsPath),
+        asyncDataApiService.cancelStatementExecution(
+          statementId,
+          reportId,
+          reportVariantId,
+          dataProductDefinitionsPath,
+        ),
       )
   }
 
   @DeleteMapping("/statements/{statementId}")
   @Operation(
     description = "Cancels the execution of a running query.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun cancelQueryExecution(
     @PathVariable("statementId") statementId: String,
@@ -265,7 +294,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   @GetMapping("/report/tables/{tableId}/count")
   @Operation(
     description = "Returns the number of rows of the table which contains the result of a previously executed query.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
     responses = [
       ApiResponse(
         headers = [
@@ -302,7 +331,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   @Operation(
     description = "Returns the number of rows of the table which contains the result of a previously executed query. " +
       "Allows filtering and it is aimed at supporting the interactive journey.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
     responses = [
       ApiResponse(
         headers = [
@@ -320,7 +349,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @PathVariable("reportVariantId") reportVariantId: String,
     @RequestParam
     filters: Map<String, String>,
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<Count> {
@@ -328,7 +360,13 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService.count(tableId, reportId, reportVariantId, filterHelper.filtersOnly(filters), dataProductDefinitionsPath),
+          asyncDataApiService.count(
+            tableId,
+            reportId,
+            reportVariantId,
+            filterHelper.filtersOnly(filters),
+            dataProductDefinitionsPath,
+          ),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
@@ -345,12 +383,15 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   @Operation(
     description = "Returns the resulting rows of the executed statement in a paginated " +
       "fashion which has been stored in a dedicated table.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @RequestParam(defaultValue = "1")
@@ -390,12 +431,15 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   @Operation(
     description = "Returns the resulting rows of the executed statement in a paginated " +
       "fashion which has been stored in a dedicated table.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getDashboardQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("dashboardId") dashboardId: String,
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @RequestParam(defaultValue = "1")
@@ -430,12 +474,15 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/summary/{summaryId}")
   @Operation(
     description = "Returns a summary of a request, which has been stored in a dedicated table.",
-    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getSummaryQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
     dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @PathVariable("summaryId") summaryId: String,
