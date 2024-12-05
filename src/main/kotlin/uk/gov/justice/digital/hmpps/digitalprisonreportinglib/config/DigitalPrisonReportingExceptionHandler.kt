@@ -4,6 +4,7 @@ import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.ResponseEntity
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 
 @RestControllerAdvice
 class DigitalPrisonReportingExceptionHandler {
@@ -53,6 +55,12 @@ class DigitalPrisonReportingExceptionHandler {
       )
   }
 
+  @ExceptionHandler(UserAuthorisationException::class)
+  @ResponseStatus(FORBIDDEN)
+  fun handleUserAuthorisationException(e: Exception): ResponseEntity<ErrorResponse> {
+    return respondWithForbiddenRequest(e)
+  }
+
   private fun respondWithBadRequest(e: Exception): ResponseEntity<ErrorResponse> {
     log.info("Validation exception: {}", e.message)
     return ResponseEntity
@@ -74,6 +82,19 @@ class DigitalPrisonReportingExceptionHandler {
         ErrorResponse(
           status = TOO_MANY_REQUESTS,
           userMessage = "Number of active statements exceeded the limit: ${e.message}",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  private fun respondWithForbiddenRequest(e: Exception): ResponseEntity<ErrorResponse> {
+    log.info("User Authorisation exception: {}", e.message)
+    return ResponseEntity
+      .status(FORBIDDEN)
+      .body(
+        ErrorResponse(
+          status = FORBIDDEN,
+          userMessage = "User Authorisation exception: ${e.message}",
           developerMessage = e.message,
         ),
       )

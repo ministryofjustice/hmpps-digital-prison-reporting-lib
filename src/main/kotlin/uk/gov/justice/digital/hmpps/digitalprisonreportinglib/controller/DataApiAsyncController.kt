@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import java.util.Collections.singletonList
@@ -96,10 +95,6 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .headers(headers)
-        .body(null)
-    } catch (authException: UserAuthorisationException) {
-      ResponseEntity
-        .status(HttpStatus.FORBIDDEN)
         .body(null)
     }
   }
@@ -197,23 +192,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService.getStatementStatus(
-            statementId = statementId,
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath,
-          ),
-        )
-    } catch (authException: UserAuthorisationException) {
-      ResponseEntity
-        .status(HttpStatus.FORBIDDEN)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.getStatementStatus(
+          statementId = statementId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath,
+        ),
+      )
   }
 
   @GetMapping("/statements/{statementId}/status")
