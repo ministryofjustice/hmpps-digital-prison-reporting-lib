@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.2.5
+Fixed issue with application startup due to AthenaApiRepository bean ambiguity on autowiring.
+
 ## 7.2.4
 Caching the list of establishments and wings and returning the establishments as static options.
 
