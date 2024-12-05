@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+## 7.2.8
+Fixed issue with ProductDefinitionTokenPolicyChecker not visible for automatic DI in hosts of the library.
+
 ## 7.2.7
 Fixed issue with Stopwatch.duration call throwing an exception.
 

@@ -28,3 +28,4 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ContextAuthenticationHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.estcodesandwings.LegacyEstablishmentCodesToWingsCacheConfig
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ProductDefinitionTokenPolicyChecker
