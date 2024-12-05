@@ -33,7 +33,7 @@ class SyncDataApiService(
     const val SCHEMA_REF_PREFIX = "\$ref:"
   }
 
-  fun validateAndFetchData(
+  suspend fun validateAndFetchData(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
@@ -47,7 +47,8 @@ class SyncDataApiService(
     dataProductDefinitionsPath: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val productDefinition = productDefinitionRepository.
+    getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
@@ -101,7 +102,7 @@ class SyncDataApiService(
       }
   }
 
-  fun validateAndCount(
+  suspend fun validateAndCount(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,

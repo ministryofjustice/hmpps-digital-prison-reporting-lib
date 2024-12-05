@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.google.gson.Gson
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -32,7 +33,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   lateinit var productDefinitionRepository: ProductDefinitionRepository
 
   @Test
-  fun `Calling the report async execute statement endpoint calls the asyncDataApiService with the correct arguments`() {
+  fun `Calling the report async execute statement endpoint calls the asyncDataApiService with the correct arguments`(): Unit = runBlocking {
     val queryExecutionId = "queryExecutionId"
     val tableId = "tableId"
     val statementExecutionResponse = StatementExecutionResponse(tableId, queryExecutionId)
@@ -81,7 +82,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the dashboard async execute statement endpoint calls the asyncDataApiService with the correct arguments`() {
+  fun `Calling the dashboard async execute statement endpoint calls the asyncDataApiService with the correct arguments`(): Unit = runBlocking {
     val queryExecutionId = "queryExecutionId"
     val tableId = "tableId"
     val statementExecutionResponse = StatementExecutionResponse(tableId, queryExecutionId)
@@ -117,7 +118,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `When a ValidationException is thrown the async execute statement endpoint responds with 400`() {
+  fun `When a ValidationException is thrown the async execute statement endpoint responds with 400`(): Unit = runBlocking {
     given(
       asyncDataApiService.validateAndExecuteStatementAsync(
         eq("external-movements"),
@@ -148,7 +149,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `When an ActiveStatementsExceededException is thrown the async execute statement endpoint responds with 429`() {
+  fun `When an ActiveStatementsExceededException is thrown the async execute statement endpoint responds with 429`(): Unit = runBlocking {
     given(
       asyncDataApiService.validateAndExecuteStatementAsync(
         eq("external-movements"),
@@ -179,7 +180,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the report status endpoint calls the getStatementStatus of the ConfiguredApiService with the correct arguments`() {
+  fun `Calling the report status endpoint calls the getStatementStatus of the ConfiguredApiService with the correct arguments`(): Unit = runBlocking {
     val queryExecutionId = "queryExecutionId"
     val reportId = "external-movements"
     val reportVariantId = "last-month"
@@ -271,7 +272,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the report cancellation endpoint calls the cancelStatementExecution of the ConfiguredApiService with the correct arguments`() {
+  fun `Calling the report cancellation endpoint calls the cancelStatementExecution of the ConfiguredApiService with the correct arguments`(): Unit = runBlocking {
     val queryExecutionId = "queryExecutionId"
     val reportId = "external-movements"
     val reportVariantId = "last-month"
@@ -341,7 +342,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the report getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
+  fun `Calling the report getStatementResult endpoint calls the configuredApiService with the correct arguments`(): Unit = runBlocking {
     val tableId = "tableId"
     val selectedPage = 2L
     val pageSize = 20L
@@ -392,7 +393,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the report getStatementResult endpoint with filters and sorting calls the configuredApiService with the correct arguments`() {
+  fun `Calling the report getStatementResult endpoint with filters and sorting calls the configuredApiService with the correct arguments`(): Unit = runBlocking {
     val tableId = "tableId"
     val selectedPage = 2L
     val pageSize = 20L
@@ -448,7 +449,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the dashboard getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
+  fun `Calling the dashboard getStatementResult endpoint calls the configuredApiService with the correct arguments`(): Unit = runBlocking {
     val tableId = "tableId"
     val dpdId = "external-movements"
     val dashboardId = "dashboardId"
@@ -494,7 +495,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the dashboard getStatementResult endpoint with filters calls the configuredApiService with the correct arguments`() {
+  fun `Calling the dashboard getStatementResult endpoint with filters calls the configuredApiService with the correct arguments`(): Unit = runBlocking {
     val tableId = "tableId"
     val dpdId = "external-movements"
     val dashboardId = "dashboardId"
@@ -541,7 +542,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the getSummaryResult endpoint calls the configuredApiService with the correct arguments`() {
+  fun `Calling the getSummaryResult endpoint calls the configuredApiService with the correct arguments`(): Unit = runBlocking {
     val tableId = "tableId"
     val summaryId = "summaryId"
     val expectedServiceResult =
@@ -605,7 +606,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the getInteractiveExternalTableRowCount endpoint with filters calls the configuredApiService with the correct arguments`() {
+  fun `Calling the getInteractiveExternalTableRowCount endpoint with filters calls the configuredApiService with the correct arguments`(): Unit = runBlocking {
     val tableId = "tableId"
     val expectedServiceResult = Count(10)
 

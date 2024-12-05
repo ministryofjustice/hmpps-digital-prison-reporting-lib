@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -92,7 +93,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndExecuteStatementAsync should throw an exception for a mandatory filter with no value`() {
+  fun `validateAndExecuteStatementAsync should throw an exception for a mandatory filter with no value`(): Unit = runBlocking {
     val sortColumn = "date"
     val sortedAsc = true
 
@@ -110,7 +111,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndExecuteStatementAsync should throw an exception for a filter value that does not match the validation pattern`() {
+  fun `validateAndExecuteStatementAsync should throw an exception for a filter value that does not match the validation pattern`(): Unit = runBlocking {
     val sortColumn = "date"
     val sortedAsc = true
     val filters = mapOf(
@@ -132,7 +133,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should make the async call to the RedshiftDataApiRepository for datamart with all provided arguments when validateAndExecuteStatementAsync is called`() {
+  fun `should make the async call to the RedshiftDataApiRepository for datamart with all provided arguments when validateAndExecuteStatementAsync is called`(): Unit = runBlocking {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
     val filters = mapOf("is_closed" to "true", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
@@ -181,7 +182,7 @@ class AsyncDataApiServiceTest {
     "nomis_db, nomis, productDefinitionNomis.json",
     "bodmis_db, bodmis, productDefinitionBodmis.json",
   )
-  fun `should make the async call to the AthenaApiRepository for nomis and bodmis with all provided arguments when validateAndExecuteStatementAsync is called`(database: String, catalog: String, definitionFile: String) {
+  fun `should make the async call to the AthenaApiRepository for nomis and bodmis with all provided arguments when validateAndExecuteStatementAsync is called`(database: String, catalog: String, definitionFile: String): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -231,7 +232,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should make the dashboard async call to the RedshiftDataApiRepository with all provided arguments when validateAndExecuteStatementAsync is called`() {
+  fun `should make the dashboard async call to the RedshiftDataApiRepository with all provided arguments when validateAndExecuteStatementAsync is called`(): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithMetrics.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -277,7 +278,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when getStatementStatus is called`() {
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when getStatementStatus is called`(): Unit = runBlocking {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val status = "FINISHED"
@@ -309,7 +310,7 @@ class AsyncDataApiServiceTest {
 
   @ParameterizedTest
   @ValueSource(strings = ["productDefinitionNomis.json", "productDefinitionBodmis.json"])
-  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getStatementStatus is called`(definitionFile: String) {
+  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getStatementStatus is called`(definitionFile: String): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -344,7 +345,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when report cancelStatementExecution is called`() {
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when report cancelStatementExecution is called`(): Unit = runBlocking {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val statementCancellationResponse = StatementCancellationResponse(
@@ -409,7 +410,7 @@ class AsyncDataApiServiceTest {
 
   @ParameterizedTest
   @ValueSource(strings = ["productDefinitionNomis.json", "productDefinitionBodmis.json"])
-  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when cancelStatementExecution is called`(definitionFile: String) {
+  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when cancelStatementExecution is called`(definitionFile: String): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -435,7 +436,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndExecuteStatementAsync should not fail validation for filters which were converted from DPD parameters and convert these filters to prompts`() {
+  fun `validateAndExecuteStatementAsync should not fail validation for filters which were converted from DPD parameters and convert these filters to prompts`(): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithParameters.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -490,7 +491,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with all provided arguments when getStatementResult is called`() {
+  fun `should call the repository with all provided arguments when getStatementResult is called`(): Unit = runBlocking {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
@@ -542,7 +543,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `getStatementResult should apply formulas to the rows returned by the repository`() {
+  fun `getStatementResult should apply formulas to the rows returned by the repository`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 20L
     val expectedRepositoryResult = listOf(
@@ -583,7 +584,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with all provided arguments when getDashboardStatementResult is called`() {
+  fun `should call the repository with all provided arguments when getDashboardStatementResult is called`(): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithMetrics.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -632,7 +633,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `getDashboardStatementResult throws an exception when the result columns are not in the dataset schema`() {
+  fun `getDashboardStatementResult throws an exception when the result columns are not in the dataset schema`(): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithMetrics.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -661,21 +662,22 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val exception = Assertions.assertThrows(ValidationException::class.java) {
-      configuredApiService.getDashboardStatementResult(
-        tableId,
-        "missing-ethnicity-metrics",
-        "test-dashboard-1",
-        selectedPage = selectedPage,
-        pageSize = pageSize,
-        filters = emptyMap(),
-        userToken = authToken,
-      )
+      runBlocking {
+        configuredApiService.getDashboardStatementResult(
+          tableId,
+          "missing-ethnicity-metrics",
+          "test-dashboard-1",
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = emptyMap(),
+        userToken = authToken,)
+      }
     }
     assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")
   }
 
   @Test
-  fun `should call the repository with all provided arguments when getSummaryResult is called`() {
+  fun `should call the repository with all provided arguments when getSummaryResult is called`(): Unit = runBlocking {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
@@ -702,7 +704,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should create and query summary table when it doesn't exist`() {
+  fun `should create and query summary table when it doesn't exist`(): Unit = runBlocking {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
@@ -746,7 +748,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with all provided arguments when the interactive count is called`() {
+  fun `should call the repository with all provided arguments when the interactive count is called`(): Unit = runBlocking {
     val tableId = "123"
     val filters = mapOf("direction" to "in")
     val expectedRepositoryResult = 5L

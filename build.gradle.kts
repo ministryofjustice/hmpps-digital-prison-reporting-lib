@@ -26,6 +26,7 @@ dependencies {
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
   implementation("software.amazon.awssdk:redshiftdata:2.29.20")
   implementation("software.amazon.awssdk:athena:2.29.20")
+  implementation("aws.sdk.kotlin:dynamodb:1.3.87")
 
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")

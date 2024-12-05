@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -96,7 +97,7 @@ class ReportDefinitionServiceTest {
   }
 
   @Test
-  fun `Getting report list for user maps correctly`() {
+  fun `Getting report list for user maps correctly`(): Unit = runBlocking {
     val expectedResult = ReportDefinitionSummary(
       id = "1",
       name = "2",
@@ -110,9 +111,9 @@ class ReportDefinitionServiceTest {
     )
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
-    val repository = mock<ProductDefinitionRepository> {
-      on { getProductDefinitions() } doReturn listOf(minimalDefinition)
-    }
+    val repository = mock<ProductDefinitionRepository> ()
+    whenever(repository.getProductDefinitions()).thenReturn(listOf(minimalDefinition))
+
     val mapper = mock<ReportDefinitionMapper> {}
 
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
@@ -131,7 +132,7 @@ class ReportDefinitionServiceTest {
   }
 
   @Test
-  fun `Getting single report for user maps correctly`() {
+  fun `Getting single report for user maps correctly`(): Unit = runBlocking {
     val expectedResult = SingleVariantReportDefinition(
       id = "1",
       name = "2",
@@ -143,11 +144,11 @@ class ReportDefinitionServiceTest {
     )
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
-    val repository = mock<ProductDefinitionRepository> {
-      on { getSingleReportProductDefinition(any(), any(), anyOrNull()) } doReturn minimalSingleDefinition
-    }
+    val repository = mock<ProductDefinitionRepository>()
+    whenever(repository.getSingleReportProductDefinition(any(), any(), anyOrNull())).thenReturn(minimalSingleDefinition)
+
     val mapper = mock<ReportDefinitionMapper> {
-      on { map(any<SingleReportProductDefinition>(), any(), anyOrNull()) } doReturn expectedResult
+      on { runBlocking { map(any<SingleReportProductDefinition>(), any(), anyOrNull()) } } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {}, productDefinitionTokenPolicyChecker)
 
@@ -168,7 +169,7 @@ class ReportDefinitionServiceTest {
   }
 
   @Test
-  fun `Getting HTML report list with no matches returns no domains`() {
+  fun `Getting HTML report list with no matches returns no domains`(): Unit = runBlocking {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
     val definitionWithNoVariants = ReportDefinitionSummary(
       id = "1",
@@ -176,9 +177,9 @@ class ReportDefinitionServiceTest {
       variants = emptyList(),
       authorised = true,
     )
-    val repository = mock<ProductDefinitionRepository> {
-      on { getProductDefinitions() } doReturn listOf(minimalDefinition)
-    }
+    val repository = mock<ProductDefinitionRepository>()
+    whenever(repository.getProductDefinitions()).thenReturn(listOf(minimalDefinition))
+
     val mapper = mock<ReportDefinitionMapper> {}
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
       on { map(any(), any(), any()) } doReturn definitionWithNoVariants

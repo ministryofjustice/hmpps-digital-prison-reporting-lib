@@ -32,7 +32,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     description = "Gets summaries of all report definitions",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
-  fun definitions(
+  suspend fun definitions(
     @Parameter(
       description = "Set this parameter to filter the list to only include reports for the given rendering method.",
       example = "HTML",
@@ -59,7 +59,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     description = "Gets report definition containing a single variant.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
-  fun definition(
+  suspend fun definition(
     @Parameter(
       description = "The ID of the report definition.",
       example = "external-movements",

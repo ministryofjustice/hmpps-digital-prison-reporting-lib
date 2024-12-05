@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -19,7 +20,7 @@ class JsonFileProductDefinitionRepositoryTest {
   )
 
   @Test
-  fun `returns the correct product definition`() {
+  fun `returns the correct product definition`(): Unit = runBlocking {
     val policy = Policy(
       "caseload",
       ROW_LEVEL,
@@ -41,10 +42,12 @@ class JsonFileProductDefinitionRepositoryTest {
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     )
     val exception = assertThrows(ValidationException::class.java) {
-      jsonFileProductDefinitionRepository.getSingleReportProductDefinition(
-        "dpd001-court-hospital-movements",
-        "report003-hospital-movement",
-      )
+      runBlocking {
+        jsonFileProductDefinitionRepository.getSingleReportProductDefinition(
+          "dpd001-court-hospital-movements",
+          "report003-hospital-movement",
+        )
+      }
     }
     assertThat(exception).message().isEqualTo("Invalid dataSetId: non-matching-dataset")
   }
