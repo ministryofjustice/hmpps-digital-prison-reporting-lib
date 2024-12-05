@@ -44,8 +44,8 @@ class SyncDataApiService(
     dataProductDefinitionsPath: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
-    val productDefinition = productDefinitionRepository.
-    getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val productDefinition = productDefinitionRepository
+      .getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)

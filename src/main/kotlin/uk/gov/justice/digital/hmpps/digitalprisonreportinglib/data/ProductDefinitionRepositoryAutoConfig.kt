@@ -60,11 +60,11 @@ class ProductDefinitionRepositoryAutoConfig(
   fun dynamoDbProductDefinitionsRepository(
     dprDefinitionGson: Gson,
     dynamoDbClient: DynamoDbClient,
-    properties: DynamoDbProductDefinitionProperties
+    properties: DynamoDbProductDefinitionProperties,
   ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
     gson = dprDefinitionGson,
-    properties = properties
+    properties = properties,
   )
 
   @Bean

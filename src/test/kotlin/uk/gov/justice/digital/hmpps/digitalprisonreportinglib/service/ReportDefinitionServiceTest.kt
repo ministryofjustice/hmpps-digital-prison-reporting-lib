@@ -3,7 +3,12 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.given
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.then
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -93,7 +98,7 @@ class ReportDefinitionServiceTest {
     )
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
-    val repository = mock<ProductDefinitionRepository> ()
+    val repository = mock<ProductDefinitionRepository>()
     given(repository.getProductDefinitions()).willReturn(listOf(minimalDefinition))
 
     val mapper = mock<ReportDefinitionMapper> {}
@@ -161,7 +166,7 @@ class ReportDefinitionServiceTest {
     )
     val repository = mock<ProductDefinitionRepository>()
     given(repository.getProductDefinitions()).willReturn(listOf(minimalDefinition))
-    
+
     val mapper = mock<ReportDefinitionMapper> {}
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
       on { map(any(), any(), any()) } doReturn definitionWithNoVariants
