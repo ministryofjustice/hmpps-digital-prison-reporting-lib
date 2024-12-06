@@ -25,7 +25,7 @@ class EstablishmentsToWingsRepository(
   companion object {
     const val NOMIS_CATALOG = "nomis"
     const val DIGITAL_PRISON_REPORTING_DB = "DIGITAL_PRISON_REPORTING"
-    const val ESTABLISHMENTS_TO_WINGS_QUERY = "SELECT DISTINCT LIVING_UNITS.agy_loc_id as establishment_code, AGENCY_LOCATIONS.description as establishment_name, LIVING_UNITS.level_1_code as wing FROM OMS_OWNER.LIVING_UNITS JOIN OMS_OWNER.AGENCY_LOCATIONS ON LIVING_UNITS.agy_loc_id = AGENCY_LOCATIONS.agy_loc_id;"
+    const val ESTABLISHMENTS_TO_WINGS_QUERY = "SELECT DISTINCT LIVING_UNITS.agy_loc_id as establishment_code, AGENCY_LOCATIONS.description as establishment_name, LIVING_UNITS.AGY_LOC_ID || '-' || LIVING_UNITS.LEVEL_1_CODE as wing FROM OMS_OWNER.LIVING_UNITS JOIN OMS_OWNER.AGENCY_LOCATIONS ON LIVING_UNITS.agy_loc_id = AGENCY_LOCATIONS.agy_loc_id;"
   }
   fun executeStatementWaitAndGetResult(): MutableMap<String, List<EstablishmentToWing>> {
     return try {

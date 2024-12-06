@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
@@ -778,12 +779,12 @@ class ReportDefinitionMapperTest {
     ).thenReturn(
       mapOf(
         bfiEstCode to listOf(
-          EstablishmentToWing(bfiEstCode, bfiDescription, "G"),
-          EstablishmentToWing(bfiEstCode, bfiDescription, "E"),
+          EstablishmentToWing(bfiEstCode, bfiDescription, "BFI-G"),
+          EstablishmentToWing(bfiEstCode, bfiDescription, "BFI-E"),
         ),
         bsiEstCode to listOf(
-          EstablishmentToWing(bsiEstCode, bsiDescription, "R"),
-          EstablishmentToWing(bsiDescription, bsiDescription, "I"),
+          EstablishmentToWing(bsiEstCode, bsiDescription, "BSI-R"),
+          EstablishmentToWing(bsiDescription, bsiDescription, "BSI-I"),
         ),
       ),
     )
@@ -795,25 +796,70 @@ class ReportDefinitionMapperTest {
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
     val expectedStaticOptions = listOf(
-      FilterOption(bfiEstCode, bfiDescription),
-      FilterOption(bsiEstCode, bsiDescription),
+      FilterOption(bfiEstCode, "$bfiEstCode-$bfiDescription"),
+      FilterOption(bsiEstCode, "$bsiEstCode-$bsiDescription"),
     )
 
-    val expectedReportField = FieldDefinition(
-      type = FieldType.String,
+    val expectedReportField = createReportFieldDefinition(parameter, expectedStaticOptions)
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
+  fun `getting single report with parameters with specialType of wing includes all the wings as static options`() {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
       name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Text,
       display = parameterDisplay,
-      mandatory = false,
-      defaultsort = false,
-      sortable = false,
-      calculated = false,
-      filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
-        type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text,
-        mandatory = true,
-        staticOptions = expectedStaticOptions,
-      ),
-      visible = false,
+      mandatory = true,
+      specialType = SpecialType.WING,
     )
+    val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
+    val bfiEstCode = "BFI"
+    val bfiDescription = "BEDFORD (HMP)"
+    val bsiEstCode = "BSI"
+    val bsiDescription = "BRINSFORD (HMP)"
+
+    val wingBfiG = "BFI-G"
+    val wingBfiE = "BFI-E"
+    val wingBsiR = "BSI-R"
+    val wingBsiI = "BSI-I"
+
+    whenever(
+      establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded(),
+    ).thenReturn(
+      mapOf(
+        bfiEstCode to listOf(
+          EstablishmentToWing(bfiEstCode, bfiDescription, wingBfiG),
+          EstablishmentToWing(bfiEstCode, bfiDescription, wingBfiE),
+        ),
+        bsiEstCode to listOf(
+          EstablishmentToWing(bsiEstCode, bsiDescription, wingBsiR),
+          EstablishmentToWing(bsiDescription, bsiDescription, wingBsiI),
+        ),
+      ),
+    )
+
+    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+
+    val result = mapper.map(productDefinition, authToken)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedStaticOptions = listOf(
+      FilterOption(wingBfiG, wingBfiG),
+      FilterOption(wingBfiE, wingBfiE),
+      FilterOption(wingBsiR, wingBsiR),
+      FilterOption(wingBsiI, wingBsiI),
+      FilterOption(ALL_WINGS, ALL_WINGS),
+    )
+
+    val expectedReportField = createReportFieldDefinition(parameter, expectedStaticOptions)
     assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
     assertThat(matchingField.size).isEqualTo(1)
     assertThat(matchingField[0]).isEqualTo(expectedReportField)
@@ -881,6 +927,25 @@ class ReportDefinitionMapperTest {
 
     verifyNoInteractions(configuredApiService)
   }
+
+  private fun createReportFieldDefinition(
+    parameter: Parameter,
+    expectedStaticOptions: List<FilterOption>?,
+  ) = FieldDefinition(
+    type = FieldType.String,
+    name = parameter.name,
+    display = parameter.display,
+    mandatory = false,
+    defaultsort = false,
+    sortable = false,
+    calculated = false,
+    filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
+      type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.valueOf(parameter.filterType.toString()),
+      mandatory = true,
+      staticOptions = expectedStaticOptions,
+    ),
+    visible = false,
+  )
 
   private fun generateReport(dynamicFilterOption: DynamicFilterOption) = Report(
     id = "21",
