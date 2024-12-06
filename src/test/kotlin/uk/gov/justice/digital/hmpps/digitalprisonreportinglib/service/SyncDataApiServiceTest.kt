@@ -84,8 +84,7 @@ class SyncDataApiServiceTest {
   private val authToken = mock<DprAuthAwareAuthenticationToken>()
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
-  private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
-  private val policyEngineResultTrue = "TRUE AND (origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
+  private val policyEngineResult = "TRUE AND (origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
   private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker)
 
@@ -121,7 +120,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
       ),
@@ -136,7 +135,7 @@ class SyncDataApiServiceTest {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
     )
@@ -175,7 +174,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dynamicFilterFieldId = setOf(reportFieldId),
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
@@ -202,7 +201,7 @@ class SyncDataApiServiceTest {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dynamicFilterFieldId = setOf(reportFieldId),
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
@@ -342,7 +341,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
       ),
@@ -357,7 +356,7 @@ class SyncDataApiServiceTest {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
     )
@@ -419,7 +418,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
       ),
@@ -434,7 +433,7 @@ class SyncDataApiServiceTest {
       pageSize,
       sortColumn,
       sortedAsc,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
     )
@@ -495,7 +494,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
       ),
@@ -510,7 +509,7 @@ class SyncDataApiServiceTest {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
     )
@@ -620,7 +619,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
       ),
@@ -639,7 +638,7 @@ class SyncDataApiServiceTest {
       pageSize = 10,
       sortColumn = "date",
       sortedAsc = true,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
     )
@@ -1179,7 +1178,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
       ),
@@ -1194,7 +1193,7 @@ class SyncDataApiServiceTest {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
     )
@@ -1353,7 +1352,7 @@ class SyncDataApiServiceTest {
         pageSize = pageSize,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResultTrue,
+        policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
         reportFilter = singleReportProductDefinition.report.filter,
       ),
@@ -1368,7 +1367,7 @@ class SyncDataApiServiceTest {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResultTrue,
+      policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
       reportFilter = singleReportProductDefinition.report.filter,
     )

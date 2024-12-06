@@ -18,10 +18,10 @@ class PolicyEngine(
   }
 
   fun execute(policyType: PolicyType): String {
-    return doExecute(policy.filter { it.type == policyType })
+    return doExecute(policy.filter { it.type == policyType }.sortedByDescending { it.type })
   }
 
-  fun execute(): String = doExecute(policy)
+  fun execute(): String = doExecute(policy.sortedByDescending { it.type })
 
   private fun doExecute(policiesToCheck: List<Policy>): String {
     return if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck)) {

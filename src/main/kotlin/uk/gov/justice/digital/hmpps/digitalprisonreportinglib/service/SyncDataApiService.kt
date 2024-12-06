@@ -121,7 +121,7 @@ class SyncDataApiService(
         filters = validateAndMapFilters(productDefinition, filters, null),
         query = productDefinition.reportDataset.query,
         reportId = reportId,
-        policyEngineResult = policyEngine.execute(PolicyType.ROW_LEVEL),
+        policyEngineResult = policyEngine.execute(),
         dataSourceName = productDefinition.datasource.name,
         productDefinition = productDefinition,
       ),
