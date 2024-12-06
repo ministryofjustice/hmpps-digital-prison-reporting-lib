@@ -283,6 +283,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
+        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
@@ -369,6 +370,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         filters = eq(emptyMap()),
         sortedAsc = eq(false),
         sortColumn = eq(null),
+        userToken = any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -409,7 +411,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -441,6 +443,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(mapOf("direction" to "out")),
         eq(true),
         eq(sortColumn),
+        any<DprAuthAwareAuthenticationToken>(),
       )
   }
 
@@ -460,7 +463,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -486,6 +489,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(emptyMap()),
+      any<DprAuthAwareAuthenticationToken>(),
     )
   }
 
@@ -505,7 +509,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -532,6 +536,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(mapOf("direction" to "out")),
+      any<DprAuthAwareAuthenticationToken>(),
     )
   }
 
@@ -554,6 +559,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("last-month"),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(emptyMap()),
+        any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -603,7 +609,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val tableId = "tableId"
     val expectedServiceResult = Count(10)
 
-    given(asyncDataApiService.count(any(), any(), any(), any(), any()))
+    given(asyncDataApiService.count(any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -626,6 +632,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(mapOf("direction" to "out")),
+        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       )
   }

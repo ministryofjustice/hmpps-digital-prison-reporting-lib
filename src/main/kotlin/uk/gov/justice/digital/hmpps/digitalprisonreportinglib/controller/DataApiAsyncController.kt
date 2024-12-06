@@ -259,6 +259,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           statementId,
           reportId,
           reportVariantId,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath,
         ),
       )
@@ -354,6 +355,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
             reportId,
             reportVariantId,
             filterHelper.filtersOnly(filters),
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
             dataProductDefinitionsPath,
           ),
         )
@@ -412,6 +414,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           filters = filterHelper.filtersOnly(filters),
           sortedAsc = sortedAsc,
           sortColumn = sortColumn,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         ),
       )
   }
@@ -456,6 +459,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           selectedPage = selectedPage,
           pageSize = pageSize,
           filters = filterHelper.filtersOnly(filters),
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         ),
       )
   }
@@ -493,6 +497,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           reportVariantId = reportVariantId,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         ),
       )
   }

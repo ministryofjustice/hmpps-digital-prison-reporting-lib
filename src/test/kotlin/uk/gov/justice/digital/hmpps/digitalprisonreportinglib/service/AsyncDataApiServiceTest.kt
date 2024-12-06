@@ -80,6 +80,7 @@ class AsyncDataApiServiceTest {
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
+  private val policyEngineResultTrue = "TRUE AND $policyEngineResult"
   private val tableIdGenerator: TableIdGenerator = TableIdGenerator()
   private val datasetHelper: DatasetHelper = DatasetHelper()
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
@@ -148,7 +149,7 @@ class AsyncDataApiServiceTest {
         filters = repositoryFilters,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResult,
+        policyEngineResult = policyEngineResultTrue,
         prompts = emptyList(),
         userToken = authToken,
       ),
@@ -168,7 +169,7 @@ class AsyncDataApiServiceTest {
       filters = repositoryFilters,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResult,
+      policyEngineResult = policyEngineResultTrue,
       prompts = emptyList(),
       userToken = authToken,
     )
@@ -252,6 +253,13 @@ class AsyncDataApiServiceTest {
         filters = emptyList(),
       ),
     ).thenReturn(statementExecutionResponse)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = "missing-ethnicity-metrics",
@@ -346,7 +354,14 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.cancelStatementExecution(statementId),
     ).thenReturn(statementCancellationResponse)
 
-    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month")
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", authToken)
     verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -406,7 +421,14 @@ class AsyncDataApiServiceTest {
       athenaApiRepository.cancelStatementExecution(statementId),
     ).thenReturn(statementCancellationResponse)
 
-    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month")
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", authToken)
     verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -440,7 +462,7 @@ class AsyncDataApiServiceTest {
         filters = repositoryFilters,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResult,
+        policyEngineResult = policyEngineResultTrue,
         prompts = prompts,
         userToken = authToken,
       ),
@@ -460,7 +482,7 @@ class AsyncDataApiServiceTest {
       filters = repositoryFilters,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResult,
+      policyEngineResult = policyEngineResultTrue,
       prompts = prompts,
       userToken = authToken,
     )
@@ -488,6 +510,13 @@ class AsyncDataApiServiceTest {
     )
       .thenReturn(expectedRepositoryResult)
 
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
     val actual = configuredApiService.getStatementResult(
       tableId,
       reportId,
@@ -497,6 +526,7 @@ class AsyncDataApiServiceTest {
       filters = mapOf("direction" to "in"),
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
+      userToken = authToken,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -531,6 +561,13 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList(), false),
     ).thenReturn(expectedRepositoryResult)
 
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
     val actual = asyncDataApiService.getStatementResult(
       tableId = executionID,
       reportId = reportId,
@@ -539,6 +576,7 @@ class AsyncDataApiServiceTest {
       pageSize = pageSize,
       filters = emptyMap(),
       sortedAsc = false,
+      userToken = authToken,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -573,6 +611,13 @@ class AsyncDataApiServiceTest {
         .getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
     val actual = configuredApiService.getDashboardStatementResult(
       tableId,
       "missing-ethnicity-metrics",
@@ -580,6 +625,7 @@ class AsyncDataApiServiceTest {
       selectedPage = selectedPage,
       pageSize = pageSize,
       filters = emptyMap(),
+      userToken = authToken,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -607,6 +653,13 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.getPaginatedExternalTableResult(tableId, selectedPage, pageSize, emptyList()),
     ).thenReturn(expectedRepositoryResult)
 
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
     val exception = Assertions.assertThrows(ValidationException::class.java) {
       configuredApiService.getDashboardStatementResult(
         tableId,
@@ -615,6 +668,7 @@ class AsyncDataApiServiceTest {
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = emptyMap(),
+        userToken = authToken,
       )
     }
     assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")
@@ -628,12 +682,20 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
 
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
     val actual = configuredApiService.getSummaryResult(
       tableId,
       summaryId,
       reportId,
       reportVariantId,
       filters = emptyMap(),
+      userToken = authToken,
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -649,12 +711,20 @@ class AsyncDataApiServiceTest {
       .thenThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
       .thenReturn(listOf(mapOf("TOTAL" to 1)))
 
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
     val actual = configuredApiService.getSummaryResult(
       tableId,
       summaryId,
       reportId,
       reportVariantId,
       filters = emptyMap(),
+      userToken = authToken,
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -684,7 +754,14 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.count(tableId, listOf(Filter("direction", "in"))),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.count(tableId, "external-movements", "last-month", filters)
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = configuredApiService.count(tableId, "external-movements", "last-month", filters, authToken)
 
     assertEquals(Count(expectedRepositoryResult), actual)
   }

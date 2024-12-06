@@ -9,12 +9,15 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Service
 class SyncDataApiService(
   private val productDefinitionRepository: ProductDefinitionRepository,
   private val configuredApiRepository: ConfiguredApiRepository,
+  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) : CommonDataApiService() {
 
@@ -45,6 +48,7 @@ class SyncDataApiService(
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
@@ -109,6 +113,7 @@ class SyncDataApiService(
       reportVariantId,
       dataProductDefinitionsPath,
     )
+    checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(
       configuredApiRepository.count(
@@ -120,6 +125,16 @@ class SyncDataApiService(
         productDefinition = productDefinition,
       ),
     )
+  }
+
+  private fun checkAuth(
+    productDefinition: WithPolicy,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ): Boolean {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
+      throw UserAuthorisationException("User does not have correct authorisation")
+    }
+    return true
   }
 
   private fun applyFormulasSelectivelyAndFormatColumns(
