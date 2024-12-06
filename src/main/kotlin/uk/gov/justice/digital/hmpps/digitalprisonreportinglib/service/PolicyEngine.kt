@@ -21,19 +21,13 @@ class PolicyEngine(
     return doExecute(policy.filter { it.type == policyType })
   }
 
+  fun execute(): String = doExecute(policy)
+
   private fun doExecute(policiesToCheck: List<Policy>): String {
     return if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck)) {
       POLICY_DENY
     } else {
       policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables) }
-    }
-  }
-
-  fun execute(): String {
-    return if (policy.isEmpty() || isAnyPolicyDenied(policy)) {
-      POLICY_DENY
-    } else {
-      policy.joinToString(" AND ") { it.apply(this::interpolateVariables) }
     }
   }
 

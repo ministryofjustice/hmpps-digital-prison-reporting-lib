@@ -80,6 +80,7 @@ class AsyncDataApiServiceTest {
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
+  private val policyEngineResultTrue = "TRUE AND $policyEngineResult"
   private val tableIdGenerator: TableIdGenerator = TableIdGenerator()
   private val datasetHelper: DatasetHelper = DatasetHelper()
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
@@ -148,7 +149,7 @@ class AsyncDataApiServiceTest {
         filters = repositoryFilters,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResult,
+        policyEngineResult = policyEngineResultTrue,
         prompts = emptyList(),
         userToken = authToken,
       ),
@@ -168,7 +169,7 @@ class AsyncDataApiServiceTest {
       filters = repositoryFilters,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResult,
+      policyEngineResult = policyEngineResultTrue,
       prompts = emptyList(),
       userToken = authToken,
     )
@@ -461,7 +462,7 @@ class AsyncDataApiServiceTest {
         filters = repositoryFilters,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
-        policyEngineResult = policyEngineResult,
+        policyEngineResult = policyEngineResultTrue,
         prompts = prompts,
         userToken = authToken,
       ),
@@ -481,7 +482,7 @@ class AsyncDataApiServiceTest {
       filters = repositoryFilters,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      policyEngineResult = policyEngineResult,
+      policyEngineResult = policyEngineResultTrue,
       prompts = prompts,
       userToken = authToken,
     )
