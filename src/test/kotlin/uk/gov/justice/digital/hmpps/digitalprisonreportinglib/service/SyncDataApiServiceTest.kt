@@ -85,11 +85,18 @@ class SyncDataApiServiceTest {
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
-  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository)
+  private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
+  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker)
 
   @BeforeEach
   fun setup() {
     whenever(authToken.getCaseLoads()).thenReturn(listOf("WWI"))
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
   }
 
   @Test
@@ -515,7 +522,7 @@ class SyncDataApiServiceTest {
       listOf("productDefinitionPolicyNoAction.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     )
-    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository)
+    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker)
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("USER-ROLE-1")))
     val policyEngineResult = "TRUE"
     val reportId = "definition-policy-no-action"
@@ -1247,7 +1254,7 @@ class SyncDataApiServiceTest {
       mapOf("9" to "1"),
     )
     val productDefRepo = mock<ProductDefinitionRepository>()
-    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository)
+    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, productDefinitionTokenPolicyChecker)
     val dataSourceName = "name"
 
     whenever(productDefRepo.getProductDefinitions())

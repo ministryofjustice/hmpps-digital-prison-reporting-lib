@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.then
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -81,6 +83,18 @@ class ReportDefinitionServiceTest {
     allDatasets = listOf(dataset),
   )
 
+  private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
+
+  @BeforeEach
+  fun setup() {
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+  }
+
   @Test
   fun `Getting report list for user maps correctly`() {
     val expectedResult = ReportDefinitionSummary(
@@ -104,7 +118,7 @@ class ReportDefinitionServiceTest {
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
       on { map(any(), any(), any()) } doReturn expectedResult
     }
-    val service = ReportDefinitionService(repository, mapper, summaryMapper)
+    val service = ReportDefinitionService(repository, mapper, summaryMapper, productDefinitionTokenPolicyChecker)
 
     val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
 
@@ -135,7 +149,7 @@ class ReportDefinitionServiceTest {
     val mapper = mock<ReportDefinitionMapper> {
       on { map(any<SingleReportProductDefinition>(), any(), anyOrNull()) } doReturn expectedResult
     }
-    val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {})
+    val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {}, productDefinitionTokenPolicyChecker)
 
     val actualResult = service.getDefinition(
       minimalSingleDefinition.id,
@@ -169,7 +183,7 @@ class ReportDefinitionServiceTest {
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
       on { map(any(), any(), any()) } doReturn definitionWithNoVariants
     }
-    val service = ReportDefinitionService(repository, mapper, summaryMapper)
+    val service = ReportDefinitionService(repository, mapper, summaryMapper, productDefinitionTokenPolicyChecker)
 
     val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
 

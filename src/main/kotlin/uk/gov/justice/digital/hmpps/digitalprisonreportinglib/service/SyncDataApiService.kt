@@ -9,12 +9,16 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Service
 class SyncDataApiService(
   private val productDefinitionRepository: ProductDefinitionRepository,
   private val configuredApiRepository: ConfiguredApiRepository,
+  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) : CommonDataApiService() {
 
@@ -45,6 +49,7 @@ class SyncDataApiService(
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
@@ -56,7 +61,7 @@ class SyncDataApiService(
         pageSize = pageSize,
         sortColumn = datasetForFilter?.let { findSortColumn(sortColumn, it) } ?: sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
         sortedAsc = sortedAsc,
-        policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
+        policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(PolicyType.ROW_LEVEL),
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = productDefinition.datasource.name,
         reportFilter = productDefinition.report.filter,
@@ -109,17 +114,28 @@ class SyncDataApiService(
       reportVariantId,
       dataProductDefinitionsPath,
     )
+    checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return Count(
       configuredApiRepository.count(
         filters = validateAndMapFilters(productDefinition, filters, null),
         query = productDefinition.reportDataset.query,
         reportId = reportId,
-        policyEngineResult = policyEngine.execute(),
+        policyEngineResult = policyEngine.execute(PolicyType.ROW_LEVEL),
         dataSourceName = productDefinition.datasource.name,
         productDefinition = productDefinition,
       ),
     )
+  }
+
+  private fun checkAuth(
+    productDefinition: WithPolicy,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ): Boolean {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
+      throw UserAuthorisationException("User does not have correct authorisation")
+    }
+    return true
   }
 
   private fun applyFormulasSelectivelyAndFormatColumns(

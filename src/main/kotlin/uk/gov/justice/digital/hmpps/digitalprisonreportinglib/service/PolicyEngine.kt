@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
 
@@ -14,6 +15,18 @@ class PolicyEngine(
     const val ROLE = "\${role}"
     const val TOKEN = "\${token}"
     const val CASELOAD = "\${caseload}"
+  }
+
+  fun execute(policyType: PolicyType): String {
+    return doExecute(policy.filter { it.type == policyType })
+  }
+
+  private fun doExecute(policiesToCheck: List<Policy>): String {
+    return if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck)) {
+      POLICY_DENY
+    } else {
+      policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables) }
+    }
   }
 
   fun execute(): String {

@@ -83,16 +83,6 @@ class AsyncDataApiService(
       )
   }
 
-  private fun checkAuth(
-    productDefinition: WithPolicy,
-    userToken: DprAuthAwareAuthenticationToken?,
-  ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
-      throw UserAuthorisationException("User does not have correct authorisation")
-    }
-    return true
-  }
-
   fun validateAndExecuteStatementAsync(
     reportId: String,
     dashboardId: String,
@@ -105,6 +95,7 @@ class AsyncDataApiService(
       dashboardId = dashboardId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
+    checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     return redshiftDataApiRepository
       .executeQueryAsync(
@@ -134,8 +125,10 @@ class AsyncDataApiService(
     filters: Map<String, String>,
     sortedAsc: Boolean,
     sortColumn: String? = null,
+    userToken: DprAuthAwareAuthenticationToken?,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
     return formatColumnsAndApplyFormulas(
       redshiftDataApiRepository.getPaginatedExternalTableResult(
@@ -159,8 +152,10 @@ class AsyncDataApiService(
     selectedPage: Long,
     pageSize: Long,
     filters: Map<String, String>,
+    userToken: DprAuthAwareAuthenticationToken?,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
     return redshiftDataApiRepository.getPaginatedExternalTableResult(
       tableId = tableId,
       selectedPage = selectedPage,
@@ -177,9 +172,10 @@ class AsyncDataApiService(
     reportVariantId: String,
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
+    userToken: DprAuthAwareAuthenticationToken?,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-
+    checkAuth(productDefinition, userToken)
     val summary = productDefinition.report.summary?.find { it.id == summaryId }
       ?: throw ValidationException("Invalid summary ID: $summaryId")
 
@@ -205,8 +201,9 @@ class AsyncDataApiService(
     }
   }
 
-  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
+  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
     return getRepo(productDefinition).cancelStatementExecution(statementId)
   }
 
@@ -218,13 +215,24 @@ class AsyncDataApiService(
     return Count(redshiftDataApiRepository.count(tableId))
   }
 
-  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, dataProductDefinitionsPath: String? = null): Count {
+  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,
       dataProductDefinitionsPath,
     )
+    checkAuth(productDefinition, userToken)
     return Count(redshiftDataApiRepository.count(tableId, validateAndMapFilters(productDefinition, filters, true)))
+  }
+
+  private fun checkAuth(
+    productDefinition: WithPolicy,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ): Boolean {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
+      throw UserAuthorisationException("User does not have correct authorisation")
+    }
+    return true
   }
 
   private fun getRepo(productDefinition: SingleReportProductDefinition): AthenaAndRedshiftCommonRepository =
