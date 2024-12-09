@@ -808,7 +808,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with parameters with specialType of wing includes all the wings as static options`() {
+  fun `getting single report with parameters with specialType of wing includes all the wings as static options`(): Unit = runBlocking {
     val parameterName = "paramName"
     val parameterDisplay = "paramDisplay"
     val parameter = Parameter(
