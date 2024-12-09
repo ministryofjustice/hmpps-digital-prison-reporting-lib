@@ -43,10 +43,10 @@ class EstablishmentsToWingsRepositoryTest {
     setupMocksForGetStatus(statementId, athenaClient, "SUCCEEDED")
 
     val row1 = buildRow("establishment_code", "establishment_name", "wing")
-    val row2 = buildRow("AKI", "ACKLINGTON (HMP)", "L")
-    val row3 = buildRow("AKI", "ACKLINGTON (HMP)", "C")
-    val row4 = buildRow("BFI", "BEDFORD (HMP)", "D")
-    val row5 = buildRow("BFI", "BEDFORD (HMP)", "E")
+    val row2 = buildRow("AKI", "ACKLINGTON (HMP)", "AKI-L")
+    val row3 = buildRow("AKI", "ACKLINGTON (HMP)", "AKI-C")
+    val row4 = buildRow("BFI", "BEDFORD (HMP)", "BFI-D")
+    val row5 = buildRow("BFI", "BEDFORD (HMP)", "BFI-E")
     val getQueryResultsRequest: GetQueryResultsRequest =
       GetQueryResultsRequest.builder()
         .queryExecutionId(statementId)
@@ -64,12 +64,12 @@ class EstablishmentsToWingsRepositoryTest {
 
     val expected = mapOf(
       "AKI" to listOf(
-        EstablishmentToWing("AKI", "ACKLINGTON (HMP)", "L"),
-        EstablishmentToWing("AKI", "ACKLINGTON (HMP)", "C"),
+        EstablishmentToWing("AKI", "ACKLINGTON (HMP)", "AKI-L"),
+        EstablishmentToWing("AKI", "ACKLINGTON (HMP)", "AKI-C"),
       ),
       "BFI" to listOf(
-        EstablishmentToWing("BFI", "BEDFORD (HMP)", "D"),
-        EstablishmentToWing("BFI", "BEDFORD (HMP)", "E"),
+        EstablishmentToWing("BFI", "BEDFORD (HMP)", "BFI-D"),
+        EstablishmentToWing("BFI", "BEDFORD (HMP)", "BFI-E"),
       ),
     )
 

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.T
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
@@ -172,14 +173,28 @@ class ReportDefinitionMapper(
 
   private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? {
     return parameter.specialType
-      ?.takeIf { it == SpecialType.ESTABLISHMENT_CODE }
-      ?.let { mapEstablishmentsToFilterOptions() }
-      ?.takeIf { it.isNotEmpty() }
+      ?.let {
+        when (it) {
+          SpecialType.ESTABLISHMENT_CODE -> mapEstablishmentsToFilterOptions()
+          SpecialType.WING -> mapWingsToFilterOptions()
+        }
+      }?.takeIf { it.isNotEmpty() }
+  }
+
+  private fun mapWingsToFilterOptions(): List<FilterOption> {
+    return establishmentCodesToWingsCacheService
+      .getEstablishmentsAndPopulateCacheIfNeeded()
+      .takeIf { it.isNotEmpty() }
+      ?.flatMap { it.value }
+      ?.map { FilterOption(it.wing, it.wing) }
+      ?.plus(FilterOption(ALL_WINGS, ALL_WINGS))
+      ?: emptyList()
   }
 
   private fun mapEstablishmentsToFilterOptions(): List<FilterOption> {
-    return establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded()
-      .map { FilterOption(it.key, it.value.first().description) }
+    return establishmentCodesToWingsCacheService
+      .getEstablishmentsAndPopulateCacheIfNeeded()
+      .map { FilterOption(it.key, it.key + "-" + it.value.first().description) }
   }
 
   private suspend fun map(
