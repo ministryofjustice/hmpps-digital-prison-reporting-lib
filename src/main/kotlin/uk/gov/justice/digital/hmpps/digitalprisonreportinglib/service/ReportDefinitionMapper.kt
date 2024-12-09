@@ -38,7 +38,7 @@ class ReportDefinitionMapper(
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, datasetHelper) {
 
-  fun map(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
+  suspend fun map(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
       id = definition.id,
       name = definition.name,
@@ -54,7 +54,7 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun map(
+  private suspend fun map(
     report: Report,
     dataSet: Dataset,
     productDefinitionId: String,
@@ -84,7 +84,7 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun map(
+  private suspend fun map(
     specification: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification?,
     schemaFields: List<SchemaField>,
     productDefinitionId: String,
@@ -133,7 +133,7 @@ class ReportDefinitionMapper(
   private fun maybeConvertToReportFields(parameters: List<Parameter>?) =
     parameters?.map { convert(it) } ?: emptyList()
 
-  private fun mapToReportFieldDefinitions(
+  private suspend fun mapToReportFieldDefinitions(
     specification: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification,
     schemaFields: List<SchemaField>,
     productDefinitionId: String,
@@ -197,7 +197,7 @@ class ReportDefinitionMapper(
       .map { FilterOption(it.key, it.key + "-" + it.value.first().description) }
   }
 
-  private fun map(
+  private suspend fun map(
     field: ReportField,
     schemaFields: List<SchemaField>,
     productDefinitionId: String,

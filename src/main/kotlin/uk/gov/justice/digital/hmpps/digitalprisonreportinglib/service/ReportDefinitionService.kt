@@ -17,7 +17,7 @@ class ReportDefinitionService(
   val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
 ) {
 
-  fun getListForUser(
+  suspend fun getListForUser(
     renderMethod: RenderMethod?,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
@@ -27,7 +27,7 @@ class ReportDefinitionService(
       .filter { containsReportVariantsOrDashboards(it) }
   }
 
-  fun getDefinition(
+  suspend fun getDefinition(
     reportId: String,
     variantId: String,
     userToken: DprAuthAwareAuthenticationToken?,

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
+import aws.sdk.kotlin.services.dynamodb.DynamoDbClient
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
@@ -45,6 +47,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var authenticationHelper: TestAuthenticationHelper
+
+  @MockitoBean
+  lateinit var dynamoDbClient: DynamoDbClient
 
   companion object {
 
