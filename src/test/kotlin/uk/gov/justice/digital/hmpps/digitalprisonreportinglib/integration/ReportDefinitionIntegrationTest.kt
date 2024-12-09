@@ -198,10 +198,12 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       val response = Mockito.mock<QueryResponse>()
       val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
       val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithMetrics.json")!!.readText()
-      given(response.items).willReturn(listOf(
-        mapOf("definition" to AttributeValue.S(productDefinitionJson)),
-        mapOf("definition" to AttributeValue.S(otherProductDefinitionJson)),
-      ))
+      given(response.items).willReturn(
+        listOf(
+          mapOf("definition" to AttributeValue.S(productDefinitionJson)),
+          mapOf("definition" to AttributeValue.S(otherProductDefinitionJson)),
+        ),
+      )
       given(dynamoDbClient.query(any())).willReturn(response)
 
       val result = webTestClient.get()
@@ -250,7 +252,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastYearVariant.name).isEqualTo("Last year")
     }
   }
-
 
   @Test
   fun `Definitions are returned when they match the filter`() {

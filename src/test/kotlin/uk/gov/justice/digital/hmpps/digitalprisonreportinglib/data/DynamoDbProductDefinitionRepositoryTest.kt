@@ -24,7 +24,7 @@ class DynamoDbProductDefinitionRepositoryTest {
   private val repo = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
     gson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-    properties = properties
+    properties = properties,
   )
 
   @BeforeEach
@@ -32,10 +32,12 @@ class DynamoDbProductDefinitionRepositoryTest {
     val response = mock<QueryResponse>()
 
     given(dynamoDbClient.query(any())).willReturn(response)
-    given(response.items).willReturn(listOf(
-      mapOf("definition" to AttributeValue.S("{\"id\": \"test1\"}")),
-      mapOf("definition" to AttributeValue.S("{\"id\": \"test2\"}"))
-    ))
+    given(response.items).willReturn(
+      listOf(
+        mapOf("definition" to AttributeValue.S("{\"id\": \"test1\"}")),
+        mapOf("definition" to AttributeValue.S("{\"id\": \"test2\"}")),
+      ),
+    )
   }
 
   @Test
