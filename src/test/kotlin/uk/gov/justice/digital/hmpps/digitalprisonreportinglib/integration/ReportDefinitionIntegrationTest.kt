@@ -1,7 +1,13 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
+import aws.sdk.kotlin.services.dynamodb.model.AttributeValue
+import aws.sdk.kotlin.services.dynamodb.model.QueryResponse
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito
+import org.mockito.kotlin.any
+import org.mockito.kotlin.given
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
@@ -176,6 +182,75 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastWeekVariant.name).isEqualTo("Last week")
     }
   }
+
+  class DynamoDbReportDefinitionListTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.dataproductdefinitions.dynamodb.enabled") { "true" }
+      }
+    }
+
+    @Test
+    fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`(): Unit = runBlocking {
+      val response = Mockito.mock<QueryResponse>()
+      val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
+      val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithMetrics.json")!!.readText()
+      given(response.items).willReturn(listOf(
+        mapOf("definition" to AttributeValue.S(productDefinitionJson)),
+        mapOf("definition" to AttributeValue.S(otherProductDefinitionJson)),
+      ))
+      given(dynamoDbClient.query(any())).willReturn(response)
+
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<ReportDefinitionSummary>()
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+      assertThat(result.responseBody).hasSize(2)
+      assertThat(result.responseBody).first().isNotNull
+      val otherDefinition = result.responseBody!![1]
+      assertThat(otherDefinition).isNotNull
+
+      val definition = result.responseBody!!.first()
+
+      assertThat(definition.name).isEqualTo("External Movements")
+      assertThat(otherDefinition.name).isEqualTo("Missing Ethnicity Metrics")
+      assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
+      assertThat(definition.variants).hasSize(3)
+      assertThat(definition.variants[0]).isNotNull
+      assertThat(definition.variants[1]).isNotNull
+      assertThat(definition.variants[2]).isNotNull
+
+      val lastMonthVariant = definition.variants[0]
+
+      assertThat(lastMonthVariant.id).isEqualTo("last-month")
+      assertThat(lastMonthVariant.name).isEqualTo("Last month")
+      assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+
+      val lastWeekVariant = definition.variants[1]
+      assertThat(lastWeekVariant.id).isEqualTo("last-week")
+      assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
+      assertThat(lastWeekVariant.name).isEqualTo("Last week")
+
+      val lastYearVariant = definition.variants[2]
+      assertThat(lastYearVariant.id).isEqualTo("last-year")
+      assertThat(lastYearVariant.description).isEqualTo("All movements in the past year")
+      assertThat(lastYearVariant.name).isEqualTo("Last year")
+    }
+  }
+
 
   @Test
   fun `Definitions are returned when they match the filter`() {

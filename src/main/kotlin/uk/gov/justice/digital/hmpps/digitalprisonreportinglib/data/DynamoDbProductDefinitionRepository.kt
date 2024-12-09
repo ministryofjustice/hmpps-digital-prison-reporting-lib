@@ -14,22 +14,22 @@ class DynamoDbProductDefinitionRepository(
 ) : AbstractProductDefinitionRepository() {
   companion object {
     val defaultPath = "definitions/prisons/orphanage"
-  }
 
-  override suspend fun getProductDefinitions(path: String?): List<ProductDefinition> {
-    // Set up mapping of the partition name with the value.
-    val attrValues: Map<String, AttributeValue> = mapOf(":${properties.categoryFieldName}" to AttributeValue.S(path ?: defaultPath))
+    fun getQueryRequest(properties: DynamoDbProductDefinitionProperties, path: String): QueryRequest {
+      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.categoryFieldName}" to AttributeValue.S(path))
 
-    val request =
-      QueryRequest {
+      return QueryRequest {
         tableName = properties.tableName
         indexName = properties.categoryIndexName
         keyConditionExpression = "${properties.categoryFieldName} = :${properties.categoryFieldName}"
         expressionAttributeValues = attrValues
         attributesToGet = listOf(properties.definitionFieldName)
       }
+    }
+  }
 
-    return dynamoDbClient.query(request).items
+  override suspend fun getProductDefinitions(path: String?): List<ProductDefinition> {
+    return dynamoDbClient.query(getQueryRequest(properties, path ?: defaultPath)).items
       ?.filter { it[properties.definitionFieldName] != null }
       ?.map { gson.fromJson(it[properties.definitionFieldName]!!.asS(), ProductDefinition::class.java) }
       ?: emptyList()
