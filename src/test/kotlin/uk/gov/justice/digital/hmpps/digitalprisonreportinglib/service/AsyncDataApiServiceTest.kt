@@ -670,7 +670,8 @@ class AsyncDataApiServiceTest {
           selectedPage = selectedPage,
           pageSize = pageSize,
           filters = emptyMap(),
-        userToken = authToken,)
+          userToken = authToken,
+        )
       }
     }
     assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")

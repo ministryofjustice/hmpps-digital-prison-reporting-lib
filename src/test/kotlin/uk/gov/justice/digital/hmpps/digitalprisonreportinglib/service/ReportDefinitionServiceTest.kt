@@ -111,7 +111,7 @@ class ReportDefinitionServiceTest {
     )
     val authToken = mock<DprAuthAwareAuthenticationToken>()
 
-    val repository = mock<ProductDefinitionRepository> ()
+    val repository = mock<ProductDefinitionRepository>()
     whenever(repository.getProductDefinitions()).thenReturn(listOf(minimalDefinition))
 
     val mapper = mock<ReportDefinitionMapper> {}
