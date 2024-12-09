@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import aws.sdk.kotlin.services.dynamodb.DynamoDbClient
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.json.GsonHttpMessageConverter
 import org.springframework.web.client.RestTemplate
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DynamoDbProductDefinitionProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthenticationHelper
 import java.util.concurrent.TimeUnit
@@ -38,6 +40,7 @@ class ProductDefinitionRepositoryAutoConfig(
     "T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.definition.locations:}') " +
       "&& !T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.dataProductDefinitions.host:}')",
   )
+  @ConditionalOnMissingBean(ProductDefinitionRepository::class)
   fun dataProductDefinitionsRepository(
     dprDefinitionGson: Gson,
     definitionsCache: Cache<String, List<ProductDefinition>>? = null,
@@ -49,6 +52,19 @@ class ProductDefinitionRepositoryAutoConfig(
     definitionsHost,
     definitionsCache,
     authenticationHelper,
+  )
+
+  @Bean
+  @ConditionalOnProperty("dpr.lib.dataproductdefinitions.dynamodb.enabled", havingValue = "true")
+  @ConditionalOnMissingBean(ProductDefinitionRepository::class)
+  fun dynamoDbProductDefinitionsRepository(
+    dprDefinitionGson: Gson,
+    dynamoDbClient: DynamoDbClient,
+    properties: DynamoDbProductDefinitionProperties,
+  ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
+    dynamoDbClient = dynamoDbClient,
+    gson = dprDefinitionGson,
+    properties = properties,
   )
 
   @Bean

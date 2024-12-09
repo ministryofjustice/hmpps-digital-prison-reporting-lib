@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -100,7 +101,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a list of rows when both range and non range filters are provided`() {
+  fun `should call the repository with the corresponding arguments and get a list of rows when both range and non range filters are provided`(): Unit = runBlocking {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
@@ -143,7 +144,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a list of rows when a dynamic filter is provided`() {
+  fun `should call the repository with the corresponding arguments and get a list of rows when a dynamic filter is provided`(): Unit = runBlocking {
     val filters = mapOf(
       "direction" to "in",
       "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25",
@@ -210,7 +211,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the correct dataset query, a permit policy and get a list of rows when a datasetForFilter is provided`() {
+  fun `should call the repository with the correct dataset query, a permit policy and get a list of rows when a datasetForFilter is provided`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 30L
     val sortedAsc = true
@@ -288,7 +289,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a count of rows when both range and non range filters are provided`() {
+  fun `should call the repository with the corresponding arguments and get a count of rows when both range and non range filters are provided`(): Unit = runBlocking {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
@@ -321,7 +322,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a list of rows when only range filters are provided`() {
+  fun `should call the repository with the corresponding arguments and get a list of rows when only range filters are provided`(): Unit = runBlocking {
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
@@ -364,7 +365,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a count of rows when only range filters are provided`() {
+  fun `should call the repository with the corresponding arguments and get a count of rows when only range filters are provided`(): Unit = runBlocking {
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
@@ -397,7 +398,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a list of rows when only non range filters are provided`() {
+  fun `should call the repository with the corresponding arguments and get a list of rows when only non range filters are provided`(): Unit = runBlocking {
     val filtersExcludingRange = mapOf("direction" to "in")
     val repositoryFilters = listOf(Filter("direction", "in"))
 
@@ -441,7 +442,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a count of rows when only non range filters are provided`() {
+  fun `should call the repository with the corresponding arguments and get a count of rows when only non range filters are provided`(): Unit = runBlocking {
     val filters = mapOf("direction" to "in")
     val repositoryFilters = listOf(Filter("direction", "in"))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
@@ -474,7 +475,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a list of rows regardless of the casing of the values of the non range filters`() {
+  fun `should call the repository with the corresponding arguments and get a list of rows regardless of the casing of the values of the non range filters`(): Unit = runBlocking {
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
@@ -517,7 +518,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `the policy engine should parse a null action correctly and return TRUE for an access policy with a matching condition`() {
+  fun `the policy engine should parse a null action correctly and return TRUE for an access policy with a matching condition`(): Unit = runBlocking {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionPolicyNoAction.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -568,7 +569,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the repository with the corresponding arguments and get a count of rows regardless of the casing of the values of the non range filters`() {
+  fun `should call the repository with the corresponding arguments and get a count of rows regardless of the casing of the values of the non range filters`(): Unit = runBlocking {
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "In"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
@@ -601,7 +602,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `the service calls the repository without filters if no filters are provided`() {
+  fun `the service calls the repository without filters if no filters are provided`(): Unit = runBlocking {
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
     val selectedPage = 1L
     val pageSize = 10L
@@ -651,7 +652,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `the service count method calls the repository without filters if no filters are provided`() {
+  fun `the service count method calls the repository without filters if no filters are provided`(): Unit = runBlocking {
     val dataSet = productDefinitionRepository.getProductDefinitions().first().dataset.first()
     val dataSourceName = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).datasource.name
     val singleReportProductDefinition =
@@ -682,7 +683,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception for invalid report id`() {
+  fun `validateAndFetchData should throw an exception for invalid report id`(): Unit = runBlocking {
     val reportId = "random report id"
 
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
@@ -710,7 +711,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception for invalid report id`() {
+  fun `validateAndCount should throw an exception for invalid report id`(): Unit = runBlocking {
     val reportId = "random report id"
 
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
@@ -723,7 +724,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception for invalid report variant`() {
+  fun `validateAndFetchData should throw an exception for invalid report variant`(): Unit = runBlocking {
     val reportVariantId = "non existent variant"
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val selectedPage = 1L
@@ -750,7 +751,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception for invalid report variant`() {
+  fun `validateAndCount should throw an exception for invalid report variant`(): Unit = runBlocking {
     val reportVariantId = "non existent variant"
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
 
@@ -762,7 +763,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception for invalid sort column`() {
+  fun `validateAndFetchData should throw an exception for invalid sort column`(): Unit = runBlocking {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val selectedPage = 1L
     val pageSize = 10L
@@ -796,7 +797,9 @@ class SyncDataApiServiceTest {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+      runBlocking {
+        configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+      }
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -815,7 +818,7 @@ class SyncDataApiServiceTest {
 
   @ParameterizedTest
   @ValueSource(strings = ["destination", "invalid field name"])
-  fun `validateAndFetchData should throw an exception for invalid dynamic filter`(fieldId: String) {
+  fun `validateAndFetchData should throw an exception for invalid dynamic filter`(fieldId: String): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -840,7 +843,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception for a fieldId which is a filter but not a dynamic one`() {
+  fun `validateAndFetchData should throw an exception for a fieldId which is a filter but not a dynamic one`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -866,7 +869,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception for a mandatory filter with no value`() {
+  fun `validateAndFetchData should throw an exception for a mandatory filter with no value`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -879,7 +882,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should not throw an exception for a mandatory filter with no value if querying for a specific field`() {
+  fun `validateAndFetchData should not throw an exception for a mandatory filter with no value if querying for a specific field`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -901,7 +904,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception for a filter value that does not match the validation pattern`() {
+  fun `validateAndFetchData should throw an exception for a filter value that does not match the validation pattern`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -917,7 +920,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should not throw an exception for a filter value that does not match the validation pattern if querying for a specific field`() {
+  fun `validateAndFetchData should not throw an exception for a filter value that does not match the validation pattern if querying for a specific field`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -943,7 +946,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception for a mandatory filter with no value`() {
+  fun `validateAndCount should throw an exception for a mandatory filter with no value`(): Unit = runBlocking {
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
       configuredApiService.validateAndCount(reportId, "last-year", emptyMap(), authToken)
     }
@@ -951,7 +954,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception for a filter value that does not match the validation pattern`() {
+  fun `validateAndCount should throw an exception for a filter value that does not match the validation pattern`(): Unit = runBlocking {
     val filters = mapOf(
       "date.start" to "2000-01-02",
       "origin" to "Invalid",
@@ -963,7 +966,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception for invalid filter`() {
+  fun `validateAndCount should throw an exception for invalid filter`(): Unit = runBlocking {
     val filters = mapOf("non existent filter" to "blah")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
@@ -974,7 +977,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception when having a valid and an invalid filter`() {
+  fun `validateAndFetchData should throw an exception when having a valid and an invalid filter`(): Unit = runBlocking {
     val filters = mapOf("non existent filter" to "blah", "date$RANGE_FILTER_START_SUFFIX" to "2023-01-01")
     val selectedPage = 1L
     val pageSize = 10L
@@ -1000,7 +1003,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception when having a valid and an invalid filter`() {
+  fun `validateAndCount should throw an exception when having a valid and an invalid filter`(): Unit = runBlocking {
     val filters = mapOf("non existent filter" to "blah", "date$RANGE_FILTER_START_SUFFIX" to "2023-01-01")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
@@ -1011,7 +1014,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception when having invalid static options for a filter and a valid range filter`() {
+  fun `validateAndFetchData should throw an exception when having invalid static options for a filter and a valid range filter`(): Unit = runBlocking {
     val filters = mapOf("direction" to "randomValue", "date$RANGE_FILTER_START_SUFFIX" to "2023-01-01")
     val selectedPage = 1L
     val pageSize = 10L
@@ -1037,7 +1040,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception when having invalid static options for a filter and a valid range filter`() {
+  fun `validateAndCount should throw an exception when having invalid static options for a filter and a valid range filter`(): Unit = runBlocking {
     val filters = mapOf("direction" to "randomValue", "date$RANGE_FILTER_START_SUFFIX" to "2023-01-01")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
@@ -1048,7 +1051,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception when having invalid static options for a filter and no range filters`() {
+  fun `validateAndFetchData should throw an exception when having invalid static options for a filter and no range filters`(): Unit = runBlocking {
     val filters = mapOf("direction" to "randomValue")
     val selectedPage = 1L
     val pageSize = 10L
@@ -1074,7 +1077,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception when having a prefix with fewer characters than the minimum length`() {
+  fun `validateAndFetchData should throw an exception when having a prefix with fewer characters than the minimum length`(): Unit = runBlocking {
     val selectedPage = 1L
     val pageSize = 10L
     val sortColumn = "date"
@@ -1110,7 +1113,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception when having invalid static options for a filter and no range filters`() {
+  fun `validateAndCount should throw an exception when having invalid static options for a filter and no range filters`(): Unit = runBlocking {
     val filters = mapOf("direction" to "randomValue")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
@@ -1121,7 +1124,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndFetchData should throw an exception when having an invalid range filter`() {
+  fun `validateAndFetchData should throw an exception when having an invalid range filter`(): Unit = runBlocking {
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "abc")
     val selectedPage = 1L
     val pageSize = 10L
@@ -1147,7 +1150,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `validateAndCount should throw an exception when having an invalid range filter`() {
+  fun `validateAndCount should throw an exception when having an invalid range filter`(): Unit = runBlocking {
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "abc")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
@@ -1158,7 +1161,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the configuredApiRepository with the default sort column if none is provided`() {
+  fun `should call the configuredApiRepository with the default sort column if none is provided`(): Unit = runBlocking {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("direction", "in"), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L
@@ -1201,7 +1204,7 @@ class SyncDataApiServiceTest {
   }
 
   @Test
-  fun `should call the configuredApiRepository with no sort column if none is provided and there is no default`() {
+  fun `should call the configuredApiRepository with no sort column if none is provided and there is no default`(): Unit = runBlocking {
     val dataSet =
       Dataset("datasetId", "datasetname", "redshift", "select *", Schema(listOf(SchemaField("9", ParameterType.String, display = "", filter = null))))
     val report = Report(
@@ -1316,23 +1319,25 @@ class SyncDataApiServiceTest {
   @Test
   fun `should throw an exception when a filter is passed as a non boolean value when a boolean is expected`() {
     val exception = Assertions.assertThrows(ValidationException::class.java) {
-      configuredApiService.validateAndFetchData(
-        reportId,
-        reportVariantId,
-        mapOf("is_closed" to "in"),
-        1L,
-        10L,
-        "date",
-        true,
-        authToken,
-      )
+      runBlocking {
+        configuredApiService.validateAndFetchData(
+          reportId,
+          reportVariantId,
+          mapOf("is_closed" to "in"),
+          1L,
+          10L,
+          "date",
+          true,
+          authToken,
+        )
+      }
     }
     verifyNoInteractions(configuredApiRepository)
     assertThat(exception).message().isEqualTo("Invalid value in for filter is_closed. Cannot be parsed as a boolean.")
   }
 
   @Test
-  fun `should call the repository with Boolean Filter type for boolean filters`() {
+  fun `should call the repository with Boolean Filter type for boolean filters`(): Unit = runBlocking {
     val filters = mapOf("is_closed" to "true", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val selectedPage = 1L

@@ -63,7 +63,7 @@ abstract class DefinitionMapper(
     )
   }
 
-  protected fun populateStaticOptions(
+  protected suspend fun populateStaticOptions(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
     productDefinitionId: String,
     reportVariantId: String,
@@ -93,7 +93,7 @@ abstract class DefinitionMapper(
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 
-  private fun populateStandardStaticOptionsForReportDefinition(
+  private suspend fun populateStandardStaticOptionsForReportDefinition(
     productDefinitionId: String,
     reportVariantId: String,
     maxStaticOptions: Long?,

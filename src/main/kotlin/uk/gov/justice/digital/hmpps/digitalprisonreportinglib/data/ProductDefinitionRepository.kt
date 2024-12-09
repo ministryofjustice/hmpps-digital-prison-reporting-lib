@@ -6,11 +6,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 
 interface ProductDefinitionRepository {
 
-  fun getProductDefinitions(path: String? = null): List<ProductDefinition>
+  suspend fun getProductDefinitions(path: String? = null): List<ProductDefinition>
 
-  fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String? = null): ProductDefinition
+  suspend fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String? = null): ProductDefinition
 
-  fun getSingleReportProductDefinition(definitionId: String, reportId: String, dataProductDefinitionsPath: String? = null): SingleReportProductDefinition
+  suspend fun getSingleReportProductDefinition(definitionId: String, reportId: String, dataProductDefinitionsPath: String? = null): SingleReportProductDefinition
 
-  fun getSingleDashboardProductDefinition(definitionId: String, dashboardId: String, dataProductDefinitionsPath: String? = null): SingleDashboardProductDefinition
+  suspend fun getSingleDashboardProductDefinition(definitionId: String, dashboardId: String, dataProductDefinitionsPath: String? = null): SingleDashboardProductDefinition
 }

@@ -70,7 +70,7 @@ class ConfiguredApiRepository(
     return jdbcTemplate.queryForList(
       buildFinalQuery(
         datasetQuery = buildDatasetQuery(query),
-        reportQuery = buildReportQuery(productDefinition?.report?.filter),
+        reportQuery = buildReportQuery(productDefinition.report.filter),
         policiesQuery = buildPolicyQuery(policyEngineResult),
         filtersQuery = buildFiltersQuery(filters),
         selectFromFinalStageQuery = "SELECT COUNT(1) as total FROM $FILTER_",
