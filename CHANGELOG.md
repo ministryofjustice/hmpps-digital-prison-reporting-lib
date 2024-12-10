@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-# 7.3.3
+# 7.3.3 - 7.3.4
 Fix for DynamoDB config.
 
 # 7.3.2
