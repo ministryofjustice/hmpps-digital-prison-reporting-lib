@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.2
+Fix for unnecessary DynamoDB config and dependency issue. 
+
 # 7.3.1
 Returning the list of wings as static options. Also added the establishment code suffixed 
 with a dash before the description in the list of establishments returned as static options.

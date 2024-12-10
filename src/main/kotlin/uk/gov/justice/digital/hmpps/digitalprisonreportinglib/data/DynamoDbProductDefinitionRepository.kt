@@ -23,7 +23,6 @@ class DynamoDbProductDefinitionRepository(
         indexName = properties.categoryIndexName
         keyConditionExpression = "${properties.categoryFieldName} = :${properties.categoryFieldName}"
         expressionAttributeValues = attrValues
-        attributesToGet = listOf(properties.definitionFieldName)
       }
     }
   }
