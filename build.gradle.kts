@@ -31,10 +31,6 @@ dependencies {
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
 
-  // Fix dependency mismatch
-  implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
-  implementation("com.squareup.okhttp3:okhttp-coroutines:5.0.0-alpha.14")
-
   // Testing
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
