@@ -12,7 +12,6 @@ class DynamoDbConfig {
   @Bean
   @ConditionalOnProperty("dpr.lib.dataproductdefinitions.dynamodb.enabled", havingValue = "true")
   @ConditionalOnMissingBean(DynamoDbClient::class)
-  fun dynamoDbClient(): DynamoDbClient {
-    return DynamoDbClient.builder().build()
-  }
+  fun dynamoDbClient(properties: DynamoDbProductDefinitionProperties): DynamoDbClient =
+    DynamoDbClient { region = properties.region }
 }
