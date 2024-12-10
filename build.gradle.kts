@@ -17,7 +17,7 @@ configurations {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.1.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.1.1")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -26,10 +26,14 @@ dependencies {
   // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
   implementation("software.amazon.awssdk:redshiftdata:2.29.20")
   implementation("software.amazon.awssdk:athena:2.29.20")
-  implementation("aws.sdk.kotlin:dynamodb:1.3.87")
+  implementation("aws.sdk.kotlin:dynamodb:1.3.90")
 
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+
+  // Fix dependency mismatch
+  implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.14")
+  implementation("com.squareup.okhttp3:okhttp-coroutines:5.0.0-alpha.14")
 
   // Testing
   testImplementation("com.h2database:h2")
