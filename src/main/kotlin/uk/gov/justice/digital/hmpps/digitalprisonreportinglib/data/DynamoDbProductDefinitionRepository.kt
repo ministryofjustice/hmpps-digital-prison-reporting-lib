@@ -4,6 +4,7 @@ import aws.sdk.kotlin.services.dynamodb.DynamoDbClient
 import aws.sdk.kotlin.services.dynamodb.model.AttributeValue
 import aws.sdk.kotlin.services.dynamodb.model.QueryRequest
 import com.google.gson.Gson
+import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DynamoDbProductDefinitionProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 
@@ -14,6 +15,8 @@ class DynamoDbProductDefinitionRepository(
 ) : AbstractProductDefinitionRepository() {
   companion object {
     val defaultPath = "definitions/prisons/orphanage"
+
+    private val log = LoggerFactory.getLogger(this::class.java)
 
     fun getQueryRequest(properties: DynamoDbProductDefinitionProperties, path: String): QueryRequest {
       val attrValues: Map<String, AttributeValue> = mapOf(":${properties.categoryFieldName}" to AttributeValue.S(path))
@@ -28,6 +31,7 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override suspend fun getProductDefinitions(path: String?): List<ProductDefinition> {
+    log.debug("Fetching DPDs from DynamoDB table: Path={}, Config={}}", path, properties)
     return dynamoDbClient.query(getQueryRequest(properties, path ?: defaultPath)).items
       ?.filter { it[properties.definitionFieldName] != null }
       ?.map { gson.fromJson(it[properties.definitionFieldName]!!.asS(), ProductDefinition::class.java) }

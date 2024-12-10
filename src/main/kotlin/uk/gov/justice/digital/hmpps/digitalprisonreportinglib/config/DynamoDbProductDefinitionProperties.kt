@@ -4,12 +4,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties("dpr.lib.dataproductdefinitions.dynamodb")
 class DynamoDbProductDefinitionProperties(
-  val region: String = "eu-west-2",
-  val accountId: String = "771283872747",
-  val tableName: String = "dpr-data-product-definition",
-  val categoryFieldName: String = "category",
-  val definitionFieldName: String = "definition",
-  val categoryIndexName: String = "category-index",
+  var region: String = "eu-west-2",
+  var accountId: String = "771283872747",
+  var tableName: String = "dpr-data-product-definition",
+  var categoryFieldName: String = "category",
+  var definitionFieldName: String = "definition",
+  var categoryIndexName: String = "category-index",
 ) {
-  val tableArn: String = "arn:aws:dynamodb:${this.region}:${this.accountId}:table/${this.tableName}"
+  val tableArn: String = "arn:aws:dynamodb:${region}:${accountId}:table/${tableName}"
 }
