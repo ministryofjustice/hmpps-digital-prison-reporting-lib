@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.apache.commons.lang3.time.StopWatch
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
+import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
 import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGen
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
 @Service
+@ConditionalOnBean(AthenaClient::class)
 class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
   private val tableIdGenerator: TableIdGenerator,

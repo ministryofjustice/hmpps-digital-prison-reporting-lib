@@ -31,6 +31,7 @@ class DynamoDbProductDefinitionRepository(
     return dynamoDbClient
       .query(getQueryRequest(properties, path ?: defaultPath))
       .items()
+      ?.filter { it[properties.dynamoDb.definitionFieldName] != null }
       ?.map { gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java) }
       ?: emptyList()
   }

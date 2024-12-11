@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
 @Service
+@ConditionalOnBean(value = [RedshiftDataApiRepository::class, AthenaApiRepository::class])
 class AsyncDataApiService(
   val productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,

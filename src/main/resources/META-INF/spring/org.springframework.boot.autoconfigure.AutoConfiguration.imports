@@ -5,12 +5,9 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncCon
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DashboardDefinitionController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DprOpenApiConfiguration
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AthenaConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DynamoDbConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.RedshiftDataApiConfig
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.StsCredentialsProviderConfig
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepositoryAutoConfig
