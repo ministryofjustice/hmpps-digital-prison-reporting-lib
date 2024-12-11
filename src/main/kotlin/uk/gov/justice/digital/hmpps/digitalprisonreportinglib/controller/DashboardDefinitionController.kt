@@ -25,7 +25,7 @@ class DashboardDefinitionController(val dashboardDefinitionService: DashboardDef
     description = "Gets the metric dashboard definition.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
   )
-  suspend fun dashboardDefinition(
+  fun dashboardDefinition(
     @Parameter(
       description = "The ID of the Data Product Definition.",
       example = "external-movements",

@@ -33,7 +33,7 @@ class SyncDataApiService(
     const val SCHEMA_REF_PREFIX = "\$ref:"
   }
 
-  suspend fun validateAndFetchData(
+  fun validateAndFetchData(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
@@ -102,7 +102,7 @@ class SyncDataApiService(
       }
   }
 
-  suspend fun validateAndCount(
+  fun validateAndCount(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,

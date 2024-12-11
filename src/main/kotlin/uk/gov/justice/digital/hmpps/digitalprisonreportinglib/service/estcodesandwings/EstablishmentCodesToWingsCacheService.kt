@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishment
 
 @Service
 class EstablishmentCodesToWingsCacheService(
-  private val establishmentsToWingsRepository: EstablishmentsToWingsRepository,
+  private val establishmentsToWingsRepository: EstablishmentsToWingsRepository?,
   private val establishmentCodesCache: Cache<String, List<EstablishmentToWing>>,
 ) {
   companion object {
@@ -27,7 +27,7 @@ class EstablishmentCodesToWingsCacheService(
     if (establishmentCodesCache.size() != 0L) {
       establishmentCodesCache.invalidateAll()
     }
-    val establishmentToWingsMap = establishmentsToWingsRepository.executeStatementWaitAndGetResult()
+    val establishmentToWingsMap = establishmentsToWingsRepository?.executeStatementWaitAndGetResult() ?: emptyMap()
     if (establishmentToWingsMap.isNotEmpty()) {
       establishmentCodesCache.putAll(establishmentToWingsMap)
       stopWatch.stop()

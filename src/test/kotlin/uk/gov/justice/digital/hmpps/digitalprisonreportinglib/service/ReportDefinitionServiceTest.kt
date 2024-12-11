@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -97,7 +96,7 @@ class ReportDefinitionServiceTest {
   }
 
   @Test
-  fun `Getting report list for user maps correctly`(): Unit = runBlocking {
+  fun `Getting report list for user maps correctly`() {
     val expectedResult = ReportDefinitionSummary(
       id = "1",
       name = "2",
@@ -132,7 +131,7 @@ class ReportDefinitionServiceTest {
   }
 
   @Test
-  fun `Getting single report for user maps correctly`(): Unit = runBlocking {
+  fun `Getting single report for user maps correctly`() {
     val expectedResult = SingleVariantReportDefinition(
       id = "1",
       name = "2",
@@ -148,7 +147,7 @@ class ReportDefinitionServiceTest {
     whenever(repository.getSingleReportProductDefinition(any(), any(), anyOrNull())).thenReturn(minimalSingleDefinition)
 
     val mapper = mock<ReportDefinitionMapper> {
-      on { runBlocking { map(any<SingleReportProductDefinition>(), any(), anyOrNull()) } } doReturn expectedResult
+      on { map(any<SingleReportProductDefinition>(), any(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {}, productDefinitionTokenPolicyChecker)
 
@@ -169,7 +168,7 @@ class ReportDefinitionServiceTest {
   }
 
   @Test
-  fun `Getting HTML report list with no matches returns no domains`(): Unit = runBlocking {
+  fun `Getting HTML report list with no matches returns no domains`() {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
     val definitionWithNoVariants = ReportDefinitionSummary(
       id = "1",

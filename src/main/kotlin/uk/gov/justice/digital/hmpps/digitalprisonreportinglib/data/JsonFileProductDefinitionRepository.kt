@@ -9,7 +9,7 @@ class JsonFileProductDefinitionRepository(
   private val gson: Gson,
 ) : AbstractProductDefinitionRepository() {
 
-  override suspend fun getProductDefinitions(path: String?): List<ProductDefinition> {
+  override fun getProductDefinitions(path: String?): List<ProductDefinition> {
     return resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinition>() {}.type) }
   }
 }

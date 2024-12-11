@@ -59,7 +59,7 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
       ),
     ],
   )
-  suspend fun configuredApiDataset(
+  fun configuredApiDataset(
     @RequestParam(defaultValue = "1")
     @Min(1)
     selectedPage: Long,
@@ -126,7 +126,7 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
       ),
     ],
   )
-  suspend fun configuredApiDynamicFilter(
+  fun configuredApiDynamicFilter(
     @RequestParam(defaultValue = "10")
     @Min(1)
     pageSize: Long,
@@ -209,7 +209,7 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
       ),
     ],
   )
-  suspend fun configuredApiCount(
+  fun configuredApiCount(
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,

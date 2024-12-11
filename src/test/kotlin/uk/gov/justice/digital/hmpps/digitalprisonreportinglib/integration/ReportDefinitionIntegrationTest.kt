@@ -1,18 +1,18 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
-import aws.sdk.kotlin.services.dynamodb.model.AttributeValue
-import aws.sdk.kotlin.services.dynamodb.model.QueryResponse
-import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
-import org.mockito.kotlin.any
 import org.mockito.kotlin.given
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -189,22 +189,22 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       @JvmStatic
       @DynamicPropertySource
       fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.dataproductdefinitions.dynamodb.enabled") { "true" }
+        registry.add("dpr.lib.aws.dynamodb.enabled") { "true" }
       }
     }
 
     @Test
-    fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`(): Unit = runBlocking {
+    fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
       val response = Mockito.mock<QueryResponse>()
       val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
       val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithMetrics.json")!!.readText()
-      given(response.items).willReturn(
+      given(response.items()).willReturn(
         listOf(
-          mapOf("definition" to AttributeValue.S(productDefinitionJson)),
-          mapOf("definition" to AttributeValue.S(otherProductDefinitionJson)),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson)),
+          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson)),
         ),
       )
-      given(dynamoDbClient.query(any())).willReturn(response)
+      given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
 
       val result = webTestClient.get()
         .uri { uriBuilder: UriBuilder ->

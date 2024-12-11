@@ -16,6 +16,9 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
+val awsSdkVersion = "2.29.20"
+val testContainersVersion = "1.20.4"
+
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.1.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -23,10 +26,12 @@ dependencies {
 
   implementation("com.google.code.gson:gson:2.11.0")
   implementation("com.google.guava:guava:33.3.1-jre")
-  // https://mvnrepository.com/artifact/software.amazon.awssdk/redshiftdata
-  implementation("software.amazon.awssdk:redshiftdata:2.29.20")
-  implementation("software.amazon.awssdk:athena:2.29.20")
-  implementation("aws.sdk.kotlin:dynamodb:1.3.90")
+
+  // AWS
+  implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")
+  implementation("software.amazon.awssdk:athena:$awsSdkVersion")
+  implementation("software.amazon.awssdk:sts:$awsSdkVersion")
+  implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
@@ -37,8 +42,8 @@ dependencies {
   testImplementation("io.jsonwebtoken:jjwt:0.12.6")
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
   testImplementation("org.postgresql:postgresql:42.7.4")
-  testImplementation("org.testcontainers:postgresql:1.20.4")
-  testImplementation("org.testcontainers:junit-jupiter:1.20.4")
+  testImplementation("org.testcontainers:postgresql:$testContainersVersion")
+  testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
 }
 
 java {

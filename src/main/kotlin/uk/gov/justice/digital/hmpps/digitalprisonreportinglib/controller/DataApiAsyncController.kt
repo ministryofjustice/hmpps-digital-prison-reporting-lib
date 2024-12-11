@@ -32,7 +32,7 @@ import java.util.Collections.singletonList
 @Validated
 @RestController
 @Tag(name = "Data API - Asynchronous")
-class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val filterHelper: FilterHelper) {
+class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val filterHelper: FilterHelper) {
 
   @GetMapping("/async/reports/{reportId}/{reportVariantId}")
   @Operation(
@@ -51,7 +51,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ),
     ],
   )
-  suspend fun asyncConfiguredApiExecuteQuery(
+  fun asyncConfiguredApiExecuteQuery(
     @RequestParam sortColumn: String?,
     @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     @Parameter(
@@ -78,7 +78,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService.validateAndExecuteStatementAsync(
+          asyncDataApiService!!.validateAndExecuteStatementAsync(
             reportId = reportId,
             reportVariantId = reportVariantId,
             filters = filterHelper.filtersOnly(filters),
@@ -95,6 +95,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .headers(headers)
+        .body(null)
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
         .body(null)
     }
   }
@@ -115,7 +119,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ),
     ],
   )
-  suspend fun asyncExecuteDashboard(
+  fun asyncExecuteDashboard(
     @PathVariable("reportId") reportId: String,
     @PathVariable("dashboardId") dashboardId: String,
     @Parameter(
@@ -139,7 +143,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService.validateAndExecuteStatementAsync(
+          asyncDataApiService!!.validateAndExecuteStatementAsync(
             reportId = reportId,
             dashboardId = dashboardId,
             userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
@@ -154,6 +158,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .headers(headers)
+        .body(null)
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
         .body(null)
     }
   }
@@ -177,7 +185,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "As a result, you may see the query state transition from STARTED or FAILED to SUBMITTED.\n",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getQueryExecutionStatus(
+  fun getQueryExecutionStatus(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("statementId") statementId: String,
@@ -192,17 +200,23 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getStatementStatus(
-          statementId = statementId,
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          dataProductDefinitionsPath,
-        ),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService!!.getStatementStatus(
+            statementId = statementId,
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            dataProductDefinitionsPath,
+          ),
+        )
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
+    }
   }
 
   @GetMapping("/statements/{statementId}/status")
@@ -225,11 +239,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @PathVariable("statementId") statementId: String,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getStatementStatus(statementId),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService!!.getStatementStatus(statementId),
+        )
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
+    }
   }
 
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
@@ -237,7 +257,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     description = "Cancels the execution of a running query.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun cancelReportQueryExecution(
+  fun cancelReportQueryExecution(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("statementId") statementId: String,
@@ -252,17 +272,23 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementCancellationResponse> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.cancelStatementExecution(
-          statementId,
-          reportId,
-          reportVariantId,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          dataProductDefinitionsPath,
-        ),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService!!.cancelStatementExecution(
+            statementId,
+            reportId,
+            reportVariantId,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+            dataProductDefinitionsPath,
+          ),
+        )
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
+    }
   }
 
   @DeleteMapping("/statements/{statementId}")
@@ -274,11 +300,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @PathVariable("statementId") statementId: String,
     authentication: Authentication,
   ): ResponseEntity<StatementCancellationResponse> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.cancelStatementExecution(statementId),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService!!.cancelStatementExecution(statementId),
+        )
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
+    }
   }
 
   @GetMapping("/report/tables/{tableId}/count")
@@ -304,7 +336,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService.count(tableId),
+          asyncDataApiService!!.count(tableId),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
@@ -313,6 +345,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .headers(headers)
+        .body(null)
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
         .body(null)
     }
   }
@@ -333,7 +369,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ),
     ],
   )
-  suspend fun getInteractiveExternalTableRowCount(
+  fun getInteractiveExternalTableRowCount(
     @PathVariable("tableId") tableId: String,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
@@ -350,7 +386,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService.count(
+          asyncDataApiService!!.count(
             tableId,
             reportId,
             reportVariantId,
@@ -367,6 +403,10 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
         .status(HttpStatus.OK)
         .headers(headers)
         .body(null)
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
     }
   }
 
@@ -376,7 +416,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "fashion which has been stored in a dedicated table.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getQueryExecutionResult(
+  fun getQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @RequestParam(
@@ -401,22 +441,28 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getStatementResult(
-          tableId = tableId,
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          filters = filterHelper.filtersOnly(filters),
-          sortedAsc = sortedAsc,
-          sortColumn = sortColumn,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-        ),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService!!.getStatementResult(
+            tableId = tableId,
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            filters = filterHelper.filtersOnly(filters),
+            sortedAsc = sortedAsc,
+            sortColumn = sortColumn,
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          ),
+        )
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
+    }
   }
 
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result")
@@ -425,7 +471,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "fashion which has been stored in a dedicated table.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getDashboardQueryExecutionResult(
+  fun getDashboardQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("dashboardId") dashboardId: String,
     @RequestParam(
@@ -448,20 +494,26 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getDashboardStatementResult(
-          tableId = tableId,
-          reportId = reportId,
-          dashboardId = dashboardId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          filters = filterHelper.filtersOnly(filters),
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-        ),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService!!.getDashboardStatementResult(
+            tableId = tableId,
+            reportId = reportId,
+            dashboardId = dashboardId,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            filters = filterHelper.filtersOnly(filters),
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          ),
+        )
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
+    }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/summary/{summaryId}")
@@ -469,7 +521,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     description = "Returns a summary of a request, which has been stored in a dedicated table.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getSummaryQueryExecutionResult(
+  fun getSummaryQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @RequestParam(
@@ -487,18 +539,24 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getSummaryResult(
-          tableId = tableId,
-          summaryId = summaryId,
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          filters = filterHelper.filtersOnly(filters),
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-        ),
-      )
+    return try {
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          asyncDataApiService!!.getSummaryResult(
+            tableId = tableId,
+            summaryId = summaryId,
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            dataProductDefinitionsPath = dataProductDefinitionsPath,
+            filters = filterHelper.filtersOnly(filters),
+            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          ),
+        )
+    } catch (exception: NullPointerException) {
+      ResponseEntity
+        .status(HttpStatus.NOT_IMPLEMENTED)
+        .body(null)
+    }
   }
 }

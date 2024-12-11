@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmen
 
 import org.apache.commons.lang3.time.StopWatch
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasou
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
 @Service
+@ConditionalOnBean(AthenaClient::class)
 class EstablishmentsToWingsRepository(
   override val athenaClient: AthenaClient,
   override val tableIdGenerator: TableIdGenerator,

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -23,7 +22,7 @@ class DashboardDefinitionServiceTest {
   private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository, dashboardDefinitionMapper)
 
   @Test
-  fun `getDashboardDefinition returns the dashboard definition`(): Unit = runBlocking {
+  fun `getDashboardDefinition returns the dashboard definition`() {
     val dashboardDefinition: DashboardDefinition = Mockito.mock()
     val productDefinition: SingleDashboardProductDefinition = Mockito.mock()
     val dashboard: Dashboard = Mockito.mock()

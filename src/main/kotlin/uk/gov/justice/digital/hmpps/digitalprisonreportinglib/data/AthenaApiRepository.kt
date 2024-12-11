@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
@@ -27,6 +28,7 @@ const val QUERY_FAILED = "FAILED"
 
 @Service
 @Primary
+@ConditionalOnBean(AthenaClient::class)
 class AthenaApiRepository(
   val athenaClient: AthenaClient,
   val tableIdGenerator: TableIdGenerator,
