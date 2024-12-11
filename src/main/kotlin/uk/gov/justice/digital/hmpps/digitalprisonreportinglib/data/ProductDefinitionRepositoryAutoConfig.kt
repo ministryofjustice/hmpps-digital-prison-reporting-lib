@@ -62,10 +62,12 @@ class ProductDefinitionRepositoryAutoConfig(
     dprDefinitionGson: Gson,
     dynamoDbClient: DynamoDbClient,
     properties: AwsProperties,
+    definitionsCache: Cache<String, List<ProductDefinition>>?,
   ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
     gson = dprDefinitionGson,
     properties = properties,
+    definitionsCache = definitionsCache,
   )
 
   @Bean
