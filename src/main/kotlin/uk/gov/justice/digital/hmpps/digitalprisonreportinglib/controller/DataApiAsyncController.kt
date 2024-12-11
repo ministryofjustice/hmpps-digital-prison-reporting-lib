@@ -51,7 +51,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ),
     ],
   )
-  suspend fun asyncConfiguredApiExecuteQuery(
+  fun asyncConfiguredApiExecuteQuery(
     @RequestParam sortColumn: String?,
     @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     @Parameter(
@@ -115,7 +115,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ),
     ],
   )
-  suspend fun asyncExecuteDashboard(
+  fun asyncExecuteDashboard(
     @PathVariable("reportId") reportId: String,
     @PathVariable("dashboardId") dashboardId: String,
     @Parameter(
@@ -177,7 +177,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "As a result, you may see the query state transition from STARTED or FAILED to SUBMITTED.\n",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getQueryExecutionStatus(
+  fun getQueryExecutionStatus(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("statementId") statementId: String,
@@ -237,7 +237,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     description = "Cancels the execution of a running query.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun cancelReportQueryExecution(
+  fun cancelReportQueryExecution(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("statementId") statementId: String,
@@ -333,7 +333,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ),
     ],
   )
-  suspend fun getInteractiveExternalTableRowCount(
+  fun getInteractiveExternalTableRowCount(
     @PathVariable("tableId") tableId: String,
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
@@ -376,7 +376,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "fashion which has been stored in a dedicated table.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getQueryExecutionResult(
+  fun getQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @RequestParam(
@@ -425,7 +425,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "fashion which has been stored in a dedicated table.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getDashboardQueryExecutionResult(
+  fun getDashboardQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("dashboardId") dashboardId: String,
     @RequestParam(
@@ -469,7 +469,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     description = "Returns a summary of a request, which has been stored in a dedicated table.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun getSummaryQueryExecutionResult(
+  fun getSummaryQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @RequestParam(

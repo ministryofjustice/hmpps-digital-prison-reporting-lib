@@ -19,7 +19,7 @@ class ClientDataProductDefinitionsRepository(
   private val authenticationHelper: AuthenticationHelper,
 ) : AbstractProductDefinitionRepository() {
 
-  override suspend fun getProductDefinitions(path: String?): List<ProductDefinition> {
+  override fun getProductDefinitions(path: String?): List<ProductDefinition> {
     if (definitionsHost == null) {
       return emptyList()
     }

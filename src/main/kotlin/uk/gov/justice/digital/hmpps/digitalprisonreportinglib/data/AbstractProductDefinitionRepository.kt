@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataAp
 
 abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository {
 
-  override suspend fun getSingleReportProductDefinition(
+  override fun getSingleReportProductDefinition(
     definitionId: String,
     reportId: String,
     dataProductDefinitionsPath: String?,
@@ -36,7 +36,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
     )
   }
 
-  override suspend fun getSingleDashboardProductDefinition(
+  override fun getSingleDashboardProductDefinition(
     definitionId: String,
     dashboardId: String,
     dataProductDefinitionsPath: String?,
@@ -61,7 +61,7 @@ abstract class AbstractProductDefinitionRepository : ProductDefinitionRepository
     )
   }
 
-  override suspend fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition = getProductDefinitions(dataProductDefinitionsPath)
+  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition = getProductDefinitions(dataProductDefinitionsPath)
     .filter { it.id == definitionId }
     .ifEmpty { throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId") }
     .first()

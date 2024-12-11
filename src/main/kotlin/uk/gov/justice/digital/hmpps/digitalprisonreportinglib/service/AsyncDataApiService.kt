@@ -50,7 +50,7 @@ class AsyncDataApiService(
       "bodmis" to athenaApiRepository,
     )
 
-  suspend fun validateAndExecuteStatementAsync(
+  fun validateAndExecuteStatementAsync(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
@@ -83,7 +83,7 @@ class AsyncDataApiService(
       )
   }
 
-  suspend fun validateAndExecuteStatementAsync(
+  fun validateAndExecuteStatementAsync(
     reportId: String,
     dashboardId: String,
     userToken: DprAuthAwareAuthenticationToken?,
@@ -105,7 +105,7 @@ class AsyncDataApiService(
       )
   }
 
-  suspend fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
+  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return getRepo(productDefinition).getStatementStatus(statementId)
@@ -115,7 +115,7 @@ class AsyncDataApiService(
     return redshiftDataApiRepository.getStatementStatus(statementId)
   }
 
-  suspend fun getStatementResult(
+  fun getStatementResult(
     tableId: String,
     reportId: String,
     reportVariantId: String,
@@ -144,7 +144,7 @@ class AsyncDataApiService(
     )
   }
 
-  suspend fun getDashboardStatementResult(
+  fun getDashboardStatementResult(
     tableId: String,
     reportId: String,
     dashboardId: String,
@@ -165,7 +165,7 @@ class AsyncDataApiService(
       .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, productDefinition.dashboardDataset.schema.field.map(SchemaField::name)) }
   }
 
-  suspend fun getSummaryResult(
+  fun getSummaryResult(
     tableId: String,
     summaryId: String,
     reportId: String,
@@ -201,7 +201,7 @@ class AsyncDataApiService(
     }
   }
 
-  suspend fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
+  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return getRepo(productDefinition).cancelStatementExecution(statementId)
@@ -215,7 +215,7 @@ class AsyncDataApiService(
     return Count(redshiftDataApiRepository.count(tableId))
   }
 
-  suspend fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): Count {
+  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,

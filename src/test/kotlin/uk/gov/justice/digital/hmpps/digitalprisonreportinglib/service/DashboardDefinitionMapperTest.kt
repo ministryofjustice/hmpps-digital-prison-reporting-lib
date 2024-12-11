@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -37,7 +36,7 @@ class DashboardDefinitionMapperTest {
   private val dashboardDefinitionMapper = DashboardDefinitionMapper(syncDataApiService, DatasetHelper())
 
   @Test
-  fun `getDashboardDefinition returns the dashboard definition`(): Unit = runBlocking {
+  fun `getDashboardDefinition returns the dashboard definition`() {
     whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any())).then {
       listOf(
         mapOf("establishment_id" to "AAA", "establishment_name" to "Aardvark"),

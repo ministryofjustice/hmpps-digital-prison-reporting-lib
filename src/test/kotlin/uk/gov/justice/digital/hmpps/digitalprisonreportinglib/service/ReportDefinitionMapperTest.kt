@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -200,7 +199,7 @@ class ReportDefinitionMapperTest {
   private val establishmentCodesToWingsCacheService = mock<EstablishmentCodesToWingsCacheService>()
 
   @Test
-  fun `Getting report for user maps full data correctly`(): Unit = runBlocking {
+  fun `Getting report for user maps full data correctly`() {
     val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.map(definition = singleReportProductDefinition, userToken = authToken)
@@ -269,7 +268,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `Getting report for statically returned dynamic filter values on a number succeeds`(): Unit = runBlocking {
+  fun `Getting report for statically returned dynamic filter values on a number succeeds`() {
     whenever(
       configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
@@ -344,7 +343,7 @@ class ReportDefinitionMapperTest {
     "2,MONTHS",
     "2,YEARS",
   )
-  fun `Default value token is mapped correctly`(offset: Long, magnitude: ChronoUnit): Unit = runBlocking {
+  fun `Default value token is mapped correctly`(offset: Long, magnitude: ChronoUnit) {
     val defaultValue = createProductDefinition("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
@@ -356,7 +355,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `Default value token for today is mapped correctly`(): Unit = runBlocking {
+  fun `Default value token for today is mapped correctly`() {
     val defaultValue = createProductDefinition("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
@@ -368,7 +367,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `Multiple default value tokens are mapped correctly`(): Unit = runBlocking {
+  fun `Multiple default value tokens are mapped correctly`() {
     val defaultValue = createProductDefinition("today(-7,DAYS), today(), today(7,DAYS)")
     val expectedDate1 = getExpectedDate(-7, ChronoUnit.DAYS)
     val expectedDate2 = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -393,7 +392,7 @@ class ReportDefinitionMapperTest {
     "2,MONTHS",
     "2,YEARS",
   )
-  fun `Min and Max value tokens are mapped correctly`(offset: Long, magnitude: ChronoUnit): Unit = runBlocking {
+  fun `Min and Max value tokens are mapped correctly`(offset: Long, magnitude: ChronoUnit) {
     val defaultValue = createProductDefinition(
       "today($offset, $magnitude)",
       min = "today($offset, $magnitude)",
@@ -410,7 +409,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `Getting single report for user maps full data correctly`(): Unit = runBlocking {
+  fun `Getting single report for user maps full data correctly`() {
     val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.map(fullSingleReportProductDefinition, authToken)
@@ -460,7 +459,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with dynamic options maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`(): Unit = runBlocking {
+  fun `getting single report with dynamic options maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
     val reportWithDynamicFilter = generateReport(DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = true))
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
@@ -490,7 +489,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with dynamic options which have a dataset maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`(): Unit = runBlocking {
+  fun `getting single report with dynamic options which have a dataset maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
     val estCodeSchemaFieldName = "establishment_code"
     val establishmentCodeSchemaField = SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code", null)
     val estNameSchemaFieldName = "establishment_name"
@@ -548,7 +547,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with dynamic options maps full data correctly and generates dynamic options in the result when returnAsStaticOptions is false`(): Unit = runBlocking {
+  fun `getting single report with dynamic options maps full data correctly and generates dynamic options in the result when returnAsStaticOptions is false`() {
     val reportWithDynamicFilter = generateReport(DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = false))
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
@@ -577,7 +576,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with a field containing a make_url formula maps full data correctly and generates HTML type for that field`(): Unit = runBlocking {
+  fun `getting single report with a field containing a make_url formula maps full data correctly and generates HTML type for that field`() {
     val reportWithMakeUrlFormula = createReport("make_url('\${profile_host}/prisoner/\${prisoner_number}',\${full_name},TRUE)")
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithMakeUrlFormula)
@@ -617,7 +616,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with a field containing a format_date formula maps full data correctly and generates date type for that field`(): Unit = runBlocking {
+  fun `getting single report with a field containing a format_date formula maps full data correctly and generates date type for that field`() {
     val reportWithFormatDateFormula = createReport("format_date(\${11}, \"dd/MM/yyyy\")")
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition
@@ -681,7 +680,7 @@ class ReportDefinitionMapperTest {
     "FALSE, false, false",
     "MANDATORY, true, true",
   )
-  fun `Visible in the report definition is mapped correctly to the visible and mandatory fields in the controller model`(visibleDpd: Visible, visibleControllerModel: Boolean, mandatoryControllerModel: Boolean): Unit = runBlocking {
+  fun `Visible in the report definition is mapped correctly to the visible and mandatory fields in the controller model`(visibleDpd: Visible, visibleControllerModel: Boolean, mandatoryControllerModel: Boolean) {
     val defaultValue = createProductDefinition(
       defaultFilterValue = "today()",
       visible = visibleDpd,
@@ -703,7 +702,7 @@ class ReportDefinitionMapperTest {
     "a, null, a",
     nullValues = ["null"],
   )
-  fun `Display field falls back to dataset display when the report display field is not specified `(datasetDisplay: String, reportDisplay: String?, expectedDisplay: String): Unit = runBlocking {
+  fun `Display field falls back to dataset display when the report display field is not specified `(datasetDisplay: String, reportDisplay: String?, expectedDisplay: String) {
     val defaultValue = createProductDefinition(
       defaultFilterValue = "today()",
       datasetDisplay = datasetDisplay,
@@ -718,7 +717,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with parameters maps full data correctly and converts the parameters to filters`(): Unit = runBlocking {
+  fun `getting single report with parameters maps full data correctly and converts the parameters to filters`() {
     val parameterName = "paramName"
     val parameterDisplay = "paramDisplay"
     val parameter = Parameter(
@@ -757,7 +756,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with parameters with specialType of establishment_code includes all the establishments as static options`(): Unit = runBlocking {
+  fun `getting single report with parameters with specialType of establishment_code includes all the establishments as static options`() {
     val parameterName = "paramName"
     val parameterDisplay = "paramDisplay"
     val parameter = Parameter(
@@ -808,7 +807,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with parameters with specialType of wing includes all the wings as static options`(): Unit = runBlocking {
+  fun `getting single report with parameters with specialType of wing includes all the wings as static options`() {
     val parameterName = "paramName"
     val parameterDisplay = "paramDisplay"
     val parameter = Parameter(
@@ -867,7 +866,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `Interactive report metadata hint is mapped to the report correctly`(): Unit = runBlocking {
+  fun `Interactive report metadata hint is mapped to the report correctly`() {
     val defaultValue = createProductDefinition("today(-2,DAYS)", interactive = true)
 
     val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
@@ -876,7 +875,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `Field filter falls back to dataset filter when the report field filter is not specified `(): Unit = runBlocking {
+  fun `Field filter falls back to dataset filter when the report field filter is not specified `() {
     val sourceDataset = Dataset(
       id = "10",
       name = "11",
