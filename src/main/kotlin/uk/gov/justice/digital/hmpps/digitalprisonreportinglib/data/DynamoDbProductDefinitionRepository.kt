@@ -12,7 +12,7 @@ class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
   private val properties: AwsProperties,
   private val gson: Gson,
-  private val definitionsCache: Cache<String, List<ProductDefinition>>?,
+  private val definitionsCache: Cache<String, List<ProductDefinition>>? = null,
 ) : AbstractProductDefinitionRepository() {
   companion object {
     val defaultPath = "definitions/prisons/orphanage"
