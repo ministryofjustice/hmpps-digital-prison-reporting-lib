@@ -1,10 +1,10 @@
 Below you can find the changes included in each release.
 
-# 7.3.7
-Fixed issue with Stopwatch.duration call throwing an exception.
-
 # 7.3.8
 Fix issue with calculated properties initialising too soon.
+
+# 7.3.7
+Fixed issue with Stopwatch.duration call throwing an exception.
 
 # 7.3.6
 Add caching to DDB DPD repo.
