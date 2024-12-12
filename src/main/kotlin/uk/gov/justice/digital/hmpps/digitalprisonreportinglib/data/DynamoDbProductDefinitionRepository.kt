@@ -21,7 +21,7 @@ class DynamoDbProductDefinitionRepository(
       val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromS(path))
 
       return QueryRequest.builder()
-        .tableName(properties.dynamoDbTableArn)
+        .tableName(properties.getDynamoDbTableArn())
         .indexName(properties.dynamoDb.categoryIndexName)
         .keyConditionExpression("${properties.dynamoDb.categoryFieldName} = :${properties.dynamoDb.categoryFieldName}")
         .expressionAttributeValues(attrValues)
