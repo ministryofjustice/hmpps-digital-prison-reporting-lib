@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import com.google.common.cache.Cache
 import com.google.gson.Gson
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
@@ -11,6 +12,7 @@ class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
   private val properties: AwsProperties,
   private val gson: Gson,
+  private val definitionsCache: Cache<String, List<ProductDefinition>>? = null,
 ) : AbstractProductDefinitionRepository() {
   companion object {
     val defaultPath = "definitions/prisons/orphanage"
@@ -28,11 +30,22 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
-    return dynamoDbClient
-      .query(getQueryRequest(properties, path ?: defaultPath))
+    val usePath = path ?: defaultPath
+
+    val cachedDefinitions = definitionsCache?.let { cache ->
+      path?.let { path -> cache.getIfPresent(path) }
+    }
+    cachedDefinitions?.let { return it }
+
+    val definitions = dynamoDbClient
+      .query(getQueryRequest(properties, usePath))
       .items()
       ?.filter { it[properties.dynamoDb.definitionFieldName] != null }
       ?.map { gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java) }
-      ?: emptyList()
+
+    return definitions?.let { responseBody ->
+      definitionsCache?.put(usePath, responseBody)
+      responseBody
+    } ?: emptyList()
   }
 }
