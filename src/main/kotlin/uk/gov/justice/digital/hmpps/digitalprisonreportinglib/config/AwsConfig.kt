@@ -19,10 +19,10 @@ class AwsConfig(val properties: AwsProperties) {
   @ConditionalOnProperty("dpr.lib.aws.sts.enabled", havingValue = "true")
   fun stsAssumeRoleCredentialsProvider(): StsAssumeRoleCredentialsProvider {
     val stsClient: StsClient = StsClient.builder()
-      .region(properties.typedRegion)
+      .region(properties.getRegion())
       .build()
     val roleRequest: AssumeRoleRequest = AssumeRoleRequest.builder()
-      .roleArn(properties.stsRoleArn)
+      .roleArn(properties.getStsRoleArn())
       .roleSessionName(properties.sts.roleSessionName)
       .durationSeconds(properties.sts.tokenRefreshDurationSec)
       .build()
@@ -40,7 +40,7 @@ class AwsConfig(val properties: AwsProperties) {
   fun athenaClient(
     stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider,
   ): AthenaClient = AthenaClient.builder()
-    .region(properties.typedRegion)
+    .region(properties.getRegion())
     .credentialsProvider(stsAssumeRoleCredentialsProvider)
     .build()
 
@@ -52,7 +52,7 @@ class AwsConfig(val properties: AwsProperties) {
     stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider,
   ): DynamoDbClient =
     DynamoDbClient.builder()
-      .region(properties.typedRegion)
+      .region(properties.getRegion())
       .credentialsProvider(stsAssumeRoleCredentialsProvider)
       .build()
 
@@ -62,7 +62,7 @@ class AwsConfig(val properties: AwsProperties) {
   fun redshiftDataClient(
     stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider,
   ): RedshiftDataClient = RedshiftDataClient.builder()
-    .region(properties.typedRegion)
+    .region(properties.getRegion())
     .credentialsProvider(stsAssumeRoleCredentialsProvider)
     .build()
 }

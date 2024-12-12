@@ -10,9 +10,6 @@ class AwsProperties(
   var dynamoDb: DynamoDb = DynamoDb(),
   var sts: Sts = Sts(),
 ) {
-  val dynamoDbTableArn: String = "arn:aws:dynamodb:$region:$accountId:table/${dynamoDb.tableName}"
-  val stsRoleArn: String = "arn:aws:iam::$accountId:role/${sts.roleName}"
-  val typedRegion = Region.of(region)
 
   class DynamoDb(
     var tableName: String = "dpr-data-product-definition",
@@ -26,4 +23,10 @@ class AwsProperties(
     var roleName: String = "dpr-data-api-cross-account-role",
     var roleSessionName: String = "dpr-cross-account-role-session",
   )
+
+  fun getDynamoDbTableArn(): String = "arn:aws:dynamodb:$region:$accountId:table/${dynamoDb.tableName}"
+
+  fun getStsRoleArn(): String = "arn:aws:iam:$accountId:role/${sts.roleName}"
+
+  fun getRegion(): Region = Region.of(region)
 }
