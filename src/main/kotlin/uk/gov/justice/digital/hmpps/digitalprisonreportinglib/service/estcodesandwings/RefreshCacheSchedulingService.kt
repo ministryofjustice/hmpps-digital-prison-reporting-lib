@@ -12,7 +12,7 @@ import java.time.Duration
 class RefreshCacheSchedulingService(
   val refreshCacheTaskScheduler: ThreadPoolTaskScheduler,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
-  @Value("\${dpr.lib.establishmentsAndWings.cache:#{1440L}}")
+  @Value("\${dpr.lib.establishmentsAndWings.cache.durationMinutes:#{1440L}}")
   private val establishmentsCacheDurationMinutes: Long = 1440L,
 ) {
   companion object {
