@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.kotlin.given
+import org.mockito.kotlin.then
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
@@ -190,6 +192,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       @DynamicPropertySource
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.aws.dynamodb.enabled") { "true" }
+        registry.add("dpr.lib.aws.accountId") { "1" }
       }
     }
 
@@ -250,6 +253,11 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastYearVariant.id).isEqualTo("last-year")
       assertThat(lastYearVariant.description).isEqualTo("All movements in the past year")
       assertThat(lastYearVariant.name).isEqualTo("Last year")
+
+      val requestCaptor = ArgumentCaptor.forClass(QueryRequest::class.java)
+      then(dynamoDbClient).should().query(requestCaptor.capture())
+
+      assertThat(requestCaptor.value.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition")
     }
   }
 

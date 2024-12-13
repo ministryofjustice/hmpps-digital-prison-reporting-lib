@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.10
+Fix for STS config.
+
 # 7.3.9
 Fix issue with retrieving list of establishments and wings when there is more than one page of results in Athena.
 
