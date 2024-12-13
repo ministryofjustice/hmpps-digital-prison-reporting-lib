@@ -6,7 +6,7 @@ import software.amazon.awssdk.regions.Region
 @ConfigurationProperties("dpr.lib.aws")
 class AwsProperties(
   var region: String = "eu-west-2",
-  var accountId: String = "771283872747",
+  var accountId: String = "",
   var dynamoDb: DynamoDb = DynamoDb(),
   var sts: Sts = Sts(),
 ) {
@@ -26,7 +26,7 @@ class AwsProperties(
 
   fun getDynamoDbTableArn(): String = "arn:aws:dynamodb:$region:$accountId:table/${dynamoDb.tableName}"
 
-  fun getStsRoleArn(): String = "arn:aws:iam:$accountId:role/${sts.roleName}"
+  fun getStsRoleArn(): String = "arn:aws:iam::$accountId:role/${sts.roleName}"
 
   fun getRegion(): Region = Region.of(region)
 }
