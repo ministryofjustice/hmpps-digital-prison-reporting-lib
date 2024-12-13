@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
@@ -37,6 +38,10 @@ class ReportDefinitionMapper(
   datasetHelper: DatasetHelper,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, datasetHelper) {
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 
   fun map(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
@@ -182,10 +187,12 @@ class ReportDefinitionMapper(
   }
 
   private fun mapWingsToFilterOptions(): List<FilterOption> {
-    return establishmentCodesToWingsCacheService
+    val wingsFlattened = establishmentCodesToWingsCacheService
       .getEstablishmentsAndPopulateCacheIfNeeded()
       .takeIf { it.isNotEmpty() }
       ?.flatMap { it.value }
+    log.debug("All wings count: ${wingsFlattened?.count() ?: 0}")
+    return wingsFlattened
       ?.map { FilterOption(it.wing, it.wing) }
       ?.plus(FilterOption(ALL_WINGS, ALL_WINGS))
       ?: emptyList()

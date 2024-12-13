@@ -78,24 +78,26 @@ class EstablishmentsToWingsRepository(
         .queryExecutionId(queryExecutionId)
         .build()
     var getQueryResultsResponse: GetQueryResultsResponse = athenaClient.getQueryResults(getQueryResultsRequest)
-    val establishmentToWings: MutableMap<String, List<EstablishmentToWing>> = mutableMapOf()
+    val establishmentToWingsAcc: MutableMap<String, List<EstablishmentToWing>> = mutableMapOf()
     var page = 1
     while (true) {
-      establishmentToWings.putAll(groupWingsByEstablishment(getQueryResultsResponse, page))
-      // If nextToken is null, there are no more pages to read. Break out of the loop.
-      if (getQueryResultsResponse.nextToken() == null) {
-        break
+      log.debug("Fetching list of establishments. Results page $page.")
+      for ((k, v) in groupWingsByEstablishment(getQueryResultsResponse, page)) {
+        establishmentToWingsAcc[k] =
+          establishmentToWingsAcc[k]?.plus(v) ?: v
       }
+      // If nextToken is null, there are no more pages to read. Break out of the loop.
+      val nextToken = getQueryResultsResponse.nextToken() ?: break
       getQueryResultsResponse = athenaClient.getQueryResults(
         GetQueryResultsRequest
           .builder()
           .queryExecutionId(queryExecutionId)
-          .nextToken(getQueryResultsResponse.nextToken())
+          .nextToken(nextToken)
           .build(),
       )
       page++
     }
-    return establishmentToWings
+    return establishmentToWingsAcc
   }
 
   private fun groupWingsByEstablishment(

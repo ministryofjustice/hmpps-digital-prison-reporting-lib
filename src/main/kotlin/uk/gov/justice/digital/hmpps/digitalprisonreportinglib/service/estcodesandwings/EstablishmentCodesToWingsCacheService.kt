@@ -17,12 +17,14 @@ class EstablishmentCodesToWingsCacheService(
   }
   fun getEstablishmentsAndPopulateCacheIfNeeded(): Map<String, List<EstablishmentToWing>> {
     if (establishmentCodesCache.size() == 0L) {
+      log.debug("Establishments cache was empty.")
       refresh()
     }
     return establishmentCodesCache.asMap()
   }
 
   fun refresh() {
+    log.debug("Initiating refresh of establishments cache...")
     val stopWatch = StopWatch.createStarted()
     if (establishmentCodesCache.size() != 0L) {
       establishmentCodesCache.invalidateAll()

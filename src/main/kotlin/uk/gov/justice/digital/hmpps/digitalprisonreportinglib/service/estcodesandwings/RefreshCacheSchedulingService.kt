@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesa
 
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -10,13 +12,20 @@ import java.time.Duration
 class RefreshCacheSchedulingService(
   val refreshCacheTaskScheduler: ThreadPoolTaskScheduler,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
+  @Value("\${dpr.lib.establishmentsAndWings.cache.durationMinutes:#{1440L}}")
+  private val establishmentsCacheDurationMinutes: Long = 1440L,
 ) {
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
+
   @PostConstruct
   fun scheduleCacheRefresh() {
+    log.debug("Scheduling establishments cache refresh every $establishmentsCacheDurationMinutes min.")
     refreshCacheTaskScheduler
       .scheduleAtFixedRate(
         { establishmentCodesToWingsCacheService.refresh() },
-        Duration.ofDays(1),
+        Duration.ofMinutes(establishmentsCacheDurationMinutes),
       )
   }
 

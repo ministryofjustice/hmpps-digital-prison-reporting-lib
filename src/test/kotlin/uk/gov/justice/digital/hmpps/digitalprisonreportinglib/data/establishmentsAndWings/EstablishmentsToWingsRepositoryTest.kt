@@ -79,6 +79,64 @@ class EstablishmentsToWingsRepositoryTest {
   }
 
   @Test
+  fun `should aggregate the results from all pages`() {
+    val athenaClient = mock<AthenaClient>()
+    val tableIdGenerator = mock<TableIdGenerator>()
+    val statementId = "statementId"
+    val athenaWorkgroup = "workgroup-1"
+    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup)
+    setupMocksForStartQueryExecution(athenaWorkgroup, athenaClient, statementId)
+    setupMocksForGetStatus(statementId, athenaClient, "SUCCEEDED")
+
+    val row1 = buildRow("establishment_code", "establishment_name", "wing")
+    val row2 = buildRow("AKI", "ACKLINGTON (HMP)", "AKI-L")
+    val row3 = buildRow("AKI", "ACKLINGTON (HMP)", "AKI-C")
+    val row4 = buildRow("BFI", "BEDFORD (HMP)", "BFI-D")
+    val row5 = buildRow("BFI", "BEDFORD (HMP)", "BFI-E")
+    val page2Row2 = buildRow("AKI", "ACKLINGTON (HMP)", "AKI-B")
+    val getQueryResultsRequestBuilder: GetQueryResultsRequest.Builder =
+      GetQueryResultsRequest.builder()
+        .queryExecutionId(statementId)
+    val getQueryResultsResponse1: GetQueryResultsResponse = GetQueryResultsResponse
+      .builder()
+      .resultSet(ResultSet.builder().rows(listOf(row1, row2, row3, row4, row5)).build())
+      .nextToken("page2")
+      .build()
+    val getQueryResultsResponse2: GetQueryResultsResponse = GetQueryResultsResponse
+      .builder()
+      .resultSet(ResultSet.builder().rows(listOf(page2Row2)).build())
+      .build()
+
+    whenever(
+      athenaClient.getQueryResults(
+        getQueryResultsRequestBuilder.build(),
+      ),
+    ).thenReturn(getQueryResultsResponse1)
+
+    whenever(
+      athenaClient.getQueryResults(
+        getQueryResultsRequestBuilder.nextToken("page2").build(),
+      ),
+    ).thenReturn(getQueryResultsResponse2)
+
+    val expected = mapOf(
+      "AKI" to listOf(
+        EstablishmentToWing("AKI", "ACKLINGTON (HMP)", "AKI-L"),
+        EstablishmentToWing("AKI", "ACKLINGTON (HMP)", "AKI-C"),
+        EstablishmentToWing("AKI", "ACKLINGTON (HMP)", "AKI-B"),
+      ),
+      "BFI" to listOf(
+        EstablishmentToWing("BFI", "BEDFORD (HMP)", "BFI-D"),
+        EstablishmentToWing("BFI", "BEDFORD (HMP)", "BFI-E"),
+      ),
+    )
+
+    val executeStatementWaitAndGetResult = establishmentsToWingsRepository.executeStatementWaitAndGetResult()
+
+    assertEquals(expected, executeStatementWaitAndGetResult)
+  }
+
+  @Test
   fun `should return empty map if the status is not successful`() {
     val athenaClient = mock<AthenaClient>()
     val tableIdGenerator = mock<TableIdGenerator>()
