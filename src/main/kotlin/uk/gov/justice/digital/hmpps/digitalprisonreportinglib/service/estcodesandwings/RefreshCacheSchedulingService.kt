@@ -12,8 +12,8 @@ import java.time.Duration
 class RefreshCacheSchedulingService(
   val refreshCacheTaskScheduler: ThreadPoolTaskScheduler,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
-  @Value("\${dpr.lib.establishmentsAndWings.cache:#{1440}}")
-  private val establishmentsCacheDurationMinutes: Long = 1440,
+  @Value("\${dpr.lib.establishmentsAndWings.cache:#{1440L}}")
+  private val establishmentsCacheDurationMinutes: Long = 1440L,
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
