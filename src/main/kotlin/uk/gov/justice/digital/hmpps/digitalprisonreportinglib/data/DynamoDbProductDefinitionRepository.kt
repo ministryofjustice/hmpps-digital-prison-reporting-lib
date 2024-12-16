@@ -15,9 +15,9 @@ class DynamoDbProductDefinitionRepository(
   private val definitionsCache: Cache<String, List<ProductDefinition>>? = null,
 ) : AbstractProductDefinitionRepository() {
   companion object {
-    val defaultPath = "definitions/prisons/orphanage"
+    const val DEFAULT_PATH = "definitions/prisons/orphanage"
 
-    fun getQueryRequest(properties: AwsProperties, path: String): QueryRequest {
+    fun getQueryRequest(properties: AwsProperties, path: String, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
       val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromS(path))
 
       return QueryRequest.builder()
@@ -25,27 +25,37 @@ class DynamoDbProductDefinitionRepository(
         .indexName(properties.dynamoDb.categoryIndexName)
         .keyConditionExpression("${properties.dynamoDb.categoryFieldName} = :${properties.dynamoDb.categoryFieldName}")
         .expressionAttributeValues(attrValues)
+        .exclusiveStartKey(exclusiveStartKey)
         .build()
     }
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
-    val usePath = path ?: defaultPath
+    val usePath = path ?: DEFAULT_PATH
 
     val cachedDefinitions = definitionsCache?.let { cache ->
       path?.let { path -> cache.getIfPresent(path) }
     }
     cachedDefinitions?.let { return it }
 
-    val definitions = dynamoDbClient
-      .query(getQueryRequest(properties, usePath))
-      .items()
-      ?.filter { it[properties.dynamoDb.definitionFieldName] != null }
-      ?.map { gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java) }
+    var response = dynamoDbClient.query(getQueryRequest(properties, usePath))
+    val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
 
-    return definitions?.let { responseBody ->
-      definitionsCache?.put(usePath, responseBody)
-      responseBody
-    } ?: emptyList()
+    while (response.hasLastEvaluatedKey()) {
+      items.addAll(response.items())
+      response = dynamoDbClient.query(getQueryRequest(properties, usePath, response.lastEvaluatedKey()))
+    }
+
+    items.addAll(response.items())
+
+    val definitions = items
+      .filter { it[properties.dynamoDb.definitionFieldName] != null }
+      .map { gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java) }
+
+    if (definitions.isNotEmpty()) {
+      definitionsCache?.put(usePath, definitions)
+    }
+
+    return definitions
   }
 }
