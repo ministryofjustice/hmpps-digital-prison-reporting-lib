@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.11
+Fix for DDB paging.
+
 # 7.3.10
 Fix for STS config.
 
