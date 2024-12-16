@@ -13,7 +13,7 @@ import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.defaultPath
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.DEFAULT_PATH
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.getQueryRequest
 
 class DynamoDbProductDefinitionRepositoryTest {
@@ -50,7 +50,7 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
 
-    then(dynamoDbClient).should().query(getQueryRequest(properties, defaultPath))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, DEFAULT_PATH))
   }
 
   @Test
@@ -59,7 +59,7 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
-    then(dynamoDbClient).should().query(getQueryRequest(properties, defaultPath))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, DEFAULT_PATH))
   }
 
   @Test
