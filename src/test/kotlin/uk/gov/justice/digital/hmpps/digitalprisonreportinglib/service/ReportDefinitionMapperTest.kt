@@ -796,8 +796,8 @@ class ReportDefinitionMapperTest {
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
     val expectedStaticOptions = listOf(
-      FilterOption(bfiEstCode, "$bfiEstCode-$bfiDescription"),
-      FilterOption(bsiEstCode, "$bsiEstCode-$bsiDescription"),
+      FilterOption(bfiEstCode, bfiDescription),
+      FilterOption(bsiEstCode, bsiDescription),
     )
 
     val expectedReportField = createReportFieldDefinition(parameter, expectedStaticOptions)

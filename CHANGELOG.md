@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.12
+Return only the establishment description as the FilterOption display value. 
+
 # 7.3.11
 Fix for DDB paging.
 
