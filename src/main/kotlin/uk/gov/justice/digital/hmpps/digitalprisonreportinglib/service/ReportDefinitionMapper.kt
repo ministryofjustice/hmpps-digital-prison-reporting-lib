@@ -201,7 +201,7 @@ class ReportDefinitionMapper(
   private fun mapEstablishmentsToFilterOptions(): List<FilterOption> {
     return establishmentCodesToWingsCacheService
       .getEstablishmentsAndPopulateCacheIfNeeded()
-      .map { FilterOption(it.key, it.key + "-" + it.value.first().description) }
+      .map { FilterOption(it.key, it.value.first().description) }
   }
 
   private fun map(
