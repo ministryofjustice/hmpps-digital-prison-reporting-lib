@@ -2,6 +2,7 @@ Below you can find the changes included in each release.
 
 # 7.3.13
 Change specialType to referenceType for the establishment and wing parameters.
+Included RefreshCacheSchedulingService in the AutoConfiguration.imports.
 
 # 7.3.12
 Return only the establishment description as the FilterOption display value. 
