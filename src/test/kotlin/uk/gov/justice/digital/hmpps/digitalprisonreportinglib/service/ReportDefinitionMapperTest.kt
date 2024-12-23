@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
@@ -37,7 +38,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SpecialType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryField
@@ -756,7 +756,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with parameters with specialType of establishment_code includes all the establishments as static options`() {
+  fun `getting single report with parameters with referenceType of establishment_code includes all the establishments as static options`() {
     val parameterName = "paramName"
     val parameterDisplay = "paramDisplay"
     val parameter = Parameter(
@@ -766,7 +766,7 @@ class ReportDefinitionMapperTest {
       filterType = FilterType.Text,
       display = parameterDisplay,
       mandatory = true,
-      specialType = SpecialType.ESTABLISHMENT_CODE,
+      referenceType = ReferenceType.ESTABLISHMENT,
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
     val bfiEstCode = "BFI"
@@ -807,7 +807,7 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
-  fun `getting single report with parameters with specialType of wing includes all the wings as static options`() {
+  fun `getting single report with parameters with referenceType of wing includes all the wings as static options`() {
     val parameterName = "paramName"
     val parameterDisplay = "paramDisplay"
     val parameter = Parameter(
@@ -817,7 +817,7 @@ class ReportDefinitionMapperTest {
       filterType = FilterType.Text,
       display = parameterDisplay,
       mandatory = true,
-      specialType = SpecialType.WING,
+      referenceType = ReferenceType.WING,
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
     val bfiEstCode = "BFI"

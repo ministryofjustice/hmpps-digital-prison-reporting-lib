@@ -25,6 +25,7 @@ import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
@@ -54,6 +55,9 @@ abstract class IntegrationTestBase {
 
   @MockitoBean
   lateinit var stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider
+
+  @MockitoBean
+  lateinit var establishmentsToWingsRepository: EstablishmentsToWingsRepository
 
   companion object {
 

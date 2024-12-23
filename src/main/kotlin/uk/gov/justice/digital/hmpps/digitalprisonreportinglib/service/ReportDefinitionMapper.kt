@@ -20,12 +20,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishment
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadataHint
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SpecialType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
@@ -177,11 +177,11 @@ class ReportDefinitionMapper(
   }
 
   private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? {
-    return parameter.specialType
+    return parameter.referenceType
       ?.let {
         when (it) {
-          SpecialType.ESTABLISHMENT_CODE -> mapEstablishmentsToFilterOptions()
-          SpecialType.WING -> mapWingsToFilterOptions()
+          ReferenceType.ESTABLISHMENT -> mapEstablishmentsToFilterOptions()
+          ReferenceType.WING -> mapWingsToFilterOptions()
         }
       }?.takeIf { it.isNotEmpty() }
   }

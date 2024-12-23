@@ -443,14 +443,20 @@ class AsyncDataApiServiceTest {
     val productDefinition = productDefinitionRepository.getProductDefinitions().first()
     val singleReportProductDefinition = productDefinitionRepository.getSingleReportProductDefinition(productDefinition.id, productDefinition.report.first().id)
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
-    val parameterName = "prisoner_number"
-    val parameterValue = "somePrisonerNumber"
+    val parameter1Name = "establishment_code"
+    val parameter1Value = "BFI"
+    val parameter2Name = "wing"
+    val parameter2Value = "BFI-A"
     val filters = mapOf(
       "origin" to "someOrigin",
-      parameterName to parameterValue,
+      parameter1Name to parameter1Value,
+      parameter2Name to parameter2Value,
     )
     val repositoryFilters = listOf(Filter("origin", "someOrigin", STANDARD))
-    val prompts = listOf(Prompt(parameterName, parameterValue, FilterType.Text))
+    val prompts = listOf(
+      Prompt(parameter1Name, parameter1Value, FilterType.AutoComplete),
+      Prompt(parameter2Name, parameter2Value, FilterType.AutoComplete),
+    )
     val sortColumn = "date"
     val sortedAsc = true
     val executionId = UUID.randomUUID().toString()
