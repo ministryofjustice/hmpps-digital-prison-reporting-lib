@@ -21,13 +21,23 @@
     "parameters": [
       {
         "index": 0,
-        "name": "prisoner_number",
-        "filterType": "text",
+        "name": "establishment_code",
+        "filterType": "autocomplete",
         "reportFieldType": "string",
-        "display": "Enter NOMS Number",
+        "display": "Establishment",
         "description": "@Prompt('Enter NOMS Number',,,mono,free,Not_Persistent,User:1)",
         "mandatory": "true",
-        "specialType": "establishment_code"
+        "referenceType": "establishment"
+      },
+      {
+        "index": 1,
+        "name": "wing",
+        "filterType": "autocomplete",
+        "reportFieldType": "string",
+        "display": "Wing",
+        "description": "@Prompt('Enter NOMS Number',,,mono,free,Not_Persistent,User:1)",
+        "mandatory": "true",
+        "referenceType": "wing"
       }
     ],
     "schema" : {
