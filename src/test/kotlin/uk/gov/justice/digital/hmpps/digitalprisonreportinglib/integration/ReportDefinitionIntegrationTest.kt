@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
+import org.mockito.kotlin.whenever
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
@@ -20,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import java.time.LocalDate.now
 import java.time.format.DateTimeFormatter
 
@@ -729,6 +732,18 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Single Definition with parameters is returned with the parameters converted to filters`() {
       try {
+        val bfiEstCode = "BFI"
+        val bfiDescription = "BEDFORD (HMP)"
+        val estToWingResult = mutableMapOf(
+          bfiEstCode to listOf(
+            EstablishmentToWing(
+              bfiEstCode,
+              bfiDescription,
+              "BFI-A",
+            ),
+          ),
+        )
+        whenever(establishmentsToWingsRepository.executeStatementWaitAndGetResult()).doReturn(estToWingResult)
         prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
         externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
 
@@ -957,11 +972,17 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "calculated": false
                   },
                   {
-                    "name": "prisoner_number",
-                    "display": "Enter NOMS Number",
+                    "name": "establishment_code",
+                    "display": "Establishment",
                     "filter": {
-                      "type": "text",
-                      "mandatory": true
+                      "mandatory": true,
+                      "type": "autocomplete",
+                      "staticOptions": [
+                        {
+                          "name": "BFI",
+                          "display": "BEDFORD (HMP)"
+                        }
+                      ]
                     },
                     "sortable": false,
                     "defaultsort": false,
@@ -969,7 +990,31 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "mandatory": false,
                     "visible": false,
                     "calculated": false
-                  } 
+                  }, 
+                 {
+                  "name": "wing",
+                  "display": "Wing",
+                  "filter": {
+                    "mandatory": true,
+                    "type": "autocomplete",
+                    "staticOptions": [
+                      {
+                        "name": "BFI-A",
+                        "display": "BFI-A"
+                      },
+                      {
+                        "name":"All",
+                        "display":"All"
+                      }
+                    ]
+                  },
+                  "sortable": false,
+                  "defaultsort": false,
+                  "type": "string",
+                  "mandatory": false,
+                  "visible": false,
+                  "calculated": false
+                }
                 ]
               },
               "classification": "report classification",
