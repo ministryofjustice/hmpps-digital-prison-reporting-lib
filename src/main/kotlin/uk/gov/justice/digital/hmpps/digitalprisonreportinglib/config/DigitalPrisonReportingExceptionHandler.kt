@@ -49,7 +49,7 @@ class DigitalPrisonReportingExceptionHandler {
       .body(
         ErrorResponse(
           status = INTERNAL_SERVER_ERROR,
-          userMessage = "Unexpected error: ${e.message}",
+          userMessage = "Unexpected error.",
           developerMessage = e.message,
         ),
       )

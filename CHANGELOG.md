@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.15
+These changes remove the stack trace from the userMessage of the 500 responses and replace it with a generic error message.
+
 # 7.3.14
 The creation of DataApiAsyncController is now conditional on dpr.lib.aws.sts.enabled being true.
 The NPE try/catch blocks have been removed from the Controller.
