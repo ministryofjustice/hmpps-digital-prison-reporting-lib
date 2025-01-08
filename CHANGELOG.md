@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 7.3.14
+The creation of DataApiAsyncController is now conditional on dpr.lib.aws.sts.enabled being true.
+The NPE try/catch blocks have been removed from the Controller.
+
 # 7.3.13
 Change specialType to referenceType for the establishment and wing parameters.
 Included RefreshCacheSchedulingService in the AutoConfiguration.imports.

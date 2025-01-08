@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.Min
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -32,6 +33,7 @@ import java.util.Collections.singletonList
 @Validated
 @RestController
 @Tag(name = "Data API - Asynchronous")
+@ConditionalOnProperty("dpr.lib.aws.sts.enabled", havingValue = "true")
 class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val filterHelper: FilterHelper) {
 
   @GetMapping("/async/reports/{reportId}/{reportVariantId}")
@@ -96,10 +98,6 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
         .status(HttpStatus.OK)
         .headers(headers)
         .body(null)
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
     }
   }
 
@@ -159,10 +157,6 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
         .status(HttpStatus.OK)
         .headers(headers)
         .body(null)
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
     }
   }
 
@@ -200,23 +194,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService!!.getStatementStatus(
-            statementId = statementId,
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath,
-          ),
-        )
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService!!.getStatementStatus(
+          statementId = statementId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath,
+        ),
+      )
   }
 
   @GetMapping("/statements/{statementId}/status")
@@ -239,17 +227,11 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     @PathVariable("statementId") statementId: String,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService!!.getStatementStatus(statementId),
-        )
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService!!.getStatementStatus(statementId),
+      )
   }
 
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
@@ -272,23 +254,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementCancellationResponse> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService!!.cancelStatementExecution(
-            statementId,
-            reportId,
-            reportVariantId,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath,
-          ),
-        )
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService!!.cancelStatementExecution(
+          statementId,
+          reportId,
+          reportVariantId,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath,
+        ),
+      )
   }
 
   @DeleteMapping("/statements/{statementId}")
@@ -300,17 +276,11 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     @PathVariable("statementId") statementId: String,
     authentication: Authentication,
   ): ResponseEntity<StatementCancellationResponse> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService!!.cancelStatementExecution(statementId),
-        )
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService!!.cancelStatementExecution(statementId),
+      )
   }
 
   @GetMapping("/report/tables/{tableId}/count")
@@ -345,10 +315,6 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .headers(headers)
-        .body(null)
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
         .body(null)
     }
   }
@@ -403,10 +369,6 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
         .status(HttpStatus.OK)
         .headers(headers)
         .body(null)
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
     }
   }
 
@@ -441,28 +403,22 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService!!.getStatementResult(
-            tableId = tableId,
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            filters = filterHelper.filtersOnly(filters),
-            sortedAsc = sortedAsc,
-            sortColumn = sortColumn,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          ),
-        )
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService!!.getStatementResult(
+          tableId = tableId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
+          sortedAsc = sortedAsc,
+          sortColumn = sortColumn,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        ),
+      )
   }
 
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result")
@@ -494,26 +450,20 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService!!.getDashboardStatementResult(
-            tableId = tableId,
-            reportId = reportId,
-            dashboardId = dashboardId,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            filters = filterHelper.filtersOnly(filters),
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          ),
-        )
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService!!.getDashboardStatementResult(
+          tableId = tableId,
+          reportId = reportId,
+          dashboardId = dashboardId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        ),
+      )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/summary/{summaryId}")
@@ -539,24 +489,18 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     filters: Map<String, String>,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService!!.getSummaryResult(
-            tableId = tableId,
-            summaryId = summaryId,
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-            filters = filterHelper.filtersOnly(filters),
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          ),
-        )
-    } catch (exception: NullPointerException) {
-      ResponseEntity
-        .status(HttpStatus.NOT_IMPLEMENTED)
-        .body(null)
-    }
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService!!.getSummaryResult(
+          tableId = tableId,
+          summaryId = summaryId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          filters = filterHelper.filtersOnly(filters),
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        ),
+      )
   }
 }
