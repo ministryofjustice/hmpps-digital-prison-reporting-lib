@@ -47,7 +47,7 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
     return when (date) {
       is LocalDate -> date.format(DateTimeFormatter.ofPattern(removeQuotes(datePatternPlaceholder.trim())))
       is LocalDateTime -> date.format(DateTimeFormatter.ofPattern(removeQuotes(datePatternPlaceholder.trim())))
-      else -> throw IllegalArgumentException("Could not parse date: $date")
+      else -> throw IllegalArgumentException("Could not parse date: $date, of type ${date::class}")
     }
   }
 
