@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 7.3.16
+
+More information on formula failure.
+
 # 7.3.15
 These changes remove the stack trace from the userMessage of the 500 responses and replace it with a generic error message.
 
