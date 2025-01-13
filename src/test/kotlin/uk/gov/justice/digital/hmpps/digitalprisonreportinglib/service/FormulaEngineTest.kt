@@ -1,13 +1,17 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
+import java.lang.IllegalArgumentException
 import java.time.LocalDate
+import java.util.*
 
 class FormulaEngineTest {
 
@@ -482,5 +486,32 @@ class FormulaEngineTest {
     )
     val formulaEngine = FormulaEngine(reportFields)
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine throws an error for an unrecognised date type`() {
+    val formatDateFormula = "format_date(\${date}, 'dd/MM/yyyy')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to Date(),
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:date",
+        display = "Date",
+        visible = Visible.TRUE,
+        formula = formatDateFormula,
+      ),
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+
+    val exception = assertThrows<IllegalArgumentException> { formulaEngine.applyFormulas(row) }
+
+    assertThat(exception.message)
+      .startsWith("Could not parse date:")
+      .endsWith(", of type class java.util.Date")
   }
 }
