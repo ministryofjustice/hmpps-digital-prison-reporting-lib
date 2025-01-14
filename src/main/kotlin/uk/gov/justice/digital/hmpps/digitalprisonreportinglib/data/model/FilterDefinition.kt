@@ -14,4 +14,6 @@ data class FilterDefinition(
   val min: String? = null,
   val max: String? = null,
   val interactive: Boolean? = false,
+  val defaultGranularity: Granularity? = null,
+  val defaultQuickFilterValue: QuickFilter? = null,
 )

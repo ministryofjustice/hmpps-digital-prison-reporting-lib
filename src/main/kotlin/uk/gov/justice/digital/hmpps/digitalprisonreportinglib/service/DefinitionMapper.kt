@@ -5,6 +5,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.GranularityDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.QuickFilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
@@ -60,6 +62,8 @@ abstract class DefinitionMapper(
       mandatory = filterDefinition.mandatory,
       pattern = filterDefinition.pattern,
       interactive = filterDefinition.interactive ?: false,
+      defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
+      defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) }
     )
   }
 
