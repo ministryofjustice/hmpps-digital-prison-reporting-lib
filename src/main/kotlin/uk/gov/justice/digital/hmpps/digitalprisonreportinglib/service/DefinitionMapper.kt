@@ -63,7 +63,7 @@ abstract class DefinitionMapper(
       pattern = filterDefinition.pattern,
       interactive = filterDefinition.interactive ?: false,
       defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
-      defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) }
+      defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) },
     )
   }
 
