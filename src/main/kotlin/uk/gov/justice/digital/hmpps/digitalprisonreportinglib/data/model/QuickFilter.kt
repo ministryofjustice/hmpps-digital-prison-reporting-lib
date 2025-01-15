@@ -21,10 +21,13 @@ enum class QuickFilter {
   @SerializedName("last-full-month")
   LAST_FULL_MONTH,
 
-  @SerializedName("last-90-days")
+  @SerializedName("last-ninety-days")
   LAST_90_DAYS,
 
-  @SerializedName("last-full-3-months")
+  @SerializedName("last-three-months")
+  LAST_THREE_MONTHS,
+
+  @SerializedName("last-full-three-months")
   LAST_FULL_3_MONTHS,
 
   @SerializedName("last-year")
@@ -48,13 +51,13 @@ enum class QuickFilter {
   @SerializedName("next-full-month")
   NEXT_FULL_MONTH,
 
-  @SerializedName("next-90-days")
+  @SerializedName("next-ninety-days")
   NEXT_90_DAYS,
 
-  @SerializedName("next-3-months")
+  @SerializedName("next-three-months")
   NEXT_3_MONTHS,
 
-  @SerializedName("next-full-3-months")
+  @SerializedName("next-full-three-months")
   NEXT_FULL_3_MONTHS,
 
   @SerializedName("next-year")
