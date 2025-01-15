@@ -4,8 +4,10 @@ Below you can find the changes included in each release.
 
 Added defaultGranularity and defaultQuickFilterValue to filters.
 
-# 7.3.16
+# 7.3.17
+Fix date formatting issue.
 
+# 7.3.16
 More information on formula failure.
 
 # 7.3.15
