@@ -8,6 +8,7 @@ import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import java.sql.SQLException
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
@@ -448,6 +450,42 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `The getStatementResult endpoint returns 404 when the redshift table is not found`() {
+    val tableId = "tableId"
+    val selectedPage = 2L
+    val pageSize = 20L
+
+    given(
+      asyncDataApiService.getStatementResult(
+        tableId = eq(tableId),
+        reportId = eq("external-movements"),
+        reportVariantId = eq("last-month"),
+        dataProductDefinitionsPath = eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        selectedPage = eq(selectedPage),
+        pageSize = eq(pageSize),
+        filters = eq(emptyMap()),
+        sortedAsc = eq(false),
+        sortColumn = eq(null),
+        userToken = any<DprAuthAwareAuthenticationToken>(),
+      ),
+    )
+      .willThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month/tables/$tableId/result")
+          .queryParam("selectedPage", 2L)
+          .queryParam("pageSize", 20L)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isNotFound
+  }
+
+  @Test
   fun `Calling the dashboard getStatementResult endpoint calls the configuredApiService with the correct arguments`() {
     val tableId = "tableId"
     val dpdId = "external-movements"
@@ -536,6 +574,42 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(mapOf("direction" to "out")),
+      any<DprAuthAwareAuthenticationToken>(),
+    )
+  }
+
+  @Test
+  fun `The dashboard getStatementResult endpoint returns 404 when the redshift table is not found`() {
+    val tableId = "tableId"
+    val dpdId = "external-movements"
+    val dashboardId = "dashboardId"
+    val selectedPage = 2L
+    val pageSize = 20L
+
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
+      .willThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("reports/$dpdId/dashboards/$dashboardId/tables/$tableId/result")
+          .queryParam("selectedPage", selectedPage)
+          .queryParam("pageSize", pageSize)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isNotFound
+
+    verify(asyncDataApiService).getDashboardStatementResult(
+      eq(tableId),
+      eq(dpdId),
+      eq(dashboardId),
+      eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      eq(selectedPage),
+      eq(pageSize),
+      eq(emptyMap()),
       any<DprAuthAwareAuthenticationToken>(),
     )
   }
