@@ -494,7 +494,7 @@ class FormulaEngineTest {
     val name = "LastName6, F"
     val row: Map<String, Any?> = mapOf(
       NAME to name,
-      DATE to Date(),
+      DATE to "I'm not a date",
       DESTINATION to "Manchester",
       DESTINATION_CODE to "MNCH",
     )
@@ -512,6 +512,62 @@ class FormulaEngineTest {
 
     assertThat(exception.message)
       .startsWith("Could not parse date:")
-      .endsWith(", of type class java.util.Date")
+      .endsWith(", of type class kotlin.String")
+  }
+
+  @Test
+  fun `Formula engine accepts java Date`() {
+    val formatDateFormula = "format_date(\${date}, 'dd/MM/yyyy')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to Date(0),
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:date",
+        display = "Date",
+        visible = Visible.TRUE,
+        formula = formatDateFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to "01/01/1970",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine accepts SQL Date`() {
+    val formatDateFormula = "format_date(\${date}, 'dd/MM/yyyy')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to java.sql.Date(0),
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:date",
+        display = "Date",
+        visible = Visible.TRUE,
+        formula = formatDateFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      DATE to "01/01/1970",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
 }

@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 class FormulaEngine(private val reportFields: List<ReportField>, private val env: String? = null) {
 
@@ -47,6 +49,7 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
     return when (date) {
       is LocalDate -> date.format(DateTimeFormatter.ofPattern(removeQuotes(datePatternPlaceholder.trim())))
       is LocalDateTime -> date.format(DateTimeFormatter.ofPattern(removeQuotes(datePatternPlaceholder.trim())))
+      is Date -> SimpleDateFormat(removeQuotes(datePatternPlaceholder.trim())).format(date)
       else -> throw IllegalArgumentException("Could not parse date: $date, of type ${date::class}")
     }
   }
