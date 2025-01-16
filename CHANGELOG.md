@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.19
+Changes to return a 404 instead of 500 when the results endpoints are called and the relevant Redshift table has been removed.
+
 # 7.3.18
 Changed numeric quick filter values to whole words. 
 
