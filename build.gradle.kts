@@ -41,7 +41,7 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.12.6")
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
-  testImplementation("org.postgresql:postgresql:42.7.4")
+  testImplementation("org.postgresql:postgresql:42.7.5")
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
 }
