@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
-import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -41,10 +41,11 @@ class DigitalPrisonReportingExceptionHandler {
   fun handleTypeMismatch(e: Exception): ResponseEntity<ErrorResponse> {
     return respondWithBadRequest(e)
   }
+
   @ExceptionHandler(UncategorizedSQLException::class)
   fun handleEntityNotFound(e: Exception): ResponseEntity<ErrorResponse> {
     val entityNotFoundMessage = "EntityNotFoundException from glue - Entity Not Found"
-    if(e.message?.contains(entityNotFoundMessage) == true) {
+    if (e.message?.contains(entityNotFoundMessage) == true) {
       log.info("Table not found exception: {}", e.message)
       return ResponseEntity
         .status(NOT_FOUND)
