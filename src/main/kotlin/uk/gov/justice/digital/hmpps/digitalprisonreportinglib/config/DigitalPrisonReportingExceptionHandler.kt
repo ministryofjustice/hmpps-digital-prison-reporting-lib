@@ -45,8 +45,8 @@ class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(UncategorizedSQLException::class)
   fun handleEntityNotFound(e: Exception): ResponseEntity<ErrorResponse> {
     val entityNotFoundMessage = "EntityNotFoundException from glue - Entity Not Found"
-    if (e.message?.contains(entityNotFoundMessage) == true) {
-      log.info("Table not found exception: {}", e.message)
+    if(e.message?.contains(entityNotFoundMessage) == true) {
+      log.warn("Table not found exception: {}", e.message)
       return ResponseEntity
         .status(NOT_FOUND)
         .body(
