@@ -63,7 +63,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     return result
   }
 
-  fun isTablePresent(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Boolean {
+  fun isTableMissing(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Boolean {
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate
       .queryForList(
@@ -72,6 +72,6 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
       )
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
-    return !result.isNullOrEmpty()
+    return result.isNullOrEmpty()
   }
 }

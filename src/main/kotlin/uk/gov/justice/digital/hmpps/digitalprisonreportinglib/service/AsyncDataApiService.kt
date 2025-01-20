@@ -110,7 +110,7 @@ class AsyncDataApiService(
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     tableId?.let {
-      if (redshiftDataApiRepository.isTablePresent(tableId)) {
+      if (redshiftDataApiRepository.isTableMissing(tableId)) {
         throw MissingTableException(tableId)
       }
     }
@@ -121,7 +121,7 @@ class AsyncDataApiService(
 
   fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus {
     tableId?.let {
-      if (redshiftDataApiRepository.isTablePresent(tableId)) {
+      if (redshiftDataApiRepository.isTableMissing(tableId)) {
         throw MissingTableException(tableId)
       }
     }

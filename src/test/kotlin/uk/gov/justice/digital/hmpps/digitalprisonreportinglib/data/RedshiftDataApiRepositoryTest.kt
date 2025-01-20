@@ -595,7 +595,7 @@ SELECT *
   }
 
   @Test
-  fun `isTablePresent should return true if the table exists`() {
+  fun `isTableMissing should return false if the table exists`() {
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
@@ -610,7 +610,7 @@ SELECT *
 
     whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(listOf(mapOf("tablename" to tableId)))
 
-    assertTrue(redshiftDataApiRepository.isTablePresent(tableId, jdbcTemplate))
+    assertFalse(redshiftDataApiRepository.isTableMissing(tableId, jdbcTemplate))
     verify(jdbcTemplate).queryForList(
       eq("SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename = '$tableId'"),
       any<MapSqlParameterSource>(),
@@ -618,7 +618,7 @@ SELECT *
   }
 
   @Test
-  fun `isTablePresent should return false if the table does not exist`() {
+  fun `isTableMissing should return true if the table is missing`() {
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
@@ -633,7 +633,7 @@ SELECT *
 
     whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(emptyList())
 
-    assertFalse(redshiftDataApiRepository.isTablePresent(tableId, jdbcTemplate))
+    assertTrue(redshiftDataApiRepository.isTableMissing(tableId, jdbcTemplate))
     verify(jdbcTemplate).queryForList(
       eq("SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename = '$tableId'"),
       any<MapSqlParameterSource>(),
