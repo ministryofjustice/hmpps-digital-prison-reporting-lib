@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
@@ -107,13 +108,23 @@ class AsyncDataApiService(
       )
   }
 
-  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
+  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
+    tableId?.let {
+      if (redshiftDataApiRepository.isTableMissing(tableId)) {
+        throw MissingTableException(tableId)
+      }
+    }
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return getRepo(productDefinition).getStatementStatus(statementId)
   }
 
-  fun getStatementStatus(statementId: String): StatementExecutionStatus {
+  fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus {
+    tableId?.let {
+      if (redshiftDataApiRepository.isTableMissing(tableId)) {
+        throw MissingTableException(tableId)
+      }
+    }
     return redshiftDataApiRepository.getStatementStatus(statementId)
   }
 

@@ -62,4 +62,16 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
   }
+
+  fun isTableMissing(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Boolean {
+    val stopwatch = StopWatch.createStarted()
+    val result = jdbcTemplate
+      .queryForList(
+        "SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename = '$tableId'",
+        MapSqlParameterSource(),
+      )
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return result.isNullOrEmpty()
+  }
 }

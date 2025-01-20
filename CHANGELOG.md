@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.20
+The status endpoints accept an optional tableId to check for table existence before returning the status.
+
 # 7.3.19
 Changes to return a 404 instead of 500 when the results endpoints are called and the relevant Redshift table has been removed.
 
