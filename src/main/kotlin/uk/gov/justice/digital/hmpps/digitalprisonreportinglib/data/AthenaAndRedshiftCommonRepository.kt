@@ -29,7 +29,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     userToken: DprAuthAwareAuthenticationToken? = null,
   ): StatementExecutionResponse
 
-  abstract fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus
+  abstract fun getStatementStatus(statementId: String): StatementExecutionStatus
 
   abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
 

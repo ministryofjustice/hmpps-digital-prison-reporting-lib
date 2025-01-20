@@ -94,7 +94,7 @@ class AthenaApiRepository(
     return StatementExecutionResponse(tableId, queryExecutionId)
   }
 
-  override fun getStatementStatus(statementId: String, tableId: String?): StatementExecutionStatus {
+  override fun getStatementStatus(statementId: String): StatementExecutionStatus {
     val getQueryExecutionRequest = GetQueryExecutionRequest.builder()
       .queryExecutionId(statementId)
       .build()
