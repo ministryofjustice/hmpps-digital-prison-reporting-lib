@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -590,5 +592,51 @@ SELECT *
       any<MapSqlParameterSource>(),
     )
     assertEquals(5L, actual)
+  }
+
+  @Test
+  fun `isTablePresent should return true if the table exists`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      datasetHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(listOf(mapOf("tablename" to tableId)))
+
+    assertTrue(redshiftDataApiRepository.isTablePresent(tableId, jdbcTemplate))
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename = '$tableId'"),
+      any<MapSqlParameterSource>(),
+    )
+  }
+
+  @Test
+  fun `isTablePresent should return false if the table does not exist`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      datasetHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(emptyList())
+
+    assertFalse(redshiftDataApiRepository.isTablePresent(tableId, jdbcTemplate))
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename = '$tableId'"),
+      any<MapSqlParameterSource>(),
+    )
   }
 }

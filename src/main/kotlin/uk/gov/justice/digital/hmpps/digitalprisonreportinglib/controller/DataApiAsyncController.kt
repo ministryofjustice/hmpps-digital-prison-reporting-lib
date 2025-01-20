@@ -192,6 +192,15 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
       defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     dataProductDefinitionsPath: String? = null,
+    @Parameter(
+      description = "External table ID.",
+      example = "reports._6b3c6dfb_f601_4795_8ee5_2ad65b7fb283",
+    )
+    @RequestParam(
+      "tableId",
+      required = false,
+    )
+    tableId: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
     return ResponseEntity
@@ -203,6 +212,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
           reportVariantId = reportVariantId,
           userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath,
+          tableId,
         ),
       )
   }
@@ -225,12 +235,21 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
   )
   fun getQueryExecutionStatus(
     @PathVariable("statementId") statementId: String,
+    @Parameter(
+      description = "External table ID.",
+      example = "reports._6b3c6dfb_f601_4795_8ee5_2ad65b7fb283",
+    )
+    @RequestParam(
+      "tableId",
+      required = false,
+    )
+    tableId: String? = null,
     authentication: Authentication,
   ): ResponseEntity<StatementExecutionStatus> {
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.getStatementStatus(statementId),
+        asyncDataApiService!!.getStatementStatus(statementId, tableId),
       )
   }
 

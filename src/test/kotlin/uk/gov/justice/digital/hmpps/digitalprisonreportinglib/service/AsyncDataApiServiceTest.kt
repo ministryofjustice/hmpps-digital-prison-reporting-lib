@@ -6,11 +6,13 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -39,6 +41,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.SQLException
@@ -344,6 +347,29 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
+  fun `getStatementStatus should throw a MissingTableException when a tableId is provided and the table is missing`() {
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val statementId = "statementId"
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+    whenever(
+      redshiftDataApiRepository.isTablePresent(tableId),
+    ).thenThrow(MissingTableException(tableId))
+
+    val exception = assertThrows<MissingTableException> {
+      asyncDataApiService.getStatementStatus(
+        statementId = statementId,
+        reportId = "external-movements",
+        reportVariantId = "last-month",
+        userToken = authToken,
+        tableId = tableId,
+      )
+    }
+    assertThat(exception).message().isEqualTo("Table reports.$tableId not found.")
+    verify(redshiftDataApiRepository, times(1)).isTablePresent(eq(tableId), anyOrNull())
+    verifyNoInteractions(athenaApiRepository)
+  }
+
+  @Test
   fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when report cancelStatementExecution is called`() {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
@@ -405,6 +431,26 @@ class AsyncDataApiServiceTest {
     val actual = asyncDataApiService.getStatementStatus(statementId)
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     assertEquals(statementExecutionStatus, actual)
+  }
+
+  @Test
+  fun `should throw a MissingTableException when getStatementStatus is called with a tableId`() {
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val statementId = "statementId"
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+    whenever(
+      redshiftDataApiRepository.isTablePresent(tableId),
+    ).thenThrow(MissingTableException(tableId))
+
+    val exception = assertThrows<MissingTableException> {
+      asyncDataApiService.getStatementStatus(
+        statementId = statementId,
+        tableId = tableId,
+      )
+    }
+    assertThat(exception).message().isEqualTo("Table reports.$tableId not found.")
+    verify(redshiftDataApiRepository, times(1)).isTablePresent(eq(tableId), anyOrNull())
+    verifyNoInteractions(athenaApiRepository)
   }
 
   @ParameterizedTest

@@ -85,7 +85,7 @@ class RedshiftDataApiRepository(
     return StatementExecutionResponse(tableId, response.id())
   }
 
-  override fun getStatementStatus(statementId: String): StatementExecutionStatus {
+  override fun getStatementStatus(statementId: String, tableId: String?): StatementExecutionStatus {
     val statementRequest = DescribeStatementRequest.builder()
       .id(statementId)
       .build()

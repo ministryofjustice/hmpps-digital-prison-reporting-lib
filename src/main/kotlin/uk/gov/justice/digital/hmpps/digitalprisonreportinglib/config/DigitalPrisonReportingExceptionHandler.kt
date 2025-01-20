@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 
 @RestControllerAdvice
@@ -45,7 +46,7 @@ class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(UncategorizedSQLException::class)
   fun handleEntityNotFound(e: Exception): ResponseEntity<ErrorResponse> {
     val entityNotFoundMessage = "EntityNotFoundException from glue - Entity Not Found"
-    if (e.message?.contains(entityNotFoundMessage) == true) {
+    return if (e.message?.contains(entityNotFoundMessage) == true) {
       log.warn("Table not found exception: {}", e.message)
       return ResponseEntity
         .status(NOT_FOUND)
@@ -59,12 +60,25 @@ class DigitalPrisonReportingExceptionHandler {
     } else {
       handleInternalServerError(e)
     }
-    return respondWithBadRequest(e)
+  }
+
+  @ExceptionHandler(MissingTableException::class)
+  fun handleMissingTableException(e: Exception): ResponseEntity<ErrorResponse> {
+    log.warn("Table not found exception: {}", e.message)
+    return ResponseEntity
+      .status(NOT_FOUND)
+      .body(
+        ErrorResponse(
+          status = NOT_FOUND,
+          userMessage = "The stored report or dashboard was not found.",
+          developerMessage = e.message,
+        ),
+      )
   }
 
   @ExceptionHandler(java.lang.Exception::class)
   @ResponseStatus(INTERNAL_SERVER_ERROR)
-  fun handleInternalServerError(e: java.lang.Exception): ResponseEntity<ErrorResponse?>? {
+  fun handleInternalServerError(e: java.lang.Exception): ResponseEntity<ErrorResponse> {
     log.error("Unexpected exception", e)
     return ResponseEntity
       .status(INTERNAL_SERVER_ERROR)

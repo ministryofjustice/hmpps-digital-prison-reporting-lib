@@ -29,7 +29,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     userToken: DprAuthAwareAuthenticationToken? = null,
   ): StatementExecutionResponse
 
-  abstract fun getStatementStatus(statementId: String): StatementExecutionStatus
+  abstract fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus
 
   abstract fun cancelStatementExecution(statementId: String): StatementCancellationResponse
 
@@ -61,5 +61,17 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
+  }
+
+  fun isTablePresent(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Boolean {
+    val stopwatch = StopWatch.createStarted()
+    val result = jdbcTemplate
+      .queryForList(
+        "SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename = '$tableId'",
+        MapSqlParameterSource(),
+      )
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return !result.isNullOrEmpty()
   }
 }
