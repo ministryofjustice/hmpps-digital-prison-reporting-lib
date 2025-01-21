@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHED
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_STARTED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.BOOLEAN
@@ -347,10 +349,29 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `getStatementStatus should throw a MissingTableException when a tableId is provided and the table is missing`() {
+  fun `getStatementStatus should throw a MissingTableException when a tableId is provided, the table is missing and the status is FINISHED`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionNomis.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val tableId = TableIdGenerator().generateNewExternalTableId()
+    val statementExecutionStatus = StatementExecutionStatus(
+      QUERY_FINISHED,
+      278109264L,
+      10L,
+      100L,
+    )
+    whenever(
+      athenaApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
     whenever(
       redshiftDataApiRepository.isTableMissing(tableId),
     ).thenReturn(true)
@@ -366,7 +387,43 @@ class AsyncDataApiServiceTest {
     }
     assertThat(exception).message().isEqualTo("Table reports.$tableId not found.")
     verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
-    verifyNoInteractions(athenaApiRepository)
+    verify(athenaApiRepository, times(1)).getStatementStatus(eq(statementId))
+  }
+
+  @Test
+  fun `isTableMissing should not be called when the status is not FINISHED`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionNomis.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    )
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val statementId = "statementId"
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+    val statementExecutionStatus = StatementExecutionStatus(
+      QUERY_STARTED,
+      278109264L,
+      10L,
+      100L,
+    )
+    whenever(
+      athenaApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+    val actual = asyncDataApiService.getStatementStatus(
+      statementId = statementId,
+      reportId = "external-movements",
+      reportVariantId = "last-month",
+      userToken = authToken,
+      tableId = tableId,
+    )
+    assertEquals(statementExecutionStatus, actual)
+    verify(redshiftDataApiRepository, times(0)).isTableMissing(any(), anyOrNull())
+    verify(athenaApiRepository, times(1)).getStatementStatus(eq(statementId))
   }
 
   @Test
@@ -480,9 +537,17 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should throw a MissingTableException when getStatementStatus is called with a tableId`() {
+  fun `should throw a MissingTableException when getStatementStatus is called with a tableId, the table is missing and the status is finished`() {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
-    val statementId = "statementId"
+    val statementExecutionStatus = StatementExecutionStatus(
+      "FINISHED",
+      278109264L,
+      10L,
+      100L,
+    )
+    whenever(
+      redshiftDataApiRepository.getStatementStatus("statementId"),
+    ).thenReturn(statementExecutionStatus)
     val tableId = TableIdGenerator().generateNewExternalTableId()
     whenever(
       redshiftDataApiRepository.isTableMissing(tableId),
@@ -490,13 +555,34 @@ class AsyncDataApiServiceTest {
 
     val exception = assertThrows<MissingTableException> {
       asyncDataApiService.getStatementStatus(
-        statementId = statementId,
+        statementId = "statementId",
         tableId = tableId,
       )
     }
     assertThat(exception).message().isEqualTo("Table reports.$tableId not found.")
     verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
     verifyNoInteractions(athenaApiRepository)
+  }
+
+  @Test
+  fun `should not call isTableMissing when getStatementStatus is called for Redshift with a tableId and the status is not finished`() {
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val statementExecutionStatus = StatementExecutionStatus(
+      QUERY_STARTED,
+      278109264L,
+      10L,
+      100L,
+    )
+    val statementId = "statementId"
+    whenever(
+      redshiftDataApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+
+    val actual = asyncDataApiService.getStatementStatus(statementId = statementId, tableId = tableId)
+    assertEquals(statementExecutionStatus, actual)
+    verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
+    verify(redshiftDataApiRepository, times(0)).isTableMissing(any(), anyOrNull())
   }
 
   @Test

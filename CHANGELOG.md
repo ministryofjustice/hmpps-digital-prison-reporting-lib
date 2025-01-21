@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.3.21
+The status endpoints check if a table is missing only if the status is 'FINISHED' and there is a table ID provided.
+
 # 7.3.20
 The status endpoints accept an optional tableId to check for table existence before returning the status.
 
