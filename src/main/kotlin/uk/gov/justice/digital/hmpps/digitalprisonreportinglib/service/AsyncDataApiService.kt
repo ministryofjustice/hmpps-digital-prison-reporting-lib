@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepo
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
@@ -109,23 +110,25 @@ class AsyncDataApiService(
   }
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
-    tableId?.let {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
+    val statementStatus = getRepo(productDefinition).getStatementStatus(statementId)
+    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
       if (redshiftDataApiRepository.isTableMissing(tableId)) {
         throw MissingTableException(tableId)
       }
     }
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, userToken)
-    return getRepo(productDefinition).getStatementStatus(statementId)
+    return statementStatus
   }
 
   fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus {
-    tableId?.let {
+    val statementStatus = redshiftDataApiRepository.getStatementStatus(statementId)
+    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
       if (redshiftDataApiRepository.isTableMissing(tableId)) {
         throw MissingTableException(tableId)
       }
     }
-    return redshiftDataApiRepository.getStatementStatus(statementId)
+    return statementStatus
   }
 
   fun getStatementResult(
