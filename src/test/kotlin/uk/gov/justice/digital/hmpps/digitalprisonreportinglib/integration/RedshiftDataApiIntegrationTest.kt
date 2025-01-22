@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -497,10 +498,12 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val pageSize = 20L
     val expectedServiceResult =
       listOf(
-        mapOf(
-          "establishment_id" to "KMI",
-          "has_ethnicity" to "10",
-          "ethnicity_is_missing" to "30",
+        listOf(
+          mapOf(
+            "establishment_id" to MetricData("KMI"),
+            "has_ethnicity" to MetricData("10"),
+            "ethnicity_is_missing" to MetricData("30"),
+          ),
         ),
       )
 
@@ -543,10 +546,12 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val pageSize = 20L
     val expectedServiceResult =
       listOf(
-        mapOf(
-          "establishment_id" to "KMI",
-          "has_ethnicity" to "10",
-          "ethnicity_is_missing" to "30",
+        listOf(
+          mapOf(
+            "establishment_id" to MetricData("KMI"),
+            "has_ethnicity" to MetricData("10"),
+            "ethnicity_is_missing" to MetricData("30"),
+          ),
         ),
       )
 

@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.4.0
+The dashboard result endpoint now returns a ResponseEntity<List<List<Map<String, Any?>>>> instead a ResponseEntity<List<Map<String, Any?>>> which was previously returned.  
+
 # 7.3.21
 The status endpoints check if a table is missing only if the status is 'FINISHED' and there is a table ID provided.
 

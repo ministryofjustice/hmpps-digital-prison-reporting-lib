@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionG
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
@@ -823,10 +824,12 @@ class AsyncDataApiServiceTest {
       ),
     )
     val expectedServiceResult = listOf(
-      mapOf(
-        "establishment_id" to "1",
-        "has_ethnicity" to "100",
-        "ethnicity_is_missing" to "30",
+      listOf(
+        mapOf(
+          "establishment_id" to MetricData("1"),
+          "has_ethnicity" to MetricData("100"),
+          "ethnicity_is_missing" to MetricData("30"),
+        ),
       ),
     )
     val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
