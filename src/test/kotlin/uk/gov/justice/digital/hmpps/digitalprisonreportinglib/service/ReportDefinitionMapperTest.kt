@@ -15,36 +15,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadata
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadataHint
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryTemplate
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -52,7 +27,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DefinitionMapper.Companion.DEFAULT_MAX_STATIC_OPTIONS
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -166,6 +140,7 @@ class ReportDefinitionMapperTest {
       ),
     ),
     allDatasets = listOf(fullDataset),
+    allReports = emptyList(),
   )
 
   private val policy: Policy = Policy(
@@ -191,18 +166,19 @@ class ReportDefinitionMapperTest {
     report = fullReport,
     policy = listOf(policy),
     allDatasets = listOf(fullDataset),
+    allReports = emptyList(),
   )
 
   private val configuredApiService: SyncDataApiService = mock()
   private val authToken = mock<DprAuthAwareAuthenticationToken>()
-  private val datasetHelper = DatasetHelper()
+  private val identifiedHelper = IdentifiedHelper()
   private val establishmentCodesToWingsCacheService = mock<EstablishmentCodesToWingsCacheService>()
 
   @Test
   fun `Getting report for user maps full data correctly`() {
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(definition = singleReportProductDefinition, userToken = authToken)
+    val result = mapper.mapReport(definition = singleReportProductDefinition, userToken = authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(singleReportProductDefinition.id)
@@ -222,7 +198,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification?.template.toString()).isEqualTo(singleReportProductDefinition.report.specification?.template.toString())
     assertThat(variant.specification?.sections).hasSize(1)
     assertThat(variant.specification?.sections?.first())
-      .isEqualTo(singleReportProductDefinition.report.specification?.section?.first()?.removePrefix(SCHEMA_REF_PREFIX))
+      .isEqualTo(singleReportProductDefinition.report.specification?.section?.first()?.removePrefix(REF_PREFIX))
     assertThat(variant.specification?.fields).isNotEmpty
     assertThat(variant.specification?.fields).hasSize(1)
 
@@ -324,10 +300,11 @@ class ReportDefinitionMapperTest {
       ),
       datasource = Datasource("datasourceId", "datasourceName"),
       allDatasets = listOf(fullDataset),
+      allReports = emptyList(),
     )
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(productDefinition, authToken)
+    val result = mapper.mapReport(productDefinition, authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.staticOptions).hasSize(2)
   }
@@ -347,7 +324,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -359,7 +336,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -374,7 +351,7 @@ class ReportDefinitionMapperTest {
     val expectedDate3 = getExpectedDate(7, ChronoUnit.DAYS)
     val expectedResult = "$expectedDate1, $expectedDate2, $expectedDate3"
 
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
 
@@ -400,7 +377,7 @@ class ReportDefinitionMapperTest {
     )
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.min).isEqualTo(expectedDate)
     assertThat(result.variant.specification!!.fields[0].filter!!.max).isEqualTo(expectedDate)
@@ -410,9 +387,9 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting single report for user maps full data correctly`() {
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(fullSingleReportProductDefinition, authToken)
+    val result = mapper.mapReport(fullSingleReportProductDefinition, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleReportProductDefinition.id)
@@ -464,7 +441,7 @@ class ReportDefinitionMapperTest {
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     whenever(
       configuredApiService.validateAndFetchData(
@@ -473,7 +450,7 @@ class ReportDefinitionMapperTest {
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
-    val result = mapper.map(fullSingleProductDefinition, authToken)
+    val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
     assertResult(result, fullSingleProductDefinition)
     val field = result.variant.specification!!.fields.first()
@@ -507,14 +484,14 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-    val reportWithDynamicFilter = generateReport(DynamicFilterOption(returnAsStaticOptions = true, dataset = SCHEMA_REF_PREFIX + estDatasetId, name = SCHEMA_REF_PREFIX + estCodeSchemaFieldName, display = SCHEMA_REF_PREFIX + estNameSchemaFieldName))
+    val reportWithDynamicFilter = generateReport(DynamicFilterOption(returnAsStaticOptions = true, dataset = REF_PREFIX + estDatasetId, name = REF_PREFIX + estCodeSchemaFieldName, display = REF_PREFIX + estNameSchemaFieldName))
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(
       report = reportWithDynamicFilter,
       allDatasets = listOf(establishmentDataset),
     )
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     whenever(
       configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any()),
@@ -525,7 +502,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.map(fullSingleProductDefinition, authToken)
+    val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
     assertResult(result, fullSingleProductDefinition)
     val field = result.variant.specification!!.fields.first()
@@ -551,7 +528,7 @@ class ReportDefinitionMapperTest {
     val reportWithDynamicFilter = generateReport(DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = false))
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     whenever(
       configuredApiService.validateAndFetchData(
@@ -560,7 +537,7 @@ class ReportDefinitionMapperTest {
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
-    val result = mapper.map(fullSingleProductDefinition, authToken)
+    val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
@@ -581,9 +558,9 @@ class ReportDefinitionMapperTest {
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithMakeUrlFormula)
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(fullSingleProductDefinition, authToken)
+    val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
@@ -640,9 +617,9 @@ class ReportDefinitionMapperTest {
         ),
       )
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(fullSingleProductDefinition, authToken)
+    val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
@@ -686,7 +663,7 @@ class ReportDefinitionMapperTest {
       visible = visibleDpd,
     )
 
-    val result: SingleVariantReportDefinition = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
+    val result: SingleVariantReportDefinition = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].visible).isEqualTo(visibleControllerModel)
     assertThat(result.variant.specification!!.fields[0].mandatory).isEqualTo(mandatoryControllerModel)
@@ -709,7 +686,7 @@ class ReportDefinitionMapperTest {
       reportFieldDisplay = reportDisplay,
     )
 
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].display).isEqualTo(expectedDisplay)
 
@@ -730,9 +707,9 @@ class ReportDefinitionMapperTest {
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(productDefinition, authToken)
+    val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -789,9 +766,9 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(productDefinition, authToken)
+    val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -845,9 +822,9 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val mapper = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService)
+    val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
-    val result = mapper.map(productDefinition, authToken)
+    val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -869,7 +846,7 @@ class ReportDefinitionMapperTest {
   fun `Interactive report metadata hint is mapped to the report correctly`() {
     val defaultValue = createProductDefinition("today(-2,DAYS)", interactive = true)
 
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = defaultValue, userToken = authToken)
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
 
     assertThat(result.variant.interactive).isEqualTo(true)
   }
@@ -918,9 +895,10 @@ class ReportDefinitionMapperTest {
         ),
       ),
       allDatasets = listOf(sourceDataset),
+      allReports = emptyList(),
     )
 
-    val result = ReportDefinitionMapper(configuredApiService, datasetHelper, establishmentCodesToWingsCacheService).map(definition = sourceDefinition, userToken = authToken)
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = sourceDefinition, userToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter?.type.toString()).isEqualTo("Text")
     assertThat(result.variant.specification!!.fields[0].filter?.mandatory).isTrue()
@@ -1124,6 +1102,7 @@ class ReportDefinitionMapperTest {
         ),
       ),
       allDatasets = listOf(fullDataset),
+      allReports = emptyList(),
     )
   }
 }

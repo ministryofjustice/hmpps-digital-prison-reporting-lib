@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -13,6 +14,8 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
     const val MAKE_URL_FORMULA_PREFIX = "make_url("
     const val FORMAT_DATE_FORMULA_PREFIX = "format_date("
   }
+
+  private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
 
   fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> =
     row.entries.associate { e ->
@@ -30,8 +33,7 @@ class FormulaEngine(private val reportFields: List<ReportField>, private val env
     )
 
   private fun findFormula(columnName: String) =
-    reportFields.firstOrNull { reportField -> reportField.name.removePrefix("\$ref:") == columnName }
-      ?.formula?.ifEmpty { null }
+    identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { null }
 
   private fun interpolate(formula: String, row: Map<String, Any?>): String {
     return when {

@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.C
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
@@ -53,6 +53,7 @@ class AsyncDataApiServiceTest {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    identifiedHelper = IdentifiedHelper()
   )
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
   private val redshiftDataApiRepository: RedshiftDataApiRepository = mock<RedshiftDataApiRepository>()
@@ -87,9 +88,9 @@ class AsyncDataApiServiceTest {
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
   private val policyEngineResultTrue = "TRUE AND $policyEngineResult"
   private val tableIdGenerator: TableIdGenerator = TableIdGenerator()
-  private val datasetHelper: DatasetHelper = DatasetHelper()
+  private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
-  private val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+  private val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
 
   @BeforeEach
   fun setup() {
@@ -108,7 +109,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+    val e = assertThrows<ValidationException> {
       configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
     }
     assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
@@ -130,7 +131,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val e = org.junit.jupiter.api.assertThrows<ValidationException> {
+    val e = assertThrows<ValidationException> {
       configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, sortColumn, sortedAsc, authToken)
     }
     assertEquals(SyncDataApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
@@ -138,7 +139,7 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should make the async call to the RedshiftDataApiRepository for datamart with all provided arguments when validateAndExecuteStatementAsync is called`() {
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val filters = mapOf("is_closed" to "true", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val sortColumn = "date"
@@ -190,8 +191,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val filters = mapOf("is_closed" to "true", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
     val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val sortColumn = "date"
@@ -240,8 +242,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithMetrics.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val productDefinition = productDefinitionRepository.getProductDefinitions().first()
     val singleDashboardProductDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinition.id, productDefinition.dashboards!!.first().id)
     val executionId = UUID.randomUUID().toString()
@@ -283,7 +286,7 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when getStatementStatus is called`() {
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -318,8 +321,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -353,8 +357,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionNomis.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val statementExecutionStatus = StatementExecutionStatus(
@@ -395,8 +400,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionNomis.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val statementExecutionStatus = StatementExecutionStatus(
@@ -431,8 +437,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionNomis.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -474,7 +481,7 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when report cancelStatementExecution is called`() {
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val statementCancellationResponse = StatementCancellationResponse(
       true,
@@ -498,7 +505,7 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when cancelStatementExecution is called`() {
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val statementCancellationResponse = StatementCancellationResponse(
       true,
@@ -515,7 +522,7 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should call the RedshiftDataApiRepository with the statement execution ID when getStatementStatus is called`() {
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -538,7 +545,7 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should throw a MissingTableException when getStatementStatus is called with a tableId, the table is missing and the status is finished`() {
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementExecutionStatus = StatementExecutionStatus(
       "FINISHED",
       278109264L,
@@ -566,7 +573,7 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should not call isTableMissing when getStatementStatus is called for Redshift with a tableId and the status is not finished`() {
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementExecutionStatus = StatementExecutionStatus(
       QUERY_STARTED,
       278109264L,
@@ -590,8 +597,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionNomis.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val status = "FINISHED"
     val duration = 278109264L
@@ -634,8 +642,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val statementId = "statementId"
     val statementCancellationResponse = StatementCancellationResponse(true)
     whenever(
@@ -660,10 +669,11 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithParameters.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
     val productDefinition = productDefinitionRepository.getProductDefinitions().first()
     val singleReportProductDefinition = productDefinitionRepository.getSingleReportProductDefinition(productDefinition.id, productDefinition.report.first().id)
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val parameter1Name = "establishment_code"
     val parameter1Value = "BFI"
     val parameter2Name = "wing"
@@ -781,8 +791,9 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithFormula.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
-    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val executionID = UUID.randomUUID().toString()
     whenever(
       redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList(), false),
@@ -814,6 +825,7 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithMetrics.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
     val expectedRepositoryResult = listOf(
       mapOf(
@@ -829,7 +841,7 @@ class AsyncDataApiServiceTest {
         "ethnicity_is_missing" to "30",
       ),
     )
-    val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
@@ -863,6 +875,7 @@ class AsyncDataApiServiceTest {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithMetrics.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
     )
     val expectedRepositoryResult = listOf(
       mapOf(
@@ -872,7 +885,7 @@ class AsyncDataApiServiceTest {
         "RANDOM_ROW" to "abc",
       ),
     )
-    val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, datasetHelper, productDefinitionTokenPolicyChecker)
+    val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
