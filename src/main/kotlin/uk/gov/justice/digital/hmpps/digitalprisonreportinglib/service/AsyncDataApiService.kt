@@ -144,7 +144,7 @@ class AsyncDataApiService(
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     return formatColumnsAndApplyFormulas(
       redshiftDataApiRepository.getPaginatedExternalTableResult(
         tableId,

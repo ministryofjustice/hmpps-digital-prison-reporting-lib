@@ -8,14 +8,16 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class FormulaEngine(private val reportFields: List<ReportField>, private val env: String? = null) {
+class FormulaEngine(
+  private val reportFields: List<ReportField>,
+  private val env: String? = null,
+  private val identifiedHelper: IdentifiedHelper = IdentifiedHelper(),
+) {
 
   companion object {
     const val MAKE_URL_FORMULA_PREFIX = "make_url("
     const val FORMAT_DATE_FORMULA_PREFIX = "format_date("
   }
-
-  private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
 
   fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> =
     row.entries.associate { e ->

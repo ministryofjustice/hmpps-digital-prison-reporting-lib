@@ -53,7 +53,7 @@ class SyncDataApiService(
     checkAuth(productDefinition, userToken)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env)
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     return configuredApiRepository
       .executeQuery(
         query = datasetForFilter?.query ?: productDefinition.reportDataset.query,
@@ -82,7 +82,7 @@ class SyncDataApiService(
     sortColumn: String,
     dataset: Dataset,
   ): List<Map<String, Any?>> {
-    val formulaEngine = FormulaEngine(emptyList(), env)
+    val formulaEngine = FormulaEngine(emptyList(), env, identifiedHelper)
     return configuredApiRepository
       .executeQuery(
         query = dataset.query,
