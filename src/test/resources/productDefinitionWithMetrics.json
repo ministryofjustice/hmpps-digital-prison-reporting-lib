@@ -97,7 +97,7 @@
                   "display": "No. of Prisoners with ethnicity"
                 },
                 {
-                  "name": "$ref:has_no_ethnicity",
+                  "name": "$ref:ethnicity_is_missing",
                   "display": "No. of Prisoners without ethnicity"
                 }
               ]

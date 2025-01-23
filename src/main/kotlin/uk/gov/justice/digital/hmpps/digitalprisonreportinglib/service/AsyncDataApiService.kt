@@ -173,23 +173,25 @@ class AsyncDataApiService(
   ): List<List<Map<String, Any?>>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    return redshiftDataApiRepository.getPaginatedExternalTableResult(
-      tableId = tableId,
-      selectedPage = selectedPage,
-      pageSize = pageSize,
-      filters = validateAndMapFilters(productDefinition, filters, true),
+    return listOf(
+      redshiftDataApiRepository.getPaginatedExternalTableResult(
+        tableId = tableId,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        filters = validateAndMapFilters(productDefinition, filters, true),
+      )
+        .map { row ->
+          formatColumnNamesToSourceFieldNamesCasing(
+            row,
+            productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
+          )
+        }
+        .map { row -> toMetricData(row) },
     )
-      .map { row ->
-        formatColumnNamesToSourceFieldNamesCasing(
-          row,
-          productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
-        )
-      }
-      .map { row -> toMetricData(row) }
   }
 
-  private fun toMetricData(row: Map<String, Any?>) =
-    row.entries.flatMap { e -> listOf(mapOf(e.key to MetricData(e.value))) }
+  private fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> =
+    row.entries.associate { e -> e.key to MetricData(e.value) }
 
   fun getSummaryResult(
     tableId: String,
