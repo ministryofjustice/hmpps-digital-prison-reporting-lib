@@ -93,7 +93,6 @@ class ReportDefinitionMapper(
       childVariants = report.child?.map { c ->
         mapChildVariant(
           child = c,
-          dataSet = dataSet,
           productDefinitionId = productDefinitionId,
           userToken = userToken,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
@@ -106,7 +105,6 @@ class ReportDefinitionMapper(
 
   private fun mapChildVariant(
     child: ReportChild,
-    dataSet: Dataset,
     productDefinitionId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
@@ -117,7 +115,7 @@ class ReportDefinitionMapper(
 
     val variant = mapVariant(
       report = report,
-      dataSet = dataSet,
+      dataSet = identifiedHelper.findOrFail(allDatasets, report.dataset),
       productDefinitionId = productDefinitionId,
       userToken = userToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,

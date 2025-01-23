@@ -18,7 +18,34 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.S
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportChild
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadata
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadataHint
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryTemplate
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -63,6 +90,48 @@ class ReportDefinitionMapperTest {
     type = FeatureType.PRINT,
   )
 
+  private val childReport = Report(
+    id = "C21",
+    name = "C22",
+    description = "C23",
+    created = LocalDateTime.MIN,
+    version = "C24",
+    dataset = "\$ref:10",
+    render = RenderMethod.HTMLChild,
+    schedule = "C26",
+    specification = Specification(
+      template = Template.List,
+      section = listOf("C30"),
+      field = listOf(
+        ReportField(
+          name = "\$ref:13",
+          display = "C14",
+          wordWrap = WordWrap.None,
+          filter = FilterDefinition(
+            type = FilterType.Radio,
+            staticOptions = listOf(
+              StaticFilterOption(
+                name = "C16",
+                display = "C17",
+              ),
+            ),
+            mandatory = true,
+            pattern = ".+",
+            interactive = true,
+          ),
+          sortable = true,
+          defaultSort = true,
+          formula = null,
+          visible = Visible.TRUE,
+        ),
+      ),
+    ),
+    destination = emptyList(),
+    classification = "someChildClassification",
+    feature = emptyList(),
+    summary = emptyList(),
+  )
+
   private val fullReport = Report(
     id = "21",
     name = "22",
@@ -73,7 +142,7 @@ class ReportDefinitionMapperTest {
     render = RenderMethod.PDF,
     schedule = "26",
     specification = Specification(
-      template = Template.ListSection,
+      template = Template.ParentChild,
       section = listOf("30"),
       field = listOf(
         ReportField(
@@ -116,6 +185,7 @@ class ReportDefinitionMapperTest {
         ),
       ),
     ),
+    child = listOf(ReportChild(childReport.id, listOf("13"))),
   )
 
   private val singleReportProductDefinition: SingleReportProductDefinition = SingleReportProductDefinition(
@@ -140,7 +210,7 @@ class ReportDefinitionMapperTest {
       ),
     ),
     allDatasets = listOf(fullDataset),
-    allReports = emptyList(),
+    allReports = listOf(fullReport, childReport),
   )
 
   private val policy: Policy = Policy(
@@ -166,7 +236,7 @@ class ReportDefinitionMapperTest {
     report = fullReport,
     policy = listOf(policy),
     allDatasets = listOf(fullDataset),
-    allReports = emptyList(),
+    allReports = listOf(fullReport, childReport),
   )
 
   private val configuredApiService: SyncDataApiService = mock()
@@ -241,6 +311,8 @@ class ReportDefinitionMapperTest {
     assertThat(summaryField.display).isEqualTo(fullDataset.schema.field.first().display)
     assertThat(summaryField.header).isEqualTo(sourceSummary.field?.first()?.header)
     assertThat(summaryField.mergeRows).isEqualTo(sourceSummary.field?.first()?.mergeRows)
+
+    assertThat(variant.childVariants?.count()).isEqualTo(1)
   }
 
   @Test
@@ -895,7 +967,7 @@ class ReportDefinitionMapperTest {
         ),
       ),
       allDatasets = listOf(sourceDataset),
-      allReports = emptyList(),
+      allReports = listOf(fullReport, childReport),
     )
 
     val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = sourceDefinition, userToken = authToken)
