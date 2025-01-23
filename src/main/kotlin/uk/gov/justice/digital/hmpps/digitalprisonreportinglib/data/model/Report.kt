@@ -19,6 +19,6 @@ data class Report(
   val filter: ReportFilter? = null,
   val metadata: ReportMetadata? = null,
   val child: List<ReportChild>? = null,
-): Identified()  {
+) : Identified() {
   override fun getIdentifier() = this.id
 }

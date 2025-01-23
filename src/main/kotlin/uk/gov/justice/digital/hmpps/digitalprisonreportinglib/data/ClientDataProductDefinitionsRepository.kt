@@ -17,7 +17,7 @@ class ClientDataProductDefinitionsRepository(
   private val definitionsHost: String?,
   private val definitionsCache: Cache<String, List<ProductDefinition>>?,
   private val authenticationHelper: AuthenticationHelper,
-  identifiedHelper: IdentifiedHelper
+  identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {

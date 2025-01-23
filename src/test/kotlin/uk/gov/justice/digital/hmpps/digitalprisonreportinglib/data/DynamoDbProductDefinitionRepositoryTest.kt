@@ -28,7 +28,7 @@ class DynamoDbProductDefinitionRepositoryTest {
     dynamoDbClient = dynamoDbClient,
     gson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     properties = properties,
-    identifiedHelper = IdentifiedHelper()
+    identifiedHelper = IdentifiedHelper(),
   )
 
   @BeforeEach

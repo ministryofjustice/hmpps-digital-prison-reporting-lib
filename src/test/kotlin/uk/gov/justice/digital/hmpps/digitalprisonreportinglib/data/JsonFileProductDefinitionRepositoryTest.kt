@@ -15,7 +15,7 @@ class JsonFileProductDefinitionRepositoryTest {
   private val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json", "dpd001-court-hospital-movements.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-    identifiedHelper = IdentifiedHelper()
+    identifiedHelper = IdentifiedHelper(),
   )
 
   @Test
@@ -39,7 +39,7 @@ class JsonFileProductDefinitionRepositoryTest {
     val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("nonMatchingDatasetProductDefinition.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-      identifiedHelper = IdentifiedHelper()
+      identifiedHelper = IdentifiedHelper(),
     )
     val exception = assertThrows(IllegalArgumentException::class.java) {
       jsonFileProductDefinitionRepository.getSingleReportProductDefinition(

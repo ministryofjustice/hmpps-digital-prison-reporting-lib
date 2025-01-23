@@ -7,6 +7,6 @@ data class Dataset(
   val query: String,
   val schema: Schema,
   val parameters: List<Parameter>? = null,
-): Identified()  {
+) : Identified() {
   override fun getIdentifier() = this.id
 }

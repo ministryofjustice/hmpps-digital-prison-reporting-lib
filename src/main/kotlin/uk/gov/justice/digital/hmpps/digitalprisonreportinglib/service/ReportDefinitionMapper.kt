@@ -2,19 +2,34 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChildVariantDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SummaryField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SummaryTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Template
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportChild
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportMetadataHint
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -75,15 +90,17 @@ class ReportDefinitionMapper(
       resourceName = "reports/$productDefinitionId/${report.id}",
       summaries = report.summary?.map { mapReportSummary(it, allDatasets) },
       interactive = report.metadata?.hints?.contains(ReportMetadataHint.INTERACTIVE),
-      childVariants = report.child?.map { c -> mapChildVariant(
-        child = c,
-        dataSet = dataSet,
-        productDefinitionId = productDefinitionId,
-        userToken = userToken,
-        dataProductDefinitionsPath = dataProductDefinitionsPath,
-        allDatasets = allDatasets,
-        allReports = allReports,
-      ) }
+      childVariants = report.child?.map { c ->
+        mapChildVariant(
+          child = c,
+          dataSet = dataSet,
+          productDefinitionId = productDefinitionId,
+          userToken = userToken,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          allDatasets = allDatasets,
+          allReports = allReports,
+        )
+      },
     )
   }
 

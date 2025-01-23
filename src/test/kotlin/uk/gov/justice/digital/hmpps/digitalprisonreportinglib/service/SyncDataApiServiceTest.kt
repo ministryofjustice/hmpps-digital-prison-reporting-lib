@@ -1273,7 +1273,7 @@ class SyncDataApiServiceTest {
       report = report,
       datasource = Datasource("id", dataSourceName),
       allDatasets = listOf(dataSet),
-      allReports = emptyList()
+      allReports = emptyList(),
     )
     whenever(productDefRepo.getSingleReportProductDefinition(reportId, reportVariantId))
       .thenReturn(

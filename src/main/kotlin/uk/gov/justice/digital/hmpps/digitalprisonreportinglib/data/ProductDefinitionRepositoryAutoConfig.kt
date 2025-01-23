@@ -73,7 +73,7 @@ class ProductDefinitionRepositoryAutoConfig(
     gson = dprDefinitionGson,
     properties = properties,
     definitionsCache = definitionsCache,
-    identifiedHelper = identifiedHelper
+    identifiedHelper = identifiedHelper,
   )
 
   @Bean

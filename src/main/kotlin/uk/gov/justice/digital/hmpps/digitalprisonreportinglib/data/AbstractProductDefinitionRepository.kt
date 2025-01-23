@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
 abstract class AbstractProductDefinitionRepository(
-  private val identifiedHelper: IdentifiedHelper
+  private val identifiedHelper: IdentifiedHelper,
 ) : ProductDefinitionRepository {
 
   override fun getSingleReportProductDefinition(

@@ -5,5 +5,5 @@ data class ChildVariantDefinition(
   val name: String,
   val resourceName: String,
   val specification: Specification? = null,
-  val joinFields: List<String>
+  val joinFields: List<String>,
 )

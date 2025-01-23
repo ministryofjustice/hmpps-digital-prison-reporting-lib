@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Product
 class JsonFileProductDefinitionRepository(
   private val resourceLocations: List<String>,
   private val gson: Gson,
-  identifiedHelper: IdentifiedHelper
+  identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {

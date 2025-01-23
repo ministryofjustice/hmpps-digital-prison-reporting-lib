@@ -6,10 +6,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identif
 
 @Component
 class IdentifiedHelper {
-  final inline fun <reified T: Identified> findOrFail(all: List<T>?, id: String?): T =
+  final inline fun <reified T : Identified> findOrFail(all: List<T>?, id: String?): T =
     findOrNull(all, id) ?: throw IllegalArgumentException("Invalid ${T::class.simpleName} ID: ${cleanId(id)}")
 
-  final inline fun <reified T: Identified> findOrNull(all: List<T>?, id: String?): T? {
+  final inline fun <reified T : Identified> findOrNull(all: List<T>?, id: String?): T? {
     val cleanId = cleanId(id)
     return all?.find { cleanId(it.getIdentifier()) == cleanId }
   }
