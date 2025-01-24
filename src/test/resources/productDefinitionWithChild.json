@@ -142,11 +142,6 @@
       }, {
         "name" : "$ref:date",
         "display" : "Date",
-        "filter" : {
-          "mandatory": false,
-          "type" : "dAtErAnGe",
-          "default" : "today(-1,months) - today()"
-        },
         "sortable" : true,
         "defaultsort" : true
       }, {
