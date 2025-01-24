@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -168,17 +169,28 @@ class AsyncDataApiService(
     pageSize: Long,
     filters: Map<String, String>,
     userToken: DprAuthAwareAuthenticationToken?,
-  ): List<Map<String, Any?>> {
+  ): List<List<Map<String, Any?>>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    return redshiftDataApiRepository.getPaginatedExternalTableResult(
-      tableId = tableId,
-      selectedPage = selectedPage,
-      pageSize = pageSize,
-      filters = validateAndMapFilters(productDefinition, filters, true),
+    return listOf(
+      redshiftDataApiRepository.getPaginatedExternalTableResult(
+        tableId = tableId,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        filters = validateAndMapFilters(productDefinition, filters, true),
+      )
+        .map { row ->
+          formatColumnNamesToSourceFieldNamesCasing(
+            row,
+            productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
+          )
+        }
+        .map { row -> toMetricData(row) },
     )
-      .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, productDefinition.dashboardDataset.schema.field.map(SchemaField::name)) }
   }
+
+  private fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> =
+    row.entries.associate { e -> e.key to MetricData(e.value) }
 
   fun getSummaryResult(
     tableId: String,

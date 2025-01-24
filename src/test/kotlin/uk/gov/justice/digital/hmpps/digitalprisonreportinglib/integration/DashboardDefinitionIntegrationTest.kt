@@ -53,7 +53,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                         "display": "No. of Prisoners with ethnicity"
                       },
                       {
-                        "name": "has_no_ethnicity",
+                        "name": "ethnicity_is_missing",
                         "display": "No. of Prisoners without ethnicity"
                       }
                     ]
@@ -71,7 +71,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                         "display": "No. of Prisoners with ethnicity"
                       },
                       {
-                        "name": "has_no_ethnicity",
+                        "name": "ethnicity_is_missing",
                         "display": "No. of Prisoners without ethnicity"
                       }
                     ]

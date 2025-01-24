@@ -69,7 +69,7 @@ class DashboardDefinitionMapperTest {
                 unit = "number",
                 columns = listOf(
                   ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                  ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
+                  ColumnDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity"),
                 ),
               ),
               ChartDefinition(
@@ -78,7 +78,7 @@ class DashboardDefinitionMapperTest {
                 unit = "percentage",
                 columns = listOf(
                   ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                  ColumnDefinition(name = "has_no_ethnicity", display = "No. of Prisoners without ethnicity"),
+                  ColumnDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity"),
                 ),
               ),
             ),

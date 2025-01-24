@@ -468,7 +468,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     @RequestParam
     filters: Map<String, String>,
     authentication: Authentication,
-  ): ResponseEntity<List<Map<String, Any?>>> {
+  ): ResponseEntity<List<List<Map<String, Any?>>>> {
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
