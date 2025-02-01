@@ -10,11 +10,13 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import java.time.LocalDateTime
 
 @Testcontainers
@@ -30,6 +32,9 @@ class ConfiguredApiRepositoryTestContainersTest {
 
   @Autowired
   lateinit var configuredApiRepository: ConfiguredApiRepository
+
+  @MockitoBean
+  lateinit var asyncDataApiService: AsyncDataApiService
 
   companion object {
     @DynamicPropertySource

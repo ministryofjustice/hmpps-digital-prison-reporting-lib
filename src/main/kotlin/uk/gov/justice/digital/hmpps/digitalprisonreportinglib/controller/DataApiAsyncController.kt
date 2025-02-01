@@ -34,7 +34,7 @@ import java.util.Collections.singletonList
 @RestController
 @Tag(name = "Data API - Asynchronous")
 @ConditionalOnProperty("dpr.lib.aws.sts.enabled", havingValue = "true")
-class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val filterHelper: FilterHelper) {
+class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val filterHelper: FilterHelper) {
 
   @GetMapping("/async/reports/{reportId}/{reportVariantId}")
   @Operation(
@@ -80,7 +80,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService!!.validateAndExecuteStatementAsync(
+          asyncDataApiService.validateAndExecuteStatementAsync(
             reportId = reportId,
             reportVariantId = reportVariantId,
             filters = filterHelper.filtersOnly(filters),
@@ -141,7 +141,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService!!.validateAndExecuteStatementAsync(
+          asyncDataApiService.validateAndExecuteStatementAsync(
             reportId = reportId,
             dashboardId = dashboardId,
             userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
@@ -206,7 +206,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.getStatementStatus(
+        asyncDataApiService.getStatementStatus(
           statementId = statementId,
           reportId = reportId,
           reportVariantId = reportVariantId,
@@ -249,7 +249,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.getStatementStatus(statementId, tableId),
+        asyncDataApiService.getStatementStatus(statementId, tableId),
       )
   }
 
@@ -276,7 +276,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.cancelStatementExecution(
+        asyncDataApiService.cancelStatementExecution(
           statementId,
           reportId,
           reportVariantId,
@@ -298,7 +298,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.cancelStatementExecution(statementId),
+        asyncDataApiService.cancelStatementExecution(statementId),
       )
   }
 
@@ -325,7 +325,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService!!.count(tableId),
+          asyncDataApiService.count(tableId),
         )
     } catch (exception: NoDataAvailableException) {
       val headers = HttpHeaders()
@@ -371,7 +371,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
       ResponseEntity
         .status(HttpStatus.OK)
         .body(
-          asyncDataApiService!!.count(
+          asyncDataApiService.count(
             tableId,
             reportId,
             reportVariantId,
@@ -425,7 +425,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.getStatementResult(
+        asyncDataApiService.getStatementResult(
           tableId = tableId,
           reportId = reportId,
           reportVariantId = reportVariantId,
@@ -472,7 +472,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.getDashboardStatementResult(
+        asyncDataApiService.getDashboardStatementResult(
           tableId = tableId,
           reportId = reportId,
           dashboardId = dashboardId,
@@ -511,7 +511,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService?, val 
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        asyncDataApiService!!.getSummaryResult(
+        asyncDataApiService.getSummaryResult(
           tableId = tableId,
           summaryId = summaryId,
           reportId = reportId,

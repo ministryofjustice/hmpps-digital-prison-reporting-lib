@@ -6,4 +6,5 @@ data class Dashboard(
   val description: String,
   val dataset: String,
   val metrics: List<Metric>,
+  val filter: ReportFilter? = null,
 )

@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovem
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("test")
@@ -58,6 +59,9 @@ abstract class IntegrationTestBase {
 
   @MockitoBean
   lateinit var establishmentsToWingsRepository: EstablishmentsToWingsRepository
+
+  @MockitoBean
+  lateinit var asyncDataApiService: AsyncDataApiService
 
   companion object {
 

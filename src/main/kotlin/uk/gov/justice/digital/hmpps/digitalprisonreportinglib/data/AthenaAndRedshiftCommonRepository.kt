@@ -4,8 +4,10 @@ import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -19,14 +21,22 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
   }
 
   abstract fun executeQueryAsync(
-    productDefinition: SingleReportProductDefinition,
     filters: List<ConfiguredApiRepository.Filter>,
-    sortColumn: String?,
+    sortColumn: String? = null,
     sortedAsc: Boolean,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
     prompts: List<Prompt>? = null,
     userToken: DprAuthAwareAuthenticationToken? = null,
+    query: String,
+    reportFilter: ReportFilter? = null,
+    datasource: Datasource,
+    reportSummaries: List<ReportSummary>? = null,
+    allDatasets: List<Dataset>,
+    productDefinitionId: String,
+    productDefinitionName: String,
+    reportOrDashboardId: String,
+    reportOrDashboardName: String,
   ): StatementExecutionResponse
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus

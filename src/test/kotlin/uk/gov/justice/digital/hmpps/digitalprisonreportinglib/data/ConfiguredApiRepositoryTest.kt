@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.PRISON_NUMBER
@@ -45,6 +46,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -89,6 +91,9 @@ class ConfiguredApiRepositoryTest {
 
   @Autowired
   lateinit var configuredApiRepository: ConfiguredApiRepository
+
+  @MockitoBean
+  lateinit var asyncDataApiService: AsyncDataApiService
 
   @BeforeEach
   fun setup() {
