@@ -40,7 +40,15 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -342,7 +350,7 @@ class AsyncDataApiServiceTest {
   fun `should make the dashboard async call to the AthenaDataApiRepository for nomis datasource with all provided arguments when validateAndExecuteStatementAsync is called`() {
     val reportId = "missing-ethnicity-metrics"
     val dashboardId = "test-dashboard-1"
-    val productDefinitionRepository: ProductDefinitionRepository =  mock<ProductDefinitionRepository>()
+    val productDefinitionRepository: ProductDefinitionRepository = mock<ProductDefinitionRepository>()
     val singleDashboardProductDefinition = mock<SingleDashboardProductDefinition>()
     val dashboard = mock<Dashboard>()
     val dashboardDataset = mock<Dataset>()
@@ -355,10 +363,12 @@ class AsyncDataApiServiceTest {
     val tableId = executionId.replace("-", "_")
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     val caseload = "caseloadA"
-    whenever(productDefinitionRepository.getSingleDashboardProductDefinition(
-      definitionId = reportId,
-      dashboardId = dashboardId,
-    )).thenReturn(singleDashboardProductDefinition)
+    whenever(
+      productDefinitionRepository.getSingleDashboardProductDefinition(
+        definitionId = reportId,
+        dashboardId = dashboardId,
+      ),
+    ).thenReturn(singleDashboardProductDefinition)
     whenever(singleDashboardProductDefinition.dashboard).thenReturn(dashboard)
     whenever(singleDashboardProductDefinition.id).thenReturn(dashboardId)
     whenever(singleDashboardProductDefinition.name).thenReturn("name")
