@@ -110,12 +110,6 @@ class AsyncDataApiService(
     checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition.dashboardDataset.parameters)
-//    return redshiftDataApiRepository
-//      .executeQueryAsync(
-//        productDefinition = productDefinition,
-//        policyEngineResult = policyEngine.execute(),
-//        filters = validateAndMapFilters(productDefinition, filters, false),
-//      )
     return getRepo(productDefinition.datasource.name)
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false),
