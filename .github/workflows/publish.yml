@@ -59,6 +59,8 @@ jobs:
 #          ./gradlew -PpublishVersion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
 
       - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "${{ steps.bump-version.outputs.next-version }}" -m "${{ inputs.versionType }} version bump"
           git push origin "${{ steps.bump-version.outputs.next-version }}"
 
