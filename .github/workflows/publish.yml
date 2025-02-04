@@ -61,6 +61,7 @@ jobs:
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ steps.bump-version.outputs.next-version }}" -m "${{ inputs.versionType }} version bump"
+          PR_MESSAGE=$(git log -1 --pretty=format:"%s")
+          git tag -a "${{ steps.bump-version.outputs.next-version }}" -m "${{ inputs.versionType }}-level version bump: $PR_MESSAGE"
           git push origin "${{ steps.bump-version.outputs.next-version }}"
 
