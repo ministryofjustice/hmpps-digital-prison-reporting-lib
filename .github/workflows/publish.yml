@@ -47,16 +47,16 @@ jobs:
           current-version: ${{ steps.get-version.outputs.current_version }}
           version-fragment: ${{ inputs.versionType }}
 
-#      - name: Publish to Sonatype
-#        id: publish-to-sonatype
-#        env:
-#          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
-#          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
-#          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-#          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-#        run: |
-#          ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
-#          ./gradlew -PpublishVersion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
+      - name: Publish to Sonatype
+        id: publish-to-sonatype
+        env:
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        run: |
+          ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
+          ./gradlew -PpublishVersion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
 
       - run: |
           git config user.name "github-actions[bot]"
