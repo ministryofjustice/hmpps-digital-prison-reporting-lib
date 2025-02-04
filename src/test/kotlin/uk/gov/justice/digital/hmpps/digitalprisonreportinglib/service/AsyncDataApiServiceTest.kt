@@ -40,7 +40,16 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -152,13 +161,21 @@ class AsyncDataApiServiceTest {
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
-        productDefinition = singleReportProductDefinition,
         filters = repositoryFilters,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResultTrue,
         prompts = emptyList(),
         userToken = authToken,
+        query = singleReportProductDefinition.reportDataset.query,
+        reportFilter = singleReportProductDefinition.report.filter,
+        datasource = singleReportProductDefinition.datasource,
+        reportSummaries = singleReportProductDefinition.report.summary,
+        allDatasets = singleReportProductDefinition.allDatasets,
+        productDefinitionId = singleReportProductDefinition.id,
+        productDefinitionName = singleReportProductDefinition.name,
+        reportOrDashboardId = singleReportProductDefinition.report.id,
+        reportOrDashboardName = singleReportProductDefinition.report.name,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -172,13 +189,21 @@ class AsyncDataApiServiceTest {
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, sortColumn, sortedAsc, authToken)
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
-      productDefinition = singleReportProductDefinition,
       filters = repositoryFilters,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResultTrue,
       prompts = emptyList(),
       userToken = authToken,
+      query = singleReportProductDefinition.reportDataset.query,
+      reportFilter = singleReportProductDefinition.report.filter,
+      datasource = singleReportProductDefinition.datasource,
+      reportSummaries = singleReportProductDefinition.report.summary,
+      allDatasets = singleReportProductDefinition.allDatasets,
+      productDefinitionId = singleReportProductDefinition.id,
+      productDefinitionName = singleReportProductDefinition.name,
+      reportOrDashboardId = singleReportProductDefinition.report.id,
+      reportOrDashboardName = singleReportProductDefinition.report.name,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -206,13 +231,21 @@ class AsyncDataApiServiceTest {
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     whenever(
       athenaApiRepository.executeQueryAsync(
-        productDefinition = singleReportProductDefinition,
         filters = repositoryFilters,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
         prompts = emptyList(),
         userToken = authToken,
+        query = singleReportProductDefinition.reportDataset.query,
+        reportFilter = singleReportProductDefinition.report.filter,
+        datasource = singleReportProductDefinition.datasource,
+        reportSummaries = singleReportProductDefinition.report.summary,
+        allDatasets = singleReportProductDefinition.allDatasets,
+        productDefinitionId = singleReportProductDefinition.id,
+        productDefinitionName = singleReportProductDefinition.name,
+        reportOrDashboardId = singleReportProductDefinition.report.id,
+        reportOrDashboardName = singleReportProductDefinition.report.name,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -226,13 +259,21 @@ class AsyncDataApiServiceTest {
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, sortColumn, sortedAsc, authToken)
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
-      productDefinition = singleReportProductDefinition,
       filters = repositoryFilters,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
       prompts = emptyList(),
       userToken = authToken,
+      query = singleReportProductDefinition.reportDataset.query,
+      reportFilter = singleReportProductDefinition.report.filter,
+      datasource = singleReportProductDefinition.datasource,
+      reportSummaries = singleReportProductDefinition.report.summary,
+      allDatasets = singleReportProductDefinition.allDatasets,
+      productDefinitionId = singleReportProductDefinition.id,
+      productDefinitionName = singleReportProductDefinition.name,
+      reportOrDashboardId = singleReportProductDefinition.report.id,
+      reportOrDashboardName = singleReportProductDefinition.report.name,
     )
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionResponse, actual)
@@ -246,7 +287,7 @@ class AsyncDataApiServiceTest {
       identifiedHelper = IdentifiedHelper(),
     )
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
-    val productDefinition = productDefinitionRepository.getProductDefinitions().first()
+    val productDefinition: ProductDefinition = productDefinitionRepository.getProductDefinitions().first()
     val singleDashboardProductDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinition.id, productDefinition.dashboards!!.first().id)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
@@ -257,9 +298,19 @@ class AsyncDataApiServiceTest {
     val policyEngineResult = "(establishment_id='$caseload')"
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
-        productDefinition = singleDashboardProductDefinition,
-        policyEngineResult = policyEngineResult,
         filters = emptyList(),
+        sortedAsc = true,
+        policyEngineResult = policyEngineResult,
+        prompts = emptyList(),
+        userToken = authToken,
+        query = singleDashboardProductDefinition.dashboardDataset.query,
+        reportFilter = singleDashboardProductDefinition.dashboard.filter,
+        datasource = singleDashboardProductDefinition.datasource,
+        allDatasets = singleDashboardProductDefinition.allDatasets,
+        productDefinitionId = singleDashboardProductDefinition.id,
+        productDefinitionName = singleDashboardProductDefinition.name,
+        reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
+        reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -278,9 +329,109 @@ class AsyncDataApiServiceTest {
     )
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
-      productDefinition = singleDashboardProductDefinition,
-      policyEngineResult = policyEngineResult,
       filters = emptyList(),
+      sortedAsc = true,
+      policyEngineResult = policyEngineResult,
+      prompts = emptyList(),
+      userToken = authToken,
+      query = singleDashboardProductDefinition.dashboardDataset.query,
+      reportFilter = singleDashboardProductDefinition.dashboard.filter,
+      datasource = singleDashboardProductDefinition.datasource,
+      allDatasets = singleDashboardProductDefinition.allDatasets,
+      productDefinitionId = singleDashboardProductDefinition.id,
+      productDefinitionName = singleDashboardProductDefinition.name,
+      reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
+      reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+    )
+    assertEquals(statementExecutionResponse, actual)
+  }
+
+  @Test
+  fun `should make the dashboard async call to the AthenaDataApiRepository for nomis datasource with all provided arguments when validateAndExecuteStatementAsync is called`() {
+    val reportId = "missing-ethnicity-metrics"
+    val dashboardId = "test-dashboard-1"
+    val productDefinitionRepository: ProductDefinitionRepository = mock<ProductDefinitionRepository>()
+    val singleDashboardProductDefinition = mock<SingleDashboardProductDefinition>()
+    val dashboard = mock<Dashboard>()
+    val dashboardDataset = mock<Dataset>()
+    val query = "select * from a"
+    val schema = mock<Schema>()
+    val field = mock<SchemaField>()
+    val datasource = mock<Datasource>()
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
+    val executionId = UUID.randomUUID().toString()
+    val tableId = executionId.replace("-", "_")
+    val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
+    val caseload = "caseloadA"
+    whenever(
+      productDefinitionRepository.getSingleDashboardProductDefinition(
+        definitionId = reportId,
+        dashboardId = dashboardId,
+      ),
+    ).thenReturn(singleDashboardProductDefinition)
+    whenever(singleDashboardProductDefinition.dashboard).thenReturn(dashboard)
+    whenever(singleDashboardProductDefinition.id).thenReturn(dashboardId)
+    whenever(singleDashboardProductDefinition.name).thenReturn("name")
+    whenever(dashboard.id).thenReturn(dashboardId)
+    whenever(dashboard.name).thenReturn("name2")
+    whenever(dashboard.filter).thenReturn(mock<ReportFilter>())
+    whenever(singleDashboardProductDefinition.dashboardDataset).thenReturn(dashboardDataset)
+    whenever(dashboardDataset.query).thenReturn(query)
+    whenever(dashboardDataset.schema).thenReturn(schema)
+    whenever(schema.field).thenReturn(listOf(field))
+    whenever(field.name).thenReturn("fieldName")
+    whenever(singleDashboardProductDefinition.allDatasets).thenReturn(listOf(dashboardDataset))
+    whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
+    whenever(datasource.name).thenReturn("NOMIS")
+    whenever(authToken.getCaseLoads()).thenReturn(listOf(caseload))
+    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
+    val policyEngineResult = Policy.PolicyResult.POLICY_DENY
+    whenever(
+      athenaApiRepository.executeQueryAsync(
+        filters = emptyList(),
+        sortedAsc = true,
+        policyEngineResult = policyEngineResult,
+        prompts = emptyList(),
+        userToken = authToken,
+        query = singleDashboardProductDefinition.dashboardDataset.query,
+        reportFilter = singleDashboardProductDefinition.dashboard.filter,
+        datasource = singleDashboardProductDefinition.datasource,
+        allDatasets = singleDashboardProductDefinition.allDatasets,
+        productDefinitionId = singleDashboardProductDefinition.id,
+        productDefinitionName = singleDashboardProductDefinition.name,
+        reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
+        reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+      ),
+    ).thenReturn(statementExecutionResponse)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync(
+      reportId = reportId,
+      dashboardId = dashboardId,
+      userToken = authToken,
+      filters = emptyMap(),
+    )
+
+    verify(athenaApiRepository, times(1)).executeQueryAsync(
+      filters = emptyList(),
+      sortedAsc = true,
+      policyEngineResult = policyEngineResult,
+      prompts = emptyList(),
+      userToken = authToken,
+      query = singleDashboardProductDefinition.dashboardDataset.query,
+      reportFilter = singleDashboardProductDefinition.dashboard.filter,
+      datasource = singleDashboardProductDefinition.datasource,
+      allDatasets = singleDashboardProductDefinition.allDatasets,
+      productDefinitionId = singleDashboardProductDefinition.id,
+      productDefinitionName = singleDashboardProductDefinition.name,
+      reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
+      reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -696,13 +847,21 @@ class AsyncDataApiServiceTest {
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
-        productDefinition = singleReportProductDefinition,
         filters = repositoryFilters,
         sortColumn = sortColumn,
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResultTrue,
         prompts = prompts,
         userToken = authToken,
+        query = singleReportProductDefinition.reportDataset.query,
+        reportFilter = singleReportProductDefinition.report.filter,
+        datasource = singleReportProductDefinition.datasource,
+        reportSummaries = singleReportProductDefinition.report.summary,
+        allDatasets = singleReportProductDefinition.allDatasets,
+        productDefinitionId = singleReportProductDefinition.id,
+        productDefinitionName = singleReportProductDefinition.name,
+        reportOrDashboardId = singleReportProductDefinition.report.id,
+        reportOrDashboardName = singleReportProductDefinition.report.name,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -716,13 +875,21 @@ class AsyncDataApiServiceTest {
     val actual = asyncDataApiService.validateAndExecuteStatementAsync("external-movements-with-parameters", reportVariantId, filters, sortColumn, sortedAsc, authToken)
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
-      productDefinition = singleReportProductDefinition,
       filters = repositoryFilters,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResultTrue,
       prompts = prompts,
       userToken = authToken,
+      query = singleReportProductDefinition.reportDataset.query,
+      reportFilter = singleReportProductDefinition.report.filter,
+      datasource = singleReportProductDefinition.datasource,
+      reportSummaries = singleReportProductDefinition.report.summary,
+      allDatasets = singleReportProductDefinition.allDatasets,
+      productDefinitionId = singleReportProductDefinition.id,
+      productDefinitionName = singleReportProductDefinition.name,
+      reportOrDashboardId = singleReportProductDefinition.report.id,
+      reportOrDashboardName = singleReportProductDefinition.report.name,
     )
     assertEquals(statementExecutionResponse, actual)
   }

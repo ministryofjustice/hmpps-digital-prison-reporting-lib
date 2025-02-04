@@ -111,12 +111,20 @@ SELECT *
     val startQueryExecutionRequest = setupMocks(whereClause = whereClauseCondition)
     whenever(dataset.query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
       userToken = userToken,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -129,13 +137,21 @@ SELECT *
     val prompts = listOf(Prompt("filterName1", "filterValue1", FilterType.Text), Prompt("filterName2", "filterValue2", FilterType.Text))
     whenever(dataset.query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
       userToken = userToken,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -148,13 +164,21 @@ SELECT *
     val prompts = listOf(Prompt("start_date", "01/01/2023", FilterType.Date))
     whenever(dataset.query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
       userToken = userToken,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -168,12 +192,20 @@ SELECT *
 
     whenever(dataset.query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       userToken = userToken,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
@@ -187,12 +219,20 @@ SELECT *
 
     whenever(dataset.query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       userToken = userToken,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
