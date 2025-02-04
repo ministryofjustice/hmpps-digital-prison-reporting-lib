@@ -20,6 +20,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -57,9 +59,6 @@ jobs:
 #        run: |
 #          ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
 #          ./gradlew -PpublishVersion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
-
-      - name: Fetch all tags
-        run: git fetch --depth=1 --tags
 
       - uses: actions-ecosystem/action-push-tag@v1
         with:
