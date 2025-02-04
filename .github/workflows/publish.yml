@@ -64,4 +64,3 @@ jobs:
           PR_MESSAGE=$(git log -1 --pretty=format:"%s")
           git tag -a "${{ steps.bump-version.outputs.next-version }}" -m "${{ inputs.versionType }}-level version bump: $PR_MESSAGE"
           git push origin "${{ steps.bump-version.outputs.next-version }}"
-
