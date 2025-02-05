@@ -1,13 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChildVariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Specification
@@ -17,12 +13,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.T
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportChild
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
@@ -38,12 +32,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesan
 class ReportDefinitionMapper(
   syncDataApiService: SyncDataApiService,
   identifiedHelper: IdentifiedHelper,
-  val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
-) : DefinitionMapper(syncDataApiService, identifiedHelper) {
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
+  establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
+) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
 
   fun mapReport(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
     return SingleVariantReportDefinition(
@@ -178,9 +168,6 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun maybeConvertToReportFields(parameters: List<Parameter>?) =
-    parameters?.map { mapParameterToField(it) } ?: emptyList()
-
   private fun mapToReportFieldDefinitions(
     specification: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification,
     schemaFields: List<SchemaField>,
@@ -199,52 +186,6 @@ class ReportDefinitionMapper(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
     )
-  }
-
-  private fun mapParameterToField(parameter: Parameter): FieldDefinition {
-    return FieldDefinition(
-      name = parameter.name,
-      display = parameter.display,
-      sortable = false,
-      defaultsort = false,
-      type = convertParameterTypeToFieldType(parameter.reportFieldType),
-      mandatory = false,
-      visible = false,
-      filter = FilterDefinition(
-        type = FilterType.valueOf(parameter.filterType.toString()),
-        mandatory = parameter.mandatory,
-        interactive = false,
-        staticOptions = populateStaticOptionsForParameter(parameter),
-      ),
-    )
-  }
-
-  private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? {
-    return parameter.referenceType
-      ?.let {
-        when (it) {
-          ReferenceType.ESTABLISHMENT -> mapEstablishmentsToFilterOptions()
-          ReferenceType.WING -> mapWingsToFilterOptions()
-        }
-      }?.takeIf { it.isNotEmpty() }
-  }
-
-  private fun mapWingsToFilterOptions(): List<FilterOption> {
-    val wingsFlattened = establishmentCodesToWingsCacheService
-      .getEstablishmentsAndPopulateCacheIfNeeded()
-      .takeIf { it.isNotEmpty() }
-      ?.flatMap { it.value }
-    log.debug("All wings count: ${wingsFlattened?.count() ?: 0}")
-    return wingsFlattened
-      ?.map { FilterOption(it.wing, it.wing) }
-      ?.plus(FilterOption(ALL_WINGS, ALL_WINGS))
-      ?: emptyList()
-  }
-
-  private fun mapEstablishmentsToFilterOptions(): List<FilterOption> {
-    return establishmentCodesToWingsCacheService
-      .getEstablishmentsAndPopulateCacheIfNeeded()
-      .map { FilterOption(it.key, it.value.first().description) }
   }
 
   private fun mapField(

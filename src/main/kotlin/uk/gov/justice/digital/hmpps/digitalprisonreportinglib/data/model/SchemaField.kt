@@ -4,7 +4,7 @@ data class SchemaField(
   val name: String,
   val type: ParameterType,
   val display: String,
-  val filter: FilterDefinition?,
+  val filter: FilterDefinition? = null,
 ) : Identified() {
   override fun getIdentifier() = this.name
 }
