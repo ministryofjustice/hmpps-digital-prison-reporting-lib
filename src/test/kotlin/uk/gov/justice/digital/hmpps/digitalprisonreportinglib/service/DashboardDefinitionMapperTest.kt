@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
@@ -24,6 +25,15 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 
 class DashboardDefinitionMapperTest {
 
@@ -33,8 +43,9 @@ class DashboardDefinitionMapperTest {
     identifiedHelper = IdentifiedHelper(),
   )
   private val syncDataApiService: SyncDataApiService = Mockito.mock()
+  private val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService = Mockito.mock()
 
-  private val dashboardDefinitionMapper = DashboardDefinitionMapper(syncDataApiService, IdentifiedHelper())
+  private val dashboardDefinitionMapper = DashboardDefinitionMapper(syncDataApiService, IdentifiedHelper(), establishmentCodesToWingsCacheService)
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
@@ -116,5 +127,77 @@ class DashboardDefinitionMapperTest {
       sortColumn = eq("establishment_id"),
       dataset = any(),
     )
+  }
+
+  @Test
+  fun `getDashboardDefinition converts dataset parameters to filters and returns the dashboard definition`() {
+    whenever(establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded()).then {
+      mapOf("KMI" to listOf(EstablishmentToWing("KMI", "KIRKHAM", "A")))
+    }
+
+    val datasetId = "dataset-id"
+    val id = "test-dashboard-1"
+    val name = "test-dashboard-name"
+    val description = "description"
+    val dashboard = Dashboard(
+      id,
+      name,
+      description,
+      datasetId,
+      listOf(),
+    )
+    val parameter = Parameter(
+      0,
+      "paramName",
+      ParameterType.String,
+      uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete,
+      "display",
+      true,
+      ReferenceType.ESTABLISHMENT,
+    )
+    val dashboardDataset = Dataset(
+      datasetId,
+      "name",
+      "datasource",
+      "query",
+      Schema(listOf(SchemaField("n", ParameterType.String, "d"))),
+      listOf(
+        parameter,
+      ),
+    )
+    val actual = dashboardDefinitionMapper.toDashboardDefinition(
+      dashboard = dashboard,
+      allDatasets = listOf(dashboardDataset),
+    )
+    val expected = DashboardDefinition(
+      id,
+      name,
+      description,
+      listOf(),
+      listOf(
+        FieldDefinition(
+          name = parameter.name,
+          display = parameter.display,
+          sortable = false,
+          defaultsort = false,
+          type = FieldType.String,
+          mandatory = false,
+          visible = false,
+          filter = FilterDefinition(
+            type = FilterType.AutoComplete,
+            mandatory = parameter.mandatory,
+            interactive = false,
+            staticOptions = listOf(
+              FilterOption(
+                "KMI",
+                "KIRKHAM",
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+    assertEquals(expected, actual)
+    verify(establishmentCodesToWingsCacheService, times(1)).getEstablishmentsAndPopulateCacheIfNeeded()
   }
 }

@@ -17,12 +17,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Label
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 
 @Component
 class DashboardDefinitionMapper(
   syncDataApiService: SyncDataApiService,
   identifiedHelper: IdentifiedHelper,
-) : DefinitionMapper(syncDataApiService, identifiedHelper) {
+  establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
+) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
   fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
@@ -33,7 +35,7 @@ class DashboardDefinitionMapper(
       metrics = dashboard.metrics.map { toMetricDefinition(it) },
       filterFields = dataset.schema.field
         .filter { it.filter != null }
-        .map { toFilterField(it, allDatasets) },
+        .map { toFilterField(it, allDatasets) } + maybeConvertToReportFields(dataset.parameters),
     )
   }
 
