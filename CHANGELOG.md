@@ -1,7 +1,7 @@
 Below you can find the changes included in each release.
 
 # 7.6.0
-Dashboards definition response converts dataset parameters to filters.
+Dashboard definition response converts dataset parameters to filters.
 
 # 7.5.1
 Dashboards support also Athena queries based on the datasource defined in the DPD.
