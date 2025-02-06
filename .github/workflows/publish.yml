@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -58,3 +58,9 @@ jobs:
           ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
           ./gradlew -PpublishVersion=${{ steps.bump-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
 
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          PR_MESSAGE=$(git log -1 --pretty=format:"%s")
+          git tag -a "${{ steps.bump-version.outputs.next-version }}" -m "${{ inputs.versionType }}-level version bump: $PR_MESSAGE"
+          git push origin "${{ steps.bump-version.outputs.next-version }}"
