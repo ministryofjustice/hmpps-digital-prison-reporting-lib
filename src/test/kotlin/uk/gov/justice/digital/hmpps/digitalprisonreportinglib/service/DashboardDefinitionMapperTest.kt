@@ -3,7 +3,11 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
@@ -22,9 +26,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
-import java.util.*
 
 class DashboardDefinitionMapperTest {
 
@@ -123,7 +132,7 @@ class DashboardDefinitionMapperTest {
   @Test
   fun `getDashboardDefinition converts dataset parameters to filters and returns the dashboard definition`() {
     whenever(establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded()).then {
-        mapOf("KMI" to listOf(EstablishmentToWing("KMI", "KIRKHAM", "A")))
+      mapOf("KMI" to listOf(EstablishmentToWing("KMI", "KIRKHAM", "A")))
     }
 
     val datasetId = "dataset-id"
@@ -135,7 +144,7 @@ class DashboardDefinitionMapperTest {
       name,
       description,
       datasetId,
-      listOf()
+      listOf(),
     )
     val parameter = Parameter(
       0,
@@ -180,13 +189,13 @@ class DashboardDefinitionMapperTest {
             interactive = false,
             staticOptions = listOf(
               FilterOption(
-              "KMI",
-              "KIRKHAM"
-            )
+                "KMI",
+                "KIRKHAM",
+              ),
             ),
           ),
-        )
-      )
+        ),
+      ),
     )
     assertEquals(expected, actual)
     verify(establishmentCodesToWingsCacheService, times(1)).getEstablishmentsAndPopulateCacheIfNeeded()
