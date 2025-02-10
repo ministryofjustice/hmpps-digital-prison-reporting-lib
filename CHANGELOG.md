@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.6.1
+Support policy checks a list of available caseloads a user is allowed to access.
+
 # 7.6.0
 Dashboard definition response converts dataset parameters to filters.
 
