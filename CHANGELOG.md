@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-# 7.7.0
+# 7.7.0 - 7.8.0
 Support policy checks a list of available caseloads a user is allowed to access. For example:
 ```json
 {
