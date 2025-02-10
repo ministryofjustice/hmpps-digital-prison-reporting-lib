@@ -93,6 +93,7 @@ class SyncDataApiServiceTest {
 
   @BeforeEach
   fun setup() {
+    whenever(authToken.getActiveCaseLoad()).thenReturn("WWI")
     whenever(authToken.getCaseLoads()).thenReturn(listOf("WWI"))
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(

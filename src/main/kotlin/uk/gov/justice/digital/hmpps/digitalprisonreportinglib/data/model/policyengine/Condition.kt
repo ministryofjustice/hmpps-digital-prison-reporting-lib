@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policy
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOADS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.ROLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.TOKEN
 
@@ -54,7 +55,8 @@ data class Condition(
     val varMappings = mapOf(
       TOKEN to authToken,
       ROLE to authToken?.authorities?.map { it.authority },
-      CASELOAD to authToken?.getCaseLoads()?.firstOrNull(),
+      CASELOAD to authToken?.getActiveCaseLoad(),
+      CASELOADS to authToken?.getCaseLoads(),
     )
     return varMappings[varPlaceholder] != null
   }

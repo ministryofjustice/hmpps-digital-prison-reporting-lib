@@ -104,6 +104,7 @@ class AsyncDataApiServiceTest {
 
   @BeforeEach
   fun setup() {
+    whenever(authToken.getActiveCaseLoad()).thenReturn("WWI")
     whenever(authToken.getCaseLoads()).thenReturn(listOf("WWI"))
   }
 
@@ -293,6 +294,7 @@ class AsyncDataApiServiceTest {
     val tableId = executionId.replace("-", "_")
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     val caseload = "caseloadA"
+    whenever(authToken.getActiveCaseLoad()).thenReturn(caseload)
     whenever(authToken.getCaseLoads()).thenReturn(listOf(caseload))
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
     val policyEngineResult = "(establishment_id='$caseload')"
@@ -383,6 +385,7 @@ class AsyncDataApiServiceTest {
     whenever(singleDashboardProductDefinition.allDatasets).thenReturn(listOf(dashboardDataset))
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
+    whenever(authToken.getActiveCaseLoad()).thenReturn(caseload)
     whenever(authToken.getCaseLoads()).thenReturn(listOf(caseload))
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
