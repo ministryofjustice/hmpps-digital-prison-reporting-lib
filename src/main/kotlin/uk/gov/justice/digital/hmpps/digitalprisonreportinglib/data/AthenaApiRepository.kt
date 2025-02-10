@@ -155,7 +155,7 @@ class AthenaApiRepository(
     """WITH $CONTEXT AS (
       SELECT 
       '${userToken?.jwt?.subject}' AS username, 
-      '${userToken?.getCaseLoads()?.first()}' AS caseload, 
+      '${userToken?.getActiveCaseLoad()}' AS caseload, 
       'GENERAL' AS account_type 
       FROM DUAL
       )"""
