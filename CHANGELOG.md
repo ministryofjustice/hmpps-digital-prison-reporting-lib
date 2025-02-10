@@ -1,7 +1,32 @@
 Below you can find the changes included in each release.
 
-# 7.6.1
-Support policy checks a list of available caseloads a user is allowed to access.
+# 7.7.0 - 7.8.0
+Support policy checks a list of available caseloads a user is allowed to access. For example:
+```json
+{
+  "policy": [
+    {
+      "id": "caseloads",
+      "type": "row-level",
+      "action": [
+        "location IN (${caseloads})"
+      ],
+      "rule": [
+        {
+          "effect": "permit",
+          "condition": [
+            {
+              "exists": [
+                "${caseloads}"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
 
 # 7.6.0
 Dashboard definition response converts dataset parameters to filters.
