@@ -46,7 +46,7 @@ class PolicyEngine(
       }
       s.contains(CASELOADS) -> {
         val caseLoads = authToken.getCaseLoads()
-        if (caseLoads.isEmpty()) POLICY_DENY else s.replace(CASELOADS, caseLoads.joinToString(",", "'", "'"))
+        if (caseLoads.isEmpty()) POLICY_DENY else s.replace(CASELOADS, caseLoads.joinToString { "\'${it}\'" })
       }
       else -> s
     }
