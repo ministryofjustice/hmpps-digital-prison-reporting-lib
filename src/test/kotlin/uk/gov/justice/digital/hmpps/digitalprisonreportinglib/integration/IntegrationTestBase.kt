@@ -134,10 +134,7 @@ abstract class IntegrationTestBase {
             "username": "TESTUSER1",
             "active": true,
             "accountType": "GENERAL",
-            "activeCaseload": {
-              "id": "$activeCaseloadId",
-              "name": "WANDSWORTH (HMP)"
-            },
+            "activeCaseload": "$activeCaseloadId",
             "caseloads": [
               {
                 "id": "WWI",

@@ -21,7 +21,7 @@ class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvid
       throw NoDataAvailableException(WARNING_NO_ACTIVE_CASELOAD)
     }
 
-    return caseloadResponse.activeCaseload.id
+    return caseloadResponse.activeCaseload
   }
 
   override fun getCaseloadIds(jwt: Jwt): List<String> {
@@ -43,5 +43,5 @@ class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvid
       .block()!!
   }
 
-  data class CaseloadResponse(val username: String, val active: Boolean, val accountType: String, val activeCaseload: Caseload?, val caseloads: List<Caseload>)
+  data class CaseloadResponse(val username: String, val active: Boolean, val accountType: String, val activeCaseload: String?, val caseloads: List<Caseload>)
 }

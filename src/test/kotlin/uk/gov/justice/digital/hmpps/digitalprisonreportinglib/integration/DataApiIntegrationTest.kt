@@ -53,6 +53,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             "username": "TESTUSER1",
             "active": true,
             "accountType": "GENERAL",
+            "activeCaseload": null,
             "caseloads": [
               {
                 "id": "WWI",

@@ -27,11 +27,11 @@ class DefaultCaseloadProviderTest {
   fun `get active caseload ID`() {
     val jwt = createJwtHeaders()
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
-      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
+      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", "WWI", listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
     val actual = caseloadProvider.getActiveCaseloadId(jwt)
 
-    assertEquals(expectedCaseloadResponse.activeCaseload!!.id, actual)
+    assertEquals(expectedCaseloadResponse.activeCaseload!!, actual)
   }
 
   @Test
@@ -39,7 +39,7 @@ class DefaultCaseloadProviderTest {
   fun `get available caseloads`() {
     val jwt = createJwtHeaders()
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
-      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)"), Caseload("LEI", "Leeds (HMP)")))
+      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", "WWI", listOf(Caseload("WWI", "WANDSWORTH (HMP)"), Caseload("LEI", "Leeds (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
     val actual = caseloadProvider.getCaseloadIds(jwt)
 
@@ -50,7 +50,7 @@ class DefaultCaseloadProviderTest {
   fun `getActiveCaseloadId should throw NoDataAvailableException for any account type other than GENERAL`() {
     val jwt = createJwtHeaders()
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
-      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
+      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GLOBAL_SEARCH", "WWI", listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
     val exception = assertThrows<NoDataAvailableException> { caseloadProvider.getActiveCaseloadId(jwt) }
 
