@@ -5,17 +5,12 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ChartType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Column
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Label
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
@@ -210,22 +205,7 @@ class ReportDefinitionSummaryMapperTest {
       name = "n1",
       description = "abc",
       dataset = "dataset1",
-      metrics = listOf(
-        Metric(
-          id = "m1",
-          name = "n1",
-          display = "d1",
-          description = "d2",
-          charts = listOf(
-            Chart(
-              type = ChartType.BAR,
-              unit = "dim_1",
-              label = Label(name = "label1", display = "Label 1"),
-              columns = listOf(Column(name = "column1", display = "Column 1")),
-            ),
-          ),
-        ),
-      ),
+      sections = emptyList(),
     )
     val dashboardDefinition = DashboardDefinitionSummary(
       id = "d1",

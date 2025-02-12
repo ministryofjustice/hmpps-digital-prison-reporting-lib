@@ -28,7 +28,7 @@ class DashboardDefinitionServiceTest {
     val dashboard: Dashboard = Mockito.mock()
     val allDatasets: List<Dataset> = listOf(Mockito.mock())
     val definitionId = "missing-ethnicity-metrics"
-    val dashboardId = "test-dashboard-1"
+    val dashboardId = "age-breakdown-dashboard-1"
 
     whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any())).doReturn(dashboardDefinition)
     whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any(), anyOrNull())).doReturn(productDefinition)

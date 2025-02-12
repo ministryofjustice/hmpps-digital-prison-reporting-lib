@@ -19,7 +19,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
-          .path("/definitions/missing-ethnicity-metrics/dashboards/test-dashboard-1")
+          .path("/definitions/missing-ethnicity-metrics/dashboards/age-breakdown-dashboard-1")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -30,55 +30,45 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
       .json(
         """
             {
-            "id": "test-dashboard-1",
-            "name": "Test Dashboard 1",
-            "description": "Test Dashboard 1 Description",
-            "metrics": [
-              {
-                "id": "missing-ethnicity-metric",
-                "name": "Missing Ethnicity By Establishment Metric",
-                "display": "Missing Ethnicity By Establishment Metric",
-                "description": "Missing Ethnicity By Establishment Metric",
-                "charts": [
-                  {
-                    "type": "bar",
-                    "label": {
-                      "name": "establishment_id",
-                      "display": "Establishment ID"
-                    },
-                    "unit": "number",
-                    "columns": [
-                      {
-                        "name": "has_ethnicity",
-                        "display": "No. of Prisoners with ethnicity"
-                      },
-                      {
-                        "name": "ethnicity_is_missing",
-                        "display": "No. of Prisoners without ethnicity"
-                      }
-                    ]
-                  },
-                  {
-                    "type": "doughnut",
-                    "label": {
-                      "name": "establishment_id",
-                      "display": "Establishment ID"
-                    },
-                    "unit": "percentage",
-                    "columns": [
-                      {
-                        "name": "has_ethnicity",
-                        "display": "No. of Prisoners with ethnicity"
-                      },
-                      {
-                        "name": "ethnicity_is_missing",
-                        "display": "No. of Prisoners without ethnicity"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
+            "id": "age-breakdown-dashboard-1",
+            "name": "Age Breakdown Dashboard",
+            "description": "Age Breakdown Dashboard Description",
+            "sections": [{
+              "id": "totals-breakdown",
+              "display": "Totals breakdown",
+              "visualisations": [ {
+                    "id": "total-prisoners",
+                    "type": "list",
+                    "display": "Total prisoners by wing",
+                    "columns": {
+                      "keys": [
+                        {
+                          "id": "establishment_id",
+                          "display": "Establishmnent ID"
+                        },
+                        {
+                          "id": "wing",
+                          "display": "Wing"
+                        }
+                      ],
+                      "measures": [
+                        {
+                          "id": "establishment_id",
+                          "display": "Establishmnent ID"
+                        },
+                        {
+                          "id": "wing",
+                          "display": "Wing"
+                        },
+                        {
+                          "id": "total_prisoners",
+                          "display": "Total prisoners"
+                        }
+                      ],
+                      "expectNulls": true
+                    }
+            }]
+             }],              
             "filterFields": [
               {
                 "name":"establishment_id",

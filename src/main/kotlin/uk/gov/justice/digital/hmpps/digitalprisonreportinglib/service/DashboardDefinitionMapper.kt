@@ -1,18 +1,27 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AggregateTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnsDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UnitTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Column
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisationColumn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Label
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
@@ -32,12 +41,44 @@ class DashboardDefinitionMapper(
       id = dashboard.id,
       name = dashboard.name,
       description = dashboard.description,
-      metrics = dashboard.metrics.map { toMetricDefinition(it) },
+      sections = dashboard.sections.map { section ->
+        DashboardSectionDefinition(
+          id = section.id,
+          display = section.display,
+          description = section.description,
+          visualisations = section.visualisations.map { visualisation ->
+            DashboardVisualisationDefinition(
+              id = visualisation.id,
+              type = DashboardVisualisationTypeDefinition.valueOf(visualisation.type.toString()),
+              display = visualisation.display,
+              description = visualisation.description,
+              columns = DashboardVisualisationColumnsDefinition(
+                keys = visualisation.columns.keys?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.columns.keys) },
+                measures = mapToDashboardVisualisationColumnDefinitions(visualisation.columns.measures),
+                filters = visualisation.columns.filters?.map { ValueVisualisationColumnDefinition(it.id, it.equals) },
+                expectNulls = visualisation.columns.expectNulls,
+              ),
+            )
+          },
+        )
+      },
       filterFields = dataset.schema.field
         .filter { it.filter != null }
         .map { toFilterField(it, allDatasets) } + maybeConvertToReportFields(dataset.parameters),
     )
   }
+
+  private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) =
+    dashboardVisualisationColumns.map {
+      DashboardVisualisationColumnDefinition(
+        it.id,
+        it.display,
+        it.aggregate?.let { type -> AggregateTypeDefinition.valueOf(type.toString()) },
+        it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
+        it.displayValue,
+        it.axis,
+      )
+    }
 
   private fun toMetricDefinition(metric: Metric): MetricDefinition {
     return MetricDefinition(
