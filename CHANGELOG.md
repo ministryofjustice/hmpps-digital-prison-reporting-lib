@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.8.1
+This fixes a bug with the caseload list generation. Was: `MDI,BXI,LEI`. It now is: `'MDI','BXI','LEI'`.
+
 # 7.7.0 - 7.8.0
 Support policy checks a list of available caseloads a user is allowed to access. For example:
 ```json
