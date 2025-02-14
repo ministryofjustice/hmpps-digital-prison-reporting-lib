@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 7.8.2
+Changed the dashboard definition. The main changes are:
+Updated metric definition to section definition which contains a list of DashboardVisualisation definitions.
+
 # 7.8.1
 This fixes a bug with the caseload list generation. Was: `MDI,BXI,LEI`. It now is: `'MDI','BXI','LEI'`.
 

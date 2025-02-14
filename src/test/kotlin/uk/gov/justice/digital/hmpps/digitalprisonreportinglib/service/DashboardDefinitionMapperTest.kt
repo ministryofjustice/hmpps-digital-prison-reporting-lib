@@ -9,18 +9,18 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnsDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -56,7 +56,7 @@ class DashboardDefinitionMapperTest {
       )
     }
 
-    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition("missing-ethnicity-metrics", "test-dashboard-1")
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition("missing-ethnicity-metrics", "age-breakdown-dashboard-1")
 
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = productDefinition.dashboard,
@@ -64,32 +64,29 @@ class DashboardDefinitionMapperTest {
     )
     assertEquals(
       DashboardDefinition(
-        id = "test-dashboard-1",
-        name = "Test Dashboard 1",
-        description = "Test Dashboard 1 Description",
-        metrics = listOf(
-          MetricDefinition(
-            id = "missing-ethnicity-metric",
-            name = "Missing Ethnicity By Establishment Metric",
-            display = "Missing Ethnicity By Establishment Metric",
-            description = "Missing Ethnicity By Establishment Metric",
-            charts = listOf(
-              ChartDefinition(
-                type = ChartTypeDefinition.BAR,
-                label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
-                unit = "number",
-                columns = listOf(
-                  ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                  ColumnDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity"),
-                ),
-              ),
-              ChartDefinition(
-                type = ChartTypeDefinition.DOUGHNUT,
-                label = LabelDefinition(name = "establishment_id", display = "Establishment ID"),
-                unit = "percentage",
-                columns = listOf(
-                  ColumnDefinition(name = "has_ethnicity", display = "No. of Prisoners with ethnicity"),
-                  ColumnDefinition(name = "ethnicity_is_missing", display = "No. of Prisoners without ethnicity"),
+        id = "age-breakdown-dashboard-1",
+        name = "Age Breakdown Dashboard",
+        description = "Age Breakdown Dashboard Description",
+        sections = listOf(
+          DashboardSectionDefinition(
+            id = "totals-breakdown",
+            display = "Totals breakdown",
+            visualisations = listOf(
+              DashboardVisualisationDefinition(
+                id = "total-prisoners",
+                type = DashboardVisualisationTypeDefinition.LIST,
+                display = "Total prisoners by wing",
+                columns = DashboardVisualisationColumnsDefinition(
+                  keys = listOf(
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
+                    DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
+                  ),
+                  measures = listOf(
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
+                    DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
+                    DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
+                  ),
+                  expectNulls = true,
                 ),
               ),
             ),
@@ -136,7 +133,7 @@ class DashboardDefinitionMapperTest {
     }
 
     val datasetId = "dataset-id"
-    val id = "test-dashboard-1"
+    val id = "age-breakdown-dashboard-1"
     val name = "test-dashboard-name"
     val description = "description"
     val dashboard = Dashboard(

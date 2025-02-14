@@ -325,7 +325,7 @@ class AsyncDataApiServiceTest {
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = "missing-ethnicity-metrics",
-      dashboardId = "test-dashboard-1",
+      dashboardId = "age-breakdown-dashboard-1",
       userToken = authToken,
       filters = emptyMap(),
     )
@@ -1033,7 +1033,7 @@ class AsyncDataApiServiceTest {
     val actual = configuredApiService.getDashboardStatementResult(
       tableId,
       "missing-ethnicity-metrics",
-      "test-dashboard-1",
+      "age-breakdown-dashboard-1",
       selectedPage = selectedPage,
       pageSize = pageSize,
       filters = emptyMap(),
@@ -1077,7 +1077,7 @@ class AsyncDataApiServiceTest {
       configuredApiService.getDashboardStatementResult(
         tableId,
         "missing-ethnicity-metrics",
-        "test-dashboard-1",
+        "age-breakdown-dashboard-1",
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = emptyMap(),
