@@ -5,5 +5,6 @@ data class Dashboard(
   val name: String,
   val description: String,
   val dataset: String,
-  val metrics: List<Metric>,
+  val sections: List<DashboardSection>,
+  val filter: ReportFilter? = null,
 )

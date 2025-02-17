@@ -11,9 +11,11 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionContext
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -37,7 +39,6 @@ class AthenaApiRepository(
 ) : AthenaAndRedshiftCommonRepository() {
 
   override fun executeQueryAsync(
-    productDefinition: SingleReportProductDefinition,
     filters: List<ConfiguredApiRepository.Filter>,
     sortColumn: String?,
     sortedAsc: Boolean,
@@ -45,10 +46,19 @@ class AthenaApiRepository(
     dynamicFilterFieldId: Set<String>?,
     prompts: List<Prompt>?,
     userToken: DprAuthAwareAuthenticationToken?,
+    query: String,
+    reportFilter: ReportFilter?,
+    datasource: Datasource,
+    reportSummaries: List<ReportSummary>?,
+    allDatasets: List<Dataset>,
+    productDefinitionId: String,
+    productDefinitionName: String,
+    reportOrDashboardId: String,
+    reportOrDashboardName: String,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val finalQuery = """
-          /* ${productDefinition.id} ${productDefinition.name} ${productDefinition.report.id} ${productDefinition.report.name} */
+          /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -59,9 +69,9 @@ class AthenaApiRepository(
       buildFinalQuery(
         buildContextQuery(userToken),
         buildPromptsQuery(prompts),
-        buildDatasetQuery(productDefinition.reportDataset.query),
-        buildReportQuery(productDefinition.report.filter),
-        buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition.report.filter)),
+        buildDatasetQuery(query),
+        buildReportQuery(reportFilter),
+        buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         // The filters part will be replaced with the variables CTE
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
@@ -71,7 +81,7 @@ class AthenaApiRepository(
           );
     """.trimIndent()
 
-    return executeQueryAsync(productDefinition.datasource, tableId, finalQuery)
+    return executeQueryAsync(datasource, tableId, finalQuery)
   }
 
   override fun executeQueryAsync(
@@ -145,7 +155,7 @@ class AthenaApiRepository(
     """WITH $CONTEXT AS (
       SELECT 
       '${userToken?.jwt?.subject}' AS username, 
-      '${userToken?.getCaseLoads()?.first()}' AS caseload, 
+      '${userToken?.getActiveCaseLoad()}' AS caseload, 
       'GENERAL' AS account_type 
       FROM DUAL
       )"""

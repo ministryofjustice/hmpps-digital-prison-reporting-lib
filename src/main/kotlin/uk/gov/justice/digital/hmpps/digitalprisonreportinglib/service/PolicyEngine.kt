@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOADS
 
 class PolicyEngine(
   val policy: List<Policy>,
@@ -15,6 +16,7 @@ class PolicyEngine(
     const val ROLE = "\${role}"
     const val TOKEN = "\${token}"
     const val CASELOAD = "\${caseload}"
+    const val CASELOADS = "\${caseloads}"
   }
 
   fun execute(policyType: PolicyType): String {
@@ -35,15 +37,18 @@ class PolicyEngine(
     policies.map { it.execute(authToken, ::interpolateVariables) }.any { it == POLICY_DENY }
 
   private fun interpolateVariables(s: String): String {
-    var interpolated = s
-    if (s.contains(CASELOAD)) {
-      if (authToken == null || authToken.getCaseLoads().isEmpty()) {
-        return POLICY_DENY
+    if (authToken == null) return POLICY_DENY
+
+    return when {
+      s.contains(CASELOAD) -> {
+        val activeCaseLoad = authToken.getActiveCaseLoad()
+        if (activeCaseLoad.isNullOrEmpty()) POLICY_DENY else s.replace(CASELOAD, activeCaseLoad)
       }
-      // Note: This is currently for a single active caseload
-      // Addition of single quotes could be in DPD instead
-      interpolated = s.replace(CASELOAD, authToken.getCaseLoads().first())
+      s.contains(CASELOADS) -> {
+        val caseLoads = authToken.getCaseLoads()
+        if (caseLoads.isEmpty()) POLICY_DENY else s.replace(CASELOADS, caseLoads.joinToString { "\'${it}\'" })
+      }
+      else -> s
     }
-    return interpolated
   }
 }

@@ -14,4 +14,5 @@ data class SingleReportProductDefinition(
   val report: Report,
   override val policy: List<Policy>,
   val allDatasets: List<Dataset>,
+  val allReports: List<Report>,
 ) : WithPolicy

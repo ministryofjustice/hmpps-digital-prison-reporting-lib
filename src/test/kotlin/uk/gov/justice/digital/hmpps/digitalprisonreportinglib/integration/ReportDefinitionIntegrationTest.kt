@@ -128,9 +128,9 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(result.responseBody!![0].dashboards).isEqualTo(
         listOf(
           DashboardDefinitionSummary(
-            id = "test-dashboard-1",
-            name = "Test Dashboard 1",
-            description = "Test Dashboard 1 Description",
+            id = "age-breakdown-dashboard-1",
+            name = "Age Breakdown Dashboard",
+            description = "Age Breakdown Dashboard Description",
           ),
         ),
       )

@@ -12,9 +12,11 @@ import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -27,7 +29,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prom
 class RedshiftDataApiRepository(
   val redshiftDataClient: RedshiftDataClient,
   private val tableIdGenerator: TableIdGenerator,
-  private val datasetHelper: DatasetHelper,
+  private val identifiedHelper: IdentifiedHelper,
   private val redShiftSummaryTableHelper: RedShiftSummaryTableHelper,
   @Value("\${dpr.lib.redshiftdataapi.database:db}") private val redshiftDataApiDb: String,
   @Value("\${dpr.lib.redshiftdataapi.clusterid:clusterId}") private val redshiftDataApiClusterId: String,
@@ -36,7 +38,6 @@ class RedshiftDataApiRepository(
   private val s3location: String = "dpr-working-development/reports",
 ) : AthenaAndRedshiftCommonRepository() {
   override fun executeQueryAsync(
-    productDefinition: SingleReportProductDefinition,
     filters: List<ConfiguredApiRepository.Filter>,
     sortColumn: String?,
     sortedAsc: Boolean,
@@ -44,6 +45,15 @@ class RedshiftDataApiRepository(
     dynamicFilterFieldId: Set<String>?,
     prompts: List<Prompt>?,
     userToken: DprAuthAwareAuthenticationToken?,
+    query: String,
+    reportFilter: ReportFilter?,
+    datasource: Datasource,
+    reportSummaries: List<ReportSummary>?,
+    allDatasets: List<Dataset>,
+    productDefinitionId: String,
+    productDefinitionName: String,
+    reportOrDashboardId: String,
+    reportOrDashboardName: String,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
@@ -53,18 +63,18 @@ class RedshiftDataApiRepository(
           AS ( 
           ${
       buildFinalQuery(
-        datasetQuery = buildDatasetQuery(productDefinition.reportDataset.query),
-        reportQuery = buildReportQuery(productDefinition.report.filter),
-        policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(productDefinition.report.filter)),
+        datasetQuery = buildDatasetQuery(query),
+        reportQuery = buildReportQuery(reportFilter),
+        policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         filtersQuery = buildFiltersQuery(filters),
         selectFromFinalStageQuery = buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
       )
     }
           );
-          ${buildSummaryQueries(productDefinition, tableId)}
+          ${buildSummaryQueries(tableId, reportSummaries, allDatasets)}
     """.trimIndent()
 
-    return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
+    return executeQueryAsync(datasource, tableId, generateSql)
   }
 
   override fun executeQueryAsync(
@@ -120,9 +130,13 @@ class RedshiftDataApiRepository(
     }
   }
 
-  fun buildSummaryQueries(productDefinition: SingleReportProductDefinition, tableId: String): String {
-    return productDefinition.report.summary?.joinToString(" ") {
-      val query = datasetHelper.findDataset(productDefinition.allDatasets, it.dataset).query
+  fun buildSummaryQueries(
+    tableId: String,
+    reportSummaries: List<ReportSummary>?,
+    allDatasets: List<Dataset>,
+  ): String {
+    return reportSummaries?.joinToString(" ") {
+      val query = identifiedHelper.findOrFail(allDatasets, it.dataset).query
 
       redShiftSummaryTableHelper.buildSummaryQuery(
         query,

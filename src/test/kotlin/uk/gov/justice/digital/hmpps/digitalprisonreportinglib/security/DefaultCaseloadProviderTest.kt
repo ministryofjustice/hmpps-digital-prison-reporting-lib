@@ -29,9 +29,21 @@ class DefaultCaseloadProviderTest {
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
       DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
-    val actual = caseloadProvider.getActiveCaseloadIds(jwt)
+    val actual = caseloadProvider.getActiveCaseloadId(jwt)
 
-    assertEquals(listOf(expectedCaseloadResponse.activeCaseload!!.id), actual)
+    assertEquals(expectedCaseloadResponse.activeCaseload!!.id, actual)
+  }
+
+  @Test
+  @SuppressWarnings("rawtypes")
+  fun `get available caseloads`() {
+    val jwt = createJwtHeaders()
+    val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
+      DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)"), Caseload("LEI", "Leeds (HMP)")))
+    mockWebClientCall(expectedCaseloadResponse)
+    val actual = caseloadProvider.getCaseloadIds(jwt)
+
+    assertEquals(expectedCaseloadResponse.caseloads.sortedBy { it.id }.map { it.id }, actual)
   }
 
   @Test
@@ -40,7 +52,7 @@ class DefaultCaseloadProviderTest {
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
       DefaultCaseloadProvider.CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
-    val exception = assertThrows<NoDataAvailableException> { caseloadProvider.getActiveCaseloadIds(jwt) }
+    val exception = assertThrows<NoDataAvailableException> { caseloadProvider.getActiveCaseloadId(jwt) }
 
     assertEquals(exception.reason, "'GLOBAL_SEARCH' account types are currently not supported.")
   }
@@ -51,7 +63,7 @@ class DefaultCaseloadProviderTest {
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
       DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", null, listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
-    val exception = assertThrows<NoDataAvailableException> { caseloadProvider.getActiveCaseloadIds(jwt) }
+    val exception = assertThrows<NoDataAvailableException> { caseloadProvider.getActiveCaseloadId(jwt) }
 
     assertEquals(exception.reason, "User has not set an active caseload.")
   }

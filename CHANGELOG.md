@@ -1,7 +1,51 @@
 Below you can find the changes included in each release.
 
+# 7.8.2
+Changed the dashboard definition. The main changes are:
+Updated metric definition to section definition which contains a list of DashboardVisualisation definitions.
+
+# 7.8.1
+This fixes a bug with the caseload list generation. Was: `MDI,BXI,LEI`. It now is: `'MDI','BXI','LEI'`.
+
+# 7.7.0 - 7.8.0
+Support policy checks a list of available caseloads a user is allowed to access. For example:
+```json
+{
+  "policy": [
+    {
+      "id": "caseloads",
+      "type": "row-level",
+      "action": [
+        "location IN (${caseloads})"
+      ],
+      "rule": [
+        {
+          "effect": "permit",
+          "condition": [
+            {
+              "exists": [
+                "${caseloads}"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+# 7.6.0
+Dashboard definition response converts dataset parameters to filters.
+
+# 7.5.1
+Dashboards support also Athena queries based on the datasource defined in the DPD.
+
+# 7.5.0
+Add Parent-Child template: https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema?tab=readme-ov-file#parent-child-template
+
 # 7.4.0
-The dashboard result endpoint now returns a ResponseEntity<List<List<Map<String, Any?>>>> instead a ResponseEntity<List<Map<String, Any?>>> which was previously returned.  
+The dashboard result endpoint now returns a ResponseEntity<List<List<Map<String, Any?>>>> instead a ResponseEntity<List<Map<String, Any?>>> which was previously returned.
 
 # 7.3.21
 The status endpoints check if a table is missing only if the status is 'FINISHED' and there is a table ID provided.

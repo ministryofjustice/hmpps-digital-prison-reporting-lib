@@ -26,6 +26,7 @@ class PolicyEngineTest {
       listOf("(origin_code='\${caseload}' AND lower(direction)='out') OR (destination_code='\${caseload}' AND lower(direction)='in')"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
+    whenever(authToken.getActiveCaseLoad()).thenReturn("ABC")
     whenever(authToken.getCaseLoads()).thenReturn(listOf("ABC"))
     val policyEngine = PolicyEngine(listOf(policy), authToken)
     val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in')"
@@ -58,6 +59,7 @@ class PolicyEngineTest {
       listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
+    whenever(authToken.getActiveCaseLoad()).thenReturn(null)
     whenever(authToken.getCaseLoads()).thenReturn(emptyList())
     val policyEngine = PolicyEngine(listOf(policy), authToken)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -71,6 +73,7 @@ class PolicyEngineTest {
       listOf("(origin_code=\${caseload} AND direction='OUT') OR (destination_code=\${caseload} AND direction='IN')"),
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${caseload}"))))),
     )
+    whenever(authToken.getActiveCaseLoad()).thenReturn(null)
     whenever(authToken.getCaseLoads()).thenReturn(emptyList())
     val policyEngine = PolicyEngine(listOf(policy), authToken)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -84,7 +87,7 @@ class PolicyEngineTest {
       listOf("TRUE"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
-    val policyEngine = PolicyEngine(listOf(policy))
+    val policyEngine = PolicyEngine(listOf(policy), authToken = authToken)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_PERMIT)
   }
 
@@ -199,9 +202,16 @@ class PolicyEngineTest {
       listOf("TRUE"),
       listOf(Rule(Effect.PERMIT, listOf(Condition(exists = listOf("\${token}"))))),
     )
-    whenever(authToken.getCaseLoads()).thenReturn(listOf("ABC"))
-    val policyEngine = PolicyEngine(listOf(policy1, policy2), authToken)
-    val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in') AND ${PolicyResult.POLICY_PERMIT}"
+    val policy3 = Policy(
+      "caseloads",
+      ROW_LEVEL,
+      listOf("origin_code in (\${caseloads})"),
+      listOf(Rule(Effect.PERMIT, emptyList())),
+    )
+    whenever(authToken.getActiveCaseLoad()).thenReturn("ABC")
+    whenever(authToken.getCaseLoads()).thenReturn(listOf("ABC", "BBC", "HEI", "MDI"))
+    val policyEngine = PolicyEngine(listOf(policy1, policy2, policy3), authToken)
+    val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in') AND ${PolicyResult.POLICY_PERMIT} AND origin_code in ('ABC', 'BBC', 'HEI', 'MDI')"
     assertThat(policyEngine.execute()).isEqualTo(expected)
   }
 

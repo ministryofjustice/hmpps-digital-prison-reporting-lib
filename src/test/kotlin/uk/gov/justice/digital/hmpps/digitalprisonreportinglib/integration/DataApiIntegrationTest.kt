@@ -88,7 +88,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
       )
 
-    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
+    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
   }
 
   class ReportDefinitionListTest : IntegrationTestBase() {
@@ -127,7 +127,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
         )
 
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
@@ -295,7 +295,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
         )
 
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
@@ -341,7 +341,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
         )
 
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(1)
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
     }
   }
 

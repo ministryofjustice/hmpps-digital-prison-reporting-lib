@@ -1,29 +1,37 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
+import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DynamicFilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.GranularityDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.QuickFilterDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DatasetHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.SCHEMA_REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
 
 abstract class DefinitionMapper(
   private val syncDataApiService: SyncDataApiService,
-  val datasetHelper: DatasetHelper,
+  val identifiedHelper: IdentifiedHelper,
+  val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) {
 
   companion object {
     const val DEFAULT_MAX_STATIC_OPTIONS: Long = 30
+    private val log = LoggerFactory.getLogger(this::class.java)
   }
 
   private val todayRegex: Regex = Regex("today\\(\\)")
@@ -97,6 +105,55 @@ abstract class DefinitionMapper(
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 
+  protected fun maybeConvertToReportFields(parameters: List<Parameter>?) =
+    parameters?.map { mapParameterToField(it) } ?: emptyList()
+
+  private fun mapParameterToField(parameter: Parameter): FieldDefinition {
+    return FieldDefinition(
+      name = parameter.name,
+      display = parameter.display,
+      sortable = false,
+      defaultsort = false,
+      type = convertParameterTypeToFieldType(parameter.reportFieldType),
+      mandatory = false,
+      visible = false,
+      filter = FilterDefinition(
+        type = FilterType.valueOf(parameter.filterType.toString()),
+        mandatory = parameter.mandatory,
+        interactive = false,
+        staticOptions = populateStaticOptionsForParameter(parameter),
+      ),
+    )
+  }
+
+  private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? {
+    return parameter.referenceType
+      ?.let {
+        when (it) {
+          ReferenceType.ESTABLISHMENT -> mapEstablishmentsToFilterOptions()
+          ReferenceType.WING -> mapWingsToFilterOptions()
+        }
+      }?.takeIf { it.isNotEmpty() }
+  }
+
+  private fun mapEstablishmentsToFilterOptions(): List<FilterOption> {
+    return establishmentCodesToWingsCacheService
+      .getEstablishmentsAndPopulateCacheIfNeeded()
+      .map { FilterOption(it.key, it.value.first().description) }
+  }
+
+  private fun mapWingsToFilterOptions(): List<FilterOption> {
+    val wingsFlattened = establishmentCodesToWingsCacheService
+      .getEstablishmentsAndPopulateCacheIfNeeded()
+      .takeIf { it.isNotEmpty() }
+      ?.flatMap { it.value }
+    log.debug("All wings count: ${wingsFlattened?.count() ?: 0}")
+    return wingsFlattened
+      ?.map { FilterOption(it.wing, it.wing) }
+      ?.plus(FilterOption(EstablishmentToWing.ALL_WINGS, EstablishmentToWing.ALL_WINGS))
+      ?: emptyList()
+  }
+
   private fun populateStandardStaticOptionsForReportDefinition(
     productDefinitionId: String,
     reportVariantId: String,
@@ -125,16 +182,10 @@ abstract class DefinitionMapper(
     dynamicFilterDatasetId: String,
     maxStaticOptions: Long?,
   ): List<FilterOption> {
-    val schemaFieldRefForName = dynamicFilterOption.name?.removePrefix(SCHEMA_REF_PREFIX)
-    val schemaFieldRefForDisplay = dynamicFilterOption.display?.removePrefix(SCHEMA_REF_PREFIX)
-    val matchingFilterDataset = datasetHelper.findDataset(allDatasets, dynamicFilterDatasetId)
+    val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
     val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
-    val nameSchemaField =
-      matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForName } ?: throw IllegalArgumentException(
-        "Could not find matching Schema Field '$schemaFieldRefForName'",
-      )
-    val displaySchemaField = matchingSchemaFieldsForFilterDataset.find { it.name == schemaFieldRefForDisplay }
-      ?: throw IllegalArgumentException("Could not find matching Schema Field '$schemaFieldRefForDisplay'")
+    val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
+    val displaySchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
     return syncDataApiService.validateAndFetchDataForFilterWithDataset(
       pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
       sortColumn = nameSchemaField.name,

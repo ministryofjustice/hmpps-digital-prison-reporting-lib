@@ -76,10 +76,14 @@ class RedshiftDataApiRepositoryTest {
   private val tableIdGenerator = mock<TableIdGenerator>()
   private val productDefinition = mock<SingleReportProductDefinition>()
   private val datasource = mock<Datasource>()
+  private val productDefinitionId = "dpdId"
+  private val productDefinitionName = "dpdName"
+  private val reportId = "reportId"
+  private val reportName = "reportName"
   private val dataset = mock<Dataset>()
   private val executeStatementResponse = mock<ExecuteStatementResponse>()
   private val report = mock<Report>()
-  private val datasetHelper = DatasetHelper()
+  private val identifiedHelper = IdentifiedHelper()
   private val redShiftSummaryTableHelper = mock<RedShiftSummaryTableHelper>()
 
   @BeforeEach
@@ -89,6 +93,10 @@ class RedshiftDataApiRepositoryTest {
     whenever(productDefinition.reportDataset).thenReturn(dataset)
     whenever(productDefinition.report).thenReturn(report)
     whenever(productDefinition.datasource).thenReturn(datasource)
+    whenever(productDefinition.id).thenReturn(productDefinitionId)
+    whenever(productDefinition.name).thenReturn(productDefinitionName)
+    whenever(productDefinition.report.id).thenReturn(reportId)
+    whenever(productDefinition.report.name).thenReturn(reportName)
     whenever(dataset.query).thenReturn(REPOSITORY_TEST_QUERY)
   }
 
@@ -97,7 +105,7 @@ class RedshiftDataApiRepositoryTest {
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -117,11 +125,19 @@ class RedshiftDataApiRepositoryTest {
     ).thenReturn(executeStatementResponse)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = listOf(Filter("direction", "out")),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, EXECUTION_ID), actual)
@@ -153,7 +169,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -173,7 +189,6 @@ SELECT *
     ).thenReturn(executeStatementResponse)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = listOf(
         startDateFilter,
         endDateFilter,
@@ -183,6 +198,15 @@ SELECT *
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
@@ -212,7 +236,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -247,7 +271,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -291,7 +315,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -327,11 +351,19 @@ SELECT *
     ).thenReturn(executeStatementResponse)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, EXECUTION_ID), actual)
@@ -346,7 +378,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -382,11 +414,19 @@ SELECT *
     ).thenReturn(executeStatementResponse)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = emptyList(),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, EXECUTION_ID), actual)
@@ -397,7 +437,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -420,11 +460,19 @@ SELECT *
     whenever(report.filter).thenReturn(ReportFilter(name = REPORT_, query = reportQuery))
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
       filters = listOf(Filter("direction", "out")),
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, EXECUTION_ID), actual)
@@ -436,7 +484,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -474,7 +522,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -513,7 +561,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -539,7 +587,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       mock(),
       mock(),
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -570,7 +618,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       mock(),
       mock(),
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -600,7 +648,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
@@ -623,7 +671,7 @@ SELECT *
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
-      datasetHelper,
+      identifiedHelper,
       redShiftSummaryTableHelper,
       REDSHIFT_DATA_API_DB,
       REDSHIFT_DATA_API_CLUSTER_ID,
