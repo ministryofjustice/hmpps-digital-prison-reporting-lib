@@ -23,6 +23,7 @@ abstract class AbstractProductDefinitionRepository(
       id = definitionId,
       name = productDefinition.name,
       description = productDefinition.description,
+      scheduled = productDefinition.scheduled,
       metadata = productDefinition.metadata,
       datasource = productDefinition.datasource.first(),
       reportDataset = dataSet,
