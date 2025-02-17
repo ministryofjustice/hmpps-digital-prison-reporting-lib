@@ -4,12 +4,14 @@ import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
@@ -40,16 +42,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -1177,5 +1174,93 @@ class AsyncDataApiServiceTest {
     val actual = configuredApiService.count(tableId, "external-movements", "last-month", filters, authToken)
 
     assertEquals(Count(expectedRepositoryResult), actual)
+  }
+
+  @Test
+  fun `should generate correct tableId for cached scheduled dataset`() {
+
+    val definition = this.definition(
+      scheduled = false,
+      dataset = dataset()
+    )
+
+    val actual = configuredApiService.generateScheduledDatasetId(definition)
+    assertEquals("_MToxMA__", actual)
+  }
+
+  @Test
+  fun `should not return table id if definition not scheduled`() {
+
+    val definitionWithNoSchedule = definition(
+      scheduled = false,
+      dataset = dataset()
+    )
+
+    val actual = configuredApiService.checkForScheduledDataset(definitionWithNoSchedule)
+    assertTrue(actual == null)
+  }
+
+  @Test
+  fun `should return table id if definition scheduled and dataset available`() {
+
+    val definitionWithSchedule = definition(
+      scheduled = true,
+      dataset = dataset("0 15 10 ? * MON-FRI")
+    )
+    val tableId = "_MToxMA__"
+    val actual = configuredApiService.checkForScheduledDataset(definitionWithSchedule)
+
+    assertEquals(tableId, actual)
+  }
+
+  private fun dataset(schedule: String? = null): Dataset = Dataset(
+    id = "10",
+    name = "11",
+    query = "12",
+    datasource = "12A",
+    schedule = schedule,
+    schema = Schema(
+      field = listOf(
+        SchemaField(
+          name = "13",
+          type = ParameterType.Long,
+          display = "14",
+          filter = null,
+        ),
+      ),
+    ),
+  )
+
+  private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {
+    val fullDatasource = Datasource(
+      id = "18",
+      name = "19",
+    )
+    val fullReport = Mockito.mock<Report>()
+    return SingleReportProductDefinition(
+      id = "1",
+      name = "2",
+      description = "3",
+      scheduled = scheduled,
+      metadata = MetaData(
+        author = "4",
+        version = "5",
+        owner = "6",
+        purpose = "7",
+        profile = "8",
+      ),
+      reportDataset = dataset,
+      datasource = fullDatasource,
+      report = fullReport,
+      policy = listOf(
+        Policy(
+          id = "caseload",
+          type = PolicyType.ACCESS,
+          rule = listOf(Rule(Effect.PERMIT, emptyList())),
+        ),
+      ),
+      allDatasets = listOf(dataset),
+      allReports = emptyList(),
+    )
   }
 }

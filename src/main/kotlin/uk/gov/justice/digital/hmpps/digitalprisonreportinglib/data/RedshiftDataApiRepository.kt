@@ -12,14 +12,17 @@ import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
-import java.util.*
 
 @Service
 @ConditionalOnBean(AthenaClient::class)
