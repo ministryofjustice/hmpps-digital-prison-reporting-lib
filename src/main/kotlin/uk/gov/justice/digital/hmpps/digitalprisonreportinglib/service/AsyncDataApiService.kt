@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.util.*
 
 @Service
 @ConditionalOnBean(value = [RedshiftDataApiRepository::class, AthenaApiRepository::class])
@@ -74,6 +76,7 @@ class AsyncDataApiService(
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition.reportDataset.parameters)
+    val preGeneratedTableId = checkForScheduledDataset(productDefinition)
     return getRepo(productDefinition.datasource.name)
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false) + dynamicFilter,
@@ -92,6 +95,7 @@ class AsyncDataApiService(
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
+        preGeneratedDatasetTableId = preGeneratedTableId,
       )
   }
 
@@ -269,6 +273,31 @@ class AsyncDataApiService(
     )
     checkAuth(productDefinition, userToken)
     return Count(redshiftDataApiRepository.count(tableId, validateAndMapFilters(productDefinition, filters, true)))
+  }
+
+  fun checkForScheduledDataset(
+    productDefinition: SingleReportProductDefinition,
+  ): String? {
+    val generatedTableId = generateScheduledDatasetId(productDefinition)
+    // check if dataset configured for scheduling and table exists
+    return if (productDefinition.hasDatasetScheduled() && !getRepo(productDefinition.datasource.name).isTableMissing(generatedTableId.lowercase())) {
+      // generate external table id
+      generatedTableId
+    } else {
+      null
+    }
+  }
+
+  fun SingleReportProductDefinition.hasDatasetScheduled(): Boolean {
+    val reportScheduled = this.scheduled ?: false
+    return reportScheduled && this.reportDataset.schedule != null
+  }
+
+  fun generateScheduledDatasetId(definition: SingleReportProductDefinition): String {
+    val id = "${definition.id}:${definition.reportDataset.id}"
+    val encodedId = Base64.getEncoder().encodeToString(id.toByteArray())
+    val updatedId = encodedId.replace("=", "_")
+    return "_$updatedId"
   }
 
   private fun checkAuth(

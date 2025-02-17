@@ -37,6 +37,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
+    preGeneratedDatasetTableId: String? = null,
   ): StatementExecutionResponse
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus

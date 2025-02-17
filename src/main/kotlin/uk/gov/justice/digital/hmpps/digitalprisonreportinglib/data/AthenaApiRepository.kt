@@ -55,6 +55,7 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
+    preGeneratedDatasetTableId: String?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val finalQuery = """

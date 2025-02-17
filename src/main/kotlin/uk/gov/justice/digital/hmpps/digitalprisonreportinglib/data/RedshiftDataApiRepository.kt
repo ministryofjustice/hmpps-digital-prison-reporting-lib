@@ -54,6 +54,7 @@ class RedshiftDataApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
+    preGeneratedDatasetTableId: String?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
@@ -63,7 +64,7 @@ class RedshiftDataApiRepository(
           AS ( 
           ${
       buildFinalQuery(
-        datasetQuery = buildDatasetQuery(query),
+        datasetQuery = checkAndBuildDatasetQuery(query, preGeneratedDatasetTableId),
         reportQuery = buildReportQuery(reportFilter),
         policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         filtersQuery = buildFiltersQuery(filters),
@@ -198,5 +199,11 @@ class RedshiftDataApiRepository(
     """.trimIndent()
 
     return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
+  }
+
+  fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?): String {
+    return generatedTableId?.let { tableId ->
+      """WITH $DATASET_ AS (SELECT * FROM reports.$tableId)"""
+    } ?: buildDatasetQuery(query)
   }
 }
