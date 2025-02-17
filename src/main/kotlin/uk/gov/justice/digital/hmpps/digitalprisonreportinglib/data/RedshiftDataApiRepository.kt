@@ -201,9 +201,9 @@ class RedshiftDataApiRepository(
     return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
   }
 
-  fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?) : String {
-    return generatedTableId?.let{ tableId ->
+  fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?): String {
+    return generatedTableId?.let { tableId ->
       """WITH $DATASET_ AS (SELECT * FROM reports.$tableId)"""
-    }?: buildDatasetQuery(query)
+    } ?: buildDatasetQuery(query)
   }
 }

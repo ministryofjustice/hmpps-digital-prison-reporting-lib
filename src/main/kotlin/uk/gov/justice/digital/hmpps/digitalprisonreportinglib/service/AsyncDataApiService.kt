@@ -276,15 +276,16 @@ class AsyncDataApiService(
   }
 
   fun checkForScheduledDataset(
-    productDefinition: SingleReportProductDefinition
+    productDefinition: SingleReportProductDefinition,
   ): String? {
-
     val generatedTableId = generateScheduledDatasetId(productDefinition)
-    //check if dataset configured for scheduling and table exists
+    // check if dataset configured for scheduling and table exists
     return if (productDefinition.hasDatasetScheduled() && !getRepo(productDefinition.datasource.name).isTableMissing(generatedTableId.lowercase())) {
-      //generate external table id
+      // generate external table id
       generatedTableId
-    } else null
+    } else {
+      null
+    }
   }
 
   fun SingleReportProductDefinition.hasDatasetScheduled(): Boolean {
@@ -292,11 +293,11 @@ class AsyncDataApiService(
     return reportScheduled && this.reportDataset.schedule != null
   }
 
-  fun generateScheduledDatasetId(definition: SingleReportProductDefinition) : String {
+  fun generateScheduledDatasetId(definition: SingleReportProductDefinition): String {
     val id = "${definition.id}:${definition.reportDataset.id}"
-    val encodedId = Base64.getEncoder().encodeToString(id .toByteArray())
+    val encodedId = Base64.getEncoder().encodeToString(id.toByteArray())
     val updatedId = encodedId.replace("=", "_")
-    return "_${updatedId}"
+    return "_$updatedId"
   }
 
   private fun checkAuth(
@@ -346,6 +347,4 @@ class AsyncDataApiService(
   ) = records
     .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, schemaFields.map(SchemaField::name)) }
     .map(formulaEngine::applyFormulas)
-
-
 }
