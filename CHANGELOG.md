@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.8.3
+For scheduled datasets, use the generated dataset if it is available. Currently supports datamart datasources.
+
 # 7.8.2
 Changed the dashboard definition. The main changes are:
 Updated metric definition to section definition which contains a list of DashboardVisualisation definitions.
