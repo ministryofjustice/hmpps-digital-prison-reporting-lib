@@ -185,4 +185,27 @@ class RedshiftDataApiRepository(
 
     return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
   }
+
+
+  fun SingleReportProductDefinition.hasDatasetScheduled(): Boolean {
+    val reportScheduled = this.scheduled ?: false
+    return reportScheduled && this.reportDataset.schedule ! = null
+  }
+
+  fun checkForScheduledDataset(
+    productDefinition: SingleReportProductDefinition
+  ) {
+
+    //check if dataset configured for scheduling
+    if (productDefinition.hasDatasetScheduled()) {
+      //generate external table id
+
+      //and check if dataset table exists
+      SELECT tablename
+        FROM SVV_EXTERNAL_TABLES
+        WHERE schemaname = 'reports' AND tablename = '_mtizomi5yjayzmy2ltvlymetngq3yy1imdfmlwuxmtk5mmizmtkynw__'
+
+    }
+
+  }
 }

@@ -7,6 +7,7 @@ data class ProductDefinition(
   val id: String,
   val name: String,
   val description: String? = null,
+  val scheduled: Boolean? = false
   val metadata: MetaData,
   val datasource: List<Datasource> = emptyList(),
   val dataset: List<Dataset> = emptyList(),
