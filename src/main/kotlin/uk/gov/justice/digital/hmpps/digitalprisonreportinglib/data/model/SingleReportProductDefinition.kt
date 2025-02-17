@@ -7,7 +7,7 @@ data class SingleReportProductDefinition(
   val id: String,
   val name: String,
   val description: String? = null,
-  val scheduled: Boolean? = false
+  val scheduled: Boolean? = false,
   val metadata: MetaData,
   val datasource: Datasource,
   val reportDataset: Dataset,

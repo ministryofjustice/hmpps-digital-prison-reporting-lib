@@ -4,15 +4,13 @@ import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.util.*
 
 abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
 
@@ -37,6 +35,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
+    preGeneratedDatasetTableId: String? = null
   ): StatementExecutionResponse
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus
@@ -83,5 +82,29 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result.isNullOrEmpty()
+  }
+
+  fun checkForScheduledDataset(
+    productDefinition: SingleReportProductDefinition
+  ): String? {
+
+    val generatedTableId = generateScheduledDatasetId(productDefinition)
+    //check if dataset configured for scheduling and table exists
+    return if (productDefinition.hasDatasetScheduled() && isTableMissing(generatedTableId.lowercase())) {
+      //generate external table id
+      generatedTableId
+    } else null
+  }
+
+  fun SingleReportProductDefinition.hasDatasetScheduled(): Boolean {
+    val reportScheduled = this.scheduled ?: false
+    return reportScheduled && this.reportDataset.schedule != null
+  }
+
+  fun generateScheduledDatasetId(definition: SingleReportProductDefinition) : String {
+    val id = "${definition.id}:${definition.reportDataset.id}"
+    val encodedId = Base64.getEncoder().encodeToString(id .toByteArray())
+    val updatedId = encodedId.replace("=", "_")
+    return "_${updatedId}"
   }
 }

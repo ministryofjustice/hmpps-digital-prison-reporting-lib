@@ -12,17 +12,14 @@ import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.util.*
 
 @Service
 @ConditionalOnBean(AthenaClient::class)
@@ -54,6 +51,7 @@ class RedshiftDataApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
+    preGeneratedDatasetTableId: String?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
@@ -63,7 +61,7 @@ class RedshiftDataApiRepository(
           AS ( 
           ${
       buildFinalQuery(
-        datasetQuery = buildDatasetQuery(query),
+        datasetQuery = checkAndBuildDatasetQuery(query, preGeneratedDatasetTableId),
         reportQuery = buildReportQuery(reportFilter),
         policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         filtersQuery = buildFiltersQuery(filters),
@@ -200,26 +198,9 @@ class RedshiftDataApiRepository(
     return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
   }
 
-
-  fun SingleReportProductDefinition.hasDatasetScheduled(): Boolean {
-    val reportScheduled = this.scheduled ?: false
-    return reportScheduled && this.reportDataset.schedule ! = null
-  }
-
-  fun checkForScheduledDataset(
-    productDefinition: SingleReportProductDefinition
-  ) {
-
-    //check if dataset configured for scheduling
-    if (productDefinition.hasDatasetScheduled()) {
-      //generate external table id
-
-      //and check if dataset table exists
-      SELECT tablename
-        FROM SVV_EXTERNAL_TABLES
-        WHERE schemaname = 'reports' AND tablename = '_mtizomi5yjayzmy2ltvlymetngq3yy1imdfmlwuxmtk5mmizmtkynw__'
-
-    }
-
+  fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?) : String {
+    return generatedTableId?.let{ tableId ->
+      """WITH $DATASET_ AS (SELECT * FROM reports.$tableId)"""
+    }?: buildDatasetQuery(query)
   }
 }

@@ -74,7 +74,9 @@ class AsyncDataApiService(
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition.reportDataset.parameters)
-    return getRepo(productDefinition.datasource.name)
+    val repo = getRepo(productDefinition.datasource.name)
+    val preGeneratedTableId = repo.checkForScheduledDataset(productDefinition)
+    return repo
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false) + dynamicFilter,
         sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
@@ -92,6 +94,7 @@ class AsyncDataApiService(
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
+        preGeneratedDatasetTableId = preGeneratedTableId,
       )
   }
 
