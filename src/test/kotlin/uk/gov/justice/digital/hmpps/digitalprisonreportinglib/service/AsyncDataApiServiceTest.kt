@@ -1186,10 +1186,9 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should generate correct tableId for cached scheduled dataset`() {
-
     val definition = this.definition(
       scheduled = false,
-      dataset = dataset()
+      dataset = dataset(),
     )
 
     val actual = configuredApiService.generateScheduledDatasetId(definition)
@@ -1198,10 +1197,9 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should not return table id if definition not scheduled`() {
-
     val definitionWithNoSchedule = definition(
       scheduled = false,
-      dataset = dataset()
+      dataset = dataset(),
     )
 
     val actual = configuredApiService.checkForScheduledDataset(definitionWithNoSchedule)
@@ -1210,10 +1208,9 @@ class AsyncDataApiServiceTest {
 
   @Test
   fun `should return table id if definition scheduled and dataset available`() {
-
     val definitionWithSchedule = definition(
       scheduled = true,
-      dataset = dataset("0 15 10 ? * MON-FRI")
+      dataset = dataset("0 15 10 ? * MON-FRI"),
     )
     val tableId = "_MToxMA__"
     val actual = configuredApiService.checkForScheduledDataset(definitionWithSchedule)
