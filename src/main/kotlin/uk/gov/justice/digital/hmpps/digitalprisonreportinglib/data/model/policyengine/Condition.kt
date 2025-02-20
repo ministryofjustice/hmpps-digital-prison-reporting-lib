@@ -55,8 +55,8 @@ data class Condition(
     val varMappings = mapOf(
       TOKEN to authToken,
       ROLE to authToken?.authorities?.map { it.authority },
-      CASELOAD to authToken?.getActiveCaseLoad(),
-      CASELOADS to authToken?.getCaseLoads(),
+      CASELOAD to authToken?.getActiveCaseLoadId(),
+      CASELOADS to authToken?.getCaseLoadIds(),
     )
     return varMappings[varPlaceholder] != null
   }

@@ -142,6 +142,14 @@ abstract class IntegrationTestBase {
               {
                 "id": "WWI",
                 "name": "WANDSWORTH (HMP)"
+              },
+              {
+                "id": "AKI",
+                "name": "Acklington (HMP)"
+              },
+              {
+                "id": "LWSTMC",
+                "name": "Lowestoft (North East Suffolk) Magistrat"
               }
             ]
           }

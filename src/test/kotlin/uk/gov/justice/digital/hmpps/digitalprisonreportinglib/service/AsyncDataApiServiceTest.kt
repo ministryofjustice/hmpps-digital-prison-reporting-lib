@@ -113,8 +113,8 @@ class AsyncDataApiServiceTest {
 
   @BeforeEach
   fun setup() {
-    whenever(authToken.getActiveCaseLoad()).thenReturn("WWI")
-    whenever(authToken.getCaseLoads()).thenReturn(listOf("WWI"))
+    whenever(authToken.getActiveCaseLoadId()).thenReturn("WWI")
+    whenever(authToken.getCaseLoadIds()).thenReturn(listOf("WWI"))
   }
 
   @Test
@@ -292,7 +292,7 @@ class AsyncDataApiServiceTest {
   @Test
   fun `should make the dashboard async call to the RedshiftDataApiRepository with all provided arguments when validateAndExecuteStatementAsync is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinitionWithMetrics.json"),
+      listOf("productDefinitionWithDashboard.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper = IdentifiedHelper(),
     )
@@ -303,8 +303,8 @@ class AsyncDataApiServiceTest {
     val tableId = executionId.replace("-", "_")
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     val caseload = "caseloadA"
-    whenever(authToken.getActiveCaseLoad()).thenReturn(caseload)
-    whenever(authToken.getCaseLoads()).thenReturn(listOf(caseload))
+    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
+    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
     val policyEngineResult = "(establishment_id='$caseload')"
     whenever(
@@ -394,8 +394,8 @@ class AsyncDataApiServiceTest {
     whenever(singleDashboardProductDefinition.allDatasets).thenReturn(listOf(dashboardDataset))
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
-    whenever(authToken.getActiveCaseLoad()).thenReturn(caseload)
-    whenever(authToken.getCaseLoads()).thenReturn(listOf(caseload))
+    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
+    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
     whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
@@ -1003,7 +1003,7 @@ class AsyncDataApiServiceTest {
   @Test
   fun `should call the repository with all provided arguments when getDashboardStatementResult is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinitionWithMetrics.json"),
+      listOf("productDefinitionWithDashboard.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper = IdentifiedHelper(),
     )
@@ -1055,7 +1055,7 @@ class AsyncDataApiServiceTest {
   @Test
   fun `getDashboardStatementResult throws an exception when the result columns are not in the dataset schema`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinitionWithMetrics.json"),
+      listOf("productDefinitionWithDashboard.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper = IdentifiedHelper(),
     )

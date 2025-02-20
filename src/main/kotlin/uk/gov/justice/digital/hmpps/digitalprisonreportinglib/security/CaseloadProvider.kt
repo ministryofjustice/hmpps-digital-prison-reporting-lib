@@ -1,10 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
 import org.springframework.security.oauth2.jwt.Jwt
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 
 interface CaseloadProvider {
 
   fun getActiveCaseloadId(jwt: Jwt): String
 
-  fun getCaseloadIds(jwt: Jwt): List<String>
+  fun getCaseloads(jwt: Jwt): List<Caseload>
 }

@@ -216,6 +216,7 @@ class ReportDefinitionMapper(
             dataProductDefinitionsPath = dataProductDefinitionsPath,
             allDatasets = allDatasets,
           ),
+          userToken = userToken,
         )
       },
       sortable = field.sortable,

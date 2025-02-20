@@ -252,6 +252,15 @@
             }
           ]
         }
+      },{
+        "name" : "$ref:origin_code",
+        "display": "Origin Code",
+        "sortable" : true,
+        "defaultsort" : false,
+        "filter" : {
+          "type" : "caseloads",
+          "mandatory": "false"
+        }
       } ]
     },
     "destination" : [ ],

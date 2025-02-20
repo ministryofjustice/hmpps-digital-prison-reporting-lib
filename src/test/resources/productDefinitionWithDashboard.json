@@ -11,8 +11,7 @@
     {
       "id": "datamart",
       "name": "datamart"
-    }
-  ],
+    }  ],
   "dataset": [
     {
       "id": "establishments",

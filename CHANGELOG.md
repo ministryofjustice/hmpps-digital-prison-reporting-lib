@@ -1,6 +1,9 @@
 Below you can find the changes included in each release.
 
-# 7.8.3
+# 7.9.1
+Support for filters of type 'caseloads'.
+
+# 7.9.0
 For scheduled datasets, use the generated dataset if it is available. Currently supports datamart datasources.
 
 # 7.8.2

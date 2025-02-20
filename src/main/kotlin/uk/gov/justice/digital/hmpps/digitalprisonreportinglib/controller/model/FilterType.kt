@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue
 enum class FilterType(@JsonValue val type: String) {
   Radio("Radio"),
   Select("Select"),
+  MultiSelect("multiselect"),
   DateRange("daterange"),
   AutoComplete("autocomplete"),
   Text("text"),

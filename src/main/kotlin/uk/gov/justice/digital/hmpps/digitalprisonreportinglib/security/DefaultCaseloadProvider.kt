@@ -24,14 +24,14 @@ class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvid
     return caseloadResponse.activeCaseload.id
   }
 
-  override fun getCaseloadIds(jwt: Jwt): List<String> {
+  override fun getCaseloads(jwt: Jwt): List<Caseload> {
     val caseloadResponse = getUsersCaseload(jwt)
 
     if (caseloadResponse.caseloads.isEmpty()) {
       throw NoDataAvailableException(WARNING_NO_CASELOADS)
     }
 
-    return caseloadResponse.caseloads.sortedBy { it.id }.map { it.id }
+    return caseloadResponse.caseloads.sortedBy { it.id }.map { Caseload(it.id, it.name) }
   }
 
   private fun getUsersCaseload(jwt: Jwt): CaseloadResponse {

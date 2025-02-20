@@ -41,9 +41,9 @@ class DefaultCaseloadProviderTest {
     val expectedCaseloadResponse: DefaultCaseloadProvider.CaseloadResponse =
       DefaultCaseloadProvider.CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)"), Caseload("LEI", "Leeds (HMP)")))
     mockWebClientCall(expectedCaseloadResponse)
-    val actual = caseloadProvider.getCaseloadIds(jwt)
+    val actual = caseloadProvider.getCaseloads(jwt)
 
-    assertEquals(expectedCaseloadResponse.caseloads.sortedBy { it.id }.map { it.id }, actual)
+    assertEquals(expectedCaseloadResponse.caseloads.sortedBy { it.id }, actual)
   }
 
   @Test
