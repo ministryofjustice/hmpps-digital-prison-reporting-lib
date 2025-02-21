@@ -204,7 +204,7 @@ abstract class DefinitionMapper(
     .map { FilterOption(it.value.toString(), it.value.toString()) }
 
   private fun populateFilterType(filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition) =
-    if (filterDefinition.type == Caseloads) FilterType.MultiSelect else FilterType.valueOf(filterDefinition.type.toString())
+    if (filterDefinition.type == Caseloads) FilterType.Multiselect else FilterType.valueOf(filterDefinition.type.toString())
 
   private fun populateDefaultValue(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,

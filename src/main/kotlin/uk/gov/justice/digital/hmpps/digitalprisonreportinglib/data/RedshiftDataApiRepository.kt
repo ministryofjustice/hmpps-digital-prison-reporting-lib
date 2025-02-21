@@ -128,6 +128,8 @@ class RedshiftDataApiRepository(
       FilterType.DATE_RANGE_END -> "${filter.field} < (CAST('${filter.value}' AS timestamp) + INTERVAL '1' day)"
       FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
       FilterType.BOOLEAN -> "${filter.field} = ${filter.value.toBoolean()}"
+      FilterType.MULTISELECT -> filter.value.split(",")
+        .joinToString(separator = " OR ", prefix = "(", postfix = ")") { "${filter.field} = '$it'" }
     }
   }
 

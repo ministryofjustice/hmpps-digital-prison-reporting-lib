@@ -129,16 +129,20 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
 
       val filterDefinition = findFilterDefinition(definition, truncatedKey)
 
-      validateValue(definition.reportDataset, filterDefinition, truncatedKey, it.value, reportFieldId)
-
+      val filterType = mapFilterTypeAndValidateValue(
+        filterDefinition = filterDefinition,
+        filter = it,
+        truncatedKey = truncatedKey,
+        dataset = definition.reportDataset,
+        reportFieldId = reportFieldId,
+      )
       ConfiguredApiRepository.Filter(
         field = truncatedKey,
         value = it.value,
-        type = mapFilterType(filterDefinition, it.key, truncatedKey, definition.reportDataset.schema),
+        type = filterType,
       )
     }
   }
-
   protected fun validateAndMapFilters(definition: SingleDashboardProductDefinition, filters: Map<String, String>, interactive: Boolean): List<ConfiguredApiRepository.Filter> {
     checkCorrectFiltersAreProvided(definition, filters, interactive)
 
@@ -149,17 +153,22 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
 
       val filterDefinition = findFilterDefinition(definition, truncatedKey)
 
-      validateValue(definition.dashboardDataset, filterDefinition, truncatedKey, it.value, null)
+      val filterType = mapFilterTypeAndValidateValue(
+        filterDefinition = filterDefinition,
+        filter = it,
+        truncatedKey = truncatedKey,
+        dataset = definition.dashboardDataset,
+      )
 
       ConfiguredApiRepository.Filter(
         field = truncatedKey,
         value = it.value,
-        type = mapFilterType(filterDefinition, it.key, truncatedKey, definition.dashboardDataset.schema),
+        type = filterType,
       )
     }
   }
 
-  protected fun validateAndMapFieldIdDynamicFilter(filterDefinition: FilterDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
+  private fun validateAndMapFieldIdDynamicFilter(filterDefinition: FilterDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
     if (filterDefinition.dynamicOptions == null) {
       throw ValidationException(AsyncDataApiService.INVALID_DYNAMIC_FILTER_MESSAGE)
     }
@@ -173,7 +182,10 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     )
   }
 
-  protected fun mapFilterType(filterDefinition: FilterDefinition, key: String, truncatedKey: String, schema: Schema): RepositoryHelper.FilterType {
+  private fun mapFilterType(filterDefinition: FilterDefinition, key: String, truncatedKey: String, schema: Schema): RepositoryHelper.FilterType {
+    if (filterDefinition.type == FilterType.Caseloads || filterDefinition.type == FilterType.Multiselect) {
+      return RepositoryHelper.FilterType.MULTISELECT
+    }
     if (filterDefinition.type == FilterType.DateRange) {
       if (key.endsWith(DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX)) {
         return RepositoryHelper.FilterType.DATE_RANGE_START
@@ -195,19 +207,36 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     return RepositoryHelper.FilterType.STANDARD
   }
 
-  fun findFilterDefinition(definition: SingleReportProductDefinition, filterName: String): FilterDefinition {
+  private fun mapFilterTypeAndValidateValue(
+    filterDefinition: FilterDefinition,
+    filter: Map.Entry<String, String>,
+    truncatedKey: String,
+    dataset: Dataset,
+    reportFieldId: Set<String>? = null,
+  ): RepositoryHelper.FilterType {
+    val filterType = mapFilterType(filterDefinition, filter.key, truncatedKey, dataset.schema)
+    if (filterType == RepositoryHelper.FilterType.MULTISELECT) {
+      filter.value.split(",")
+        .forEach { v -> validateValue(dataset, filterDefinition, truncatedKey, v, reportFieldId) }
+    } else {
+      validateValue(dataset, filterDefinition, truncatedKey, filter.value, reportFieldId)
+    }
+    return filterType
+  }
+
+  private fun findFilterDefinition(definition: SingleReportProductDefinition, filterName: String): FilterDefinition {
     val filter = findFilterDefinitionFromFieldsAndDataset(definition.report.specification?.field, definition.reportDataset, filterName)
 
     return filter ?: throw ValidationException(AsyncDataApiService.INVALID_FILTERS_MESSAGE)
   }
 
-  fun findFilterDefinition(definition: SingleDashboardProductDefinition, filterName: String): FilterDefinition {
+  private fun findFilterDefinition(definition: SingleDashboardProductDefinition, filterName: String): FilterDefinition {
     val filter = findFilterDefinitionFromFieldsAndDataset(null, definition.dashboardDataset, filterName)
 
     return filter ?: throw ValidationException(AsyncDataApiService.INVALID_FILTERS_MESSAGE)
   }
 
-  fun findFilterDefinitionFromFieldsAndDataset(fields: List<ReportField>?, dataset: Dataset, filterName: String): FilterDefinition? {
+  private fun findFilterDefinitionFromFieldsAndDataset(fields: List<ReportField>?, dataset: Dataset, filterName: String): FilterDefinition? {
     val fieldFilter = identifiedHelper.findOrNull(fields, filterName)?.filter
 
     val datasetFilter = findFilterDefinitionFromDataset(dataset, filterName)
@@ -218,7 +247,7 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
   private fun findFilterDefinitionFromDataset(dataset: Dataset, filterName: String): FilterDefinition? =
     identifiedHelper.findOrNull<SchemaField>(dataset.schema.field, filterName)?.filter
 
-  protected fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, filterName: String, filterValue: String, reportFieldId: Set<String>?) {
+  private fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, filterName: String, filterValue: String, reportFieldId: Set<String>?) {
     validateFilterSchemaFieldType(dataSet, filterName, filterValue)
     if (filterDefinition.staticOptions != null && filterDefinition.staticOptions.none { it.name.lowercase() == filterValue.lowercase() }) {
       throw ValidationException(AsyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE)
@@ -231,7 +260,7 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     }
   }
 
-  protected fun validateFilterSchemaFieldType(dataSet: Dataset, key: String, value: String) {
+  private fun validateFilterSchemaFieldType(dataSet: Dataset, key: String, value: String) {
     val schemaField = dataSet.schema.field.first { it.name == key }
     if (schemaField.type == ParameterType.Long) {
       try {
@@ -252,9 +281,9 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     }
   }
 
-  protected fun isNotABoolean(value: String) = value.lowercase() != "true" && value.lowercase() != "false"
+  private fun isNotABoolean(value: String) = value.lowercase() != "true" && value.lowercase() != "false"
 
-  protected fun truncateBasedOnSuffix(k: String): String {
+  private fun truncateBasedOnSuffix(k: String): String {
     return if (k.endsWith(DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX)) {
       k.removeSuffix(DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX)
     } else if (k.endsWith(DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX)) {
@@ -264,7 +293,7 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     }
   }
 
-  protected fun transformKey(key: String, fieldNames: List<String>): String {
+  private fun transformKey(key: String, fieldNames: List<String>): String {
     return fieldNames.firstOrNull { it.lowercase() == key.lowercase() }
       ?: throw ValidationException("The DPD is missing schema field: $key.")
   }

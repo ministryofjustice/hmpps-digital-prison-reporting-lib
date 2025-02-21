@@ -41,6 +41,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.MULTISELECT
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
@@ -694,6 +696,41 @@ class ConfiguredApiRepositoryTest {
       reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(5, actual.size)
+  }
+
+  @Test
+  fun `should return only the rows which match the multiselect filter`() {
+    val actual = configuredApiRepository.executeQuery(
+      query = REPOSITORY_TEST_QUERY,
+      filters = listOf(Filter("destination_code", "HEI,NSI,LCI", MULTISELECT)),
+      selectedPage = 1,
+      pageSize = 20,
+      sortColumn = "date",
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      reportFilter = productDefinition.report.filter,
+    )
+    Assertions.assertEquals(3, actual.size)
+  }
+
+  @Test
+  fun `should return only the rows which match all the filters when a multiselect filter is present`() {
+    val actual = configuredApiRepository.executeQuery(
+      query = REPOSITORY_TEST_QUERY,
+      filters = listOf(
+        Filter("destination_code", "WWI,NSI,LCI", MULTISELECT),
+        Filter("direction", "out", STANDARD),
+      ),
+      selectedPage = 1,
+      pageSize = 20,
+      sortColumn = "date",
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      reportFilter = productDefinition.report.filter,
+    )
+    Assertions.assertEquals(1, actual.size)
   }
 
   @Test

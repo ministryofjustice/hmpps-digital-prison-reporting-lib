@@ -14,7 +14,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.MultiSelect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Multiselect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -1015,7 +1015,7 @@ class ReportDefinitionMapperTest {
         // type is the same as schema field type
         type = FieldType.Date,
         filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
-          type = MultiSelect,
+          type = Multiselect,
           defaultValue = "KMI,WWI",
           staticOptions = listOf(
             FilterOption("KMI", "KIRKHAM"),
