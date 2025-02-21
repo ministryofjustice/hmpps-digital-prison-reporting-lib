@@ -1,7 +1,9 @@
 Below you can find the changes included in each release.
 
 # 7.9.1
-Support for filters of type 'caseloads'.
+Support for filters of type 'caseloads' and 'multiselect'. 
+These are passed as one query parameter per filter with a comma separated list of values:
+`filters.someMultiselectFilter=a,b,c`
 
 # 7.9.0
 For scheduled datasets, use the generated dataset if it is available. Currently supports datamart datasources.
