@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.G
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.QuickFilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
@@ -55,16 +55,17 @@ abstract class DefinitionMapper(
   protected fun map(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
     staticOptions: List<FilterOption>?,
+    userToken: DprAuthAwareAuthenticationToken? = null,
   ): FilterDefinition {
     return FilterDefinition(
-      type = FilterType.valueOf(filterDefinition.type.toString()),
+      type = populateFilterType(filterDefinition),
       staticOptions = staticOptions,
       dynamicOptions = filterDefinition.dynamicOptions?.let {
         DynamicFilterOption(
           minimumLength = filterDefinition.dynamicOptions.minimumLength,
         )
       },
-      defaultValue = replaceTokens(filterDefinition.default),
+      defaultValue = populateDefaultValue(filterDefinition, userToken),
       min = replaceTokens(filterDefinition.min),
       max = replaceTokens(filterDefinition.max),
       mandatory = filterDefinition.mandatory,
@@ -85,6 +86,9 @@ abstract class DefinitionMapper(
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
   ): List<FilterOption>? {
+    if (filterDefinition.type == Caseloads) {
+      return userToken?.getCaseLoads()?.map { FilterOption(it.id, it.name) }
+    }
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
         return populateStaticOptionsForFilterWithDataset(
@@ -107,6 +111,29 @@ abstract class DefinitionMapper(
 
   protected fun maybeConvertToReportFields(parameters: List<Parameter>?) =
     parameters?.map { mapParameterToField(it) } ?: emptyList()
+
+  protected fun populateStaticOptionsForFilterWithDataset(
+    dynamicFilterOption: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption,
+    allDatasets: List<Dataset>,
+    dynamicFilterDatasetId: String,
+    maxStaticOptions: Long?,
+  ): List<FilterOption> {
+    val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
+    val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
+    val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
+    val displaySchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
+    return syncDataApiService.validateAndFetchDataForFilterWithDataset(
+      pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
+      sortColumn = nameSchemaField.name,
+      dataset = matchingFilterDataset,
+    )
+      .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
+  }
+
+  protected fun map(definition: StaticFilterOption): FilterOption = FilterOption(
+    name = definition.name,
+    display = definition.display,
+  )
 
   private fun mapParameterToField(parameter: Parameter): FieldDefinition {
     return FieldDefinition(
@@ -176,23 +203,18 @@ abstract class DefinitionMapper(
     .flatMap { it.entries }
     .map { FilterOption(it.value.toString(), it.value.toString()) }
 
-  protected fun populateStaticOptionsForFilterWithDataset(
-    dynamicFilterOption: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption,
-    allDatasets: List<Dataset>,
-    dynamicFilterDatasetId: String,
-    maxStaticOptions: Long?,
-  ): List<FilterOption> {
-    val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
-    val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
-    val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
-    val displaySchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
-    return syncDataApiService.validateAndFetchDataForFilterWithDataset(
-      pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
-      sortColumn = nameSchemaField.name,
-      dataset = matchingFilterDataset,
-    )
-      .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
-  }
+  private fun populateFilterType(filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition) =
+    if (filterDefinition.type == Caseloads) FilterType.Multiselect else FilterType.valueOf(filterDefinition.type.toString())
+
+  private fun populateDefaultValue(
+    filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ) =
+    if (filterDefinition.type == Caseloads) {
+      userToken?.getCaseLoadIds()?.joinToString(",")
+    } else {
+      replaceTokens(filterDefinition.default)
+    }
 
   private fun replaceTokens(defaultValue: String?): String? {
     if (defaultValue == null) {
@@ -212,9 +234,4 @@ abstract class DefinitionMapper(
 
     return result
   }
-
-  protected fun map(definition: StaticFilterOption): FilterOption = FilterOption(
-    name = definition.name,
-    display = definition.display,
-  )
 }

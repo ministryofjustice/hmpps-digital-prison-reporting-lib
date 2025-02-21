@@ -38,7 +38,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesan
 class DashboardDefinitionMapperTest {
 
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-    listOf("productDefinitionWithMetrics.json"),
+    listOf("productDefinitionWithDashboard.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper = IdentifiedHelper(),
   )

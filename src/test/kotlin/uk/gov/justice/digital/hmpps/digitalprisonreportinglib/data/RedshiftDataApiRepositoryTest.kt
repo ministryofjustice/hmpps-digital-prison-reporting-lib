@@ -479,6 +479,69 @@ SELECT *
   }
 
   @Test
+  fun `executeQueryAsync should build the filters CTE correctly for multiselect filters`() {
+    val selectSql = """SELECT ABC, DEF FROM GHI"""
+    whenever(dataset.query).thenReturn(selectSql)
+    val multiselectFilter = Filter("ABC", "q,w,e", FilterType.MULTISELECT)
+    val standardFilter = Filter("DEF", "r", FilterType.STANDARD)
+    val executionId = "someId"
+    val sqlStatement =
+      """          CREATE EXTERNAL TABLE reports.$TABLE_ID 
+          STORED AS parquet 
+          LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
+          AS ( 
+          WITH dataset_ AS ($selectSql),$DEFAULT_REPORT_CTE,policy_ AS (SELECT * FROM $REPORT_ WHERE 1=1),filter_ AS (SELECT * FROM policy_ WHERE lower(DEF) = 'r' AND (ABC = 'q' OR ABC = 'w' OR ABC = 'e'))
+SELECT *
+          FROM filter_ ORDER BY ABC asc
+          );
+          
+      """.trimIndent()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      identifiedHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val executeStatementRequest = ExecuteStatementRequest.builder()
+      .clusterIdentifier(REDSHIFT_DATA_API_CLUSTER_ID)
+      .database(REDSHIFT_DATA_API_DB)
+      .secretArn(REDSHIFT_DATA_API_SECRET_ARN)
+      .sql(sqlStatement)
+      .build()
+
+    whenever(
+      redshiftDataClient.executeStatement(
+        any<ExecuteStatementRequest>(),
+      ),
+    ).thenReturn(executeStatementResponse)
+
+    val actual = redshiftDataApiRepository.executeQueryAsync(
+      filters = listOf(
+        standardFilter,
+        multiselectFilter,
+      ),
+      sortColumn = "ABC",
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
+    )
+
+    assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
+    verify(redshiftDataClient).executeStatement(executeStatementRequest)
+  }
+
+  @Test
   fun `getStatementResult should make a paginated JDBC call and return the existing results`() {
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(

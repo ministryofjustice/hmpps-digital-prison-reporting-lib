@@ -10,7 +10,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
-      registry.add("dpr.lib.definition.locations") { "productDefinitionWithMetrics.json" }
+      registry.add("dpr.lib.definition.locations") { "productDefinitionWithDashboard.json" }
     }
   }
 

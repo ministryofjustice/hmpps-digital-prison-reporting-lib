@@ -41,11 +41,11 @@ class PolicyEngine(
 
     return when {
       s.contains(CASELOAD) -> {
-        val activeCaseLoad = authToken.getActiveCaseLoad()
+        val activeCaseLoad = authToken.getActiveCaseLoadId()
         if (activeCaseLoad.isNullOrEmpty()) POLICY_DENY else s.replace(CASELOAD, activeCaseLoad)
       }
       s.contains(CASELOADS) -> {
-        val caseLoads = authToken.getCaseLoads()
+        val caseLoads = authToken.getCaseLoadIds()
         if (caseLoads.isEmpty()) POLICY_DENY else s.replace(CASELOADS, caseLoads.joinToString { "\'${it}\'" })
       }
       else -> s

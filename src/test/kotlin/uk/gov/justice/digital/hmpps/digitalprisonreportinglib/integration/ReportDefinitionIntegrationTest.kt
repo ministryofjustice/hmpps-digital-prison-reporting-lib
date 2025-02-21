@@ -101,7 +101,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       @JvmStatic
       @DynamicPropertySource
       fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinitionWithMetrics.json" }
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithDashboard.json" }
       }
     }
 
@@ -203,7 +203,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
       val response = Mockito.mock<QueryResponse>()
       val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
-      val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithMetrics.json")!!.readText()
+      val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
       given(response.items()).willReturn(
         listOf(
           mapOf("definition" to AttributeValue.fromS(productDefinitionJson)),
@@ -363,7 +363,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
       assertThat(lastMonthVariant.specification).isNotNull
-      assertThat(lastMonthVariant.specification?.fields).hasSize(9)
+      assertThat(lastMonthVariant.specification?.fields).hasSize(10)
       assertThat(lastMonthVariant.printable).isEqualTo(true)
 
       val directionField = lastMonthVariant.specification?.fields?.find { it.name == "direction" }
@@ -631,6 +631,44 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "mandatory": false,
                     "visible": true,
                     "calculated": false
+                  },
+                   {
+                     "name":"origin_code",
+                     "display":"Origin Code",
+                     "wordWrap":null,
+                     "filter":{
+                        "type":"multiselect",
+                        "mandatory":false,
+                        "pattern":null,
+                        "staticOptions":[
+                          {
+                              "name":"AKI",
+                              "display":"Acklington (HMP)"
+                           },
+                           {
+                              "name":"LWSTMC",
+                              "display":"Lowestoft (North East Suffolk) Magistrat"
+                           },
+                           {
+                              "name":"WWI",
+                              "display":"WANDSWORTH (HMP)"
+                           }
+                        ],
+                        "dynamicOptions":null,
+                        "defaultValue":"AKI,LWSTMC,WWI",
+                        "min":null,
+                        "max":null,
+                        "interactive":false,
+                        "defaultGranularity":null,
+                        "defaultQuickFilterValue":null
+                     },
+                     "sortable":true,
+                     "defaultsort":false,
+                     "type":"string",
+                     "mandatory":false,
+                     "visible":true,
+                     "calculated":false,
+                     "header":false
                   }
                 ]
               },

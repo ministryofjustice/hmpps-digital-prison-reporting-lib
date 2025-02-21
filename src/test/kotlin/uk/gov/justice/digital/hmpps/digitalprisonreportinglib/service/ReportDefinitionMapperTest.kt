@@ -14,6 +14,8 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Multiselect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
@@ -55,6 +57,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DefinitionMapper.Companion.DEFAULT_MAX_STATIC_OPTIONS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -794,7 +797,7 @@ class ReportDefinitionMapperTest {
       sortable = false,
       calculated = false,
       filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
-        type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text,
+        type = Text,
         mandatory = true,
       ),
       visible = false,
@@ -978,6 +981,51 @@ class ReportDefinitionMapperTest {
     verifyNoInteractions(configuredApiService)
   }
 
+  @Test
+  fun `Report fields with 'caseloads' filter type are mapped to 'multiselect' and have the static options populated `() {
+    whenever(authToken.getCaseLoads()).thenReturn(
+      listOf(
+        Caseload("KMI", "KIRKHAM"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+    )
+    whenever(authToken.getCaseLoadIds()).thenReturn(
+      listOf(
+        "KMI",
+        "WWI",
+      ),
+    )
+    val defaultValue = createProductDefinition(
+      "today(-2,DAYS)",
+      reportField = ReportField(
+        name = "\$ref:13",
+        display = "reportFieldDisplay",
+        filter = FilterDefinition(
+          type = FilterType.Caseloads,
+        ),
+      ),
+    )
+
+    val result = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService).mapReport(definition = defaultValue, userToken = authToken)
+
+    assertThat(result.variant.specification?.fields?.first()).isEqualTo(
+      FieldDefinition(
+        name = "13",
+        display = "reportFieldDisplay",
+        // type is the same as schema field type
+        type = FieldType.Date,
+        filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
+          type = Multiselect,
+          defaultValue = "KMI,WWI",
+          staticOptions = listOf(
+            FilterOption("KMI", "KIRKHAM"),
+            FilterOption("WWI", "WANDSWORTH (HMP)"),
+          ),
+        ),
+      ),
+    )
+  }
+
   private fun createReportFieldDefinition(
     parameter: Parameter,
     expectedStaticOptions: List<FilterOption>?,
@@ -1109,6 +1157,18 @@ class ReportDefinitionMapperTest {
     formula: String? = null,
     parameters: List<Parameter>? = null,
     interactive: Boolean? = null,
+    reportField: ReportField = ReportField(
+      name = "\$ref:13",
+      display = reportFieldDisplay,
+      filter = FilterDefinition(
+        type = FilterType.DateRange,
+        default = defaultFilterValue,
+        min = min,
+        max = max,
+      ),
+      formula = formula,
+      visible = visible,
+    ),
   ): SingleReportProductDefinition {
     return SingleReportProductDefinition(
       id = "1",
@@ -1149,18 +1209,7 @@ class ReportDefinitionMapperTest {
           template = Template.List,
           section = null,
           field = listOf(
-            ReportField(
-              name = "\$ref:13",
-              display = reportFieldDisplay,
-              filter = FilterDefinition(
-                type = FilterType.DateRange,
-                default = defaultFilterValue,
-                min = min,
-                max = max,
-              ),
-              formula = formula,
-              visible = visible,
-            ),
+            reportField,
           ),
         ),
         classification = "someClassification",

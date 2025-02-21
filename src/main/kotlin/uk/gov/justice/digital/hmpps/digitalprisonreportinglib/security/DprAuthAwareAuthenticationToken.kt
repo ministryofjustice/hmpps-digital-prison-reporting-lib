@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 
 class DprAuthAwareAuthenticationToken(
   val jwt: Jwt,
@@ -13,13 +14,13 @@ class DprAuthAwareAuthenticationToken(
 
   private val lock = Any()
   private var activeCaseload: String? = null
-  private var caseloads: List<String>? = null
+  private var caseloads: List<Caseload>? = null
 
   override fun getPrincipal(): String {
     return aPrincipal
   }
 
-  fun getActiveCaseLoad(): String? = synchronized(lock) {
+  fun getActiveCaseLoadId(): String? = synchronized(lock) {
     if (this.activeCaseload == null) {
       this.activeCaseload = caseloadProvider.getActiveCaseloadId(this.jwt)
     }
@@ -27,11 +28,17 @@ class DprAuthAwareAuthenticationToken(
     return this.activeCaseload
   }
 
-  fun getCaseLoads(): List<String> = synchronized(lock) {
+  fun getCaseLoadIds(): List<String> = synchronized(lock) {
     if (this.caseloads == null) {
-      this.caseloads = caseloadProvider.getCaseloadIds(this.jwt)
+      this.caseloads = caseloadProvider.getCaseloads(this.jwt)
     }
+    return this.caseloads!!.map { it.id }
+  }
 
+  fun getCaseLoads(): List<Caseload> = synchronized(lock) {
+    if (this.caseloads == null) {
+      this.caseloads = caseloadProvider.getCaseloads(this.jwt)
+    }
     return this.caseloads!!
   }
 }

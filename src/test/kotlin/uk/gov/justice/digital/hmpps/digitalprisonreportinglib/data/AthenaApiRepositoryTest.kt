@@ -354,8 +354,8 @@ SELECT *
     val jwt = mock<Jwt>()
     whenever(userToken.jwt).thenReturn(jwt)
     whenever(jwt.subject).thenReturn(testUsername)
-    whenever(userToken.getActiveCaseLoad()).thenReturn(testCaseload)
-    whenever(userToken.getCaseLoads()).thenReturn(listOf(testCaseload))
+    whenever(userToken.getActiveCaseLoadId()).thenReturn(testCaseload)
+    whenever(userToken.getCaseLoadIds()).thenReturn(listOf(testCaseload))
 
     return startQueryExecutionRequest
   }
