@@ -46,13 +46,11 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): List<ReportDefinitionSummary> {
-    return reportDefinitionService.getListForUser(
-      renderMethod,
-      if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-      dataProductDefinitionsPath,
-    )
-  }
+  ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
+    renderMethod,
+    if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    dataProductDefinitionsPath,
+  )
 
   @GetMapping("/definitions/{reportId}/{variantId}")
   @Operation(
@@ -79,12 +77,10 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): SingleVariantReportDefinition {
-    return reportDefinitionService.getDefinition(
-      reportId,
-      variantId,
-      if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-      dataProductDefinitionsPath,
-    )
-  }
+  ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
+    reportId,
+    variantId,
+    if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    dataProductDefinitionsPath,
+  )
 }

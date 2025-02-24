@@ -34,27 +34,21 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
         ?.let { listOf(validateAndMapFieldIdDynamicFilter(findFilterDefinition(productDefinition, reportFieldId), reportFieldId, prefix)) }
     } ?: emptyList()
 
-  protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? {
-    return definition.report.specification
-      ?.field
-      ?.firstOrNull { it.defaultSort }
-      ?.name
-      ?.removePrefix(REF_PREFIX)
-  }
+  protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? = definition.report.specification
+    ?.field
+    ?.firstOrNull { it.defaultSort }
+    ?.name
+    ?.removePrefix(REF_PREFIX)
 
-  protected fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String? {
-    return findSortColumn(sortColumn, productDefinition.reportDataset) ?: calculateDefaultSortColumn(productDefinition)
-  }
+  protected fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String? = findSortColumn(sortColumn, productDefinition.reportDataset) ?: calculateDefaultSortColumn(productDefinition)
 
   protected fun findSortColumn(
     sortColumn: String?,
     dataset: Dataset,
-  ): String? {
-    return sortColumn?.let {
-      dataset.schema.field.filter { schemaField -> schemaField.name == sortColumn }
-        .ifEmpty { throw ValidationException("Invalid sortColumn provided: $sortColumn") }
-        .first().name
-    }
+  ): String? = sortColumn?.let {
+    dataset.schema.field.filter { schemaField -> schemaField.name == sortColumn }
+      .ifEmpty { throw ValidationException("Invalid sortColumn provided: $sortColumn") }
+      .first().name
   }
 
   private fun checkCorrectFiltersAreProvided(definition: SingleReportProductDefinition, filters: Map<String, String>, interactive: Boolean?) {
@@ -93,8 +87,7 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
       ?.let { throw ValidationException("${AsyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE} $it") }
   }
 
-  private fun isNotInTheProvidedFilters(filters: Map<String, String>, it: String) =
-    !filters.keys.map(::truncateBasedOnSuffix).contains(it)
+  private fun isNotInTheProvidedFilters(filters: Map<String, String>, it: String) = !filters.keys.map(::truncateBasedOnSuffix).contains(it)
 
   private fun isAtTheSameInteractiveStage(
     interactive: Boolean?,
@@ -244,8 +237,7 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     return fieldFilter ?: datasetFilter
   }
 
-  private fun findFilterDefinitionFromDataset(dataset: Dataset, filterName: String): FilterDefinition? =
-    identifiedHelper.findOrNull<SchemaField>(dataset.schema.field, filterName)?.filter
+  private fun findFilterDefinitionFromDataset(dataset: Dataset, filterName: String): FilterDefinition? = identifiedHelper.findOrNull<SchemaField>(dataset.schema.field, filterName)?.filter
 
   private fun validateValue(dataSet: Dataset, filterDefinition: FilterDefinition, filterName: String, filterValue: String, reportFieldId: Set<String>?) {
     validateFilterSchemaFieldType(dataSet, filterName, filterValue)
@@ -283,18 +275,14 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
 
   private fun isNotABoolean(value: String) = value.lowercase() != "true" && value.lowercase() != "false"
 
-  private fun truncateBasedOnSuffix(k: String): String {
-    return if (k.endsWith(DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX)) {
-      k.removeSuffix(DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX)
-    } else if (k.endsWith(DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX)) {
-      k.removeSuffix(DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX)
-    } else {
-      k
-    }
+  private fun truncateBasedOnSuffix(k: String): String = if (k.endsWith(DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX)) {
+    k.removeSuffix(DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX)
+  } else if (k.endsWith(DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX)) {
+    k.removeSuffix(DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX)
+  } else {
+    k
   }
 
-  private fun transformKey(key: String, fieldNames: List<String>): String {
-    return fieldNames.firstOrNull { it.lowercase() == key.lowercase() }
-      ?: throw ValidationException("The DPD is missing schema field: $key.")
-  }
+  private fun transformKey(key: String, fieldNames: List<String>): String = fieldNames.firstOrNull { it.lowercase() == key.lowercase() }
+    ?: throw ValidationException("The DPD is missing schema field: $key.")
 }

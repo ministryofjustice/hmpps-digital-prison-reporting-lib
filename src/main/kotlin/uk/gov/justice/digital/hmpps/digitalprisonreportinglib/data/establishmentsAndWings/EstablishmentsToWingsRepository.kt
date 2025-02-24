@@ -29,23 +29,21 @@ class EstablishmentsToWingsRepository(
     const val DIGITAL_PRISON_REPORTING_DB = "DIGITAL_PRISON_REPORTING"
     const val ESTABLISHMENTS_TO_WINGS_QUERY = "SELECT DISTINCT LIVING_UNITS.agy_loc_id as establishment_code, AGENCY_LOCATIONS.description as establishment_name, LIVING_UNITS.AGY_LOC_ID || '-' || LIVING_UNITS.LEVEL_1_CODE as wing FROM OMS_OWNER.LIVING_UNITS JOIN OMS_OWNER.AGENCY_LOCATIONS ON LIVING_UNITS.agy_loc_id = AGENCY_LOCATIONS.agy_loc_id;"
   }
-  fun executeStatementWaitAndGetResult(): MutableMap<String, List<EstablishmentToWing>> {
-    return try {
-      val stopwatch = StopWatch.createStarted()
-      val executionId = executeQueryAsync(
-        datasource = Datasource("", "", DIGITAL_PRISON_REPORTING_DB, NOMIS_CATALOG),
-        tableId = "notApplicableHere",
-        query = ESTABLISHMENTS_TO_WINGS_QUERY,
-      ).executionId
-      waitForQueryToComplete(executionId)
-      val results = fetchAllResults(executionId)
-      stopwatch.stop()
-      log.info("List of establishments and wings retrieved successfully in ${stopwatch.time}.")
-      results
-    } catch (e: Exception) {
-      log.error("Error retrieving list of establishments and wings: ", e)
-      mutableMapOf()
-    }
+  fun executeStatementWaitAndGetResult(): MutableMap<String, List<EstablishmentToWing>> = try {
+    val stopwatch = StopWatch.createStarted()
+    val executionId = executeQueryAsync(
+      datasource = Datasource("", "", DIGITAL_PRISON_REPORTING_DB, NOMIS_CATALOG),
+      tableId = "notApplicableHere",
+      query = ESTABLISHMENTS_TO_WINGS_QUERY,
+    ).executionId
+    waitForQueryToComplete(executionId)
+    val results = fetchAllResults(executionId)
+    stopwatch.stop()
+    log.info("List of establishments and wings retrieved successfully in ${stopwatch.time}.")
+    results
+  } catch (e: Exception) {
+    log.error("Error retrieving list of establishments and wings: ", e)
+    mutableMapOf()
   }
 
   private fun waitForQueryToComplete(executionId: String) {
@@ -103,17 +101,15 @@ class EstablishmentsToWingsRepository(
   private fun groupWingsByEstablishment(
     getQueryResultsResponse: GetQueryResultsResponse,
     page: Int,
-  ): Map<String, List<EstablishmentToWing>> {
-    return getQueryResultsResponse
-      .resultSet()
-      .rows()
-      .mapIndexed { index, row ->
-        // Process the row. The first row of the first page holds the column names.
-        mapRow(page, index, row)
-      }
-      .filterNotNull()
-      .groupBy { it.establishmentCode }
-  }
+  ): Map<String, List<EstablishmentToWing>> = getQueryResultsResponse
+    .resultSet()
+    .rows()
+    .mapIndexed { index, row ->
+      // Process the row. The first row of the first page holds the column names.
+      mapRow(page, index, row)
+    }
+    .filterNotNull()
+    .groupBy { it.establishmentCode }
 
   private fun mapRow(page: Int, index: Int, row: Row): EstablishmentToWing? {
     if (page == 1 && index == 0) {

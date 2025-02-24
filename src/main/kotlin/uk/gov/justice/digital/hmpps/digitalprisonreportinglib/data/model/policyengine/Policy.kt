@@ -28,11 +28,9 @@ data class Policy(val id: String, val type: PolicyType, @SerializedName("action"
       POLICY_DENY
     }
   }
-  fun apply(transformFunction: (String) -> String): String {
-    return if (action.isEmpty()) {
-      POLICY_PERMIT
-    } else {
-      action.joinToString(" AND ", transform = transformFunction)
-    }
+  fun apply(transformFunction: (String) -> String): String = if (action.isEmpty()) {
+    POLICY_PERMIT
+  } else {
+    action.joinToString(" AND ", transform = transformFunction)
   }
 }

@@ -37,44 +37,40 @@ abstract class DefinitionMapper(
   private val todayRegex: Regex = Regex("today\\(\\)")
   private val dateRegex: Regex = Regex("today\\((-?\\d+), ?([a-z]+)\\)", RegexOption.IGNORE_CASE)
 
-  protected fun convertParameterTypeToFieldType(parameterType: ParameterType): FieldType {
-    return when (parameterType) {
-      ParameterType.Boolean -> FieldType.Boolean
-      ParameterType.Date -> FieldType.Date
-      ParameterType.DateTime -> FieldType.Date
-      ParameterType.Timestamp -> FieldType.Date
-      ParameterType.Time -> FieldType.Time
-      ParameterType.Double -> FieldType.Double
-      ParameterType.Float -> FieldType.Double
-      ParameterType.Integer -> FieldType.Long
-      ParameterType.Long -> FieldType.Long
-      ParameterType.String -> FieldType.String
-    }
+  protected fun convertParameterTypeToFieldType(parameterType: ParameterType): FieldType = when (parameterType) {
+    ParameterType.Boolean -> FieldType.Boolean
+    ParameterType.Date -> FieldType.Date
+    ParameterType.DateTime -> FieldType.Date
+    ParameterType.Timestamp -> FieldType.Date
+    ParameterType.Time -> FieldType.Time
+    ParameterType.Double -> FieldType.Double
+    ParameterType.Float -> FieldType.Double
+    ParameterType.Integer -> FieldType.Long
+    ParameterType.Long -> FieldType.Long
+    ParameterType.String -> FieldType.String
   }
 
   protected fun map(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
     staticOptions: List<FilterOption>?,
     userToken: DprAuthAwareAuthenticationToken? = null,
-  ): FilterDefinition {
-    return FilterDefinition(
-      type = populateFilterType(filterDefinition),
-      staticOptions = staticOptions,
-      dynamicOptions = filterDefinition.dynamicOptions?.let {
-        DynamicFilterOption(
-          minimumLength = filterDefinition.dynamicOptions.minimumLength,
-        )
-      },
-      defaultValue = populateDefaultValue(filterDefinition, userToken),
-      min = replaceTokens(filterDefinition.min),
-      max = replaceTokens(filterDefinition.max),
-      mandatory = filterDefinition.mandatory,
-      pattern = filterDefinition.pattern,
-      interactive = filterDefinition.interactive ?: false,
-      defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
-      defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) },
-    )
-  }
+  ): FilterDefinition = FilterDefinition(
+    type = populateFilterType(filterDefinition),
+    staticOptions = staticOptions,
+    dynamicOptions = filterDefinition.dynamicOptions?.let {
+      DynamicFilterOption(
+        minimumLength = filterDefinition.dynamicOptions.minimumLength,
+      )
+    },
+    defaultValue = populateDefaultValue(filterDefinition, userToken),
+    min = replaceTokens(filterDefinition.min),
+    max = replaceTokens(filterDefinition.max),
+    mandatory = filterDefinition.mandatory,
+    pattern = filterDefinition.pattern,
+    interactive = filterDefinition.interactive ?: false,
+    defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
+    defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) },
+  )
 
   protected fun populateStaticOptions(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
@@ -109,8 +105,7 @@ abstract class DefinitionMapper(
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 
-  protected fun maybeConvertToReportFields(parameters: List<Parameter>?) =
-    parameters?.map { mapParameterToField(it) } ?: emptyList()
+  protected fun maybeConvertToReportFields(parameters: List<Parameter>?) = parameters?.map { mapParameterToField(it) } ?: emptyList()
 
   protected fun populateStaticOptionsForFilterWithDataset(
     dynamicFilterOption: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption,
@@ -135,39 +130,33 @@ abstract class DefinitionMapper(
     display = definition.display,
   )
 
-  private fun mapParameterToField(parameter: Parameter): FieldDefinition {
-    return FieldDefinition(
-      name = parameter.name,
-      display = parameter.display,
-      sortable = false,
-      defaultsort = false,
-      type = convertParameterTypeToFieldType(parameter.reportFieldType),
-      mandatory = false,
-      visible = false,
-      filter = FilterDefinition(
-        type = FilterType.valueOf(parameter.filterType.toString()),
-        mandatory = parameter.mandatory,
-        interactive = false,
-        staticOptions = populateStaticOptionsForParameter(parameter),
-      ),
-    )
-  }
+  private fun mapParameterToField(parameter: Parameter): FieldDefinition = FieldDefinition(
+    name = parameter.name,
+    display = parameter.display,
+    sortable = false,
+    defaultsort = false,
+    type = convertParameterTypeToFieldType(parameter.reportFieldType),
+    mandatory = false,
+    visible = false,
+    filter = FilterDefinition(
+      type = FilterType.valueOf(parameter.filterType.toString()),
+      mandatory = parameter.mandatory,
+      interactive = false,
+      staticOptions = populateStaticOptionsForParameter(parameter),
+    ),
+  )
 
-  private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? {
-    return parameter.referenceType
-      ?.let {
-        when (it) {
-          ReferenceType.ESTABLISHMENT -> mapEstablishmentsToFilterOptions()
-          ReferenceType.WING -> mapWingsToFilterOptions()
-        }
-      }?.takeIf { it.isNotEmpty() }
-  }
+  private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? = parameter.referenceType
+    ?.let {
+      when (it) {
+        ReferenceType.ESTABLISHMENT -> mapEstablishmentsToFilterOptions()
+        ReferenceType.WING -> mapWingsToFilterOptions()
+      }
+    }?.takeIf { it.isNotEmpty() }
 
-  private fun mapEstablishmentsToFilterOptions(): List<FilterOption> {
-    return establishmentCodesToWingsCacheService
-      .getEstablishmentsAndPopulateCacheIfNeeded()
-      .map { FilterOption(it.key, it.value.first().description) }
-  }
+  private fun mapEstablishmentsToFilterOptions(): List<FilterOption> = establishmentCodesToWingsCacheService
+    .getEstablishmentsAndPopulateCacheIfNeeded()
+    .map { FilterOption(it.key, it.value.first().description) }
 
   private fun mapWingsToFilterOptions(): List<FilterOption> {
     val wingsFlattened = establishmentCodesToWingsCacheService
@@ -203,18 +192,16 @@ abstract class DefinitionMapper(
     .flatMap { it.entries }
     .map { FilterOption(it.value.toString(), it.value.toString()) }
 
-  private fun populateFilterType(filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition) =
-    if (filterDefinition.type == Caseloads) FilterType.Multiselect else FilterType.valueOf(filterDefinition.type.toString())
+  private fun populateFilterType(filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition) = if (filterDefinition.type == Caseloads) FilterType.Multiselect else FilterType.valueOf(filterDefinition.type.toString())
 
   private fun populateDefaultValue(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
     userToken: DprAuthAwareAuthenticationToken?,
-  ) =
-    if (filterDefinition.type == Caseloads) {
-      userToken?.getCaseLoadIds()?.joinToString(",")
-    } else {
-      replaceTokens(filterDefinition.default)
-    }
+  ) = if (filterDefinition.type == Caseloads) {
+    userToken?.getCaseLoadIds()?.joinToString(",")
+  } else {
+    replaceTokens(filterDefinition.default)
+  }
 
   private fun replaceTokens(defaultValue: String?): String? {
     if (defaultValue == null) {

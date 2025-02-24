@@ -35,22 +35,20 @@ class ReportDefinitionMapper(
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
 
-  fun mapReport(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition {
-    return SingleVariantReportDefinition(
-      id = definition.id,
-      name = definition.name,
-      description = definition.description,
-      variant = mapVariant(
-        report = definition.report,
-        dataSet = definition.reportDataset,
-        productDefinitionId = definition.id,
-        userToken = userToken,
-        dataProductDefinitionsPath = dataProductDefinitionsPath,
-        allDatasets = definition.allDatasets,
-        allReports = definition.allReports,
-      ),
-    )
-  }
+  fun mapReport(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition = SingleVariantReportDefinition(
+    id = definition.id,
+    name = definition.name,
+    description = definition.description,
+    variant = mapVariant(
+      report = definition.report,
+      dataSet = definition.reportDataset,
+      productDefinitionId = definition.id,
+      userToken = userToken,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      allDatasets = definition.allDatasets,
+      allReports = definition.allReports,
+    ),
+  )
 
   private fun mapVariant(
     report: Report,
@@ -60,38 +58,36 @@ class ReportDefinitionMapper(
     dataProductDefinitionsPath: String? = null,
     allDatasets: List<Dataset>,
     allReports: List<Report>,
-  ): VariantDefinition {
-    return VariantDefinition(
-      id = report.id,
-      name = report.name,
-      description = report.description,
-      specification = mapSpecification(
-        specification = report.specification,
-        schemaFields = dataSet.schema.field,
+  ): VariantDefinition = VariantDefinition(
+    id = report.id,
+    name = report.name,
+    description = report.description,
+    specification = mapSpecification(
+      specification = report.specification,
+      schemaFields = dataSet.schema.field,
+      productDefinitionId = productDefinitionId,
+      reportVariantId = report.id,
+      userToken = userToken,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      allDatasets = allDatasets,
+      parameters = dataSet.parameters,
+    ),
+    classification = report.classification,
+    printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
+    resourceName = "reports/$productDefinitionId/${report.id}",
+    summaries = report.summary?.map { mapReportSummary(it, allDatasets) },
+    interactive = report.metadata?.hints?.contains(ReportMetadataHint.INTERACTIVE),
+    childVariants = report.child?.map { c ->
+      mapChildVariant(
+        child = c,
         productDefinitionId = productDefinitionId,
-        reportVariantId = report.id,
         userToken = userToken,
         dataProductDefinitionsPath = dataProductDefinitionsPath,
         allDatasets = allDatasets,
-        parameters = dataSet.parameters,
-      ),
-      classification = report.classification,
-      printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
-      resourceName = "reports/$productDefinitionId/${report.id}",
-      summaries = report.summary?.map { mapReportSummary(it, allDatasets) },
-      interactive = report.metadata?.hints?.contains(ReportMetadataHint.INTERACTIVE),
-      childVariants = report.child?.map { c ->
-        mapChildVariant(
-          child = c,
-          productDefinitionId = productDefinitionId,
-          userToken = userToken,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          allDatasets = allDatasets,
-          allReports = allReports,
-        )
-      },
-    )
-  }
+        allReports = allReports,
+      )
+    },
+  )
 
   private fun mapChildVariant(
     child: ReportChild,
@@ -150,12 +146,11 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun mapReportSummary(summary: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary, allDatasets: List<Dataset>): ReportSummary =
-    ReportSummary(
-      id = summary.id,
-      template = SummaryTemplate.valueOf(summary.template.toString()),
-      fields = identifiedHelper.findOrFail(allDatasets, summary.dataset).schema.field.map { mapSummaryField(it, summary.field) },
-    )
+  private fun mapReportSummary(summary: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary, allDatasets: List<Dataset>): ReportSummary = ReportSummary(
+    id = summary.id,
+    template = SummaryTemplate.valueOf(summary.template.toString()),
+    fields = identifiedHelper.findOrFail(allDatasets, summary.dataset).schema.field.map { mapSummaryField(it, summary.field) },
+  )
 
   private fun mapSummaryField(field: SchemaField, summaryFields: List<uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SummaryField>?): SummaryField {
     val summaryField = identifiedHelper.findOrNull(summaryFields, field.name)
@@ -228,29 +223,23 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun populateDisplay(reportFieldDisplay: String?, schemaFieldDisplay: String): String {
-    return reportFieldDisplay?.ifBlank { schemaFieldDisplay } ?: schemaFieldDisplay
-  }
+  private fun populateDisplay(reportFieldDisplay: String?, schemaFieldDisplay: String): String = reportFieldDisplay?.ifBlank { schemaFieldDisplay } ?: schemaFieldDisplay
 
-  private fun populateVisible(visible: Visible?): Boolean {
-    return visible?.let {
-      when (visible) {
-        Visible.TRUE -> true
-        Visible.FALSE -> false
-        Visible.MANDATORY -> true
-      }
-    } ?: true
-  }
+  private fun populateVisible(visible: Visible?): Boolean = visible?.let {
+    when (visible) {
+      Visible.TRUE -> true
+      Visible.FALSE -> false
+      Visible.MANDATORY -> true
+    }
+  } ?: true
 
-  private fun populateMandatory(visible: Visible?): Boolean {
-    return visible?.let {
-      when (visible) {
-        Visible.TRUE -> false
-        Visible.FALSE -> false
-        Visible.MANDATORY -> true
-      }
-    } ?: false
-  }
+  private fun populateMandatory(visible: Visible?): Boolean = visible?.let {
+    when (visible) {
+      Visible.TRUE -> false
+      Visible.FALSE -> false
+      Visible.MANDATORY -> true
+    }
+  } ?: false
 
   private fun populateType(schemaField: SchemaField, reportField: ReportField): FieldType {
     if (reportField.formula?.startsWith(MAKE_URL_FORMULA_PREFIX) == true) {

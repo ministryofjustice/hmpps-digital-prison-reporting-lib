@@ -21,11 +21,9 @@ class ReportDefinitionService(
     renderMethod: RenderMethod?,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
-  ): List<ReportDefinitionSummary> {
-    return productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
-      .map { summaryMapper.map(it, renderMethod, userToken) }
-      .filter { containsReportVariantsOrDashboards(it) }
-  }
+  ): List<ReportDefinitionSummary> = productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
+    .map { summaryMapper.map(it, renderMethod, userToken) }
+    .filter { containsReportVariantsOrDashboards(it) }
 
   fun getDefinition(
     reportId: String,
@@ -51,8 +49,6 @@ class ReportDefinitionService(
     }
     return true
   }
-  private fun containsReportVariantsOrDashboards(it: ReportDefinitionSummary) =
-    it.variants.isNotEmpty() || hasDashboards(it)
-  private fun hasDashboards(it: ReportDefinitionSummary) =
-    (it.dashboards?.isNotEmpty() ?: false)
+  private fun containsReportVariantsOrDashboards(it: ReportDefinitionSummary) = it.variants.isNotEmpty() || hasDashboards(it)
+  private fun hasDashboards(it: ReportDefinitionSummary) = (it.dashboards?.isNotEmpty() ?: false)
 }

@@ -73,8 +73,7 @@ class AthenaApiRepositoryTest {
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
     prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
-  ) =
-    """          /* dpdId dpdName reportId reportName */
+  ) = """          /* dpdId dpdName reportId reportName */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -86,7 +85,7 @@ SELECT *
           FROM $FILTER_ ORDER BY column_a asc'
            )) 
           );
-    """.trimIndent()
+  """.trimIndent()
 
   private val athenaClient = mock<AthenaClient>()
   private val tableIdGenerator = mock<TableIdGenerator>()

@@ -17,13 +17,9 @@ class CaseloadProviderAutoConfig(
 
   @Bean
   @Qualifier("caseloadWebClient")
-  fun caseloadWebClient(): WebClient {
-    return WebClient.builder().baseUrl("$caseloadHost/$caseloadPath").build()
-  }
+  fun caseloadWebClient(): WebClient = WebClient.builder().baseUrl("$caseloadHost/$caseloadPath").build()
 
   @Bean
   @ConditionalOnMissingBean(CaseloadProvider::class)
-  fun caseloadProvider(@Qualifier("caseloadWebClient") webClient: WebClient): CaseloadProvider {
-    return DefaultCaseloadProvider(webClient)
-  }
+  fun caseloadProvider(@Qualifier("caseloadWebClient") webClient: WebClient): CaseloadProvider = DefaultCaseloadProvider(webClient)
 }
