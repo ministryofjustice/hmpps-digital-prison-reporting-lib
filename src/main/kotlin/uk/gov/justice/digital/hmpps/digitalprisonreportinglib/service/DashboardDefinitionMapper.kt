@@ -28,7 +28,7 @@ class DashboardDefinitionMapper(
   identifiedHelper: IdentifiedHelper,
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
-  fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>): DashboardDefinition {
+  fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>, userToken: DprAuthAwareAuthenticationToken? = null): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
     return DashboardDefinition(
