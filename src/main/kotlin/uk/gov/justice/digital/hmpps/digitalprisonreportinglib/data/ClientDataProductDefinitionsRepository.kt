@@ -9,14 +9,14 @@ import org.springframework.http.ResponseEntity
 import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthenticationHelper
+import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 import java.net.URI
 
 class ClientDataProductDefinitionsRepository(
   private val dataProductDefinitionsClient: RestTemplate,
   private val definitionsHost: String?,
   private val definitionsCache: Cache<String, List<ProductDefinition>>?,
-  private val authenticationHelper: AuthenticationHelper,
+  private val authenticationHelper: HmppsAuthenticationHolder,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 
@@ -31,7 +31,7 @@ class ClientDataProductDefinitionsRepository(
 
     val respEntity: ResponseEntity<List<ProductDefinition>>? = path?.let {
       val headers: MultiValueMap<String, String> = HttpHeaders()
-      headers.add(HttpHeaders.AUTHORIZATION, "Bearer ${authenticationHelper.getCurrentAuthentication().jwt.tokenValue}")
+      headers.add(HttpHeaders.AUTHORIZATION, "Bearer ${authenticationHelper.authentication.jwt.tokenValue}")
       val requestEntity = RequestEntity<List<ProductDefinition>>(headers, HttpMethod.GET, URI("$definitionsHost/$path"))
       dataProductDefinitionsClient
         .exchange(requestEntity, object : ParameterizedTypeReference<List<ProductDefinition>>() {})

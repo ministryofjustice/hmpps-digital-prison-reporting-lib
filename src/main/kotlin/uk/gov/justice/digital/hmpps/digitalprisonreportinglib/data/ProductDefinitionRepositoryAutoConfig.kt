@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.AuthenticationHelper
+import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
 import java.util.concurrent.TimeUnit
 
 @Configuration
@@ -47,7 +47,7 @@ class ProductDefinitionRepositoryAutoConfig(
   fun dataProductDefinitionsRepository(
     dprDefinitionGson: Gson,
     definitionsCache: Cache<String, List<ProductDefinition>>? = null,
-    authenticationHelper: AuthenticationHelper,
+    authenticationHelper: HmppsAuthenticationHolder,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = ClientDataProductDefinitionsRepository(
     RestTemplate(
