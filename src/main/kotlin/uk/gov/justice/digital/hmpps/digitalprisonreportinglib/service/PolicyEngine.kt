@@ -19,22 +19,17 @@ class PolicyEngine(
     const val CASELOADS = "\${caseloads}"
   }
 
-  fun execute(policyType: PolicyType): String {
-    return doExecute(policy.filter { it.type == policyType }.sortedByDescending { it.type })
-  }
+  fun execute(policyType: PolicyType): String = doExecute(policy.filter { it.type == policyType }.sortedByDescending { it.type })
 
   fun execute(): String = doExecute(policy.sortedByDescending { it.type })
 
-  private fun doExecute(policiesToCheck: List<Policy>): String {
-    return if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck)) {
-      POLICY_DENY
-    } else {
-      policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables) }
-    }
+  private fun doExecute(policiesToCheck: List<Policy>): String = if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck)) {
+    POLICY_DENY
+  } else {
+    policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables) }
   }
 
-  private fun isAnyPolicyDenied(policies: List<Policy>) =
-    policies.map { it.execute(authToken, ::interpolateVariables) }.any { it == POLICY_DENY }
+  private fun isAnyPolicyDenied(policies: List<Policy>) = policies.map { it.execute(authToken, ::interpolateVariables) }.any { it == POLICY_DENY }
 
   private fun interpolateVariables(s: String): String {
     if (authToken == null) return POLICY_DENY

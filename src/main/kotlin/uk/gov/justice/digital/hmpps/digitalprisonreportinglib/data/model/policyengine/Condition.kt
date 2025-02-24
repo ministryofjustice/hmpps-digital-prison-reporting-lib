@@ -25,12 +25,10 @@ data class Condition(
     matchList: List<String>,
     authToken: DprAuthAwareAuthenticationToken?,
     interpolateVariables: (String) -> String,
-  ): Boolean {
-    return if (matchList.contains(ROLE)) {
-      isAnyOfTheRolesInTheList(authToken, matchList)
-    } else {
-      isTheInterpolatedVarInTheList(matchList, interpolateVariables)
-    }
+  ): Boolean = if (matchList.contains(ROLE)) {
+    isAnyOfTheRolesInTheList(authToken, matchList)
+  } else {
+    isTheInterpolatedVarInTheList(matchList, interpolateVariables)
   }
 
   private fun isAnyOfTheRolesInTheList(

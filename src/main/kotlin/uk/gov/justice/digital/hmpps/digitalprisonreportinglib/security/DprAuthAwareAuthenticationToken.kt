@@ -2,23 +2,21 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
 class DprAuthAwareAuthenticationToken(
-  val jwt: Jwt,
-  private val aPrincipal: String,
-  authorities: Collection<GrantedAuthority>,
+  jwt: Jwt,
+  clientId: String,
+  userName: String? = null,
+  authSource: AuthSource = AuthSource.NONE,
+  authorities: Collection<GrantedAuthority> = emptyList(),
   private val caseloadProvider: CaseloadProvider,
-) : JwtAuthenticationToken(jwt, authorities) {
-
+) : AuthAwareAuthenticationToken(jwt, clientId, userName, authSource, authorities) {
   private val lock = Any()
   private var activeCaseload: String? = null
   private var caseloads: List<Caseload>? = null
-
-  override fun getPrincipal(): String {
-    return aPrincipal
-  }
 
   fun getActiveCaseLoadId(): String? = synchronized(lock) {
     if (this.activeCaseload == null) {

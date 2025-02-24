@@ -46,12 +46,10 @@ class DashboardDefinitionController(val dashboardDefinitionService: DashboardDef
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): DashboardDefinition {
-    return dashboardDefinitionService.getDashboardDefinition(
+  ): DashboardDefinition = dashboardDefinitionService.getDashboardDefinition(
       dataProductDefinitionId = dataProductDefinitionId,
-      dashboardId = dashboardId,
+    dashboardId = dashboardId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-    )
-  }
+  )
 }

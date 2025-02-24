@@ -55,8 +55,7 @@ class ConfiguredApiRepository(
   ) = """${buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc)} 
         ${buildPaginationQuery(pageSize, selectedPage)}"""
 
-  private fun buildPaginationQuery(pageSize: Long, selectedPage: Long) =
-    """limit $pageSize OFFSET ($selectedPage - 1) * $pageSize"""
+  private fun buildPaginationQuery(pageSize: Long, selectedPage: Long) = """limit $pageSize OFFSET ($selectedPage - 1) * $pageSize"""
 
   fun count(
     filters: List<Filter>,

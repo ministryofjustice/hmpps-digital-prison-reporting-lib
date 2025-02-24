@@ -675,15 +675,13 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     requestWithQueryAndAssert(params, path).isOk
   }
 
-  private fun requestWithQueryAndAssert(params: Map<String, Any>, path: String): StatusAssertions {
-    return webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        params.entries.forEach { uriBuilder.queryParam(it.key, it.value) }
+  private fun requestWithQueryAndAssert(params: Map<String, Any>, path: String): StatusAssertions = webTestClient.get()
+    .uri { uriBuilder: UriBuilder ->
+      params.entries.forEach { uriBuilder.queryParam(it.key, it.value) }
 
-        uriBuilder.path(path).build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-  }
+      uriBuilder.path(path).build()
+    }
+    .headers(setAuthorisation(roles = listOf(authorisedRole)))
+    .exchange()
+    .expectStatus()
 }

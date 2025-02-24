@@ -6,10 +6,7 @@ import java.util.UUID
 @Service
 class TableIdGenerator {
 
-  fun generateNewExternalTableId(): String {
-    return "_" + UUID.randomUUID().toString().replace("-", "_")
-  }
+  fun generateNewExternalTableId(): String = "_" + UUID.randomUUID().toString().replace("-", "_")
 
-  fun getTableSummaryId(tableId: String, summaryId: String): String =
-    "${tableId}_${summaryId.replace('-', '_')}"
+  fun getTableSummaryId(tableId: String, summaryId: String): String = "${tableId}_${summaryId.replace('-', '_')}"
 }

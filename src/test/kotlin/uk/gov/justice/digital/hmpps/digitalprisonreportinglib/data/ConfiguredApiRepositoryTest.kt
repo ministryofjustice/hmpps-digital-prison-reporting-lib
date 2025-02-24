@@ -229,44 +229,34 @@ class ConfiguredApiRepositoryTest {
   }
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by date when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "date", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner5)
+  fun `should return all rows for the selected page and pageSize sorted by date when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "date", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner5)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by prisoner when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "prisonNumber", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner3)
+  fun `should return all rows for the selected page and pageSize sorted by prisoner when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "prisonNumber", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner3)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'origin' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "origin", expectedForAscending = movementPrisoner3, expectedForDescending = movementPrisoner4)
+  fun `should return all rows for the selected page and pageSize sorted by 'origin' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "origin", expectedForAscending = movementPrisoner3, expectedForDescending = movementPrisoner4)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'origin_code' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "origin_code", expectedForAscending = movementPrisoner3, expectedForDescending = movementPrisoner1)
+  fun `should return all rows for the selected page and pageSize sorted by 'origin_code' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "origin_code", expectedForAscending = movementPrisoner3, expectedForDescending = movementPrisoner1)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'destination' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "destination", expectedForAscending = movementPrisoner5, expectedForDescending = movementPrisoner4)
+  fun `should return all rows for the selected page and pageSize sorted by 'destination' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "destination", expectedForAscending = movementPrisoner5, expectedForDescending = movementPrisoner4)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'destination_code' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "destination_code", expectedForAscending = movementPrisoner5, expectedForDescending = movementPrisoner4)
+  fun `should return all rows for the selected page and pageSize sorted by 'destination_code' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "destination_code", expectedForAscending = movementPrisoner5, expectedForDescending = movementPrisoner4)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'direction' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "direction", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner4)
+  fun `should return all rows for the selected page and pageSize sorted by 'direction' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "direction", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner4)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'type' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "type", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner2)
+  fun `should return all rows for the selected page and pageSize sorted by 'type' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "type", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner2)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'reason' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "reason", expectedForAscending = movementPrisoner2, expectedForDescending = movementPrisoner1)
+  fun `should return all rows for the selected page and pageSize sorted by 'reason' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "reason", expectedForAscending = movementPrisoner2, expectedForDescending = movementPrisoner1)
 
   @TestFactory
-  fun `should return all rows for the selected page and pageSize sorted by 'lastname,firstname' when sortedAsc is true and when it is false`() =
-    assertExternalMovements(sortColumn = "name", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner4)
+  fun `should return all rows for the selected page and pageSize sorted by 'lastname,firstname' when sortedAsc is true and when it is false`() = assertExternalMovements(sortColumn = "name", expectedForAscending = movementPrisoner1, expectedForDescending = movementPrisoner4)
 
   @Test
   fun `should return data and not error when there is no sort column provided `() {
@@ -854,29 +844,27 @@ class ConfiguredApiRepositoryTest {
     sortColumn: String,
     expectedForAscending: Map<String, Any>,
     expectedForDescending: Map<String, Any>,
-  ): List<DynamicTest> {
-    return listOf(
-      true to listOf(expectedForAscending),
-      false to listOf(expectedForDescending),
-    )
-      .map { (sortedAsc, expected) ->
-        DynamicTest.dynamicTest("When sorting by $sortColumn and sortedAsc is $sortedAsc the result is $expected") {
-          val actual = configuredApiRepository.executeQuery(
-            query = REPOSITORY_TEST_QUERY,
-            filters = emptyList(),
-            selectedPage = 1,
-            pageSize = 1,
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
-            dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
-            reportFilter = productDefinition.report.filter,
-          )
-          Assertions.assertEquals(expected, actual)
-          Assertions.assertEquals(1, actual.size)
-        }
+  ): List<DynamicTest> = listOf(
+    true to listOf(expectedForAscending),
+    false to listOf(expectedForDescending),
+  )
+    .map { (sortedAsc, expected) ->
+      DynamicTest.dynamicTest("When sorting by $sortColumn and sortedAsc is $sortedAsc the result is $expected") {
+        val actual = configuredApiRepository.executeQuery(
+          query = REPOSITORY_TEST_QUERY,
+          filters = emptyList(),
+          selectedPage = 1,
+          pageSize = 1,
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+          dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+          reportFilter = productDefinition.report.filter,
+        )
+        Assertions.assertEquals(expected, actual)
+        Assertions.assertEquals(1, actual.size)
       }
-  }
+    }
 
   object AllMovements {
     val externalMovement1 = ExternalMovementEntity(

@@ -19,10 +19,9 @@ class FormulaEngine(
     const val FORMAT_DATE_FORMULA_PREFIX = "format_date("
   }
 
-  fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> =
-    row.entries.associate { e ->
-      e.key to constructValueWithFormulaInterpolationIfNeeded(e, row)
-    }
+  fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> = row.entries.associate { e ->
+    e.key to constructValueWithFormulaInterpolationIfNeeded(e, row)
+  }
 
   private fun constructValueWithFormulaInterpolationIfNeeded(
     e: Map.Entry<String, Any?>,
@@ -34,15 +33,12 @@ class FormulaEngine(
       } ?: e.value
     )
 
-  private fun findFormula(columnName: String) =
-    identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { null }
+  private fun findFormula(columnName: String) = identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { null }
 
-  private fun interpolate(formula: String, row: Map<String, Any?>): String {
-    return when {
-      formula.startsWith(MAKE_URL_FORMULA_PREFIX) -> interpolateUrlFormula(formula, row)
-      formula.startsWith(FORMAT_DATE_FORMULA_PREFIX) -> interpolateFormatDateFormula(formula, row)
-      else -> interpolateStandardFormula(formula, row)
-    }
+  private fun interpolate(formula: String, row: Map<String, Any?>): String = when {
+    formula.startsWith(MAKE_URL_FORMULA_PREFIX) -> interpolateUrlFormula(formula, row)
+    formula.startsWith(FORMAT_DATE_FORMULA_PREFIX) -> interpolateFormatDateFormula(formula, row)
+    else -> interpolateStandardFormula(formula, row)
   }
 
   private fun interpolateFormatDateFormula(formula: String, row: Map<String, Any?>): String {

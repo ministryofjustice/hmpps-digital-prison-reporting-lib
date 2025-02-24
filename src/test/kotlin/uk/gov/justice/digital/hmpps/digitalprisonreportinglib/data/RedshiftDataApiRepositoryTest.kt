@@ -47,8 +47,7 @@ class RedshiftDataApiRepositoryTest {
       tableId: String,
       prefilter: ReportFilter? =
         ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
-    ) =
-      """
+    ) = """
                   CREATE EXTERNAL TABLE reports.$tableId 
                   STORED AS parquet 
                   LOCATION 's3://dpr-working-development/reports/$tableId/' 
@@ -61,7 +60,7 @@ class RedshiftDataApiRepositoryTest {
                   FROM filter_ ORDER BY date asc
                   );
                   
-      """.trimIndent()
+    """.trimIndent()
 
     val movementPrisoner1 = mapOf("id" to "171034.12", "prisoner" to 171034L, "date" to LocalDateTime.of(2010, 12, 17, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 17, 7, 12, 0), "direction" to "OUT", "type" to "CRT", "origin_code" to "LFI", "origin" to "LANCASTER FARMS (HMPYOI)", "destination_code" to "STHEMC", "destination" to "St. Helens Magistrates Court", "reason" to "Production (Sentence/Civil Custody)")
     val movementPrisoner2 = mapOf("id" to "227482.1", "prisoner" to 227482L, "date" to LocalDateTime.of(2010, 12, 8, 0, 0, 0), "time" to LocalDateTime.of(2010, 12, 8, 10, 8, 0), "direction" to "IN", "type" to "ADM", "origin_code" to "IMM", "origin" to "Immigration", "destination_code" to "HRI", "destination" to "Haslar Immigration Removal Centre", "reason" to "Detained Immigration Act 71 -Wait Deport")

@@ -34,14 +34,12 @@ class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvid
     return caseloadResponse.caseloads.sortedBy { it.id }.map { Caseload(it.id, it.name) }
   }
 
-  private fun getUsersCaseload(jwt: Jwt): CaseloadResponse {
-    return webClient
-      .get()
-      .header("Authorization", "Bearer ${jwt.tokenValue}")
-      .retrieve()
-      .bodyToMono(CaseloadResponse::class.java)
-      .block()!!
-  }
+  private fun getUsersCaseload(jwt: Jwt): CaseloadResponse = webClient
+    .get()
+    .header("Authorization", "Bearer ${jwt.tokenValue}")
+    .retrieve()
+    .bodyToMono(CaseloadResponse::class.java)
+    .block()!!
 
   data class CaseloadResponse(val username: String, val active: Boolean, val accountType: String, val activeCaseload: Caseload?, val caseloads: List<Caseload>)
 }

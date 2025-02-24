@@ -212,8 +212,7 @@ class AsyncDataApiService(
     )
   }
 
-  private fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> =
-    row.entries.associate { e -> e.key to MetricData(e.value) }
+  private fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> = row.entries.associate { e -> e.key to MetricData(e.value) }
 
   fun getSummaryResult(
     tableId: String,
@@ -257,13 +256,9 @@ class AsyncDataApiService(
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
-  fun cancelStatementExecution(statementId: String): StatementCancellationResponse {
-    return redshiftDataApiRepository.cancelStatementExecution(statementId)
-  }
+  fun cancelStatementExecution(statementId: String): StatementCancellationResponse = redshiftDataApiRepository.cancelStatementExecution(statementId)
 
-  fun count(tableId: String): Count {
-    return Count(redshiftDataApiRepository.count(tableId))
-  }
+  fun count(tableId: String): Count = Count(redshiftDataApiRepository.count(tableId))
 
   fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
@@ -310,25 +305,22 @@ class AsyncDataApiService(
     return true
   }
 
-  private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository =
-    datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), redshiftDataApiRepository)
+  private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository = datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), redshiftDataApiRepository)
 
   private fun buildPrompts(
     prompts: List<Map.Entry<String, String>>,
     parameters: List<Parameter>?,
-  ): List<Prompt> =
-    prompts.mapNotNull { entry ->
-      mapToMatchingParameter(entry, parameters)
-        ?.let { Prompt(entry.key, entry.value, it.filterType) }
-    }
+  ): List<Prompt> = prompts.mapNotNull { entry ->
+    mapToMatchingParameter(entry, parameters)
+      ?.let { Prompt(entry.key, entry.value, it.filterType) }
+  }
 
   private fun mapToMatchingParameter(
     entry: Map.Entry<String, String>,
     parameters: List<Parameter>?,
   ) = parameters?.firstOrNull { parameter -> parameter.name == entry.key }
 
-  private fun <K, V> toMap(entries: List<Map.Entry<K, V>>): Map<K, V> =
-    entries.associate { it.toPair() }
+  private fun <K, V> toMap(entries: List<Map.Entry<K, V>>): Map<K, V> = entries.associate { it.toPair() }
 
   private fun partitionToPromptsAndFilters(
     filters: Map<String, String>,

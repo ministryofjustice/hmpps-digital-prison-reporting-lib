@@ -22,26 +22,18 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuth
 class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(ValidationException::class)
   @ResponseStatus(BAD_REQUEST)
-  fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> {
-    return respondWithBadRequest(e)
-  }
+  fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
   @ExceptionHandler(software.amazon.awssdk.services.redshiftdata.model.ValidationException::class)
   @ResponseStatus(BAD_REQUEST)
-  fun handleRedshiftDataValidationException(e: Exception): ResponseEntity<ErrorResponse> {
-    return respondWithBadRequest(e)
-  }
+  fun handleRedshiftDataValidationException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
   @ExceptionHandler(ActiveStatementsExceededException::class)
   @ResponseStatus(TOO_MANY_REQUESTS)
-  fun handleRedshiftActiveStatementsExceededException(e: Exception): ResponseEntity<ErrorResponse> {
-    return respondWithTooManyRequests(e)
-  }
+  fun handleRedshiftActiveStatementsExceededException(e: Exception): ResponseEntity<ErrorResponse> = respondWithTooManyRequests(e)
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
-  fun handleTypeMismatch(e: Exception): ResponseEntity<ErrorResponse> {
-    return respondWithBadRequest(e)
-  }
+  fun handleTypeMismatch(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
   @ExceptionHandler(UncategorizedSQLException::class)
   fun handleEntityNotFound(e: Exception): ResponseEntity<ErrorResponse> {
@@ -93,9 +85,7 @@ class DigitalPrisonReportingExceptionHandler {
 
   @ExceptionHandler(UserAuthorisationException::class)
   @ResponseStatus(FORBIDDEN)
-  fun handleUserAuthorisationException(e: Exception): ResponseEntity<ErrorResponse> {
-    return respondWithForbiddenRequest(e)
-  }
+  fun handleUserAuthorisationException(e: Exception): ResponseEntity<ErrorResponse> = respondWithForbiddenRequest(e)
 
   private fun respondWithBadRequest(e: Exception): ResponseEntity<ErrorResponse> {
     log.info("Validation exception: {}", e.message)

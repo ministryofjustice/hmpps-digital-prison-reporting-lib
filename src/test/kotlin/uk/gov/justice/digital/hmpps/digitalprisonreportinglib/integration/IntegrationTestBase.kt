@@ -21,13 +21,13 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
-import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("test")
@@ -40,7 +40,7 @@ abstract class IntegrationTestBase {
   lateinit var webTestClient: WebTestClient
 
   @Autowired
-  lateinit var jwtAuthHelper: JwtAuthHelper
+  protected lateinit var jwtAuthorisationHelper: JwtAuthorisationHelper
 
   @Autowired
   lateinit var externalMovementRepository: ExternalMovementRepository
@@ -53,9 +53,6 @@ abstract class IntegrationTestBase {
 
   @MockitoBean
   lateinit var dynamoDbClient: DynamoDbClient
-
-  @MockitoBean
-  lateinit var stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider
 
   @MockitoBean
   lateinit var establishmentsToWingsRepository: EstablishmentsToWingsRepository
@@ -155,9 +152,14 @@ abstract class IntegrationTestBase {
           }
     """.trimIndent()
 
-  internal fun setAuthorisation(
-    user: String = "AUTH_ADM",
-    roles: List<String> = listOf(),
-    scopes: List<String> = listOf(),
-  ): (HttpHeaders) -> Unit = jwtAuthHelper.setAuthorisation(user, roles, scopes)
+  protected fun setAuthorisation(
+    user: String = "request-user",
+    roles: List<String> = emptyList(),
+    scopes: List<String> = emptyList(),
+  ): (HttpHeaders) -> Unit = jwtAuthorisationHelper.setAuthorisationHeader(
+    clientId = "hmpps-digital-prison-reporting-api",
+    username = user,
+    scope = scopes,
+    roles = roles,
+  )
 }

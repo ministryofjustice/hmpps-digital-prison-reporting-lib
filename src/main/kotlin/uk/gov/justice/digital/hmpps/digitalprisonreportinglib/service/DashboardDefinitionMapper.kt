@@ -28,11 +28,7 @@ class DashboardDefinitionMapper(
   identifiedHelper: IdentifiedHelper,
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
-  fun toDashboardDefinition(
-    dashboard: Dashboard,
-    allDatasets: List<Dataset>,
-    userToken: DprAuthAwareAuthenticationToken? = null,
-  ): DashboardDefinition {
+  fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
     return DashboardDefinition(
@@ -66,17 +62,16 @@ class DashboardDefinitionMapper(
     )
   }
 
-  private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) =
-    dashboardVisualisationColumns.map {
-      DashboardVisualisationColumnDefinition(
-        it.id,
-        it.display,
-        it.aggregate?.let { type -> AggregateTypeDefinition.valueOf(type.toString()) },
-        it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
-        it.displayValue,
-        it.axis,
-      )
-    }
+  private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
+    DashboardVisualisationColumnDefinition(
+      it.id,
+      it.display,
+      it.aggregate?.let { type -> AggregateTypeDefinition.valueOf(type.toString()) },
+      it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
+      it.displayValue,
+      it.axis,
+    )
+  }
 
   private fun toFilterField(
     schemaField: SchemaField,

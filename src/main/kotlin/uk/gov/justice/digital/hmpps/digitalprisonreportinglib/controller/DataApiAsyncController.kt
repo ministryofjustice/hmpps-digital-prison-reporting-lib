@@ -75,30 +75,28 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<StatementExecutionResponse> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService.validateAndExecuteStatementAsync(
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            filters = filterHelper.filtersOnly(filters),
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-          ),
-        )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+  ): ResponseEntity<StatementExecutionResponse> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.validateAndExecuteStatementAsync(
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          filters = filterHelper.filtersOnly(filters),
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+        ),
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(null)
-    }
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(null)
   }
 
   @GetMapping("/async/dashboards/{reportId}/{dashboardId}")
@@ -136,28 +134,26 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam
     filters: Map<String, String>,
     authentication: Authentication,
-  ): ResponseEntity<StatementExecutionResponse> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService.validateAndExecuteStatementAsync(
-            reportId = reportId,
-            dashboardId = dashboardId,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-            filters = filterHelper.filtersOnly(filters),
-          ),
-        )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+  ): ResponseEntity<StatementExecutionResponse> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.validateAndExecuteStatementAsync(
+          reportId = reportId,
+          dashboardId = dashboardId,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          filters = filterHelper.filtersOnly(filters),
+        ),
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(null)
-    }
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(null)
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}/status")
@@ -202,20 +198,18 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     tableId: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<StatementExecutionStatus> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getStatementStatus(
-          statementId = statementId,
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          dataProductDefinitionsPath,
-          tableId,
-        ),
-      )
-  }
+  ): ResponseEntity<StatementExecutionStatus> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.getStatementStatus(
+        statementId = statementId,
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        dataProductDefinitionsPath,
+        tableId,
+      ),
+    )
 
   @GetMapping("/statements/{statementId}/status")
   @Operation(
@@ -245,13 +239,11 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     tableId: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<StatementExecutionStatus> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getStatementStatus(statementId, tableId),
-      )
-  }
+  ): ResponseEntity<StatementExecutionStatus> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.getStatementStatus(statementId, tableId),
+    )
 
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
   @Operation(
@@ -272,19 +264,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<StatementCancellationResponse> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.cancelStatementExecution(
-          statementId,
-          reportId,
-          reportVariantId,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          dataProductDefinitionsPath,
-        ),
-      )
-  }
+  ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.cancelStatementExecution(
+        statementId,
+        reportId,
+        reportVariantId,
+        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        dataProductDefinitionsPath,
+      ),
+    )
 
   @DeleteMapping("/statements/{statementId}")
   @Operation(
@@ -294,13 +284,11 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   fun cancelQueryExecution(
     @PathVariable("statementId") statementId: String,
     authentication: Authentication,
-  ): ResponseEntity<StatementCancellationResponse> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.cancelStatementExecution(statementId),
-      )
-  }
+  ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.cancelStatementExecution(statementId),
+    )
 
   @GetMapping("/report/tables/{tableId}/count")
   @Operation(
@@ -320,22 +308,20 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   fun getExternalTableRowCount(
     @PathVariable("tableId") tableId: String,
     authentication: Authentication,
-  ): ResponseEntity<Count> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService.count(tableId),
-        )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+  ): ResponseEntity<Count> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.count(tableId),
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(null)
-    }
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(null)
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/count")
@@ -366,29 +352,27 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<Count> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          asyncDataApiService.count(
-            tableId,
-            reportId,
-            reportVariantId,
-            filterHelper.filtersOnly(filters),
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath,
-          ),
-        )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+  ): ResponseEntity<Count> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.count(
+          tableId,
+          reportId,
+          reportVariantId,
+          filterHelper.filtersOnly(filters),
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath,
+        ),
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(null)
-    }
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(null)
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result")
@@ -421,24 +405,22 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam sortColumn: String?,
     @RequestParam(defaultValue = "false") sortedAsc: Boolean,
     authentication: Authentication,
-  ): ResponseEntity<List<Map<String, Any?>>> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getStatementResult(
-          tableId = tableId,
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          filters = filterHelper.filtersOnly(filters),
-          sortedAsc = sortedAsc,
-          sortColumn = sortColumn,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-        ),
-      )
-  }
+  ): ResponseEntity<List<Map<String, Any?>>> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.getStatementResult(
+        tableId = tableId,
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        filters = filterHelper.filtersOnly(filters),
+        sortedAsc = sortedAsc,
+        sortColumn = sortColumn,
+        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+      ),
+    )
 
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result")
   @Operation(
@@ -468,22 +450,20 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam
     filters: Map<String, String>,
     authentication: Authentication,
-  ): ResponseEntity<List<List<Map<String, Any?>>>> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getDashboardStatementResult(
-          tableId = tableId,
-          reportId = reportId,
-          dashboardId = dashboardId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          filters = filterHelper.filtersOnly(filters),
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-        ),
-      )
-  }
+  ): ResponseEntity<List<List<Map<String, Any?>>>> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.getDashboardStatementResult(
+        tableId = tableId,
+        reportId = reportId,
+        dashboardId = dashboardId,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        filters = filterHelper.filtersOnly(filters),
+        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+      ),
+    )
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/summary/{summaryId}")
   @Operation(
@@ -507,19 +487,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam
     filters: Map<String, String>,
     authentication: Authentication,
-  ): ResponseEntity<List<Map<String, Any?>>> {
-    return ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.getSummaryResult(
-          tableId = tableId,
-          summaryId = summaryId,
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          filters = filterHelper.filtersOnly(filters),
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-        ),
-      )
-  }
+  ): ResponseEntity<List<Map<String, Any?>>> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.getSummaryResult(
+        tableId = tableId,
+        summaryId = summaryId,
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        filters = filterHelper.filtersOnly(filters),
+        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+      ),
+    )
 }
