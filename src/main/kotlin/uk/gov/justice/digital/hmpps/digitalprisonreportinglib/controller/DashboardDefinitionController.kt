@@ -47,9 +47,9 @@ class DashboardDefinitionController(val dashboardDefinitionService: DashboardDef
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): DashboardDefinition = dashboardDefinitionService.getDashboardDefinition(
-      dataProductDefinitionId = dataProductDefinitionId,
+    dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
-      userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    dataProductDefinitionsPath = dataProductDefinitionsPath,
+    userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
   )
 }
