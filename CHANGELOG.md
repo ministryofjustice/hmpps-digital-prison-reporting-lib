@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.9.2
+Integrate the library with the HMPPS Kotlin library and make use of the `AuthAwareAuthenticationToken` and Converter interface
+
 # 7.9.1
 Support for filters of type 'caseloads' and 'multiselect'. 
 These are passed as one query parameter per filter with a comma separated list of values:
