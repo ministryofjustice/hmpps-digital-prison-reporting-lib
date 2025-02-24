@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionService
 
 @Validated
@@ -47,9 +48,10 @@ class DashboardDefinitionController(val dashboardDefinitionService: DashboardDef
     authentication: Authentication,
   ): DashboardDefinition {
     return dashboardDefinitionService.getDashboardDefinition(
-      dataProductDefinitionId,
-      dashboardId,
-      dataProductDefinitionsPath,
+      dataProductDefinitionId = dataProductDefinitionId,
+      dashboardId = dashboardId,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     )
   }
 }
