@@ -1169,61 +1169,59 @@ class ReportDefinitionMapperTest {
       formula = formula,
       visible = visible,
     ),
-  ): SingleReportProductDefinition {
-    return SingleReportProductDefinition(
-      id = "1",
-      name = "2",
-      metadata = MetaData(
-        author = "3",
-        owner = "4",
-        version = "5",
-      ),
-      datasource = Datasource("datasourceId", "datasourceName"),
-      reportDataset =
-      Dataset(
-        id = "10",
-        name = "11",
-        query = "12",
-        datasource = "12A",
-        schema = Schema(
-          field = listOf(
-            SchemaField(
-              name = "13",
-              type = ParameterType.Date,
-              display = datasetDisplay,
-              filter = null,
-            ),
+  ): SingleReportProductDefinition = SingleReportProductDefinition(
+    id = "1",
+    name = "2",
+    metadata = MetaData(
+      author = "3",
+      owner = "4",
+      version = "5",
+    ),
+    datasource = Datasource("datasourceId", "datasourceName"),
+    reportDataset =
+    Dataset(
+      id = "10",
+      name = "11",
+      query = "12",
+      datasource = "12A",
+      schema = Schema(
+        field = listOf(
+          SchemaField(
+            name = "13",
+            type = ParameterType.Date,
+            display = datasetDisplay,
+            filter = null,
           ),
         ),
-        parameters = parameters,
       ),
-      report =
-      Report(
-        id = "16",
-        name = "17",
-        created = LocalDateTime.MAX,
-        version = "18",
-        dataset = "\$ref:10",
-        render = RenderMethod.HTML,
-        specification = Specification(
-          template = Template.List,
-          section = null,
-          field = listOf(
-            reportField,
-          ),
-        ),
-        classification = "someClassification",
-        metadata = interactive?.takeIf { it }?.let { ReportMetadata(hints = listOf(ReportMetadataHint.INTERACTIVE)) },
-      ),
-      policy = listOf(
-        Policy(
-          id = "caseload",
-          type = PolicyType.ACCESS,
-          rule = listOf(Rule(Effect.PERMIT, emptyList())),
+      parameters = parameters,
+    ),
+    report =
+    Report(
+      id = "16",
+      name = "17",
+      created = LocalDateTime.MAX,
+      version = "18",
+      dataset = "\$ref:10",
+      render = RenderMethod.HTML,
+      specification = Specification(
+        template = Template.List,
+        section = null,
+        field = listOf(
+          reportField,
         ),
       ),
-      allDatasets = listOf(fullDataset),
-      allReports = emptyList(),
-    )
-  }
+      classification = "someClassification",
+      metadata = interactive?.takeIf { it }?.let { ReportMetadata(hints = listOf(ReportMetadataHint.INTERACTIVE)) },
+    ),
+    policy = listOf(
+      Policy(
+        id = "caseload",
+        type = PolicyType.ACCESS,
+        rule = listOf(Rule(Effect.PERMIT, emptyList())),
+      ),
+    ),
+    allDatasets = listOf(fullDataset),
+    allReports = emptyList(),
+  )
 }

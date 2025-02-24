@@ -58,11 +58,10 @@ class AwsConfig {
   fun dynamoDbClient(
     stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider,
     properties: AwsProperties,
-  ): DynamoDbClient =
-    DynamoDbClient.builder()
-      .region(properties.getRegion())
-      .credentialsProvider(stsAssumeRoleCredentialsProvider)
-      .build()
+  ): DynamoDbClient = DynamoDbClient.builder()
+    .region(properties.getRegion())
+    .credentialsProvider(stsAssumeRoleCredentialsProvider)
+    .build()
 
   @Bean
   @ConditionalOnMissingBean(RedshiftDataClient::class)

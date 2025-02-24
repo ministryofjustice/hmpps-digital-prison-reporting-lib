@@ -155,14 +155,13 @@ class EstablishmentsToWingsRepositoryTest {
     assertEquals(mapOf<String, List<EstablishmentToWing>>(), executeStatementWaitAndGetResult)
   }
 
-  private fun buildRow(column1: String, column2: String, column3: String): Row? =
-    Row.builder().data(
-      listOf(
-        Datum.builder().varCharValue(column1).build(),
-        Datum.builder().varCharValue(column2).build(),
-        Datum.builder().varCharValue(column3).build(),
-      ),
-    ).build()
+  private fun buildRow(column1: String, column2: String, column3: String): Row? = Row.builder().data(
+    listOf(
+      Datum.builder().varCharValue(column1).build(),
+      Datum.builder().varCharValue(column2).build(),
+      Datum.builder().varCharValue(column3).build(),
+    ),
+  ).build()
 
   private fun setupMocksForGetStatus(statementId: String, athenaClient: AthenaClient, status: String) {
     val getQueryExecutionRequest = GetQueryExecutionRequest.builder()

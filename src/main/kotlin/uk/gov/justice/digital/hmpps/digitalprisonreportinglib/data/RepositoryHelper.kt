@@ -79,17 +79,12 @@ abstract class RepositoryHelper {
 
   protected open fun buildDatasetQuery(query: String) = """WITH $DATASET_ AS ($query)"""
 
-  protected fun buildReportQuery(filter: ReportFilter?): String {
-    return filter?.query ?: DEFAULT_REPORT_CTE
-  }
+  protected fun buildReportQuery(filter: ReportFilter?): String = filter?.query ?: DEFAULT_REPORT_CTE
 
-  protected fun determinePreviousCteName(reportFilter: ReportFilter? = null) =
-    reportFilter?.name ?: REPORT_
+  protected fun determinePreviousCteName(reportFilter: ReportFilter? = null) = reportFilter?.name ?: REPORT_
 
-  protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) =
-    """$POLICY_ AS (SELECT * FROM $previousCteName WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
-  protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) =
-    """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
+  protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) = """$POLICY_ AS (SELECT * FROM $previousCteName WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
+  protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) = """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
 
   protected fun buildFinalStageQuery(
     dynamicFilterFieldId: Set<String>? = null,
@@ -116,14 +111,11 @@ abstract class RepositoryHelper {
     }
   }
 
-  protected fun maybeTransform(key: String, keyTransformer: ((s: String) -> String)?) =
-    keyTransformer?.let { it(key) } ?: key
+  protected fun maybeTransform(key: String, keyTransformer: ((s: String) -> String)?) = keyTransformer?.let { it(key) } ?: key
 
-  private fun convertPolicyResultToSql(policyEngineResult: String): String {
-    return policyEngineResult
-      .replace(PolicyResult.POLICY_PERMIT, TRUE_WHERE_CLAUSE)
-      .replace(PolicyResult.POLICY_DENY, FALSE_WHERE_CLAUSE)
-  }
+  private fun convertPolicyResultToSql(policyEngineResult: String): String = policyEngineResult
+    .replace(PolicyResult.POLICY_PERMIT, TRUE_WHERE_CLAUSE)
+    .replace(PolicyResult.POLICY_DENY, FALSE_WHERE_CLAUSE)
 
   protected fun buildFiltersWhereClause(
     filters: List<ConfiguredApiRepository.Filter>,
@@ -133,15 +125,11 @@ abstract class RepositoryHelper {
     return filterClause
   }
 
-  private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) =
-    dynamicFilterFieldId?.let { "DISTINCT ${dynamicFilterFieldId.joinToString(", ")}" } ?: "*"
+  private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) = dynamicFilterFieldId?.let { "DISTINCT ${dynamicFilterFieldId.joinToString(", ")}" } ?: "*"
 
-  protected fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) =
-    sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
+  protected fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) = sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
 
-  private fun calculateSortingDirection(sortedAsc: Boolean): String {
-    return if (sortedAsc) "asc" else "desc"
-  }
+  private fun calculateSortingDirection(sortedAsc: Boolean): String = if (sortedAsc) "asc" else "desc"
 
   enum class FilterType(val suffix: String = "") {
     STANDARD,

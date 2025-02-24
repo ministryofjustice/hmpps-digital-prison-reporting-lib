@@ -85,7 +85,5 @@ class ProductDefinitionRepositoryAutoConfig(
 
   @Bean
   @ConditionalOnMissingBean(LocalDateTimeTypeAdaptor::class)
-  fun localDateTimeTypeAdaptor(): LocalDateTimeTypeAdaptor {
-    return IsoLocalDateTimeTypeAdaptor()
-  }
+  fun localDateTimeTypeAdaptor(): LocalDateTimeTypeAdaptor = IsoLocalDateTimeTypeAdaptor()
 }

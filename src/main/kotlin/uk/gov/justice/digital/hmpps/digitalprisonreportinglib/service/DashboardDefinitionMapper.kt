@@ -68,42 +68,35 @@ class DashboardDefinitionMapper(
     )
   }
 
-  private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) =
-    dashboardVisualisationColumns.map {
-      DashboardVisualisationColumnDefinition(
-        it.id,
-        it.display,
-        it.aggregate?.let { type -> AggregateTypeDefinition.valueOf(type.toString()) },
-        it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
-        it.displayValue,
-        it.axis,
-      )
-    }
-
-  private fun toMetricDefinition(metric: Metric): MetricDefinition {
-    return MetricDefinition(
-      id = metric.id,
-      name = metric.name,
-      display = metric.display,
-      description = metric.description,
-      charts = metric.charts.map { toChartDefinition(it) },
+  private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
+    DashboardVisualisationColumnDefinition(
+      it.id,
+      it.display,
+      it.aggregate?.let { type -> AggregateTypeDefinition.valueOf(type.toString()) },
+      it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
+      it.displayValue,
+      it.axis,
     )
   }
 
-  private fun toChartDefinition(chart: Chart): ChartDefinition {
-    return ChartDefinition(
-      type = ChartTypeDefinition.valueOf(chart.type.toString()),
-      label = toLabelDefinition(chart.label),
-      unit = chart.unit,
-      columns = chart.columns.map { toColumnDefinition(it) },
-    )
-  }
+  private fun toMetricDefinition(metric: Metric): MetricDefinition = MetricDefinition(
+    id = metric.id,
+    name = metric.name,
+    display = metric.display,
+    description = metric.description,
+    charts = metric.charts.map { toChartDefinition(it) },
+  )
 
-  private fun toColumnDefinition(it: Column) =
-    ColumnDefinition(it.name.removePrefix("\$ref:"), it.display)
+  private fun toChartDefinition(chart: Chart): ChartDefinition = ChartDefinition(
+    type = ChartTypeDefinition.valueOf(chart.type.toString()),
+    label = toLabelDefinition(chart.label),
+    unit = chart.unit,
+    columns = chart.columns.map { toColumnDefinition(it) },
+  )
 
-  private fun toLabelDefinition(label: Label) =
-    LabelDefinition(label.name.removePrefix("\$ref:"), label.display)
+  private fun toColumnDefinition(it: Column) = ColumnDefinition(it.name.removePrefix("\$ref:"), it.display)
+
+  private fun toLabelDefinition(label: Label) = LabelDefinition(label.name.removePrefix("\$ref:"), label.display)
 
   private fun toFilterField(
     schemaField: SchemaField,

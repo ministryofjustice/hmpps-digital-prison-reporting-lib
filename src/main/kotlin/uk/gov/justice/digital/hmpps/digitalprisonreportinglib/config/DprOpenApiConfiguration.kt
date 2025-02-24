@@ -11,17 +11,15 @@ import org.springframework.context.annotation.Configuration
 class DprOpenApiConfiguration {
   @Bean("dprOpenAPIConfiguration")
   @ConditionalOnMissingBean(OpenAPI::class)
-  fun openAPIConfiguration(): OpenAPI {
-    return OpenAPI()
-      .components(
-        Components()
-          .addSecuritySchemes(
-            "bearer-jwt",
-            SecurityScheme()
-              .type(SecurityScheme.Type.HTTP)
-              .scheme("bearer")
-              .bearerFormat("JWT"),
-          ),
-      )
-  }
+  fun openAPIConfiguration(): OpenAPI = OpenAPI()
+    .components(
+      Components()
+        .addSecuritySchemes(
+          "bearer-jwt",
+          SecurityScheme()
+            .type(SecurityScheme.Type.HTTP)
+            .scheme("bearer")
+            .bearerFormat("JWT"),
+        ),
+    )
 }

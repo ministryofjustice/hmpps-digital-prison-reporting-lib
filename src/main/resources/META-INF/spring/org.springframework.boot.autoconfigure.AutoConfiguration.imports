@@ -1,4 +1,3 @@
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.TokenConverterAutoConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.FilterHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiAsyncController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController

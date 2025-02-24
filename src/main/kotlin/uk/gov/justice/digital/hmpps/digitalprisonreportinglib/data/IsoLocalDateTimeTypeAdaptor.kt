@@ -14,16 +14,12 @@ class IsoLocalDateTimeTypeAdaptor : LocalDateTimeTypeAdaptor {
     date: LocalDateTime?,
     typeOfSrc: Type?,
     context: JsonSerializationContext?,
-  ): JsonElement {
-    return JsonPrimitive(date?.format(DateTimeFormatter.ISO_DATE_TIME))
-  }
+  ): JsonElement = JsonPrimitive(date?.format(DateTimeFormatter.ISO_DATE_TIME))
 
   @Throws(JsonParseException::class)
   override fun deserialize(
     json: JsonElement,
     typeOfT: Type?,
     context: JsonDeserializationContext?,
-  ): LocalDateTime {
-    return LocalDateTime.parse(json.asString, DateTimeFormatter.ISO_DATE_TIME)
-  }
+  ): LocalDateTime = LocalDateTime.parse(json.asString, DateTimeFormatter.ISO_DATE_TIME)
 }

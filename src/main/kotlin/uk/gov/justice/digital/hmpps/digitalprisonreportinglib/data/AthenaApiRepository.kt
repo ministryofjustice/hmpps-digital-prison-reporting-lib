@@ -134,8 +134,7 @@ class AthenaApiRepository(
     return StatementCancellationResponse(true)
   }
 
-  override fun buildDatasetQuery(query: String) =
-    if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
+  override fun buildDatasetQuery(query: String) = if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
   private fun buildPromptsQuery(prompts: List<Prompt>?): String {
     if (prompts.isNullOrEmpty()) {
@@ -145,15 +144,12 @@ class AthenaApiRepository(
     return "$PROMPT AS (SELECT $promptsCte FROM DUAL)"
   }
 
-  private fun buildPromptsQueryBasedOnType(prompt: Prompt): String {
-    return when (prompt.type) {
-      Date -> "TO_DATE('${prompt.value}','yyyy-mm-dd') AS ${prompt.name}"
-      else -> "'${prompt.value}' AS ${prompt.name}"
-    }
+  private fun buildPromptsQueryBasedOnType(prompt: Prompt): String = when (prompt.type) {
+    Date -> "TO_DATE('${prompt.value}','yyyy-mm-dd') AS ${prompt.name}"
+    else -> "'${prompt.value}' AS ${prompt.name}"
   }
 
-  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String =
-    """WITH $CONTEXT AS (
+  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String = """WITH $CONTEXT AS (
       SELECT 
       '${userToken?.jwt?.subject}' AS username, 
       '${userToken?.getActiveCaseLoadId()}' AS caseload, 
@@ -185,11 +181,9 @@ class AthenaApiRepository(
     return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }
 
-  private fun calculateDuration(status: QueryExecutionStatus): Long {
-    return status.completionDateTime()?.let { completion ->
-      status.submissionDateTime()?.let { submission ->
-        completion.minusMillis(submission.toEpochMilli()).toEpochMilli() * 1000000
-      } ?: 0
+  private fun calculateDuration(status: QueryExecutionStatus): Long = status.completionDateTime()?.let { completion ->
+    status.submissionDateTime()?.let { submission ->
+      completion.minusMillis(submission.toEpochMilli()).toEpochMilli() * 1000000
     } ?: 0
-  }
+  } ?: 0
 }

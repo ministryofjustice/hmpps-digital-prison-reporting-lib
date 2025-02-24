@@ -137,17 +137,15 @@ class RedshiftDataApiRepository(
     tableId: String,
     reportSummaries: List<ReportSummary>?,
     allDatasets: List<Dataset>,
-  ): String {
-    return reportSummaries?.joinToString(" ") {
-      val query = identifiedHelper.findOrFail(allDatasets, it.dataset).query
+  ): String = reportSummaries?.joinToString(" ") {
+    val query = identifiedHelper.findOrFail(allDatasets, it.dataset).query
 
-      redShiftSummaryTableHelper.buildSummaryQuery(
-        query,
-        tableId,
-        it.id,
-      )
-    } ?: ""
-  }
+    redShiftSummaryTableHelper.buildSummaryQuery(
+      query,
+      tableId,
+      it.id,
+    )
+  } ?: ""
 
   fun getFullExternalTableResult(
     tableId: String,
@@ -203,9 +201,7 @@ class RedshiftDataApiRepository(
     return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
   }
 
-  fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?): String {
-    return generatedTableId?.let { tableId ->
-      """WITH $DATASET_ AS (SELECT * FROM reports.$tableId)"""
-    } ?: buildDatasetQuery(query)
-  }
+  fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?): String = generatedTableId?.let { tableId ->
+    """WITH $DATASET_ AS (SELECT * FROM reports.$tableId)"""
+  } ?: buildDatasetQuery(query)
 }

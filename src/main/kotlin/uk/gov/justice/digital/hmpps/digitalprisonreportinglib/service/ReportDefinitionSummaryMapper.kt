@@ -31,27 +31,21 @@ class ReportDefinitionSummaryMapper {
   private fun determineAuth(
     productDefinition: ProductDefinition,
     userToken: DprAuthAwareAuthenticationToken?,
-  ): Boolean {
-    return ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, userToken)
-  }
+  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, userToken)
 
   private fun map(
     report: Report,
-  ): VariantDefinitionSummary {
-    return VariantDefinitionSummary(
-      id = report.id,
-      name = report.name,
-      description = report.description,
-    )
-  }
+  ): VariantDefinitionSummary = VariantDefinitionSummary(
+    id = report.id,
+    name = report.name,
+    description = report.description,
+  )
 
   private fun map(
     dashboard: Dashboard,
-  ): DashboardDefinitionSummary {
-    return DashboardDefinitionSummary(
-      id = dashboard.id,
-      name = dashboard.name,
-      description = dashboard.description,
-    )
-  }
+  ): DashboardDefinitionSummary = DashboardDefinitionSummary(
+    id = dashboard.id,
+    name = dashboard.name,
+    description = dashboard.description,
+  )
 }

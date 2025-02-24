@@ -86,32 +86,30 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<List<Map<String, Any?>>> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          dataApiSyncService.validateAndFetchData(
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            filters = filterHelper.filtersOnly(filters),
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-          ),
-        )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+  ): ResponseEntity<List<Map<String, Any?>>> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        dataApiSyncService.validateAndFetchData(
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          filters = filterHelper.filtersOnly(filters),
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+        ),
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(emptyList())
-    }
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(emptyList())
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
@@ -163,38 +161,36 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<List<String>> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          dataApiSyncService.validateAndFetchData(
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            filters = filterHelper.filtersOnly(filters),
-            selectedPage = 1,
-            pageSize = pageSize,
-            sortColumn = fieldId,
-            sortedAsc = sortedAsc,
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            reportFieldId = setOf(fieldId),
-            prefix = prefix,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-          ).asSequence()
-            .flatMap {
-              it.asSequence()
-            }.groupBy({ it.key }, { it.value })
-            .values.flatten().map { it.toString() },
-        )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+  ): ResponseEntity<List<String>> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        dataApiSyncService.validateAndFetchData(
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          filters = filterHelper.filtersOnly(filters),
+          selectedPage = 1,
+          pageSize = pageSize,
+          sortColumn = fieldId,
+          sortedAsc = sortedAsc,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          reportFieldId = setOf(fieldId),
+          prefix = prefix,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+        ).asSequence()
+          .flatMap {
+            it.asSequence()
+          }.groupBy({ it.key }, { it.value })
+          .values.flatten().map { it.toString() },
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(emptyList())
-    }
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(emptyList())
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")
@@ -228,27 +224,25 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
-  ): ResponseEntity<Count> {
-    return try {
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          dataApiSyncService.validateAndCount(
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            filters = filterHelper.filtersOnly(filters),
-            userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-            dataProductDefinitionsPath = dataProductDefinitionsPath,
-          ),
-        )
-    } catch (exception: NoDataAvailableException) {
-      val headers = HttpHeaders()
-      headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+  ): ResponseEntity<Count> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        dataApiSyncService.validateAndCount(
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          filters = filterHelper.filtersOnly(filters),
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+        ),
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
 
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .headers(headers)
-        .body(Count(0))
-    }
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(Count(0))
   }
 }
