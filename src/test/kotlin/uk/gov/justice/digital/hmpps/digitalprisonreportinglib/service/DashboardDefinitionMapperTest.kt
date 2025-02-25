@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
@@ -28,12 +29,17 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition as DataFilterDefinition
 
 class DashboardDefinitionMapperTest {
 
@@ -147,7 +153,7 @@ class DashboardDefinitionMapperTest {
       0,
       "paramName",
       ParameterType.String,
-      uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete,
+      AutoComplete,
       "display",
       true,
       ReferenceType.ESTABLISHMENT,
@@ -196,5 +202,79 @@ class DashboardDefinitionMapperTest {
     )
     assertEquals(expected, actual)
     verify(establishmentCodesToWingsCacheService, times(1)).getEstablishmentsAndPopulateCacheIfNeeded()
+  }
+
+  @Test
+  fun `getDashboardDefinition converts caseloads filter to multiselect filter and returns the dashboard definition`() {
+    val userToken = mock<DprAuthAwareAuthenticationToken>()
+    whenever(userToken.getCaseLoads()).thenReturn(listOf(Caseload("KMI", "KIRKHAM"), Caseload("WWI", "WANDSWORTH (HMP)")))
+    val datasetId = "dataset-id"
+    val id = "age-breakdown-dashboard-1"
+    val name = "test-dashboard-name"
+    val description = "description"
+    val dashboard = Dashboard(
+      id,
+      name,
+      description,
+      datasetId,
+      listOf(),
+    )
+    val schemaField = SchemaField(
+      name = "n",
+      type = ParameterType.String,
+      display = "d",
+      filter = DataFilterDefinition(
+        type = Caseloads,
+      ),
+    )
+    val dashboardDataset = Dataset(
+      id = datasetId,
+      name = "name",
+      datasource = "datasource",
+      query = "query",
+      schema = Schema(
+        listOf(
+          schemaField,
+        ),
+      ),
+    )
+    val actual = dashboardDefinitionMapper.toDashboardDefinition(
+      dashboard = dashboard,
+      allDatasets = listOf(dashboardDataset),
+      userToken = userToken,
+    )
+    val expected = DashboardDefinition(
+      id,
+      name,
+      description,
+      listOf(),
+      listOf(
+        FieldDefinition(
+          name = "n",
+          display = "d",
+          sortable = true,
+          defaultsort = false,
+          type = FieldType.String,
+          mandatory = false,
+          visible = true,
+          filter = FilterDefinition(
+            type = FilterType.Multiselect,
+            mandatory = false,
+            interactive = false,
+            staticOptions = listOf(
+              FilterOption(
+                "KMI",
+                "KIRKHAM",
+              ),
+              FilterOption(
+                "WWI",
+                "WANDSWORTH (HMP)",
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+    assertEquals(expected, actual)
   }
 }

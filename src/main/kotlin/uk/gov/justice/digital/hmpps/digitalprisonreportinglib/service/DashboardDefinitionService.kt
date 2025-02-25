@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Service
 class DashboardDefinitionService(
@@ -13,6 +14,7 @@ class DashboardDefinitionService(
     dataProductDefinitionId: String,
     dashboardId: String,
     dataProductDefinitionsPath: String? = null,
+    userToken: DprAuthAwareAuthenticationToken? = null,
   ): DashboardDefinition {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(
       dataProductDefinitionId,
@@ -20,6 +22,10 @@ class DashboardDefinitionService(
       dataProductDefinitionsPath,
     )
 
-    return dashboardDefinitionMapper.toDashboardDefinition(productDefinition.dashboard, productDefinition.allDatasets)
+    return dashboardDefinitionMapper.toDashboardDefinition(
+      dashboard = productDefinition.dashboard,
+      allDatasets = productDefinition.allDatasets,
+      userToken = userToken,
+    )
   }
 }
