@@ -3,8 +3,11 @@ Below you can find the changes included in each release.
 # 7.11.0
 Secure only endpoints in this library with the roles provided. Removed the default role. Deprecated the `dpr.lib.user.role` property in favour of the `dpr.lib.user.roles` property as applications may need to secure endpoints via multiple roles.
 
-# 7.10.0
-Integrate the library with the HMPPS Kotlin library and make use of the `AuthAwareAuthenticationToken` and Converter interface
+# 7.10.2
+Support in dashboards for 'caseloads` and 'multiselect' filter types.
+
+# 7.10.0 - 7.10.1
+Integrate the library with the HMPPS Kotlin library and make use of the `AuthAwareAuthenticationToken` and Converter interface.
 
 # 7.9.1
 Support for filters of type 'caseloads' and 'multiselect'. 
