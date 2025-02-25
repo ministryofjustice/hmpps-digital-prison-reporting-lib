@@ -7,4 +7,5 @@ data class DashboardVisualisationColumn(
   val unit: UnitType? = null,
   val displayValue: Boolean? = null,
   val axis: String? = null,
+  val optional: Boolean? = null,
 )

@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 7.10.3
+Update dashboard definition.
+
 # 7.10.2
 Support in dashboards for 'caseloads` and 'multiselect' filter types.
 
