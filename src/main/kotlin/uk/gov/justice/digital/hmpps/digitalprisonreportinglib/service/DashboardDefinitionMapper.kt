@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboa
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -49,7 +50,7 @@ class DashboardDefinitionMapper(
               columns = DashboardVisualisationColumnsDefinition(
                 keys = visualisation.columns.keys?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.columns.keys) },
                 measures = mapToDashboardVisualisationColumnDefinitions(visualisation.columns.measures),
-                filters = visualisation.columns.filters?.map { ValueVisualisationColumnDefinition(it.id, it.equals) },
+                filters = visualisation.columns.filters?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
                 expectNulls = visualisation.columns.expectNulls,
               ),
             )
@@ -64,7 +65,7 @@ class DashboardDefinitionMapper(
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
     DashboardVisualisationColumnDefinition(
-      it.id,
+      it.id.removePrefix(REF_PREFIX),
       it.display,
       it.aggregate?.let { type -> AggregateTypeDefinition.valueOf(type.toString()) },
       it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
