@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
-# 7.11.0
+# 7.10.4
 Secure only endpoints in this library with the roles provided. Removed the default role. Deprecated the `dpr.lib.user.role` property in favour of the `dpr.lib.user.roles` property as applications may need to secure endpoints via multiple roles.
+
+# 7.10.3
+Update dashboard definition.
 
 # 7.10.2
 Support in dashboards for 'caseloads` and 'multiselect' filter types.
