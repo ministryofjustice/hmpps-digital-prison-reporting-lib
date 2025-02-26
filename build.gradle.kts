@@ -48,7 +48,7 @@ dependencies {
 
   // Fix for security issue in transient dependency
   implementation("ch.qos.logback:logback-classic:1.5.16")
-  implementation("ch.qos.logback:logback-core:1.5.16")
+  implementation("ch.qos.logback:logback-core:1.5.17")
 }
 
 java {
