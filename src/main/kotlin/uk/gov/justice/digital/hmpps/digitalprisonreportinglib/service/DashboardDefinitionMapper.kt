@@ -2,9 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AggregateTypeDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ChartTypeDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
@@ -13,19 +10,17 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.D
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LabelDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UnitTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Chart
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Column
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisationColumn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Label
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Metric
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 
 @Component
@@ -34,7 +29,7 @@ class DashboardDefinitionMapper(
   identifiedHelper: IdentifiedHelper,
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
-  fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>): DashboardDefinition {
+  fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>, userToken: DprAuthAwareAuthenticationToken? = null): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
     return DashboardDefinition(
@@ -55,7 +50,7 @@ class DashboardDefinitionMapper(
               columns = DashboardVisualisationColumnsDefinition(
                 keys = visualisation.columns.keys?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.columns.keys) },
                 measures = mapToDashboardVisualisationColumnDefinitions(visualisation.columns.measures),
-                filters = visualisation.columns.filters?.map { ValueVisualisationColumnDefinition(it.id, it.equals) },
+                filters = visualisation.columns.filters?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
                 expectNulls = visualisation.columns.expectNulls,
               ),
             )
@@ -64,13 +59,13 @@ class DashboardDefinitionMapper(
       },
       filterFields = dataset.schema.field
         .filter { it.filter != null }
-        .map { toFilterField(it, allDatasets) } + maybeConvertToReportFields(dataset.parameters),
+        .map { toFilterField(it, allDatasets, userToken) } + maybeConvertToReportFields(dataset.parameters),
     )
   }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
     DashboardVisualisationColumnDefinition(
-      it.id,
+      it.id.removePrefix(REF_PREFIX),
       it.display,
       it.aggregate?.let { type -> AggregateTypeDefinition.valueOf(type.toString()) },
       it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
@@ -79,28 +74,10 @@ class DashboardDefinitionMapper(
     )
   }
 
-  private fun toMetricDefinition(metric: Metric): MetricDefinition = MetricDefinition(
-    id = metric.id,
-    name = metric.name,
-    display = metric.display,
-    description = metric.description,
-    charts = metric.charts.map { toChartDefinition(it) },
-  )
-
-  private fun toChartDefinition(chart: Chart): ChartDefinition = ChartDefinition(
-    type = ChartTypeDefinition.valueOf(chart.type.toString()),
-    label = toLabelDefinition(chart.label),
-    unit = chart.unit,
-    columns = chart.columns.map { toColumnDefinition(it) },
-  )
-
-  private fun toColumnDefinition(it: Column) = ColumnDefinition(it.name.removePrefix("\$ref:"), it.display)
-
-  private fun toLabelDefinition(label: Label) = LabelDefinition(label.name.removePrefix("\$ref:"), label.display)
-
   private fun toFilterField(
     schemaField: SchemaField,
     allDatasets: List<Dataset>,
+    userToken: DprAuthAwareAuthenticationToken?,
   ) = FieldDefinition(
     name = schemaField.name,
     display = schemaField.display,
@@ -111,25 +88,32 @@ class DashboardDefinitionMapper(
         staticOptions = populateStaticOptions(
           filterDefinition = schemaField.filter,
           allDatasets = allDatasets,
+          userToken = userToken,
         ),
       )
     },
   )
 
   private fun populateStaticOptions(
-    filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
+    filterDefinition: FilterDefinition,
     allDatasets: List<Dataset>,
-  ): List<FilterOption>? = filterDefinition.dynamicOptions
-    ?.takeIf { it.returnAsStaticOptions }
-    ?.let { dynamicFilterOption ->
-      dynamicFilterOption.dataset
-        ?.let { dynamicFilterDatasetId ->
-          populateStaticOptionsForFilterWithDataset(
-            dynamicFilterOption,
-            allDatasets,
-            dynamicFilterDatasetId,
-            dynamicFilterOption.maximumOptions,
-          )
-        }
-    } ?: filterDefinition.staticOptions?.map(this::map)
+    userToken: DprAuthAwareAuthenticationToken?,
+  ): List<FilterOption>? {
+    if (filterDefinition.type == FilterType.Caseloads) {
+      return userToken?.getCaseLoads()?.map { FilterOption(it.id, it.name) }
+    }
+    return filterDefinition.dynamicOptions
+      ?.takeIf { it.returnAsStaticOptions }
+      ?.let { dynamicFilterOption ->
+        dynamicFilterOption.dataset
+          ?.let { dynamicFilterDatasetId ->
+            populateStaticOptionsForFilterWithDataset(
+              dynamicFilterOption,
+              allDatasets,
+              dynamicFilterDatasetId,
+              dynamicFilterOption.maximumOptions,
+            )
+          }
+      } ?: filterDefinition.staticOptions?.map(this::map)
+  }
 }
