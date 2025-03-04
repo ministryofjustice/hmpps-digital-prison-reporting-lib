@@ -6,19 +6,33 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.annotation.Order
+import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.web.SecurityFilterChain
+import uk.gov.justice.hmpps.kotlin.auth.HmppsResourceServerConfiguration
 import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomizer
 
 @Configuration("dprResourceServerConfiguration")
 @ConditionalOnProperty(name = ["dpr.lib.user.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
-class ResourceServerConfiguration(
+class DprResourceServerConfiguration(
   private val caseloadProvider: CaseloadProvider,
   @Value("\${dpr.lib.user.role}") private val authorisedRole: String,
 ) {
 
+  @Order(1)
+  @Bean
+  fun dprSecurityFilterChain(
+    http: HttpSecurity,
+    dprResourceServerCustomizer: ResourceServerConfigurationCustomizer,
+  ): SecurityFilterChain = HmppsResourceServerConfiguration().hmppsSecurityFilterChain(http, dprResourceServerCustomizer)
+
   @Bean
   fun resourceServerCustomizer() = ResourceServerConfigurationCustomizer {
-    anyRequestRole { authorisedRole }
     oauth2 { tokenConverter = DefaultDprAuthAwareTokenConverter(caseloadProvider) }
+    securityMatcher { listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**") }
+    anyRequestRole { defaultRole = removeRolePrefix(authorisedRole) }
   }
 }
+
+private fun removeRolePrefix(role: String) = role.replace("ROLE_", "")

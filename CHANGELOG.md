@@ -1,4 +1,6 @@
 Below you can find the changes included in each release.
+# 7.10.4
+Secure only endpoints in this library with the roles provided. Removed the default role.
 
 # 7.10.3
 Update dashboard definition.

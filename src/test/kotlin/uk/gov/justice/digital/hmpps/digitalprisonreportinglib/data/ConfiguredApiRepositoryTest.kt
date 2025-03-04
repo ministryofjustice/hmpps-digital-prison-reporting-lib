@@ -605,7 +605,7 @@ class ConfiguredApiRepositoryTest {
   }
 
   @Test
-  fun `should return only the rows whose origin code is in the caseloads list and its direction is "Out" or the destination code is in the caseloads list and its direction is "IN" for external-movements`() {
+  fun `should return only the rows whose origin code is in the caseloads list and its direction is OUT or the destination code is in the caseloads list and its direction is IN for external-movements`() {
     try {
       val policyEngineResult =
         "(origin_code IN ('LWSTMC') AND lower(direction)='out') OR (destination_code IN ('LWSTMC') AND lower(direction)='in')"

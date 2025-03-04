@@ -12,7 +12,7 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWin
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepositoryAutoConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedShiftSummaryTableHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadProviderAutoConfig
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ResourceServerConfiguration
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprResourceServerConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionService
