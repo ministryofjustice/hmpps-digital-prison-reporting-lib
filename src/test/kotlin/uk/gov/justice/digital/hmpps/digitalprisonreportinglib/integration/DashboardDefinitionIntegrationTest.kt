@@ -22,7 +22,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
           .path("/definitions/missing-ethnicity-metrics/dashboards/age-breakdown-dashboard-1")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk

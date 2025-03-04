@@ -28,7 +28,7 @@ class ReportDefinitionWithChildReportIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "HTML")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -53,7 +53,7 @@ class ReportDefinitionWithChildReportIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "SVG")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -73,7 +73,7 @@ class ReportDefinitionWithChildReportIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "HTML")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -97,7 +97,7 @@ class ReportDefinitionWithChildReportIntegrationTest : IntegrationTestBase() {
             .queryParam("renderMethod", "HTML")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk

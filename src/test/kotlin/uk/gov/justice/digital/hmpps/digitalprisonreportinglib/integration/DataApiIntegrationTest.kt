@@ -74,7 +74,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("sortedAsc", false)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -113,7 +113,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .queryParam("sortedAsc", false)
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
@@ -134,7 +134,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     fun `Data API count returns the number of records when the definitions are retrieved via the web client`() {
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -162,7 +162,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .queryParam("sortedAsc", false)
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
@@ -181,7 +181,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .queryParam("sortedAsc", false)
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
@@ -225,7 +225,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .queryParam("sortedAsc", false)
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
@@ -244,7 +244,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .queryParam("sortedAsc", false)
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
@@ -279,7 +279,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .queryParam("sortedAsc", false)
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
@@ -325,7 +325,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .queryParam("sortedAsc", false)
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
@@ -349,7 +349,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   fun `Data API count returns the number of records`() {
     webTestClient.get()
       .uri("/reports/external-movements/last-month/count")
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -371,7 +371,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("filters.direction", direction?.lowercase())
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -390,7 +390,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${FILTERS_PREFIX}direction", "out")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -417,7 +417,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("prefix", "La")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -443,7 +443,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("prefix", "la")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -465,7 +465,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -497,7 +497,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${FILTERS_PREFIX}direction", direction)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -536,7 +536,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("sortedAsc", false)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -561,7 +561,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reports/external-movements/last-month/count")
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -681,7 +681,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       uriBuilder.path(path).build()
     }
-    .headers(setAuthorisation(roles = authorisedRoles))
+    .headers(setAuthorisation(roles = listOf(authorisedRole)))
     .exchange()
     .expectStatus()
 }

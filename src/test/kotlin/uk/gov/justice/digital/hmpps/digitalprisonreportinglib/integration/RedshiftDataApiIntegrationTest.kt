@@ -67,7 +67,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("sortedAsc", false)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -103,7 +103,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/async/dashboards/some-metrics-dpd/some-dashboard-id")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -142,7 +142,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("sortedAsc", false)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isBadRequest
@@ -173,7 +173,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("sortedAsc", false)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isEqualTo(429)
@@ -212,7 +212,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/$reportId/$reportVariantId/statements/$queryExecutionId/status")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -256,7 +256,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/statements/$queryExecutionId/status")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -298,7 +298,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/$reportId/$reportVariantId/statements/$queryExecutionId")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -330,7 +330,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/statements/$queryExecutionId")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -386,7 +386,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("pageSize", 20L)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -428,7 +428,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${DataApiSyncController.FiltersPrefix.FILTERS_PREFIX}direction", "out")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -480,7 +480,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("pageSize", 20L)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isNotFound
@@ -515,7 +515,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("pageSize", pageSize)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -564,7 +564,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${DataApiSyncController.FiltersPrefix.FILTERS_PREFIX}direction", "out")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -602,7 +602,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("pageSize", pageSize)
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isNotFound
@@ -649,7 +649,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month/tables/$tableId/result/summary/$summaryId")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -675,7 +675,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .path("/report/tables/$tableId/count")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -698,7 +698,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("${DataApiSyncController.FiltersPrefix.FILTERS_PREFIX}direction", "out")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()

@@ -54,7 +54,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             .path("/definitions")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -113,7 +113,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             .path("/definitions")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -156,7 +156,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             .queryParam("dataProductDefinitionsPath", "definitions/prisons/orphanage")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -218,7 +218,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             .path("/definitions")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -273,7 +273,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "HTML")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -298,7 +298,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "SVG")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -318,7 +318,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .queryParam("renderMethod", "HTML")
           .build()
       }
-      .headers(setAuthorisation(roles = authorisedRoles))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk
@@ -341,7 +341,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             .path("/definitions/external-movements/last-month")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -413,7 +413,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             .path("/definitions/external-movements/last-month")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -693,7 +693,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/definitions")
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -744,7 +744,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
             .path("/definitions/external-movements/last-week")
             .build()
         }
-        .headers(setAuthorisation(roles = authorisedRoles))
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk
@@ -791,7 +791,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
               .path("/definitions/external-movements-with-parameters/last-month")
               .build()
           }
-          .headers(setAuthorisation(roles = authorisedRoles))
+          .headers(setAuthorisation(roles = listOf(authorisedRole)))
           .exchange()
           .expectStatus()
           .isOk

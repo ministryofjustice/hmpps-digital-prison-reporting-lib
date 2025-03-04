@@ -33,8 +33,8 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 @ActiveProfiles("test")
 abstract class IntegrationTestBase {
 
-  @Value("\${dpr.lib.user.roles}")
-  lateinit var authorisedRoles: List<String>
+  @Value("\${dpr.lib.user.role}")
+  lateinit var authorisedRole: String
 
   @Autowired
   lateinit var webTestClient: WebTestClient
