@@ -28,9 +28,9 @@ class DprResourceServerConfiguration(
   ): SecurityFilterChain = HmppsResourceServerConfiguration().hmppsSecurityFilterChain(http, dprResourceServerCustomizer)
 
   @Bean
-  fun resourceServerCustomizer() = ResourceServerConfigurationCustomizer {
+  fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
     oauth2 { tokenConverter = DefaultDprAuthAwareTokenConverter(caseloadProvider) }
-    securityMatcher { listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**") }
+    securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**") }
     anyRequestRole { defaultRole = removeRolePrefix(authorisedRole) }
   }
 }
