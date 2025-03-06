@@ -1,4 +1,12 @@
 Below you can find the changes included in each release.
+
+# 7.10.6
+Fixed issue with more than one multiselect filters in which the same filter value was applied to different columns.   
+
+# 7.10.5
+Fixed issue with DprResourceServerConfiguration.
+Renamed resourceServerCustomizer Bean to dprResourceServerCustomizer and added "paths" property to the securityMatcher. 
+
 # 7.10.4
 Secure only endpoints in this library with the roles provided. Removed the default role.
 

@@ -724,6 +724,25 @@ class ConfiguredApiRepositoryTest {
   }
 
   @Test
+  fun `should return only the rows which match all the filters when two multiselect filters are present`() {
+    val actual = configuredApiRepository.executeQuery(
+      query = REPOSITORY_TEST_QUERY,
+      filters = listOf(
+        Filter("destination_code", "WWI,NSI,LCI", MULTISELECT),
+        Filter("direction", "Out", MULTISELECT),
+      ),
+      selectedPage = 1,
+      pageSize = 20,
+      sortColumn = "date",
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
+      reportFilter = productDefinition.report.filter,
+    )
+    Assertions.assertEquals(1, actual.size)
+  }
+
+  @Test
   fun `should return a count of all rows with no filters`() {
     val actual = configuredApiRepository.count(
       filters = emptyList(),
