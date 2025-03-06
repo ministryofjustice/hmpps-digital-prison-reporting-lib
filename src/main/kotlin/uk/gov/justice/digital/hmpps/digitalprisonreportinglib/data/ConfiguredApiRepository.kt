@@ -100,7 +100,7 @@ class ConfiguredApiRepository(
       .forEach { filter ->
         filter.value.split(",")
           .forEachIndexed { i, v ->
-            preparedStatementNamedParams.addValue(MULTISELECT_QUERY_PLACEHOLDER + i, v)
+            preparedStatementNamedParams.addValue(filter.field + i, v)
           }
       }
   }
