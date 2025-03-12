@@ -230,6 +230,56 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Calling the dashboard status endpoint calls the getStatementStatus of the AsyncDataApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    val reportId = "external-movements"
+    val dashboardId = "test-dashboard"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val resultRows = 10L
+    val resultSize = 100L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      resultRows,
+      resultSize,
+    )
+    given(
+      asyncDataApiService.getDashboardStatementStatus(
+        eq(queryExecutionId),
+        eq(reportId),
+        eq(dashboardId),
+        any<DprAuthAwareAuthenticationToken>(),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+        anyOrNull(),
+      ),
+    )
+      .willReturn(statementExecutionStatus)
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/$reportId/dashboards/$dashboardId/statements/$queryExecutionId/status")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """{
+          "status": "$status",
+          "duration": $duration,
+          "resultRows": $resultRows,
+          "resultSize": $resultSize,
+          "error": null
+        }
+      """,
+      )
+  }
+
+  @Test
   fun `Calling the statement status endpoint calls the getStatementStatus of the AsyncDataApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
     val status = "FINISHED"
