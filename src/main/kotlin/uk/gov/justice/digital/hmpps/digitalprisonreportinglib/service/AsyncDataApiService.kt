@@ -268,6 +268,12 @@ class AsyncDataApiService(
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
+  fun cancelDashboardStatementExecution(statementId: String, definitionId: String, dashboardId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
+    return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
+  }
+
   fun cancelStatementExecution(statementId: String): StatementCancellationResponse = redshiftDataApiRepository.cancelStatementExecution(statementId)
 
   fun count(tableId: String): Count = Count(redshiftDataApiRepository.count(tableId))

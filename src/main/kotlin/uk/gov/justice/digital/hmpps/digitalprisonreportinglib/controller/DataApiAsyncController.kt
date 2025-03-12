@@ -232,7 +232,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   )
   fun getDashboardExecutionStatus(
     @PathVariable("reportId") reportId: String,
-    @PathVariable("dashboardId") reportVariantId: String,
+    @PathVariable("dashboardId") dashboardId: String,
     @PathVariable("statementId") statementId: String,
     @Parameter(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
@@ -259,7 +259,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       asyncDataApiService.getDashboardStatementStatus(
         statementId = statementId,
         productDefinitionId = reportId,
-        dashboardId = reportVariantId,
+        dashboardId = dashboardId,
         userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         dataProductDefinitionsPath,
         tableId,
@@ -326,6 +326,37 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
         statementId,
         reportId,
         reportVariantId,
+        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        dataProductDefinitionsPath,
+      ),
+    )
+
+  @DeleteMapping("/reports/{reportId}/dashboards/{dashboardId}/statements/{statementId}")
+  @Operation(
+    description = "Cancels the execution of a running query.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun cancelDashboardQueryExecution(
+    @PathVariable("reportId") definitionId: String,
+    @PathVariable("dashboardId") dashboardId: String,
+    @PathVariable("statementId") statementId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    dataProductDefinitionsPath: String? = null,
+    authentication: Authentication,
+  ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.cancelDashboardStatementExecution(
+        statementId,
+        definitionId,
+        dashboardId,
         userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         dataProductDefinitionsPath,
       ),
