@@ -1,6 +1,9 @@
 Below you can find the changes included in each release.
 
 # 7.10.8
+New dashboard execution cancellation endpoint to support running dashboards for legacy nomis/bodmis reports.
+
+# 7.10.7
 New dashboard status endpoint to support running dashboards for legacy nomis/bodmis reports. 
 
 # 7.10.6

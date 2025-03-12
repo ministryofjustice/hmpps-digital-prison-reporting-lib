@@ -362,6 +362,44 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Calling the dashboard cancellation endpoint calls the cancelStatementExecution of the AsyncDataApiService with the correct arguments`() {
+    val queryExecutionId = "queryExecutionId"
+    val reportId = "external-movements"
+    val dashboardId = "test-dashboard"
+    val statementCancellationResponse = StatementCancellationResponse(
+      true,
+    )
+    given(
+      asyncDataApiService.cancelDashboardStatementExecution(
+        eq(queryExecutionId),
+        eq(reportId),
+        eq(dashboardId),
+        any<DprAuthAwareAuthenticationToken>(),
+        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
+      ),
+    )
+      .willReturn(statementCancellationResponse)
+
+    webTestClient.delete()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/$reportId/dashboards/$dashboardId/statements/$queryExecutionId")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """{
+          "cancellationSucceeded": true
+        }
+      """,
+      )
+  }
+
+  @Test
   fun `Calling the statement cancellation endpoint calls the cancelStatementExecution of the AsyncDataApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
     val statementCancellationResponse = StatementCancellationResponse(
