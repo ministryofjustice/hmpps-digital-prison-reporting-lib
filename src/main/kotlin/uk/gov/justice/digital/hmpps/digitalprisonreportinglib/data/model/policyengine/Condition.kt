@@ -35,7 +35,7 @@ data class Condition(
     authToken: DprAuthAwareAuthenticationToken?,
     matchList: List<String>,
   ): Boolean {
-    val userRoles = authToken?.authorities?.map { it.authority }
+    val userRoles = authToken?.getRoles()
     return userRoles?.any { it in matchList } ?: false
   }
 
@@ -52,7 +52,7 @@ data class Condition(
   ): Boolean {
     val varMappings = mapOf(
       TOKEN to authToken,
-      ROLE to authToken?.authorities?.map { it.authority },
+      ROLE to authToken?.getRoles(),
       CASELOAD to authToken?.getActiveCaseLoadId(),
       CASELOADS to authToken?.getCaseLoadIds(),
     )
