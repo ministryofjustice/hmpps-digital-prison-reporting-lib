@@ -21,7 +21,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.jdbc.UncategorizedSQLException
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -305,7 +304,7 @@ class AsyncDataApiServiceTest {
     val caseload = "caseloadA"
     whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
+    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = "(establishment_id='$caseload')"
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
@@ -396,7 +395,7 @@ class AsyncDataApiServiceTest {
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
+    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(

@@ -151,7 +151,7 @@ class AthenaApiRepository(
 
   private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String = """WITH $CONTEXT AS (
       SELECT 
-      '${userToken?.jwt?.subject}' AS username, 
+      '${userToken?.getUsername()}' AS username, 
       '${userToken?.getActiveCaseLoadId()}' AS caseload, 
       'GENERAL' AS account_type 
       FROM DUAL
