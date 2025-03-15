@@ -116,7 +116,7 @@ abstract class IntegrationTestBase {
 
   protected fun stubMeCaseloadsResponse(body: String) {
     wireMockServer.stubFor(
-      WireMock.get("/me/caseloads").willReturn(
+      WireMock.get("/users/me/caseloads").willReturn(
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)

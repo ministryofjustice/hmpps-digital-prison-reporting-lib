@@ -12,7 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient
 @ConditionalOnProperty(name = ["dpr.lib.caseloads.host"])
 class CaseloadProviderAutoConfig(
   @Value("\${dpr.lib.caseloads.host}") private val caseloadHost: String,
-  @Value("\${dpr.lib.caseloads.path:me/caseloads}") private val caseloadPath: String,
+  @Value("\${dpr.lib.caseloads.path:users/me/caseloads}") private val caseloadPath: String,
 ) {
 
   @Bean
