@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-# 7.11.0
+# 7.13.0
 Migrate to call manage-users-api instead of the nomis-user-roles-api to retrieve caseloads.
 
 # 7.10.8
