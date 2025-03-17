@@ -18,6 +18,16 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
+      client:
+        registration:
+          DPR_LIB_API:
+            provider: hmpps-auth
+            client-id: ${dpr_lib.api.client.id}
+            client-secret: ${dpr_lib.api.client.secret}
+            authorization-grant-type: client_credentials
+        provider:
+          hmpps-auth:
+            token-uri: ${hmpps.auth.url}/oauth/token
 
 management.endpoint:
   health.cache.time-to-live: 0

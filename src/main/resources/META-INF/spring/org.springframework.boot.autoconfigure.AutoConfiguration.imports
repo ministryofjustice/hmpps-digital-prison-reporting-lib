@@ -31,4 +31,3 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.estcodesandwings.LegacyEstablishmentCodesToWingsCacheConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ProductDefinitionTokenPolicyChecker
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.RefreshCacheSchedulingService
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DigitalPrisonReportingExceptionHandler

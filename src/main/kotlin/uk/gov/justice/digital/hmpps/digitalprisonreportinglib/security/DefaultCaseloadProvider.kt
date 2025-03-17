@@ -40,6 +40,4 @@ class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvid
     .retrieve()
     .bodyToMono(CaseloadResponse::class.java)
     .block()!!
-
-  data class CaseloadResponse(val username: String, val active: Boolean, val accountType: String, val activeCaseload: Caseload?, val caseloads: List<Caseload>)
 }
