@@ -88,7 +88,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
       )
 
-    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
+    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
   }
 
   class ReportDefinitionListTest : IntegrationTestBase() {
@@ -127,7 +127,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
         )
 
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
@@ -295,7 +295,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
         )
 
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
@@ -341,7 +341,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
         )
 
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/me/caseloads")).size).isEqualTo(2)
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
   }
 
@@ -517,7 +517,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   fun `Data API returns empty list and warning header if no active caseloads`() {
     wireMockServer.resetAll()
     wireMockServer.stubFor(
-      WireMock.get("/me/caseloads").willReturn(
+      WireMock.get("/users/me/caseloads").willReturn(
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -550,7 +550,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   fun `Data API count returns zero and warning header if no active caseloads`() {
     wireMockServer.resetAll()
     wireMockServer.stubFor(
-      WireMock.get("/me/caseloads").willReturn(
+      WireMock.get("/users/me/caseloads").willReturn(
         WireMock.aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
