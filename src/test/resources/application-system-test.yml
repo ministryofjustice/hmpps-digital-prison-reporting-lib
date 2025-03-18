@@ -22,8 +22,8 @@ spring:
         registration:
           DPR_LIB_API:
             provider: hmpps-auth
-            client-id: ${dpr_lib.api.client.id}
-            client-secret: ${{dpr_lib.api.client.secret}
+            client-id: ${dpr.lib.api.client.id}
+            client-secret: ${{dpr.lib.api.client.secret}
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
@@ -35,6 +35,10 @@ management.endpoint:
 
 dpr:
   lib:
+    api:
+      client:
+        id: dpr-api-client-id
+        secret: dpr-api-client-secret
     system:
       role: PRISONS_REPORTING_USER
     aws:
