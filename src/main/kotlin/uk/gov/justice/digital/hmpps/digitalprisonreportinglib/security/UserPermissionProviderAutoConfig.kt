@@ -12,5 +12,5 @@ import org.springframework.web.reactive.function.client.WebClient
 class UserPermissionProviderAutoConfig {
   @Bean
   @ConditionalOnMissingBean(UserPermissionProvider::class)
-  fun userPermissionProvider(@Qualifier("manageUsersWebClient") webClient: WebClient) = UserPermissionProvider(webClient)
+  fun userPermissionProvider(@Qualifier("manageUsersWebClient") webClient: WebClient): UserPermissionProvider = DefaultUserPermissionProvider(webClient)
 }

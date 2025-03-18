@@ -13,7 +13,6 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRep
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedShiftSummaryTableHelper
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadProviderAutoConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.UserPermissionProviderAutoConfig
-uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprResourceServerConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthResourceConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService

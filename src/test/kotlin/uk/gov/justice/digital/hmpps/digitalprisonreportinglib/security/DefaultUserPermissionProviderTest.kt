@@ -13,10 +13,10 @@ import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 
-class UserPermissionProviderTest {
+class DefaultUserPermissionProviderTest {
 
   private val webClient = mock<WebClient>()
-  private val userPermissionProvider: UserPermissionProvider = UserPermissionProvider(webClient)
+  private val userPermissionProvider: UserPermissionProvider = DefaultUserPermissionProvider(webClient)
 
   @Test
   fun `get active caseload ID`() {

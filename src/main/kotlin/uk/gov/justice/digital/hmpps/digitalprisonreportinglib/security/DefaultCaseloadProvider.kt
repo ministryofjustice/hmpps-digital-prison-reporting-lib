@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Case
 const val WARNING_NO_ACTIVE_CASELOAD = "User has not set an active caseload."
 const val WARNING_NO_CASELOADS = "User does not have any caseloads."
 
-@Deprecated("Use UserPermissionProvider instead")
+@Deprecated("Use DefaultUserPermissionProvider instead")
 class DefaultCaseloadProvider(private val webClient: WebClient) : CaseloadProvider {
 
   override fun getActiveCaseloadId(jwt: Jwt): String {
