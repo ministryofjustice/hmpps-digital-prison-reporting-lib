@@ -31,6 +31,6 @@ class DprSystemAuthResourceConfiguration(
   fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
     oauth2 { tokenConverter = DprSystemAuthAwareTokenConverter(userPermissionProvider) }
     securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**") }
-    anyRequestRole { defaultRole = removeRolePrefix(systemRole) }
+    anyRequestRole { defaultRole = systemRole.removePrefix("ROLE_") }
   }
 }

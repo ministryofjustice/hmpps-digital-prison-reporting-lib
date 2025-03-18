@@ -32,8 +32,6 @@ class DprResourceServerConfiguration(
   fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
     oauth2 { tokenConverter = DefaultDprAuthAwareTokenConverter(caseloadProvider) }
     securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**") }
-    anyRequestRole { defaultRole = removeRolePrefix(authorisedRole) }
+    anyRequestRole { defaultRole = authorisedRole.removePrefix("ROLE_") }
   }
 }
-
-fun removeRolePrefix(role: String) = role.replace("ROLE_", "")

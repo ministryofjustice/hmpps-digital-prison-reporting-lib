@@ -35,8 +35,8 @@ data class Condition(
     authToken: DprAuthAwareAuthenticationToken?,
     matchList: List<String>,
   ): Boolean {
-    val userRoles = authToken?.getRoles()
-    return userRoles?.any { it in matchList } ?: false
+    val userRoles = authToken?.getRoles()?.removeRolePrefix()
+    return userRoles?.any { it in matchList.removeRolePrefix() } ?: false
   }
 
   private fun isTheInterpolatedVarInTheList(
@@ -59,3 +59,5 @@ data class Condition(
     return varMappings[varPlaceholder] != null
   }
 }
+
+fun List<String>.removeRolePrefix(): List<String> = this.map { it.removePrefix("ROLE_") }
