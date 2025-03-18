@@ -14,6 +14,7 @@ import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomize
 
 @Configuration("dprResourceServerConfiguration")
 @ConditionalOnProperty(name = ["dpr.lib.user.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
+@Deprecated("Use DprSystemAuthResourceConfiguration instead")
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
 class DprResourceServerConfiguration(
   private val caseloadProvider: CaseloadProvider,

@@ -6,6 +6,7 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareTokenConverter
 import uk.gov.justice.hmpps.kotlin.auth.extractAuthorities
 
+@Deprecated("Use DprSystemAuthAwareTokenConverter instead")
 class DefaultDprAuthAwareTokenConverter(private val caseloadProvider: CaseloadProvider) : AuthAwareTokenConverter() {
 
   override fun convert(jwt: Jwt): AuthAwareAuthenticationToken = super.convert(jwt)

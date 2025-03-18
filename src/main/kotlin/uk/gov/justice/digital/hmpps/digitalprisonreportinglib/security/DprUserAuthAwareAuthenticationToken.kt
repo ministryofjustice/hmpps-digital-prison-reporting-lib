@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Case
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
+@Deprecated("Use DprSystemAuthAwareAuthenticationToken instead")
 class DprUserAuthAwareAuthenticationToken(
   jwt: Jwt,
   clientId: String,
