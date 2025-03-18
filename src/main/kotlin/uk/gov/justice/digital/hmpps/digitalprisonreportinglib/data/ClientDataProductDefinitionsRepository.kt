@@ -31,7 +31,7 @@ class ClientDataProductDefinitionsRepository(
 
     val respEntity: ResponseEntity<List<ProductDefinition>>? = path?.let {
       val headers: MultiValueMap<String, String> = HttpHeaders()
-      // TODO: should be passing the existing token onwards - should create a new one
+      // TODO: should not be passing the existing token onwards - should create a new one
       headers.add(HttpHeaders.AUTHORIZATION, "Bearer ${authenticationHelper.authentication.jwt.tokenValue}")
       val requestEntity = RequestEntity<List<ProductDefinition>>(headers, HttpMethod.GET, URI("$definitionsHost/$path"))
       dataProductDefinitionsClient
