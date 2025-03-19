@@ -14,7 +14,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -528,7 +527,7 @@ class SyncDataApiServiceTest {
       identifiedHelper,
     )
     val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper)
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("USER-ROLE-1")))
+    whenever(authToken.getRoles()).thenReturn(listOf("USER-ROLE-1"))
     val policyEngineResult = "TRUE"
     val reportId = "definition-policy-no-action"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
