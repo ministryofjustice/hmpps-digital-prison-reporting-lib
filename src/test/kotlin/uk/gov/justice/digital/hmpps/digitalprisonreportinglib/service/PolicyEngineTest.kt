@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -143,7 +142,7 @@ class PolicyEngineTest {
   fun `policy engine returns TRUE for a policy with a permit rule with a condition of matching a role and an action of TRUE when there is a matching role`() {
     val userRole = "A_ROLE"
     val authToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority(userRole)))
+    whenever(authToken.getRoles()).thenReturn(listOf(userRole))
     val policy = Policy(
       "caseload",
       ROW_LEVEL,
@@ -157,7 +156,7 @@ class PolicyEngineTest {
   @Test
   fun `policy engine returns FALSE for a policy with a permit rule with a condition of matching a role and an action of TRUE when there is no matching role`() {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("A_ROLE")))
+    whenever(authToken.getRoles()).thenReturn(listOf("A_ROLE"))
     val policy = Policy(
       "caseload",
       ROW_LEVEL,
@@ -171,7 +170,7 @@ class PolicyEngineTest {
   @Test
   fun `policy engine returns FALSE when one of the policies is denied`() {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("A_ROLE")))
+    whenever(authToken.getRoles()).thenReturn(listOf("A_ROLE"))
     val policy1 = Policy(
       "caseload",
       ROW_LEVEL,
@@ -263,7 +262,7 @@ class PolicyEngineTest {
   fun `policy engine returns TRUE for an access policy with a permit rule with a condition of matching a role when there is one matching role`() {
     val userRole = "DPR-USER"
     val authToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority(userRole)))
+    whenever(authToken.getRoles()).thenReturn(listOf(userRole))
     val policy = Policy(
       id = "caseload",
       type = ACCESS,
@@ -277,7 +276,7 @@ class PolicyEngineTest {
   fun `policy engine returns TRUE for an access policy with a permit rule with a condition of matching a role when any role matches`() {
     val userRole = "DPR-USER"
     val authToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority(userRole)))
+    whenever(authToken.getRoles()).thenReturn(listOf(userRole))
     val policy = Policy(
       id = "caseload",
       type = ACCESS,
@@ -290,7 +289,7 @@ class PolicyEngineTest {
   @Test
   fun `policy engine returns FALSE for an access policy with a permit rule with a condition of matching a role when no role matches`() {
     val authToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("USER_ROLE")))
+    whenever(authToken.getRoles()).thenReturn(listOf("USER_ROLE"))
     val policy = Policy(
       id = "caseload",
       type = ACCESS,

@@ -144,6 +144,18 @@ class AsyncDataApiService(
     return statementStatus
   }
 
+  fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
+    val statementStatus = getRepo(productDefinition.datasource.name).getStatementStatus(statementId)
+    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
+      if (redshiftDataApiRepository.isTableMissing(tableId)) {
+        throw MissingTableException(tableId)
+      }
+    }
+    return statementStatus
+  }
+
   fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus {
     val statementStatus = redshiftDataApiRepository.getStatementStatus(statementId)
     tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
@@ -252,6 +264,12 @@ class AsyncDataApiService(
 
   fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
+    return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
+  }
+
+  fun cancelDashboardStatementExecution(statementId: String, definitionId: String, dashboardId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }

@@ -29,7 +29,6 @@ abstract class RepositoryHelper {
     const val CONTEXT = """context_"""
 
     const val DEFAULT_REPORT_CTE = "report_ AS (SELECT * FROM dataset_)"
-    const val MULTISELECT_QUERY_PLACEHOLDER = "multiselectValue"
   }
 
   @Autowired
@@ -107,7 +106,7 @@ abstract class RepositoryHelper {
       FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
       FilterType.BOOLEAN -> "${filter.field} = :$key"
       FilterType.MULTISELECT -> filter.value.split(",")
-        .joinToString(separator = " OR ", prefix = "(", postfix = ")") { "${filter.field} = :$MULTISELECT_QUERY_PLACEHOLDER${index++}" }
+        .joinToString(separator = " OR ", prefix = "(", postfix = ")") { "${filter.field} = :${filter.field}${index++}" }
     }
   }
 

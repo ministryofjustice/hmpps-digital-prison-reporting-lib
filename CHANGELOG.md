@@ -1,4 +1,26 @@
 Below you can find the changes included in each release.
+
+
+# 8.0.0
+Provide a system credential mechanism to authenticate users interacting with the DPR library. Endpoints can new be secured with a
+system token and caseloads and roles are checked my callback to the manage user api service rather than token inspection.
+
+# 7.13.0
+Migrate to call manage-users-api instead of the nomis-user-roles-api to retrieve caseloads.
+
+# 7.10.8
+New dashboard execution cancellation endpoint to support running dashboards for legacy nomis/bodmis reports.
+
+# 7.10.7
+New dashboard status endpoint to support running dashboards for legacy nomis/bodmis reports. 
+
+# 7.10.6
+Fixed issue with more than one multiselect filters in which the same filter value was applied to different columns.   
+
+# 7.10.5
+Fixed issue with DprResourceServerConfiguration.
+Renamed resourceServerCustomizer Bean to dprResourceServerCustomizer and added "paths" property to the securityMatcher. 
+
 # 7.10.4
 Secure only endpoints in this library with the roles provided. Removed the default role.
 
