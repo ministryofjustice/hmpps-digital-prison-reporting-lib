@@ -1,5 +1,10 @@
 Below you can find the changes included in each release.
 
+
+# 8.0.0
+Provide a system credential mechanism to authenticate users interacting with the DPR library. Endpoints can new be secured with a
+system token and caseloads and roles are checked my callback to the manage user api service rather than token inspection.
+
 # 7.13.0
 Migrate to call manage-users-api instead of the nomis-user-roles-api to retrieve caseloads.
 
