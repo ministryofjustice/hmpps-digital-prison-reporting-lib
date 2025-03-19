@@ -5,5 +5,5 @@ data class DashboardVisualisationDefinition(
   val type: DashboardVisualisationTypeDefinition,
   val display: String? = null,
   val description: String? = null,
-  val column: DashboardVisualisationColumnsDefinition,
+  val columns: DashboardVisualisationColumnsDefinition,
 )

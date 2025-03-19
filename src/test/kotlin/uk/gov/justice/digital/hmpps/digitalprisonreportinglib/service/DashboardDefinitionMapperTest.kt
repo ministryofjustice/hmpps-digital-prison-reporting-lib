@@ -73,26 +73,26 @@ class DashboardDefinitionMapperTest {
         id = "age-breakdown-dashboard-1",
         name = "Age Breakdown Dashboard",
         description = "Age Breakdown Dashboard Description",
-        section = listOf(
+        sections = listOf(
           DashboardSectionDefinition(
             id = "totals-breakdown",
             display = "Totals breakdown",
-            visualisation = listOf(
+            visualisations = listOf(
               DashboardVisualisationDefinition(
                 id = "total-prisoners",
                 type = DashboardVisualisationTypeDefinition.LIST,
                 display = "Total prisoners by wing",
-                column = DashboardVisualisationColumnsDefinition(
-                  key = listOf(
+                columns = DashboardVisualisationColumnsDefinition(
+                  keys = listOf(
                     DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                   ),
-                  measure = listOf(
+                  measures = listOf(
                     DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
                   ),
-                  expectNull = true,
+                  expectNulls = true,
                 ),
               ),
             ),

@@ -5,6 +5,6 @@ data class ReportDefinitionSummary(
   val name: String,
   val description: String? = null,
   val variants: List<VariantDefinitionSummary>,
-  val dashboard: List<DashboardDefinitionSummary>? = null,
+  val dashboards: List<DashboardDefinitionSummary>? = null,
   val authorised: Boolean,
 )

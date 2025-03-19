@@ -36,22 +36,22 @@ class DashboardDefinitionMapper(
       id = dashboard.id,
       name = dashboard.name,
       description = dashboard.description,
-      section = dashboard.section.map { section ->
+      sections = dashboard.section.map { section ->
         DashboardSectionDefinition(
           id = section.id,
           display = section.display,
           description = section.description,
-          visualisation = section.visualisation.map { visualisation ->
+          visualisations = section.visualisation.map { visualisation ->
             DashboardVisualisationDefinition(
               id = visualisation.id,
               type = DashboardVisualisationTypeDefinition.valueOf(visualisation.type.toString()),
               display = visualisation.display,
               description = visualisation.description,
-              column = DashboardVisualisationColumnsDefinition(
-                key = visualisation.column.key?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.column.key) },
-                measure = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure),
+              columns = DashboardVisualisationColumnsDefinition(
+                keys = visualisation.column.key?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.column.key) },
+                measures = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure),
                 filters = visualisation.column.filters?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
-                expectNull = visualisation.column.expectNull,
+                expectNulls = visualisation.column.expectNull,
               ),
             )
           },

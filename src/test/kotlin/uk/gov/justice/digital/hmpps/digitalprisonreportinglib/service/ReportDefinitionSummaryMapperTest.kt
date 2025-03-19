@@ -224,6 +224,6 @@ class ReportDefinitionSummaryMapperTest {
       authToken,
     )
 
-    assertThat(result.dashboard!![0]).isEqualTo(dashboardDefinition)
+    assertThat(result.dashboards!![0]).isEqualTo(dashboardDefinition)
   }
 }
