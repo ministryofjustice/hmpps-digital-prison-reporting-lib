@@ -8,7 +8,6 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.security.oauth2.jwt.Jwt
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionResponse
@@ -350,9 +349,7 @@ SELECT *
       startQueryExecutionResponse.queryExecutionId(),
     ).thenReturn(executionId)
 
-    val jwt = mock<Jwt>()
-    whenever(userToken.jwt).thenReturn(jwt)
-    whenever(jwt.subject).thenReturn(testUsername)
+    whenever(userToken.getUsername()).thenReturn(testUsername)
     whenever(userToken.getActiveCaseLoadId()).thenReturn(testCaseload)
     whenever(userToken.getCaseLoadIds()).thenReturn(listOf(testCaseload))
 

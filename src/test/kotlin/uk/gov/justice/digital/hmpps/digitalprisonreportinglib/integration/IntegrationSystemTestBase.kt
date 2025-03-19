@@ -1,9 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -13,27 +9,32 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestWebClientConfiguration
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprUserAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.TEST_TOKEN
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
-@ActiveProfiles("test")
-abstract class IntegrationTestBase {
+@ActiveProfiles("system-test")
+@Import(TestWebClientConfiguration::class)
+abstract class IntegrationSystemTestBase {
 
-  @Value("\${dpr.lib.user.role}")
+  @Value("\${dpr.lib.system.role}")
   lateinit var authorisedRole: String
 
   @Autowired
@@ -61,32 +62,38 @@ abstract class IntegrationTestBase {
   lateinit var asyncDataApiService: AsyncDataApiService
 
   companion object {
+    @Suppress("unused")
+    @JvmField
+    val hmppsAuthMockServer = HmppsAuthMockServer()
 
-    lateinit var wireMockServer: WireMockServer
+    @JvmField
+    val manageUsersMockServer = ManageUsersMockServer()
 
     @BeforeAll
     @JvmStatic
-    fun setupClass() {
-      wireMockServer = WireMockServer(
-        WireMockConfiguration.wireMockConfig().port(9999),
-      )
-      wireMockServer.start()
+    fun startMocks() {
+      hmppsAuthMockServer.start()
+      hmppsAuthMockServer.stubGrantToken()
+      manageUsersMockServer.start()
+
+      hmppsAuthMockServer.stubGrantToken()
     }
 
     @AfterAll
     @JvmStatic
-    fun teardownClass() {
-      wireMockServer.stop()
+    fun stopMocks() {
+      manageUsersMockServer.stop()
+      hmppsAuthMockServer.stop()
     }
+  }
 
-    const val TEST_TOKEN = "TestToken"
+  init {
+    // Resolves an issue where Wiremock keeps previous sockets open from other tests causing connection resets
+    System.setProperty("http.keepAlive", "false")
   }
 
   @BeforeEach
   fun setup() {
-    wireMockServer.resetAll()
-    stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
-    stubDefinitionsResponse()
     ConfiguredApiRepositoryTest.AllMovements.allExternalMovements.forEach {
       externalMovementRepository.save(it)
     }
@@ -94,63 +101,16 @@ abstract class IntegrationTestBase {
       prisonerRepository.save(it)
     }
     val jwt = mock<Jwt>()
-    val authentication = mock<DprUserAuthAwareAuthenticationToken>()
+    val authentication = mock<DprSystemAuthAwareAuthenticationToken>()
     whenever(jwt.tokenValue).then { TEST_TOKEN }
     whenever(authentication.jwt).then { jwt }
     authenticationHelper.authentication = authentication
+    whenever(authentication.getRoles()).thenReturn(listOf(authorisedRole))
+    whenever(authentication.getCaseLoads()).thenReturn(listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
+    whenever(authentication.getActiveCaseLoadId()).thenReturn("WWI")
+    whenever(authentication.getCaseLoadIds()).thenReturn(listOf("WWI"))
+    whenever(authentication.getUsername()).thenReturn("request-user")
   }
-
-  protected fun stubDefinitionsResponse() {
-    val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")?.readText()
-    wireMockServer.stubFor(
-      WireMock.get("/definitions/prisons/orphanage")
-        .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer $TEST_TOKEN"))
-        .willReturn(
-          WireMock.aResponse()
-            .withStatus(HttpStatus.OK.value())
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .withBody("""[$productDefinitionJson]"""),
-        ),
-    )
-  }
-
-  protected fun stubMeCaseloadsResponse(body: String) {
-    wireMockServer.stubFor(
-      WireMock.get("/users/me/caseloads").willReturn(
-        WireMock.aResponse()
-          .withStatus(HttpStatus.OK.value())
-          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody(body),
-      ),
-    )
-  }
-
-  protected fun createCaseloadJsonResponse(activeCaseloadId: String) =
-    """
-          {
-            "username": "TESTUSER1",
-            "active": true,
-            "accountType": "GENERAL",
-            "activeCaseload": {
-              "id": "$activeCaseloadId",
-              "name": "WANDSWORTH (HMP)"
-            },
-            "caseloads": [
-              {
-                "id": "WWI",
-                "name": "WANDSWORTH (HMP)"
-              },
-              {
-                "id": "AKI",
-                "name": "Acklington (HMP)"
-              },
-              {
-                "id": "LWSTMC",
-                "name": "Lowestoft (North East Suffolk) Magistrat"
-              }
-            ]
-          }
-    """.trimIndent()
 
   protected fun setAuthorisation(
     user: String = "request-user",
