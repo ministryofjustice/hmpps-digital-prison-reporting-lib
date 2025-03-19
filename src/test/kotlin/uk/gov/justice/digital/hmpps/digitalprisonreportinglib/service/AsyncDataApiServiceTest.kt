@@ -297,7 +297,7 @@ class AsyncDataApiServiceTest {
     )
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val productDefinition: ProductDefinition = productDefinitionRepository.getProductDefinitions().first()
-    val singleDashboardProductDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinition.id, productDefinition.dashboards!!.first().id)
+    val singleDashboardProductDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinition.id, productDefinition.dashboard!!.first().id)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)

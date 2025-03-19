@@ -205,7 +205,7 @@ class ReportDefinitionSummaryMapperTest {
       name = "n1",
       description = "abc",
       dataset = "dataset1",
-      sections = emptyList(),
+      section = emptyList(),
     )
     val dashboardDefinition = DashboardDefinitionSummary(
       id = "d1",
@@ -216,7 +216,7 @@ class ReportDefinitionSummaryMapperTest {
     val result = mapper.map(
       fullProductDefinition
         .copy(
-          dashboards = listOf(
+          dashboard = listOf(
             dashboard,
           ),
         ),

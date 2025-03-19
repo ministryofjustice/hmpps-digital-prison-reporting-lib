@@ -40,7 +40,7 @@ abstract class AbstractProductDefinitionRepository(
     dataProductDefinitionsPath: String?,
   ): SingleDashboardProductDefinition {
     val productDefinition: ProductDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
-    val dashboard = productDefinition.dashboards?.firstOrNull { it.id == dashboardId }
+    val dashboard = productDefinition.dashboard?.firstOrNull { it.id == dashboardId }
       ?: throw ValidationException("Invalid report dashboard id provided: $dashboardId")
 
     val dataSet = identifiedHelper.findOrFail(productDefinition.dataset, dashboard.dataset)

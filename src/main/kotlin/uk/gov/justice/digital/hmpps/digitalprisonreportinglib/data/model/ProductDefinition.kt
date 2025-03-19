@@ -13,5 +13,5 @@ data class ProductDefinition(
   val dataset: List<Dataset> = emptyList(),
   val report: List<Report> = emptyList(),
   override val policy: List<Policy> = emptyList(),
-  val dashboards: List<Dashboard>? = null,
+  val dashboard: List<Dashboard>? = null,
 ) : WithPolicy

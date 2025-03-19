@@ -1,5 +1,10 @@
 Below you can find the changes included in each release.
 
+# 8.0.2
+Renamed dashboard fields which were defining collections from plural to singular to comply with existing naming conventions in DPDs. 
+
+# 8.0.1
+Fixed an issue in DprSystemAuthAwareAuthenticationToken due to which an error was thrown when the username was null. 
 
 # 8.0.0
 Provide a system credential mechanism to authenticate users interacting with the DPR library. Endpoints can new be secured with a
