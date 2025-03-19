@@ -24,7 +24,7 @@ class ReportDefinitionSummaryMapper {
     variants = productDefinition.report
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
       .map { map(it) },
-    dashboards = productDefinition.dashboards?.map { map(it) },
+    dashboard = productDefinition.dashboard?.map { map(it) },
     authorised = determineAuth(productDefinition, userToken),
   )
 

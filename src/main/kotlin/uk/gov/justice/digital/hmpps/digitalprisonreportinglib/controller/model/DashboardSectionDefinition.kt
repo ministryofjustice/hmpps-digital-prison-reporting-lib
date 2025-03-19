@@ -4,5 +4,5 @@ data class DashboardSectionDefinition(
   val id: String,
   val display: String? = null,
   val description: String? = null,
-  val visualisations: List<DashboardVisualisationDefinition>,
+  val visualisation: List<DashboardVisualisationDefinition>,
 )

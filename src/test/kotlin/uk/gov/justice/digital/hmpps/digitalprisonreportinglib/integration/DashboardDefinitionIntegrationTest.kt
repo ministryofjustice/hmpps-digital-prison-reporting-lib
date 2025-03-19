@@ -33,15 +33,15 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
             "id": "age-breakdown-dashboard-1",
             "name": "Age Breakdown Dashboard",
             "description": "Age Breakdown Dashboard Description",
-            "sections": [{
+            "section": [{
               "id": "totals-breakdown",
               "display": "Totals breakdown",
-              "visualisations": [ {
+              "visualisation": [ {
                     "id": "total-prisoners",
                     "type": "list",
                     "display": "Total prisoners by wing",
-                    "columns": {
-                      "keys": [
+                    "column": {
+                      "key": [
                         {
                           "id": "establishment_id",
                           "display": "Establishmnent ID"
@@ -51,7 +51,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                           "display": "Wing"
                         }
                       ],
-                      "measures": [
+                      "measure": [
                         {
                           "id": "establishment_id",
                           "display": "Establishmnent ID"
@@ -65,7 +65,7 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                           "display": "Total prisoners"
                         }
                       ],
-                      "expectNulls": true
+                      "expectNull": true
                     }
             }]
              }],              

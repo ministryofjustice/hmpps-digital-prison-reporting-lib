@@ -123,9 +123,9 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(result.responseBody).isNotNull
       assertThat(result.responseBody).hasSize(1)
       assertThat(result.responseBody).first().isNotNull
-      assertThat(result.responseBody!![0].dashboards).isNotNull
-      assertThat(result.responseBody!![0].dashboards).hasSize(1)
-      assertThat(result.responseBody!![0].dashboards).isEqualTo(
+      assertThat(result.responseBody!![0].dashboard).isNotNull
+      assertThat(result.responseBody!![0].dashboard).hasSize(1)
+      assertThat(result.responseBody!![0].dashboard).isEqualTo(
         listOf(
           DashboardDefinitionSummary(
             id = "age-breakdown-dashboard-1",
