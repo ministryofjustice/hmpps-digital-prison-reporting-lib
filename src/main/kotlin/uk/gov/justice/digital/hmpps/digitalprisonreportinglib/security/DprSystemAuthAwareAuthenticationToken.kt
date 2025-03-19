@@ -23,28 +23,34 @@ class DprSystemAuthAwareAuthenticationToken(
 
   override fun getActiveCaseLoadId(): String? {
     if (this.activeCaseload == null) {
-      this.activeCaseload = userPermissionProvider.getActiveCaseloadId(this.userName!!)
+      this.activeCaseload = this.userName?.let {
+        userPermissionProvider.getActiveCaseloadId(it)
+      }
     }
     return this.activeCaseload
   }
 
   override fun getCaseLoadIds(): List<String> {
     if (this.caseloads == null) {
-      this.caseloads = userPermissionProvider.getCaseloads(this.userName!!)
+      this.caseloads = getCaseLoads()
     }
     return this.caseloads!!.map { it.id }
   }
 
   override fun getCaseLoads(): List<Caseload> {
     if (this.caseloads == null) {
-      this.caseloads = userPermissionProvider.getCaseloads(this.userName!!)
+      this.caseloads = this.userName?.let {
+        userPermissionProvider.getCaseloads(it)
+      } ?: emptyList()
     }
     return this.caseloads!!
   }
 
   override fun getRoles(): List<String> {
     if (this.roles == null) {
-      this.roles = userPermissionProvider.getUsersRoles(this.userName!!)
+      this.roles = this.userName?.let {
+        userPermissionProvider.getUsersRoles(it)
+      } ?: emptyList()
     }
     return this.roles!!
   }

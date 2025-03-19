@@ -113,7 +113,7 @@ abstract class IntegrationSystemTestBase {
   }
 
   protected fun setAuthorisation(
-    user: String = "request-user",
+    user: String? = "request-user",
     roles: List<String> = emptyList(),
     scopes: List<String> = emptyList(),
   ): (HttpHeaders) -> Unit = jwtAuthorisationHelper.setAuthorisationHeader(
