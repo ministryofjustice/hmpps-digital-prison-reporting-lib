@@ -25,6 +25,50 @@ class ReportDefinitionIntegrationSystemTokenTest : IntegrationSystemTestBase() {
   }
 
   @Test
+  fun `Definitions can be obtained with a user in context and authorised is true`() {
+    webTestClient.get()
+      .uri("/definitions")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().jsonPath("$.length()").isEqualTo(1)
+      .jsonPath("$[0].authorised").isEqualTo("true")
+  }
+
+  @Test
+  fun `Definitions can be obtained with a user in context but incorrect role and authorised is false`() {
+    manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__OTHER"))
+    webTestClient.get()
+      .uri("/definitions")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().jsonPath("$.length()").isEqualTo(1)
+      .jsonPath("$[0].authorised").isEqualTo("false")
+  }
+
+  @Test
+  fun `Definitions can be obtained without a user in context but authorised is false`() {
+    webTestClient.get()
+      .uri("/definitions")
+      .headers(setAuthorisation(user = null, roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody().jsonPath("$.length()").isEqualTo(1)
+      .jsonPath("$[0].authorised").isEqualTo("false")
+  }
+
+  @Test
+  fun `Definition details is forbidden without a user in context`() {
+    webTestClient.get()
+      .uri("/definitions/external-movements/last-month")
+      .headers(setAuthorisation(user = null, roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
   fun `Single definition is returned in expected format`() {
     try {
       prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
