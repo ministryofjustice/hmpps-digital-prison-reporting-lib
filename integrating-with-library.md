@@ -2,11 +2,15 @@
 To integrate the library into your project you will need to add the dependency to your build.gradle file, e.g:
 `implementation("uk.gov.justice.service.hmpps:hmpps-digital-prison-reporting-lib:1.0.0")`
 
-You will also need to use or extended the AuthAwareAuthenticationToken class in your Spring Security configuration as your Authentication implementation in order to pass the list of active caseload ids since this is used
-for row level security in the library. 
-The JWT token is needed to retrieve the caseload user details and this can be done simply by calling the getActiveCaseloadIds method of the CaseloadProvider and passing the JWT as a parameter.
-An example can be found [here](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-lib/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/digitalprisonreportinglib/security/DefaultDprAuthAwareTokenConverter.kt#L13).
-The AuthAwareAuthenticationToken can then be used in your controllers to retrieve the caseload ids should you need to implement row level security. 
+To support row level security you will need to implement the `DprAuthAwareAuthenticationToken` interface and provide a `UserPermissionProvider` implementation.
+A default implementation is provided with the library and can be used by setting the `dpr.lib.system.role` property to enable it. In addition, a `WebClient` bean of name `manageUsersWebClient` must be provided configured with its own system token and having the role `USER_PERMISSIONS__RO`.  
+This allows policy checks (for the user's roles) and caseloads to be retrieved from the manage users API allowing filtering of the data based on the users caseloads.  
+The call to this API is made using a system client token and the username of the user present in the application should be passed as a request parameter when generating the system token.  This will 
+allow the library to extract the username from the token and use it to retrieve the user's roles and caseloads.  
+
+An example of its can be seen in this example where the [username passed in the call to hmpps auth server]( https://github.com/ministryofjustice/hmpps-incident-reporting/blob/main/server/middleware/setSystemToken.ts#L9-L16) and the system token is passed in the UI library call [here](https://github.com/ministryofjustice/hmpps-incident-reporting/blob/main/server/routes/dpr/index.ts#L31-L33) 
+The client API making use of this library will need to implement their own `ResourceServerConfiguration` if they want to override the default implementation, but will need to chain the [securityFilterChain](https://github.com/ministryofjustice/hmpps-incident-reporting-api/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/incidentreporting/config/ResourceServerConfiguration.kt#L13-L17) to make sure the DPR library security filter is applied.
+ 
 
 ### Open API Docs
 The API documentation is generated via the following dependency:
