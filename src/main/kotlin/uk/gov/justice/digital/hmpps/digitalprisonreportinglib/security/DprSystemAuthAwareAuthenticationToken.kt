@@ -25,7 +25,7 @@ class DprSystemAuthAwareAuthenticationToken(
     if (this.activeCaseload == null) {
       this.activeCaseload = this.userName?.let {
         userPermissionProvider.getActiveCaseloadId(it)
-      } ?: "NO_CASELOAD"
+      }
     }
     return this.activeCaseload
   }
