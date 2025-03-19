@@ -21,7 +21,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.jdbc.UncategorizedSQLException
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -305,7 +304,7 @@ class AsyncDataApiServiceTest {
     val caseload = "caseloadA"
     whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
+    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = "(establishment_id='$caseload')"
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
@@ -396,7 +395,7 @@ class AsyncDataApiServiceTest {
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.authorities).thenReturn(listOf(SimpleGrantedAuthority("ROLE_PRISONS_REPORTING_USER")))
+    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(
@@ -479,6 +478,42 @@ class AsyncDataApiServiceTest {
     assertEquals(statementExecutionStatus, actual)
   }
 
+  @Test
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when getDashboardStatementStatus is called`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithDashboard.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
+    val statementId = "statementId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val resultRows = 10L
+    val resultSize = 100L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      resultRows,
+      resultSize,
+    )
+    whenever(
+      redshiftDataApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.getDashboardStatementStatus(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", authToken)
+    verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
+    verifyNoInteractions(athenaApiRepository)
+    assertEquals(statementExecutionStatus, actual)
+  }
+
   @ParameterizedTest
   @ValueSource(strings = ["productDefinitionNomis.json", "productDefinitionBodmis.json"])
   fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getStatementStatus is called`(definitionFile: String) {
@@ -511,6 +546,48 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month", authToken)
+    verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
+    verifyNoInteractions(redshiftDataApiRepository)
+    assertEquals(statementExecutionStatus, actual)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["NOMIS", "BODMIS"])
+  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getDashboardStatementStatus is called`(datasourceName: String) {
+    val productDefinitionRepository = mock<ProductDefinitionRepository>()
+    val singleReportProductDefinition = mock<SingleDashboardProductDefinition>()
+    val datasource = mock<Datasource>()
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
+    val definitionId = "definitionId"
+    val dashboardId = "test-dashboard"
+    val statementId = "statementId"
+    val status = "FINISHED"
+    val duration = 278109264L
+    val resultRows = 10L
+    val resultSize = 100L
+    val statementExecutionStatus = StatementExecutionStatus(
+      status,
+      duration,
+      resultRows,
+      resultSize,
+    )
+    whenever(
+      productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId),
+    ).thenReturn(singleReportProductDefinition)
+    whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
+    whenever(datasource.name).thenReturn(datasourceName)
+    whenever(
+      athenaApiRepository.getStatementStatus(statementId),
+    ).thenReturn(statementExecutionStatus)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.getDashboardStatementStatus(statementId, definitionId, dashboardId, authToken)
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionStatus, actual)
@@ -662,6 +739,35 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", authToken)
+    verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
+    verifyNoInteractions(athenaApiRepository)
+    assertEquals(statementCancellationResponse, actual)
+  }
+
+  @Test
+  fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when cancelDashboardStatementExecution is called`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithDashboard.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
+    val statementId = "statementId"
+    val statementCancellationResponse = StatementCancellationResponse(
+      true,
+    )
+    whenever(
+      redshiftDataApiRepository.cancelStatementExecution(statementId),
+    ).thenReturn(statementCancellationResponse)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", authToken)
     verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -823,6 +929,39 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", authToken)
+    verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
+    verifyNoInteractions(redshiftDataApiRepository)
+    assertEquals(statementCancellationResponse, actual)
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = ["NOMIS", "BODMIS"])
+  fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when cancelDashboardStatementExecution is called`(datasourceName: String) {
+    val productDefinitionRepository = mock<ProductDefinitionRepository>()
+    val singleReportProductDefinition = mock<SingleDashboardProductDefinition>()
+    val datasource = mock<Datasource>()
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
+    val definitionId = "definitionId"
+    val dashboardId = "test-dashboard"
+    val statementId = "statementId"
+    val statementCancellationResponse = StatementCancellationResponse(true)
+    whenever(
+      productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId),
+    ).thenReturn(singleReportProductDefinition)
+    whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
+    whenever(datasource.name).thenReturn(datasourceName)
+    whenever(
+      athenaApiRepository.cancelStatementExecution(statementId),
+    ).thenReturn(statementCancellationResponse)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, definitionId, dashboardId, authToken)
     verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementCancellationResponse, actual)

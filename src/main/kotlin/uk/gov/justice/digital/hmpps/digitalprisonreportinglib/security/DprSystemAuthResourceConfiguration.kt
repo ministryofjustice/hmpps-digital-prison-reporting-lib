@@ -13,12 +13,11 @@ import uk.gov.justice.hmpps.kotlin.auth.HmppsResourceServerConfiguration
 import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomizer
 
 @Configuration("dprResourceServerConfiguration")
-@ConditionalOnProperty(name = ["dpr.lib.user.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
-@Deprecated("Use DprSystemAuthResourceConfiguration instead")
+@ConditionalOnProperty(name = ["dpr.lib.system.role", "spring.security.oauth2.resourceserver.jwt.jwk-set-uri"])
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
-class DprResourceServerConfiguration(
-  private val caseloadProvider: CaseloadProvider,
-  @Value("\${dpr.lib.user.role}") private val authorisedRole: String,
+class DprSystemAuthResourceConfiguration(
+  private val userPermissionProvider: UserPermissionProvider,
+  @Value("\${dpr.lib.system.role}") private val systemRole: String,
 ) {
 
   @Order(1)
@@ -30,8 +29,8 @@ class DprResourceServerConfiguration(
 
   @Bean
   fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
-    oauth2 { tokenConverter = DefaultDprAuthAwareTokenConverter(caseloadProvider) }
+    oauth2 { tokenConverter = DprSystemAuthAwareTokenConverter(userPermissionProvider) }
     securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**") }
-    anyRequestRole { defaultRole = authorisedRole.removePrefix("ROLE_") }
+    anyRequestRole { defaultRole = systemRole.removePrefix("ROLE_") }
   }
 }

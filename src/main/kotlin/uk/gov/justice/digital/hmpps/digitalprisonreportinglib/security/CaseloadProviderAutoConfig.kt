@@ -10,9 +10,10 @@ import org.springframework.web.reactive.function.client.WebClient
 
 @Configuration
 @ConditionalOnProperty(name = ["dpr.lib.caseloads.host"])
+@Deprecated("Use UserPermissionProviderAutoConfig instead")
 class CaseloadProviderAutoConfig(
   @Value("\${dpr.lib.caseloads.host}") private val caseloadHost: String,
-  @Value("\${dpr.lib.caseloads.path:me/caseloads}") private val caseloadPath: String,
+  @Value("\${dpr.lib.caseloads.path:users/me/caseloads}") private val caseloadPath: String,
 ) {
 
   @Bean
