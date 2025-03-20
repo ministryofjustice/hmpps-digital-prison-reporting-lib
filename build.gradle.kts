@@ -25,7 +25,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.12.1")
-  implementation("com.google.guava:guava:33.4.0-jre")
+  implementation("com.google.guava:guava:33.4.5-jre")
 
   // AWS
   implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")
