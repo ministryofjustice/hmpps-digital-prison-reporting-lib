@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisationColumn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasetQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
@@ -59,9 +60,12 @@ class DashboardDefinitionMapper(
       },
       filterFields = dataset.schema.field
         .filter { it.filter != null }
-        .map { toFilterField(it, allDatasets, userToken) } + maybeConvertToReportFields(dataset.parameters),
+        .map { toFilterField(it, allDatasets, userToken) } +
+        (dataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.let { collectAllParametersAndMapToDistinctReportFields(it) } ?: maybeConvertToReportFields(dataset.parameters)),
     )
   }
+
+  private fun collectAllParametersAndMapToDistinctReportFields(queries: List<DatasetQuery>): List<FieldDefinition> = queries.map { maybeConvertToReportFields(it.parameters) }.filterNot { it.isEmpty() }.flatten().distinct()
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
     DashboardVisualisationColumnDefinition(

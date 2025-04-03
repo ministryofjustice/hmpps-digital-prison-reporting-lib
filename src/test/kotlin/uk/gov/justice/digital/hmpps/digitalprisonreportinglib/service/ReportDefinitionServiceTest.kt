@@ -53,8 +53,8 @@ class ReportDefinitionServiceTest {
   private val dataset = Dataset(
     id = "10",
     name = "11",
-    query = "12",
     datasource = "12A",
+    query = "12",
     schema = Schema(emptyList()),
   )
 

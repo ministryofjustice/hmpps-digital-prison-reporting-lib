@@ -96,6 +96,7 @@ class AsyncDataApiService(
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
         preGeneratedDatasetTableId = preGeneratedTableId,
+        multiphaseQuery = productDefinition.reportDataset.multiphaseQuery,
       )
   }
 
@@ -129,6 +130,7 @@ class AsyncDataApiService(
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.dashboard.id,
         reportOrDashboardName = productDefinition.dashboard.name,
+        multiphaseQuery = productDefinition.dashboardDataset.multiphaseQuery,
       )
   }
 

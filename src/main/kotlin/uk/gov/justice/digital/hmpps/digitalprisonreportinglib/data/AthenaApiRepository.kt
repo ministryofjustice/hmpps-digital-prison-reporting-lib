@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasetQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
@@ -56,6 +57,196 @@ class AthenaApiRepository(
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String?,
+    multiphaseQuery: List<DatasetQuery>?,
+  ): StatementExecutionResponse = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
+    executeMultiphaseQuery(
+      productDefinitionId,
+      productDefinitionName,
+      reportOrDashboardId,
+      reportOrDashboardName,
+      userToken,
+      prompts,
+      reportFilter,
+      policyEngineResult,
+      sortColumn,
+      sortedAsc,
+      datasource,
+      it,
+    )
+  }
+    ?: executeSingleQuery(
+      productDefinitionId,
+      productDefinitionName,
+      reportOrDashboardId,
+      reportOrDashboardName,
+      userToken,
+      prompts,
+      query,
+      reportFilter,
+      policyEngineResult,
+      dynamicFilterFieldId,
+      sortColumn,
+      sortedAsc,
+      datasource,
+    )
+
+  private fun executeMultiphaseQuery(
+    productDefinitionId: String,
+    productDefinitionName: String,
+    reportOrDashboardId: String,
+    reportOrDashboardName: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    prompts: List<Prompt>?,
+    reportFilter: ReportFilter?,
+    policyEngineResult: String,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    datasource: Datasource,
+    multiphaseQuery: List<DatasetQuery>,
+  ): StatementExecutionResponse {
+    val multiphaseQuerySortedByIndex = multiphaseQuery.sortedBy { it.index }
+    val firstTableId = tableIdGenerator.generateNewExternalTableId()
+    val firstQuery = """
+            /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+            CREATE TABLE AwsDataCatalog.reports.$firstTableId 
+            WITH (
+              format = 'PARQUET'
+            ) 
+            AS (
+            SELECT * FROM TABLE(system.query(query =>
+             '${
+      listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(multiphaseQuerySortedByIndex[0].query))
+        .joinToString(",") +
+        "\nSELECT * FROM $DATASET_"
+          .replace("'", "''")
+    }'
+             )) 
+            );
+    """.trimIndent()
+    log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
+    val statementExecutionResponse = executeQueryAsync(datasource, firstTableId, firstQuery)
+    val jdbcTemplate = populateJdbcTemplate(datasource.name)
+    val insertStatement: String =
+      buildInsertStatement(
+        rootExecutionId = statementExecutionResponse.executionId,
+        currentExecutionId = statementExecutionResponse.executionId,
+        datasourceName = datasource.name,
+        datasourceCatalog = datasource.catalog,
+        datasourceDatabase = datasource.database,
+        index = multiphaseQuerySortedByIndex[0].index,
+        query = multiphaseQuerySortedByIndex[0].query,
+      )
+    log.debug("Inserting into admin table: {}", insertStatement)
+    jdbcTemplate.execute(insertStatement)
+    var previousTableId = firstTableId
+    List(
+      multiphaseQuerySortedByIndex
+        .drop(1)
+        .dropLast(1).size,
+    ) { i ->
+      val currentTableId = tableIdGenerator.generateNewExternalTableId()
+      val intermediaryQuery = """
+          /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+              CREATE TABLE AwsDataCatalog.reports.$currentTableId
+              WITH (
+                format = 'PARQUET'
+              ) 
+              AS (
+              ${listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(multiphaseQuerySortedByIndex[i + 1].query))
+        .joinToString(",") +
+        "\nSELECT * FROM $DATASET_"
+          .replace("\${tableId}", previousTableId)
+      }
+              )
+      """.trimIndent()
+      val insertQuery = buildInsertStatement(
+        rootExecutionId = statementExecutionResponse.executionId,
+        datasourceName = multiphaseQuerySortedByIndex.last().datasource.name,
+        datasourceCatalog = multiphaseQuerySortedByIndex.last().datasource.catalog,
+        datasourceDatabase = multiphaseQuerySortedByIndex.last().datasource.database,
+        index = multiphaseQuerySortedByIndex[i + 1].index,
+        query = intermediaryQuery,
+      )
+      log.debug("Inserting into admin table: {}", insertQuery)
+      jdbcTemplate.execute(insertQuery)
+      previousTableId = currentTableId
+    }
+    val lastTableId = tableIdGenerator.generateNewExternalTableId()
+    val lastQuery = """
+      /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+              CREATE TABLE AwsDataCatalog.reports.$lastTableId
+              WITH (
+                format = 'PARQUET'
+              ) 
+              AS (
+               ${buildFinalQuery(
+      buildContextQuery(userToken),
+      buildPromptsQuery(prompts),
+      buildDatasetQuery(multiphaseQuerySortedByIndex.last().query),
+      buildReportQuery(reportFilter),
+      buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
+      buildFinalStageQuery(sortColumn = sortColumn, sortedAsc = sortedAsc),
+    )
+      .replace("\${tableId}", previousTableId)}
+              )
+    """.trimIndent()
+    val lastInsertStatement = buildInsertStatement(
+      rootExecutionId = statementExecutionResponse.executionId,
+      datasourceName = multiphaseQuerySortedByIndex.last().datasource.name,
+      datasourceCatalog = multiphaseQuerySortedByIndex.last().datasource.catalog,
+      datasourceDatabase = multiphaseQuerySortedByIndex.last().datasource.database,
+      index = multiphaseQuerySortedByIndex.last().index,
+      query = lastQuery,
+    )
+    log.debug("Inserting into admin table: {}", lastInsertStatement)
+    jdbcTemplate.execute(lastInsertStatement)
+    return statementExecutionResponse
+  }
+
+  private fun buildInsertStatement(
+    rootExecutionId: String,
+    currentExecutionId: String? = null,
+    datasourceName: String,
+    datasourceCatalog: String? = null,
+    datasourceDatabase: String? = null,
+    index: Int,
+    query: String,
+  ) = """insert into 
+          admin.execution_manager (
+          root_execution_id,
+          ${currentExecutionId?.let { "current_execution_id,"} ?: ""}
+          datasource,
+          ${datasourceCatalog?.let { "catalog,"} ?: "" }
+          ${datasourceDatabase?.let { "database," } ?: "" }
+          index,
+          query
+          )
+          values (
+            $rootExecutionId,
+            ${currentExecutionId?.let { "$it," } ?: ""}
+            $datasourceName,
+            ${datasourceCatalog?.let { "$it," } ?: ""}
+            ${datasourceDatabase?.let { "$it," } ?: ""}
+            $index,
+            $query
+          )
+  """.trimMargin()
+
+  private fun executeSingleQuery(
+    productDefinitionId: String,
+    productDefinitionName: String,
+    reportOrDashboardId: String,
+    reportOrDashboardName: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    prompts: List<Prompt>?,
+    query: String,
+    reportFilter: ReportFilter?,
+    policyEngineResult: String,
+    dynamicFilterFieldId: Set<String>?,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    datasource: Datasource,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val finalQuery = """

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasetQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
@@ -38,6 +39,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String? = null,
+    multiphaseQuery: List<DatasetQuery>? = null,
   ): StatementExecutionResponse
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus

@@ -223,8 +223,8 @@ class SyncDataApiServiceTest {
     val filterDataset = Dataset(
       id = "establishment-dataset",
       name = "establishment-dataset-name",
-      query = "select * from table",
       datasource = "redshift",
+      query = "select * from table",
       schema = Schema(
         listOf(
           SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code", null),
@@ -1207,7 +1207,13 @@ class SyncDataApiServiceTest {
   @Test
   fun `should call the configuredApiRepository with no sort column if none is provided and there is no default`() {
     val dataSet =
-      Dataset("datasetId", "datasetname", "redshift", "select *", Schema(listOf(SchemaField("9", ParameterType.String, display = "", filter = null))))
+      Dataset(
+        "datasetId",
+        "datasetname",
+        "redshift",
+        "select *",
+        Schema(listOf(SchemaField("9", ParameterType.String, display = "", filter = null))),
+      )
     val report = Report(
       id = "6",
       name = "7",

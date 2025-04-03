@@ -387,6 +387,7 @@ class AsyncDataApiServiceTest {
     whenever(dashboard.filter).thenReturn(mock<ReportFilter>())
     whenever(singleDashboardProductDefinition.dashboardDataset).thenReturn(dashboardDataset)
     whenever(dashboardDataset.query).thenReturn(query)
+    whenever(dashboardDataset.multiphaseQuery).thenReturn(null)
     whenever(dashboardDataset.schema).thenReturn(schema)
     whenever(schema.field).thenReturn(listOf(field))
     whenever(field.name).thenReturn("fieldName")
@@ -1364,9 +1365,8 @@ class AsyncDataApiServiceTest {
   private fun dataset(schedule: String? = null): Dataset = Dataset(
     id = "10",
     name = "11",
-    query = "12",
     datasource = "12A",
-    schedule = schedule,
+    query = "12",
     schema = Schema(
       field = listOf(
         SchemaField(
@@ -1377,6 +1377,7 @@ class AsyncDataApiServiceTest {
         ),
       ),
     ),
+    schedule = schedule,
   )
 
   private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {
