@@ -116,12 +116,11 @@ class AthenaApiRepository(
             ) 
             AS (
             SELECT * FROM TABLE(system.query(query =>
-             '${
+             '${(
       listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(multiphaseQuerySortedByIndex[0].query))
         .joinToString(",") +
         "\nSELECT * FROM $DATASET_"
-          .replace("'", "''")
-    }'
+      ).replace("'", "''")}'
              )) 
             );
     """.trimIndent()

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.UncategorizedSQLException
@@ -48,6 +49,7 @@ class AsyncDataApiService(
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
     const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
     const val FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE = "Filter value does not match pattern:"
+    private val log = LoggerFactory.getLogger(this::class.java)
   }
 
   private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
@@ -116,6 +118,9 @@ class AsyncDataApiService(
     checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition.dashboardDataset.parameters)
+    log.debug("All filters from user are: {}", filters)
+    log.debug("Prompts are: {}", promptsMap)
+    log.debug("Filters only are: {}", filtersOnly)
     return getRepo(productDefinition.datasource.name)
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false),
