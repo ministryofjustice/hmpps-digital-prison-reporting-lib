@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AggregateTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
@@ -30,6 +31,11 @@ class DashboardDefinitionMapper(
   identifiedHelper: IdentifiedHelper,
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
 ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
+
   fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>, userToken: DprAuthAwareAuthenticationToken? = null): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
@@ -65,7 +71,12 @@ class DashboardDefinitionMapper(
     )
   }
 
-  private fun collectAllParametersAndMapToDistinctReportFields(queries: List<DatasetQuery>): List<FieldDefinition> = queries.map { maybeConvertToReportFields(it.parameters) }.filterNot { it.isEmpty() }.flatten().distinct()
+  private fun collectAllParametersAndMapToDistinctReportFields(queries: List<DatasetQuery>): List<FieldDefinition> {
+    val distinctParameters =
+      queries.map { maybeConvertToReportFields(it.parameters) }.filterNot { it.isEmpty() }.flatten().distinct()
+    log.debug("Distinct multiphase converted fields from parameters: $distinctParameters")
+    return distinctParameters
+  }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
     DashboardVisualisationColumnDefinition(
