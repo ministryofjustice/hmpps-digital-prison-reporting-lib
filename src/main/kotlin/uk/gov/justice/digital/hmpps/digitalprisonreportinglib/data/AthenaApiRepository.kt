@@ -28,6 +28,8 @@ const val QUERY_STARTED = "STARTED"
 const val QUERY_FINISHED = "FINISHED"
 const val QUERY_ABORTED = "ABORTED"
 const val QUERY_FAILED = "FAILED"
+const val QUERY_SUCCEEDED = "SUCCEEDED"
+const val QUERY_CANCELLED = "CANCELLED"
 
 @Service
 @Primary
@@ -104,6 +106,8 @@ class AthenaApiRepository(
     datasource: Datasource,
     multiphaseQuery: List<DatasetQuery>,
   ): StatementExecutionResponse {
+    // 1. datasource needs to come from multiphase query
+    // 2. table ID returned needs to be the last one
     val multiphaseQuerySortedByIndex = multiphaseQuery.sortedBy { it.index }
     val firstTableId = tableIdGenerator.generateNewExternalTableId()
     val firstQuery = """
@@ -124,15 +128,16 @@ class AthenaApiRepository(
             );
     """.trimIndent()
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
-    val statementExecutionResponse = executeQueryAsync(datasource, firstTableId, firstQuery)
-    val jdbcTemplate = populateJdbcTemplate(datasource.name)
+    val firstQueryDatasource = multiphaseQuerySortedByIndex[0].datasource
+    val statementExecutionResponse = executeQueryAsync(firstQueryDatasource, firstTableId, firstQuery)
+    val jdbcTemplate = populateJdbcTemplate(firstQueryDatasource.name)
     val insertStatement: String =
       buildInsertStatement(
         rootExecutionId = statementExecutionResponse.executionId,
         currentExecutionId = statementExecutionResponse.executionId,
-        datasourceName = datasource.name,
-        datasourceCatalog = datasource.catalog,
-        datasourceDatabase = datasource.database,
+        datasourceName = firstQueryDatasource.name,
+        datasourceCatalog = firstQueryDatasource.catalog,
+        datasourceDatabase = firstQueryDatasource.database,
         index = multiphaseQuerySortedByIndex[0].index,
         query = multiphaseQuerySortedByIndex[0].query,
       )
@@ -145,27 +150,29 @@ class AthenaApiRepository(
         .dropLast(1).size,
     ) { i ->
       val currentTableId = tableIdGenerator.generateNewExternalTableId()
-      val intermediaryQuery = """
+      val intermediateQuery = multiphaseQuerySortedByIndex[i + 1]
+      val intermediateQueryString = """
           /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
               CREATE TABLE AwsDataCatalog.reports.$currentTableId
               WITH (
                 format = 'PARQUET'
               ) 
               AS (
-              ${listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(multiphaseQuerySortedByIndex[i + 1].query))
+              ${listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(intermediateQuery.query))
         .joinToString(",") +
         "\nSELECT * FROM $DATASET_"
           .replace("\${tableId}", previousTableId)
       }
               )
       """.trimIndent()
+      log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)
       val insertQuery = buildInsertStatement(
         rootExecutionId = statementExecutionResponse.executionId,
-        datasourceName = multiphaseQuerySortedByIndex.last().datasource.name,
-        datasourceCatalog = multiphaseQuerySortedByIndex.last().datasource.catalog,
-        datasourceDatabase = multiphaseQuerySortedByIndex.last().datasource.database,
-        index = multiphaseQuerySortedByIndex[i + 1].index,
-        query = intermediaryQuery,
+        datasourceName = intermediateQuery.datasource.name,
+        datasourceCatalog = intermediateQuery.datasource.catalog,
+        datasourceDatabase = intermediateQuery.datasource.database,
+        index = intermediateQuery.index,
+        query = intermediateQueryString,
       )
       log.debug("Inserting into admin table: {}", insertQuery)
       jdbcTemplate.execute(insertQuery)
@@ -191,6 +198,7 @@ class AthenaApiRepository(
       .replace("\${tableId}", previousTableId)}
               )
     """.trimIndent()
+    log.debug("Last multiphase query: {}", lastQuery)
     val lastInsertStatement = buildInsertStatement(
       rootExecutionId = statementExecutionResponse.executionId,
       datasourceName = multiphaseQuerySortedByIndex.last().datasource.name,
@@ -201,7 +209,7 @@ class AthenaApiRepository(
     )
     log.debug("Inserting into admin table: {}", lastInsertStatement)
     jdbcTemplate.execute(lastInsertStatement)
-    return statementExecutionResponse
+    return StatementExecutionResponse(lastTableId, statementExecutionResponse.executionId)
   }
 
   private fun buildInsertStatement(
@@ -366,8 +374,8 @@ class AthenaApiRepository(
     val athenaToRedshiftStateMappings = mapOf(
       "QUEUED" to "SUBMITTED",
       "RUNNING" to QUERY_STARTED,
-      "SUCCEEDED" to QUERY_FINISHED,
-      "CANCELLED" to QUERY_ABORTED,
+      QUERY_SUCCEEDED to QUERY_FINISHED,
+      QUERY_CANCELLED to QUERY_ABORTED,
     )
     return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }

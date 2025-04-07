@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
@@ -149,6 +150,17 @@ class AsyncDataApiService(
   fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
+    return productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
+      getRepo(productDefinition.datasource.name).getStatementStatusForMultiphaseQuery(statementId)
+    }
+      ?: getStatusOrThrowIfTableIsMissing(productDefinition, statementId, tableId)
+  }
+
+  private fun getStatusOrThrowIfTableIsMissing(
+    productDefinition: SingleDashboardProductDefinition,
+    statementId: String,
+    tableId: String?,
+  ): StatementExecutionStatus {
     val statementStatus = getRepo(productDefinition.datasource.name).getStatementStatus(statementId)
     tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
       if (redshiftDataApiRepository.isTableMissing(tableId)) {

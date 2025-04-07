@@ -556,8 +556,9 @@ class AsyncDataApiServiceTest {
   @ValueSource(strings = ["NOMIS", "BODMIS"])
   fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getDashboardStatementStatus is called`(datasourceName: String) {
     val productDefinitionRepository = mock<ProductDefinitionRepository>()
-    val singleReportProductDefinition = mock<SingleDashboardProductDefinition>()
+    val singleDashboardProductDefinition = mock<SingleDashboardProductDefinition>()
     val datasource = mock<Datasource>()
+    val dashboardDataset = mock<Dataset>()
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val definitionId = "definitionId"
     val dashboardId = "test-dashboard"
@@ -574,8 +575,9 @@ class AsyncDataApiServiceTest {
     )
     whenever(
       productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId),
-    ).thenReturn(singleReportProductDefinition)
-    whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
+    ).thenReturn(singleDashboardProductDefinition)
+    whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
+    whenever(singleDashboardProductDefinition.dashboardDataset).thenReturn(dashboardDataset)
     whenever(datasource.name).thenReturn(datasourceName)
     whenever(
       athenaApiRepository.getStatementStatus(statementId),

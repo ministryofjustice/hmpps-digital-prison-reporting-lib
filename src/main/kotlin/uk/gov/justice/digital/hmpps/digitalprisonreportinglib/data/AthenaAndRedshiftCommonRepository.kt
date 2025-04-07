@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.QueryExecution
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -86,5 +87,62 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result.isNullOrEmpty()
+  }
+
+  fun getStatementStatusForMultiphaseQuery(rootExecutionId: String): StatementExecutionStatus {
+    val executions = getExecutions(rootExecutionId)
+    return executions.firstOrNull { it.currentState == QUERY_FAILED }?.let {
+      return StatementExecutionStatus(
+        status = QUERY_FAILED,
+        duration = 1,
+        resultRows = 0,
+        error = it.error,
+        stateChangeReason = it.error,
+      )
+    }
+      ?: executions.firstOrNull { it.currentState == QUERY_CANCELLED }?.let {
+        return StatementExecutionStatus(
+          status = QUERY_ABORTED,
+          duration = 1,
+          resultRows = 0,
+          resultSize = 0,
+        )
+      }
+      ?: return StatementExecutionStatus(
+        status = executions.maxByOrNull { it.index }!!.currentState!!,
+        duration = 1,
+        resultRows = 0,
+      )
+  }
+
+  private fun getExecutions(rootExecutionId: String): List<QueryExecution> {
+    val jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()
+    val stopwatch = StopWatch.createStarted()
+    val mapSqlParameterSource = MapSqlParameterSource()
+    log.debug("Retrieving query executions...")
+    mapSqlParameterSource.addValue("rootExecutionId", rootExecutionId)
+    val result = jdbcTemplate
+      .queryForList(
+        "SELECT * FROM admin.execution_manager WHERE root_execution_id = :rootExecutionId;",
+        mapSqlParameterSource,
+      )
+      .map {
+        transformTimestampToLocalDateTime(it)
+      }
+    stopwatch.stop()
+    log.debug("Query to get executions for root execution {} completed in {}ms", rootExecutionId, stopwatch.time)
+    return result.map {
+      QueryExecution(
+        rootExecutionId = it["root_execution_id"] as String,
+        currentExecutionId = it["current_execution_id"] as String?,
+        datasource = it["datasource"] as String,
+        catalog = it["catalog"] as String?,
+        database = it["database"] as String?,
+        index = it["index"] as Int,
+        query = it["query"] as String,
+        currentState = it["current_state"] as String?,
+        error = it["error"] as String?,
+      )
+    }
   }
 }
