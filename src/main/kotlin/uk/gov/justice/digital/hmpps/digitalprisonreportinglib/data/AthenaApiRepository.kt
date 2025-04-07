@@ -106,8 +106,6 @@ class AthenaApiRepository(
     datasource: Datasource,
     multiphaseQuery: List<DatasetQuery>,
   ): StatementExecutionResponse {
-    // 1. datasource needs to come from multiphase query
-    // 2. table ID returned needs to be the last one
     val multiphaseQuerySortedByIndex = multiphaseQuery.sortedBy { it.index }
     val firstTableId = tableIdGenerator.generateNewExternalTableId()
     val firstQuery = """
