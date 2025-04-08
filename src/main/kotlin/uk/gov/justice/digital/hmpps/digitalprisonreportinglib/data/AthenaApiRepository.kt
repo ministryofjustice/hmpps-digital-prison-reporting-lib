@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
@@ -27,6 +28,8 @@ const val QUERY_STARTED = "STARTED"
 const val QUERY_FINISHED = "FINISHED"
 const val QUERY_ABORTED = "ABORTED"
 const val QUERY_FAILED = "FAILED"
+const val QUERY_SUCCEEDED = "SUCCEEDED"
+const val QUERY_CANCELLED = "CANCELLED"
 
 @Service
 @Primary
@@ -56,6 +59,199 @@ class AthenaApiRepository(
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String?,
+    multiphaseQuery: List<MultiphaseQuery>?,
+  ): StatementExecutionResponse = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
+    executeMultiphaseQuery(
+      productDefinitionId,
+      productDefinitionName,
+      reportOrDashboardId,
+      reportOrDashboardName,
+      userToken,
+      prompts,
+      reportFilter,
+      policyEngineResult,
+      sortColumn,
+      sortedAsc,
+      datasource,
+      it,
+    )
+  }
+    ?: executeSingleQuery(
+      productDefinitionId,
+      productDefinitionName,
+      reportOrDashboardId,
+      reportOrDashboardName,
+      userToken,
+      prompts,
+      query,
+      reportFilter,
+      policyEngineResult,
+      dynamicFilterFieldId,
+      sortColumn,
+      sortedAsc,
+      datasource,
+    )
+
+  private fun executeMultiphaseQuery(
+    productDefinitionId: String,
+    productDefinitionName: String,
+    reportOrDashboardId: String,
+    reportOrDashboardName: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    prompts: List<Prompt>?,
+    reportFilter: ReportFilter?,
+    policyEngineResult: String,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    datasource: Datasource,
+    multiphaseQuery: List<MultiphaseQuery>,
+  ): StatementExecutionResponse {
+    val multiphaseQuerySortedByIndex = multiphaseQuery.sortedBy { it.index }
+    val firstTableId = tableIdGenerator.generateNewExternalTableId()
+    val firstQuery = """
+            /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+            CREATE TABLE AwsDataCatalog.reports.$firstTableId 
+            WITH (
+              format = 'PARQUET'
+            ) 
+            AS (
+            SELECT * FROM TABLE(system.query(query =>
+             '${(
+      listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(multiphaseQuerySortedByIndex[0].query))
+        .joinToString(",") +
+        "\nSELECT * FROM $DATASET_"
+      ).replace("'", "''")}'
+             )) 
+            );
+    """.trimIndent()
+    log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
+    val firstQueryDatasource = multiphaseQuerySortedByIndex[0].datasource
+    val statementExecutionResponse = executeQueryAsync(firstQueryDatasource, firstTableId, firstQuery)
+    val jdbcTemplate = populateJdbcTemplate(firstQueryDatasource.name)
+    val insertStatement: String =
+      buildInsertStatement(
+        rootExecutionId = statementExecutionResponse.executionId,
+        currentExecutionId = statementExecutionResponse.executionId,
+        datasourceName = firstQueryDatasource.name,
+        datasourceCatalog = firstQueryDatasource.catalog,
+        datasourceDatabase = firstQueryDatasource.database,
+        index = multiphaseQuerySortedByIndex[0].index,
+        query = multiphaseQuerySortedByIndex[0].query,
+      )
+    log.debug("Inserting into admin table: {}", insertStatement)
+    jdbcTemplate.execute(insertStatement)
+    var previousTableId = firstTableId
+    List(
+      multiphaseQuerySortedByIndex
+        .drop(1)
+        .dropLast(1).size,
+    ) { i ->
+      val currentTableId = tableIdGenerator.generateNewExternalTableId()
+      val intermediateQuery = multiphaseQuerySortedByIndex[i + 1]
+      val intermediateQueryString = """
+          /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+              CREATE TABLE AwsDataCatalog.reports.$currentTableId
+              WITH (
+                format = 'PARQUET'
+              ) 
+              AS (
+              ${listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(intermediateQuery.query))
+        .joinToString(",") +
+        "\nSELECT * FROM $DATASET_"
+          .replace("\${tableId}", previousTableId)
+      }
+              )
+      """.trimIndent()
+      log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)
+      val insertQuery = buildInsertStatement(
+        rootExecutionId = statementExecutionResponse.executionId,
+        datasourceName = intermediateQuery.datasource.name,
+        datasourceCatalog = intermediateQuery.datasource.catalog,
+        datasourceDatabase = intermediateQuery.datasource.database,
+        index = intermediateQuery.index,
+        query = intermediateQueryString,
+      )
+      log.debug("Inserting into admin table: {}", insertQuery)
+      jdbcTemplate.execute(insertQuery)
+      previousTableId = currentTableId
+    }
+    val lastTableId = tableIdGenerator.generateNewExternalTableId()
+    val lastQuery = """
+      /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+              CREATE TABLE AwsDataCatalog.reports.$lastTableId
+              WITH (
+                format = 'PARQUET'
+              ) 
+              AS (
+               ${buildFinalQuery(
+      buildContextQuery(userToken),
+      buildPromptsQuery(prompts),
+      buildDatasetQuery(multiphaseQuerySortedByIndex.last().query),
+      buildReportQuery(reportFilter),
+      buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
+      buildFinalStageQuery(sortColumn = sortColumn, sortedAsc = sortedAsc),
+    )
+      .replace("\${tableId}", previousTableId)}
+              )
+    """.trimIndent()
+    log.debug("Last multiphase query: {}", lastQuery)
+    val lastInsertStatement = buildInsertStatement(
+      rootExecutionId = statementExecutionResponse.executionId,
+      datasourceName = multiphaseQuerySortedByIndex.last().datasource.name,
+      datasourceCatalog = multiphaseQuerySortedByIndex.last().datasource.catalog,
+      datasourceDatabase = multiphaseQuerySortedByIndex.last().datasource.database,
+      index = multiphaseQuerySortedByIndex.last().index,
+      query = lastQuery,
+    )
+    log.debug("Inserting into admin table: {}", lastInsertStatement)
+    jdbcTemplate.execute(lastInsertStatement)
+    return StatementExecutionResponse(lastTableId, statementExecutionResponse.executionId)
+  }
+
+  private fun buildInsertStatement(
+    rootExecutionId: String,
+    currentExecutionId: String? = null,
+    datasourceName: String,
+    datasourceCatalog: String? = null,
+    datasourceDatabase: String? = null,
+    index: Int,
+    query: String,
+  ) = """insert into 
+          admin.execution_manager (
+          root_execution_id,
+          ${currentExecutionId?.let { "current_execution_id,"} ?: ""}
+          datasource,
+          ${datasourceCatalog?.let { "catalog,"} ?: "" }
+          ${datasourceDatabase?.let { "database," } ?: "" }
+          index,
+          query
+          )
+          values (
+            $rootExecutionId,
+            ${currentExecutionId?.let { "$it," } ?: ""}
+            $datasourceName,
+            ${datasourceCatalog?.let { "$it," } ?: ""}
+            ${datasourceDatabase?.let { "$it," } ?: ""}
+            $index,
+            $query
+          )
+  """.trimMargin()
+
+  private fun executeSingleQuery(
+    productDefinitionId: String,
+    productDefinitionName: String,
+    reportOrDashboardId: String,
+    reportOrDashboardName: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    prompts: List<Prompt>?,
+    query: String,
+    reportFilter: ReportFilter?,
+    policyEngineResult: String,
+    dynamicFilterFieldId: Set<String>?,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    datasource: Datasource,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val finalQuery = """
@@ -175,8 +371,8 @@ class AthenaApiRepository(
     val athenaToRedshiftStateMappings = mapOf(
       "QUEUED" to "SUBMITTED",
       "RUNNING" to QUERY_STARTED,
-      "SUCCEEDED" to QUERY_FINISHED,
-      "CANCELLED" to QUERY_ABORTED,
+      QUERY_SUCCEEDED to QUERY_FINISHED,
+      QUERY_CANCELLED to QUERY_ABORTED,
     )
     return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }

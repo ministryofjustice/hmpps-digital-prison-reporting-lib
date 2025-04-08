@@ -34,8 +34,8 @@ class ReportDefinitionSummaryMapperTest {
   private val fullDataset = Dataset(
     id = "10",
     name = "11",
-    query = "12",
     datasource = "12A",
+    query = "12",
     schema = Schema(
       field = listOf(
         SchemaField(
@@ -159,8 +159,8 @@ class ReportDefinitionSummaryMapperTest {
         Dataset(
           id = "10",
           name = "11",
-          query = "12",
           datasource = "12A",
+          query = "12",
           schema = Schema(
             field = emptyList(),
           ),
