@@ -136,7 +136,7 @@ class AthenaApiRepository(
         datasourceCatalog = firstQueryDatasource.catalog,
         datasourceDatabase = firstQueryDatasource.database,
         index = multiphaseQuerySortedByIndex[0].index,
-        query = multiphaseQuerySortedByIndex[0].query,
+        query = firstQuery.replace("'", "''"),
       )
     log.debug("Inserting into admin table: {}", insertStatement)
     jdbcTemplate.execute(insertStatement)
@@ -169,7 +169,7 @@ class AthenaApiRepository(
         datasourceCatalog = intermediateQuery.datasource.catalog,
         datasourceDatabase = intermediateQuery.datasource.database,
         index = intermediateQuery.index,
-        query = intermediateQueryString,
+        query = intermediateQueryString.replace("'","''"),
       )
       log.debug("Inserting into admin table: {}", insertQuery)
       jdbcTemplate.execute(insertQuery)
@@ -202,7 +202,7 @@ class AthenaApiRepository(
       datasourceCatalog = multiphaseQuerySortedByIndex.last().datasource.catalog,
       datasourceDatabase = multiphaseQuerySortedByIndex.last().datasource.database,
       index = multiphaseQuerySortedByIndex.last().index,
-      query = lastQuery,
+      query = lastQuery.replace("'", "''"),
     )
     log.debug("Inserting into admin table: {}", lastInsertStatement)
     jdbcTemplate.execute(lastInsertStatement)
