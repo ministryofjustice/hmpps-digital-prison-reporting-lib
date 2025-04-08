@@ -228,13 +228,13 @@ class AthenaApiRepository(
           query
           )
           values (
-            $rootExecutionId,
-            ${currentExecutionId?.let { "$it," } ?: ""}
-            $datasourceName,
-            ${datasourceCatalog?.let { "$it," } ?: ""}
-            ${datasourceDatabase?.let { "$it," } ?: ""}
+            '$rootExecutionId',
+            ${currentExecutionId?.let { "'$it'," } ?: ""}
+            '$datasourceName',
+            ${datasourceCatalog?.let { "'$it'," } ?: ""}
+            ${datasourceDatabase?.let { "'$it'," } ?: ""}
             $index,
-            $query
+            '$query'
           )
   """.trimMargin()
 
