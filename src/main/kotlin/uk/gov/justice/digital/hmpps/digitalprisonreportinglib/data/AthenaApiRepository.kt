@@ -12,9 +12,9 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasetQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
@@ -59,7 +59,7 @@ class AthenaApiRepository(
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String?,
-    multiphaseQuery: List<DatasetQuery>?,
+    multiphaseQuery: List<MultiphaseQuery>?,
   ): StatementExecutionResponse = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
     executeMultiphaseQuery(
       productDefinitionId,
@@ -104,7 +104,7 @@ class AthenaApiRepository(
     sortColumn: String?,
     sortedAsc: Boolean,
     datasource: Datasource,
-    multiphaseQuery: List<DatasetQuery>,
+    multiphaseQuery: List<MultiphaseQuery>,
   ): StatementExecutionResponse {
     val multiphaseQuerySortedByIndex = multiphaseQuery.sortedBy { it.index }
     val firstTableId = tableIdGenerator.generateNewExternalTableId()

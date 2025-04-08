@@ -8,7 +8,7 @@ data class Dataset(
   val schema: Schema,
   val parameters: List<Parameter>? = null,
   val schedule: String? = null,
-  val multiphaseQuery: List<DatasetQuery>? = null,
+  val multiphaseQuery: List<MultiphaseQuery>? = null,
 ) : Identified() {
   override fun getIdentifier() = this.id
 }
