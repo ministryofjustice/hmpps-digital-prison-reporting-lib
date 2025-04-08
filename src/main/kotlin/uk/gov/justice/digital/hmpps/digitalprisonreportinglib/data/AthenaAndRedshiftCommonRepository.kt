@@ -91,6 +91,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
 
   fun getStatementStatusForMultiphaseQuery(rootExecutionId: String): StatementExecutionStatus {
     val executions = getExecutions(rootExecutionId)
+    log.debug("All mapped QueryExecutions: {}", executions)
     return executions.firstOrNull { it.currentState == QUERY_FAILED }?.let {
       return StatementExecutionStatus(
         status = QUERY_FAILED,
@@ -131,6 +132,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
       }
     stopwatch.stop()
     log.debug("Query to get executions for root execution {} completed in {}ms", rootExecutionId, stopwatch.time)
+    log.debug("All execution rows from the admin table: {}", result)
     return result.map {
       QueryExecution(
         rootExecutionId = it["root_execution_id"] as String,
