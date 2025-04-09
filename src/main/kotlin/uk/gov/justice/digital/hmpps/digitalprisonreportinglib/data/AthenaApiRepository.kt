@@ -159,7 +159,7 @@ class AthenaApiRepository(
                 format = 'PARQUET'
               ) 
               AS (
-              ${listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(intermediateQuery.query))
+              ${listOf(buildContextQuery(userToken, false), buildPromptsQuery(prompts, false), buildDatasetQuery(intermediateQuery.query))
         .joinToString(",") +
         "\nSELECT * FROM $DATASET_"
           .replace("\${tableId}", previousTableId)
@@ -188,8 +188,8 @@ class AthenaApiRepository(
               ) 
               AS (
                ${buildFinalQuery(
-      buildContextQuery(userToken),
-      buildPromptsQuery(prompts),
+      buildContextQuery(userToken, false),
+      buildPromptsQuery(prompts, false),
       buildDatasetQuery(multiphaseQuerySortedByIndex.last().query),
       buildReportQuery(reportFilter),
       buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
@@ -336,12 +336,12 @@ class AthenaApiRepository(
 
   override fun buildDatasetQuery(query: String) = if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
-  private fun buildPromptsQuery(prompts: List<Prompt>?): String {
+  private fun buildPromptsQuery(prompts: List<Prompt>?, useDualTable: Boolean = true): String {
     if (prompts.isNullOrEmpty()) {
-      return "$PROMPT AS (SELECT '' FROM DUAL)"
+      return "$PROMPT AS (SELECT '' ${if (useDualTable) "FROM DUAL" else ""})"
     }
     val promptsCte = prompts.joinToString(", ") { prompt -> buildPromptsQueryBasedOnType(prompt) }
-    return "$PROMPT AS (SELECT $promptsCte FROM DUAL)"
+    return "$PROMPT AS (SELECT $promptsCte ${if (useDualTable) "FROM DUAL" else ""})"
   }
 
   private fun buildPromptsQueryBasedOnType(prompt: Prompt): String = when (prompt.type) {
@@ -349,12 +349,12 @@ class AthenaApiRepository(
     else -> "'${prompt.value}' AS ${prompt.name}"
   }
 
-  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String = """WITH $CONTEXT AS (
+  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?, useDualTable: Boolean = true): String = """WITH $CONTEXT AS (
       SELECT 
       '${userToken?.getUsername()}' AS username, 
       '${userToken?.getActiveCaseLoadId()}' AS caseload, 
       'GENERAL' AS account_type 
-      FROM DUAL
+      ${if (useDualTable) "FROM DUAL" else ""}
       )"""
 
   private fun buildFinalQuery(
