@@ -110,10 +110,20 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         )
       }
       ?: return StatementExecutionStatus(
-        status = executions.maxByOrNull { it.index }!!.currentState ?: QUERY_SUBMITTED,
+        status = executions.maxByOrNull { it.index }!!.currentState?.let { mapAthenaStateToRedshiftState(it) } ?: QUERY_SUBMITTED,
         duration = 1,
         resultRows = 0,
       )
+  }
+
+  protected fun mapAthenaStateToRedshiftState(queryState: String): String {
+    val athenaToRedshiftStateMappings = mapOf(
+      QUERY_QUEUED to QUERY_SUBMITTED,
+      QUERY_RUNNING to QUERY_STARTED,
+      QUERY_SUCCEEDED to QUERY_FINISHED,
+      QUERY_CANCELLED to QUERY_ABORTED,
+    )
+    return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }
 
   private fun getExecutions(rootExecutionId: String): List<QueryExecution> {

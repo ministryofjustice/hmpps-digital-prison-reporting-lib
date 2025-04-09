@@ -371,16 +371,6 @@ class AthenaApiRepository(
     return query
   }
 
-  private fun mapAthenaStateToRedshiftState(queryState: String): String {
-    val athenaToRedshiftStateMappings = mapOf(
-      QUERY_QUEUED to QUERY_SUBMITTED,
-      QUERY_RUNNING to QUERY_STARTED,
-      QUERY_SUCCEEDED to QUERY_FINISHED,
-      QUERY_CANCELLED to QUERY_ABORTED,
-    )
-    return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
-  }
-
   private fun calculateDuration(status: QueryExecutionStatus): Long = status.completionDateTime()?.let { completion ->
     status.submissionDateTime()?.let { submission ->
       completion.minusMillis(submission.toEpochMilli()).toEpochMilli() * 1000000
