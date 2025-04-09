@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.util.Base64
 
 const val QUERY_STARTED = "STARTED"
 const val QUERY_FINISHED = "FINISHED"
@@ -30,6 +31,7 @@ const val QUERY_ABORTED = "ABORTED"
 const val QUERY_FAILED = "FAILED"
 const val QUERY_SUCCEEDED = "SUCCEEDED"
 const val QUERY_CANCELLED = "CANCELLED"
+const val QUERY_RUNNING = "RUNNING"
 
 @Service
 @Primary
@@ -234,7 +236,7 @@ class AthenaApiRepository(
             ${datasourceCatalog?.let { "'$it'," } ?: ""}
             ${datasourceDatabase?.let { "'$it'," } ?: ""}
             $index,
-            '${query.replace("'", "''")}'
+            '${Base64.getEncoder().encodeToString(query.toByteArray())}'
           )
   """.trimMargin()
 
@@ -370,7 +372,7 @@ class AthenaApiRepository(
   private fun mapAthenaStateToRedshiftState(queryState: String): String {
     val athenaToRedshiftStateMappings = mapOf(
       "QUEUED" to "SUBMITTED",
-      "RUNNING" to QUERY_STARTED,
+      QUERY_RUNNING to QUERY_STARTED,
       QUERY_SUCCEEDED to QUERY_FINISHED,
       QUERY_CANCELLED to QUERY_ABORTED,
     )

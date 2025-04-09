@@ -110,7 +110,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         )
       }
       ?: return StatementExecutionStatus(
-        status = executions.maxByOrNull { it.index }!!.currentState!!,
+        status = executions.maxByOrNull { it.index }!!.currentState ?: QUERY_RUNNING,
         duration = 1,
         resultRows = 0,
       )
