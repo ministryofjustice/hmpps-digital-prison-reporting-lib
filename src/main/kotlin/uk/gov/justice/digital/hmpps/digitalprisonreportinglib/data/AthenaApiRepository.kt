@@ -35,7 +35,6 @@ const val QUERY_RUNNING = "RUNNING"
 const val QUERY_QUEUED = "QUEUED"
 const val QUERY_SUBMITTED = "SUBMITTED"
 
-
 @Service
 @Primary
 @ConditionalOnBean(AthenaClient::class)
