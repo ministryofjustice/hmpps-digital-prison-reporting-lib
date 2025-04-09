@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-# 8.0.3 - 8.0.4
+# 8.0.3 - 8.0.5
 Added support for multiphase queries for dashboards. This is an experimental feature at this point.
 
 # 8.0.2
