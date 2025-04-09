@@ -32,6 +32,9 @@ const val QUERY_FAILED = "FAILED"
 const val QUERY_SUCCEEDED = "SUCCEEDED"
 const val QUERY_CANCELLED = "CANCELLED"
 const val QUERY_RUNNING = "RUNNING"
+const val QUERY_QUEUED = "QUEUED"
+const val QUERY_SUBMITTED = "SUBMITTED"
+
 
 @Service
 @Primary
@@ -371,7 +374,7 @@ class AthenaApiRepository(
 
   private fun mapAthenaStateToRedshiftState(queryState: String): String {
     val athenaToRedshiftStateMappings = mapOf(
-      "QUEUED" to "SUBMITTED",
+      QUERY_QUEUED to QUERY_SUBMITTED,
       QUERY_RUNNING to QUERY_STARTED,
       QUERY_SUCCEEDED to QUERY_FINISHED,
       QUERY_CANCELLED to QUERY_ABORTED,
