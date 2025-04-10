@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.util.Base64
 
 abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
 
@@ -153,8 +154,10 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         index = it["index"] as Int,
         query = it["query"] as String,
         currentState = it["current_state"] as String?,
-        error = it["error"] as String?,
+        error = base64Decode(it["error"] as String?),
       )
     }
   }
+
+  private fun base64Decode(encoded: String?): String? = encoded?.let { String(Base64.getDecoder().decode(it.removeSurrounding("\"").toByteArray())) }
 }
