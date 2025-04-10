@@ -117,7 +117,7 @@ class AsyncDataApiService(
     )
     checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition.dashboardDataset.parameters)
+    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, extractParameters(productDefinition))
     log.debug("All filters from user are: {}", filters)
     log.debug("Prompts are: {}", promptsMap)
     log.debug("Filters only are: {}", filtersOnly)
@@ -139,6 +139,10 @@ class AsyncDataApiService(
         multiphaseQuery = productDefinition.dashboardDataset.multiphaseQuery,
       )
   }
+
+  private fun extractParameters(productDefinition: SingleDashboardProductDefinition) = productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.mapNotNull { q -> q.parameters }
+    ?.filterNot { p -> p.isEmpty() }?.flatten()?.distinct()
+    ?: productDefinition.dashboardDataset.parameters
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)

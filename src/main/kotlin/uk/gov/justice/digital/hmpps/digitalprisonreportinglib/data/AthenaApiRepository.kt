@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.util.Base64
 
 const val QUERY_STARTED = "STARTED"
 const val QUERY_FINISHED = "FINISHED"
@@ -30,6 +31,9 @@ const val QUERY_ABORTED = "ABORTED"
 const val QUERY_FAILED = "FAILED"
 const val QUERY_SUCCEEDED = "SUCCEEDED"
 const val QUERY_CANCELLED = "CANCELLED"
+const val QUERY_RUNNING = "RUNNING"
+const val QUERY_QUEUED = "QUEUED"
+const val QUERY_SUBMITTED = "SUBMITTED"
 
 @Service
 @Primary
@@ -136,7 +140,7 @@ class AthenaApiRepository(
         datasourceCatalog = firstQueryDatasource.catalog,
         datasourceDatabase = firstQueryDatasource.database,
         index = multiphaseQuerySortedByIndex[0].index,
-        query = multiphaseQuerySortedByIndex[0].query,
+        query = firstQuery,
       )
     log.debug("Inserting into admin table: {}", insertStatement)
     jdbcTemplate.execute(insertStatement)
@@ -155,7 +159,7 @@ class AthenaApiRepository(
                 format = 'PARQUET'
               ) 
               AS (
-              ${listOf(buildContextQuery(userToken), buildPromptsQuery(prompts), buildDatasetQuery(intermediateQuery.query))
+              ${listOf(buildContextQuery(userToken, false), buildPromptsQuery(prompts, false), buildDatasetQuery(intermediateQuery.query))
         .joinToString(",") +
         "\nSELECT * FROM $DATASET_"
           .replace("\${tableId}", previousTableId)
@@ -184,8 +188,8 @@ class AthenaApiRepository(
               ) 
               AS (
                ${buildFinalQuery(
-      buildContextQuery(userToken),
-      buildPromptsQuery(prompts),
+      buildContextQuery(userToken, false),
+      buildPromptsQuery(prompts, false),
       buildDatasetQuery(multiphaseQuerySortedByIndex.last().query),
       buildReportQuery(reportFilter),
       buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
@@ -234,7 +238,7 @@ class AthenaApiRepository(
             ${datasourceCatalog?.let { "'$it'," } ?: ""}
             ${datasourceDatabase?.let { "'$it'," } ?: ""}
             $index,
-            '$query'
+            '${Base64.getEncoder().encodeToString(query.toByteArray())}'
           )
   """.trimMargin()
 
@@ -332,12 +336,12 @@ class AthenaApiRepository(
 
   override fun buildDatasetQuery(query: String) = if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
-  private fun buildPromptsQuery(prompts: List<Prompt>?): String {
+  private fun buildPromptsQuery(prompts: List<Prompt>?, useDualTable: Boolean = true): String {
     if (prompts.isNullOrEmpty()) {
-      return "$PROMPT AS (SELECT '' FROM DUAL)"
+      return "$PROMPT AS (SELECT '' ${if (useDualTable) "FROM DUAL" else ""})"
     }
     val promptsCte = prompts.joinToString(", ") { prompt -> buildPromptsQueryBasedOnType(prompt) }
-    return "$PROMPT AS (SELECT $promptsCte FROM DUAL)"
+    return "$PROMPT AS (SELECT $promptsCte ${if (useDualTable) "FROM DUAL" else ""})"
   }
 
   private fun buildPromptsQueryBasedOnType(prompt: Prompt): String = when (prompt.type) {
@@ -345,12 +349,12 @@ class AthenaApiRepository(
     else -> "'${prompt.value}' AS ${prompt.name}"
   }
 
-  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?): String = """WITH $CONTEXT AS (
+  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?, useDualTable: Boolean = true): String = """WITH $CONTEXT AS (
       SELECT 
       '${userToken?.getUsername()}' AS username, 
       '${userToken?.getActiveCaseLoadId()}' AS caseload, 
       'GENERAL' AS account_type 
-      FROM DUAL
+      ${if (useDualTable) "FROM DUAL" else ""}
       )"""
 
   private fun buildFinalQuery(
@@ -365,16 +369,6 @@ class AthenaApiRepository(
     val query = listOf(context, prompts, datasetQuery, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
     log.debug("Database query: $query")
     return query
-  }
-
-  private fun mapAthenaStateToRedshiftState(queryState: String): String {
-    val athenaToRedshiftStateMappings = mapOf(
-      "QUEUED" to "SUBMITTED",
-      "RUNNING" to QUERY_STARTED,
-      QUERY_SUCCEEDED to QUERY_FINISHED,
-      QUERY_CANCELLED to QUERY_ABORTED,
-    )
-    return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }
 
   private fun calculateDuration(status: QueryExecutionStatus): Long = status.completionDateTime()?.let { completion ->
