@@ -126,7 +126,8 @@ class AsyncDataApiService(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false),
         sortedAsc = true,
         policyEngineResult = policyEngine.execute(),
-        prompts = buildPrompts(promptsMap, productDefinition.dashboardDataset.parameters),
+        prompts = productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.flatMap { q -> buildPrompts(promptsMap, q.parameters) }?.distinct()
+          ?: buildPrompts(promptsMap, productDefinition.dashboardDataset.parameters),
         userToken = userToken,
         query = productDefinition.dashboardDataset.query,
         reportFilter = productDefinition.dashboard.filter,
