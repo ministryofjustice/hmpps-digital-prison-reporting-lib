@@ -110,6 +110,7 @@ class AthenaApiRepository(
     datasource: Datasource,
     multiphaseQuery: List<MultiphaseQuery>,
   ): StatementExecutionResponse {
+    // consider executing one insert operation
     val multiphaseQuerySortedByIndex = multiphaseQuery.sortedBy { it.index }
     val firstTableId = tableIdGenerator.generateNewExternalTableId()
     val firstQuery = """
