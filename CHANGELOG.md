@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 8.0.11
+Added debug logs to log the result query for the async journey.
+
 # 8.0.3 - 8.0.10
 Added support for multiphase queries for dashboards. This is an experimental feature at this point.
 
