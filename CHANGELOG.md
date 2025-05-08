@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 8.1.0
+Added `parent-child-section` report specification template.
+
 # 8.0.11
 Added debug logs to log the result query for the async journey.
 
