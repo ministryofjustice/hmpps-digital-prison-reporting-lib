@@ -173,9 +173,8 @@ abstract class DefinitionMapper(
       ?: emptyList()
   }
 
-  private fun mapAlertsToFilterOptions(): List<FilterOption> =
-    alertCategoryCacheService.getAlertCodesCacheIfNeeded()
-      .map { FilterOption(it.value.first().code, it.value.first().description) }
+  private fun mapAlertsToFilterOptions(): List<FilterOption> = alertCategoryCacheService.getAlertCodesCacheIfNeeded()
+    .map { FilterOption(it.value.first().code, it.value.first().description) }
 
   private fun populateStandardStaticOptionsForReportDefinition(
     productDefinitionId: String,

@@ -253,7 +253,6 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting report for user maps full data correctly`() {
-
     val result = mapper.mapReport(definition = singleReportProductDefinition, userToken = authToken)
 
     assertThat(result).isNotNull
@@ -380,7 +379,7 @@ class ReportDefinitionMapperTest {
       allDatasets = listOf(fullDataset),
       allReports = emptyList(),
     )
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(productDefinition, authToken)
 
@@ -465,7 +464,7 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting single report for user maps full data correctly`() {
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(fullSingleReportProductDefinition, authToken)
 
@@ -519,7 +518,7 @@ class ReportDefinitionMapperTest {
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     whenever(
       configuredApiService.validateAndFetchData(
@@ -569,7 +568,7 @@ class ReportDefinitionMapperTest {
       allDatasets = listOf(establishmentDataset),
     )
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     whenever(
       configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any()),
@@ -606,7 +605,7 @@ class ReportDefinitionMapperTest {
     val reportWithDynamicFilter = generateReport(DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = false))
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     whenever(
       configuredApiService.validateAndFetchData(
@@ -636,7 +635,7 @@ class ReportDefinitionMapperTest {
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithMakeUrlFormula)
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
@@ -695,7 +694,7 @@ class ReportDefinitionMapperTest {
         ),
       )
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
@@ -785,7 +784,7 @@ class ReportDefinitionMapperTest {
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(productDefinition, authToken)
 
@@ -844,7 +843,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(productDefinition, authToken)
 
@@ -900,7 +899,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
+    // val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(productDefinition, authToken)
 

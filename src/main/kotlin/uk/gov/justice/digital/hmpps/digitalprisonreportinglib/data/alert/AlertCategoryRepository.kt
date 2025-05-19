@@ -21,7 +21,7 @@ class AlertCategoryRepository(
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   override val athenaWorkgroup: String,
   val athenaQueryHelper: AthenaQueryHelper = AthenaQueryHelper(),
-  ) : AthenaApiRepository(athenaClient, tableIdGenerator, athenaWorkgroup) {
+) : AthenaApiRepository(athenaClient, tableIdGenerator, athenaWorkgroup) {
 
   companion object {
     const val NOMIS_CATALOG = "nomis"
@@ -57,7 +57,7 @@ class AlertCategoryRepository(
     while (true) {
       log.debug("Fetching list of establishments. Results page $page.")
       for ((v) in mapResults(getQueryResultsResponse, page)) {
-          alertCategoryResultAcc.plus(v)
+        alertCategoryResultAcc.plus(v)
       }
       // If nextToken is null, there are no more pages to read. Break out of the loop.
       val nextToken = getQueryResultsResponse.nextToken() ?: break

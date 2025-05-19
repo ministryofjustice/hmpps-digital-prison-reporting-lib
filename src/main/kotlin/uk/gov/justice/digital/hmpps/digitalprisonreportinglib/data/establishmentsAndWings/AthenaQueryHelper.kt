@@ -5,11 +5,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FAILED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 
-
 class AthenaQueryHelper {
 
-  fun waitForQueryToComplete(executionId: String,
-                             getStatementStatus: (statementId: String) -> StatementExecutionStatus) {
+  fun waitForQueryToComplete(
+    executionId: String,
+    getStatementStatus: (statementId: String) -> StatementExecutionStatus,
+  ) {
     var isQueryStillRunning = true
     while (isQueryStillRunning) {
       val status = getStatementStatus(executionId)
