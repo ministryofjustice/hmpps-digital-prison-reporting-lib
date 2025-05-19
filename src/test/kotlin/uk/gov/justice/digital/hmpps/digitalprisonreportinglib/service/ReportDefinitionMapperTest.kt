@@ -253,7 +253,6 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting report for user maps full data correctly`() {
-
     val result = mapper.mapReport(definition = singleReportProductDefinition, userToken = authToken)
 
     assertThat(result).isNotNull
@@ -380,7 +379,6 @@ class ReportDefinitionMapperTest {
       allDatasets = listOf(fullDataset),
       allReports = emptyList(),
     )
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(productDefinition, authToken)
 
@@ -465,8 +463,6 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting single report for user maps full data correctly`() {
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
-
     val result = mapper.mapReport(fullSingleReportProductDefinition, authToken)
 
     assertThat(result).isNotNull
@@ -519,8 +515,6 @@ class ReportDefinitionMapperTest {
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
-
     whenever(
       configuredApiService.validateAndFetchData(
         fullSingleProductDefinition.id,
@@ -569,8 +563,6 @@ class ReportDefinitionMapperTest {
       allDatasets = listOf(establishmentDataset),
     )
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
-
     whenever(
       configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any()),
     ).thenReturn(
@@ -606,8 +598,6 @@ class ReportDefinitionMapperTest {
     val reportWithDynamicFilter = generateReport(DynamicFilterOption(minimumLength = 2, returnAsStaticOptions = false))
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithDynamicFilter)
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
-
     whenever(
       configuredApiService.validateAndFetchData(
         fullSingleProductDefinition.id,
@@ -635,8 +625,6 @@ class ReportDefinitionMapperTest {
     val reportWithMakeUrlFormula = createReport("make_url('\${profile_host}/prisoner/\${prisoner_number}',\${full_name},TRUE)")
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithMakeUrlFormula)
-
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
@@ -694,8 +682,6 @@ class ReportDefinitionMapperTest {
           ),
         ),
       )
-
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(fullSingleProductDefinition, authToken)
 
@@ -785,8 +771,6 @@ class ReportDefinitionMapperTest {
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
-
     val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
@@ -844,8 +828,6 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
-
     val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
@@ -899,8 +881,6 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-
-    //val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService)
 
     val result = mapper.mapReport(productDefinition, authToken)
 

@@ -35,7 +35,6 @@ class EstablishmentsToWingsRepository(
       query = ESTABLISHMENTS_TO_WINGS_QUERY,
     ).executionId
     athenaQueryHelper.waitForQueryToComplete(executionId, this::getStatementStatus)
-    //waitForQueryToComplete(executionId)
     val results = fetchAllResults(executionId)
     stopwatch.stop()
     log.info("List of establishments and wings retrieved successfully in ${stopwatch.time}.")
