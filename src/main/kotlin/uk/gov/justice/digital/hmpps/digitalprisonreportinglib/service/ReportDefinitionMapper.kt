@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 
 @Component
@@ -33,7 +34,8 @@ class ReportDefinitionMapper(
   syncDataApiService: SyncDataApiService,
   identifiedHelper: IdentifiedHelper,
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
-) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService) {
+  alertCategoryCacheService: AlertCategoryCacheService,
+  ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService) {
 
   fun mapReport(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition = SingleVariantReportDefinition(
     id = definition.id,

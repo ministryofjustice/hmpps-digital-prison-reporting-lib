@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Referen
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition as DataFilterDefinition
@@ -48,10 +49,10 @@ class DashboardDefinitionMapperTest {
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper = IdentifiedHelper(),
   )
-  private val syncDataApiService: SyncDataApiService = Mockito.mock()
-  private val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService = Mockito.mock()
-
-  private val dashboardDefinitionMapper = DashboardDefinitionMapper(syncDataApiService, IdentifiedHelper(), establishmentCodesToWingsCacheService)
+  private val syncDataApiService: SyncDataApiService = mock()
+  private val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService = mock()
+  private val alertCategoryCacheService: AlertCategoryCacheService = mock()
+  private val dashboardDefinitionMapper = DashboardDefinitionMapper(syncDataApiService, IdentifiedHelper(), establishmentCodesToWingsCacheService, alertCategoryCacheService)
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {

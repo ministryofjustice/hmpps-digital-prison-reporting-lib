@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
@@ -27,6 +28,7 @@ abstract class DefinitionMapper(
   private val syncDataApiService: SyncDataApiService,
   val identifiedHelper: IdentifiedHelper,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
+  val alertCategoryCacheService: AlertCategoryCacheService,
 ) {
 
   companion object {
@@ -151,6 +153,7 @@ abstract class DefinitionMapper(
       when (it) {
         ReferenceType.ESTABLISHMENT -> mapEstablishmentsToFilterOptions()
         ReferenceType.WING -> mapWingsToFilterOptions()
+        ReferenceType.ALERT -> mapAlertsToFilterOptions()
       }
     }?.takeIf { it.isNotEmpty() }
 
@@ -169,6 +172,10 @@ abstract class DefinitionMapper(
       ?.plus(FilterOption(EstablishmentToWing.ALL_WINGS, EstablishmentToWing.ALL_WINGS))
       ?: emptyList()
   }
+
+  private fun mapAlertsToFilterOptions(): List<FilterOption> =
+    alertCategoryCacheService.getAlertCodesCacheIfNeeded()
+      .map { FilterOption(it.value.first().code, it.value.first().description) }
 
   private fun populateStandardStaticOptionsForReportDefinition(
     productDefinitionId: String,

@@ -8,4 +8,7 @@ enum class ReferenceType {
 
   @SerializedName("wing")
   WING,
+
+  @SerializedName("alert_code")
+  ALERT,
 }
