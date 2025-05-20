@@ -161,7 +161,6 @@ abstract class DefinitionMapper(
   private fun mapEstablishmentsToFilterOptions(): List<FilterOption> = establishmentCodesToWingsCacheService
     .getEstablishmentsAndPopulateCacheIfNeeded()
     .map { FilterOption(it.key, it.value.first().description) }
-    .plus(FilterOption(AlertCategory.ALL_ALERT, AlertCategory.ALL_ALERT))
 
   private fun mapWingsToFilterOptions(): List<FilterOption> {
     val wingsFlattened = establishmentCodesToWingsCacheService
@@ -176,7 +175,8 @@ abstract class DefinitionMapper(
   }
 
   private fun mapAlertsToFilterOptions(): List<FilterOption> = alertCategoryCacheService.getAlertCodesCacheIfNeeded()
-    .map { FilterOption(it.value.first().code, it.value.first().description) }
+    .flatMap { alerts -> alerts.value.map { FilterOption(it.code, it.description) } }.toList()
+    .plus(FilterOption(AlertCategory.ALL_ALERT, AlertCategory.ALL_ALERT))
 
   private fun populateStandardStaticOptionsForReportDefinition(
     productDefinitionId: String,

@@ -14,7 +14,7 @@ class AlertCategoryCacheService(
 ) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
-    private const val ALERT_CACHE_KEY = "ALERT_CODES"
+    const val ALERT_CACHE_KEY = "ALERT_CODES"
   }
 
   fun getAlertCodesCacheIfNeeded(): Map<String, List<AlertCategory>> {

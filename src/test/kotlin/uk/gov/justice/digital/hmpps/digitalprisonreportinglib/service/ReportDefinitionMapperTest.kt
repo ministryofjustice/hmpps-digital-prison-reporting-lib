@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -827,8 +828,9 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
+    val rdfMapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
 
-    val result = mapper.mapReport(productDefinition, authToken)
+    val result = rdfMapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -892,6 +894,53 @@ class ReportDefinitionMapperTest {
       FilterOption(wingBsiR, wingBsiR),
       FilterOption(wingBsiI, wingBsiI),
       FilterOption(ALL_WINGS, ALL_WINGS),
+    )
+
+    val expectedReportField = createReportFieldDefinition(parameter, expectedStaticOptions)
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
+  fun `getting single report with parameters with referenceType of alert_code includes all the alerts as static options`() {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Text,
+      display = parameterDisplay,
+      mandatory = true,
+      referenceType = ReferenceType.ALERT,
+    )
+    val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
+    val alertCode1 = "OPPO"
+    val alertDesc1 = "PPO Case"
+    val alertCode2 = "P1"
+    val alertDesc2 = "MAPPA Level 1 Case"
+
+    whenever(
+      alertCategoryCacheService.getAlertCodesCacheIfNeeded(),
+    ).thenReturn(
+      mapOf(
+        "ALERT_CODES" to listOf(
+          AlertCategory("ALERT_CODE", alertCode1, alertDesc1),
+          AlertCategory("ALERT_CODE", alertCode2, alertDesc2),
+        ),
+      ),
+    )
+    val rdfMapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
+
+    val result = rdfMapper.mapReport(productDefinition, authToken)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedStaticOptions = listOf(
+      FilterOption(alertCode1, alertDesc1),
+      FilterOption(alertCode2, alertDesc2),
+      FilterOption("All", "All"),
     )
 
     val expectedReportField = createReportFieldDefinition(parameter, expectedStaticOptions)
