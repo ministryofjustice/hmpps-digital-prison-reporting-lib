@@ -56,8 +56,8 @@ class AlertCategoryRepository(
     var page = 1
     while (true) {
       log.debug("Fetching list of establishments. Results page $page.")
-      for ((v) in mapResults(getQueryResultsResponse, page)) {
-        alertCategoryResultAcc.plus(v)
+      for (v in mapResults(getQueryResultsResponse, page)) {
+        alertCategoryResultAcc.add(v)
       }
       // If nextToken is null, there are no more pages to read. Break out of the loop.
       val nextToken = getQueryResultsResponse.nextToken() ?: break

@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.GranularityDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.QuickFilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
@@ -160,6 +161,7 @@ abstract class DefinitionMapper(
   private fun mapEstablishmentsToFilterOptions(): List<FilterOption> = establishmentCodesToWingsCacheService
     .getEstablishmentsAndPopulateCacheIfNeeded()
     .map { FilterOption(it.key, it.value.first().description) }
+    .plus(FilterOption(AlertCategory.ALL_ALERT, AlertCategory.ALL_ALERT))
 
   private fun mapWingsToFilterOptions(): List<FilterOption> {
     val wingsFlattened = establishmentCodesToWingsCacheService
