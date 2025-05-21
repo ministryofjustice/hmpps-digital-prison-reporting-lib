@@ -1,6 +1,15 @@
 Below you can find the changes included in each release.
 
-# 8.0.3 - 8.0.9-alpha.0
+# 8.2.0
+Added Alerts as referenceType 'alert' for the alert parameters.
+
+# 8.1.0
+Added `parent-child-section` report specification template.
+
+# 8.0.11
+Added debug logs to log the result query for the async journey.
+
+# 8.0.3 - 8.0.10
 Added support for multiphase queries for dashboards. This is an experimental feature at this point.
 
 # 8.0.2

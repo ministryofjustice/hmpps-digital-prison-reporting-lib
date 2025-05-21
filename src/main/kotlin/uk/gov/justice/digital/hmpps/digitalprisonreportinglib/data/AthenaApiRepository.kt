@@ -160,11 +160,11 @@ class AthenaApiRepository(
                 format = 'PARQUET'
               ) 
               AS (
-              ${listOf(buildContextQuery(userToken, false), buildPromptsQuery(prompts, false), buildDatasetQuery(intermediateQuery.query))
-        .joinToString(",") +
-        "\nSELECT * FROM $DATASET_"
-          .replace("\${tableId}", previousTableId)
-      }
+              ${(
+        listOf(buildContextQuery(userToken, false), buildPromptsQuery(prompts, false), buildDatasetQuery(intermediateQuery.query))
+          .joinToString(",") +
+          "\nSELECT * FROM $DATASET_"
+        ) .replace("\${tableId}", previousTableId)}
               )
       """.trimIndent()
       log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)

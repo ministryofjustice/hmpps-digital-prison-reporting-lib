@@ -65,9 +65,11 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val whereClause = buildFiltersWhereClause(filters)
+    val query = "SELECT * FROM reports.$tableId WHERE $whereClause ${buildOrderByClause(sortColumn, sortedAsc) } LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"
+    log.debug("Query to get results: {}", query)
     val result = jdbcTemplate
       .queryForList(
-        "SELECT * FROM reports.$tableId WHERE $whereClause ${buildOrderByClause(sortColumn, sortedAsc)} LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;",
+        query,
         MapSqlParameterSource(),
       )
       .map {
