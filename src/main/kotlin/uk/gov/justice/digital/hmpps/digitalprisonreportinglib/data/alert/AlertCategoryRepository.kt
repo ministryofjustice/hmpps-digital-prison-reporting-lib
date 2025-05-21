@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings
+package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert
 
 import org.apache.commons.lang3.time.StopWatch
 import org.springframework.beans.factory.annotation.Value
@@ -9,12 +9,13 @@ import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
 import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.Row
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.AthenaQueryHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
 @Service
 @ConditionalOnBean(AthenaClient::class)
-class EstablishmentsToWingsRepository(
+class AlertCategoryRepository(
   override val athenaClient: AthenaClient,
   override val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
@@ -25,38 +26,38 @@ class EstablishmentsToWingsRepository(
   companion object {
     const val NOMIS_CATALOG = "nomis"
     const val DIGITAL_PRISON_REPORTING_DB = "DIGITAL_PRISON_REPORTING"
-    const val ESTABLISHMENTS_TO_WINGS_QUERY = "SELECT DISTINCT LIVING_UNITS.agy_loc_id as establishment_code, AGENCY_LOCATIONS.description as establishment_name, LIVING_UNITS.AGY_LOC_ID || '-' || LIVING_UNITS.LEVEL_1_CODE as wing FROM OMS_OWNER.LIVING_UNITS JOIN OMS_OWNER.AGENCY_LOCATIONS ON LIVING_UNITS.agy_loc_id = AGENCY_LOCATIONS.agy_loc_id;"
+    const val ALERT_CATEGORY_QUERY = "SELECT DOMAIN, CODE, DESCRIPTION FROM OMS_OWNER.REFERENCE_CODES WHERE DOMAIN='ALERT' OR DOMAIN IS NULL OR DOMAIN='ALERT_CODE' ORDER BY DOMAIN;"
   }
-  fun executeStatementWaitAndGetResult(): MutableMap<String, List<EstablishmentToWing>> = try {
+
+  fun executeStatementWaitAndGetResult(): List<AlertCategory> = try {
     val stopwatch = StopWatch.createStarted()
     val executionId = executeQueryAsync(
       datasource = Datasource("", "", DIGITAL_PRISON_REPORTING_DB, NOMIS_CATALOG),
       tableId = "notApplicableHere",
-      query = ESTABLISHMENTS_TO_WINGS_QUERY,
+      query = ALERT_CATEGORY_QUERY,
     ).executionId
     athenaQueryHelper.waitForQueryToComplete(executionId, this::getStatementStatus)
     val results = fetchAllResults(executionId)
     stopwatch.stop()
-    log.info("List of establishments and wings retrieved successfully in ${stopwatch.time}.")
+    log.info("List of alert categories and codes retrieved successfully in ${stopwatch.time}.")
     results
   } catch (e: Exception) {
-    log.error("Error retrieving list of establishments and wings: ", e)
-    mutableMapOf()
+    log.error("Error retrieving list of alerts: ", e)
+    emptyList()
   }
 
-  private fun fetchAllResults(queryExecutionId: String): MutableMap<String, List<EstablishmentToWing>> {
+  private fun fetchAllResults(queryExecutionId: String): List<AlertCategory> {
     val getQueryResultsRequest: GetQueryResultsRequest =
       GetQueryResultsRequest.builder()
         .queryExecutionId(queryExecutionId)
         .build()
     var getQueryResultsResponse: GetQueryResultsResponse = athenaClient.getQueryResults(getQueryResultsRequest)
-    val establishmentToWingsAcc: MutableMap<String, List<EstablishmentToWing>> = mutableMapOf()
+    val alertCategoryResultAcc: MutableList<AlertCategory> = mutableListOf()
     var page = 1
     while (true) {
       log.debug("Fetching list of establishments. Results page $page.")
-      for ((k, v) in groupWingsByEstablishment(getQueryResultsResponse, page)) {
-        establishmentToWingsAcc[k] =
-          establishmentToWingsAcc[k]?.plus(v) ?: v
+      for (v in mapResults(getQueryResultsResponse, page)) {
+        alertCategoryResultAcc.add(v)
       }
       // If nextToken is null, there are no more pages to read. Break out of the loop.
       val nextToken = getQueryResultsResponse.nextToken() ?: break
@@ -69,13 +70,13 @@ class EstablishmentsToWingsRepository(
       )
       page++
     }
-    return establishmentToWingsAcc
+    return alertCategoryResultAcc
   }
 
-  private fun groupWingsByEstablishment(
+  private fun mapResults(
     getQueryResultsResponse: GetQueryResultsResponse,
     page: Int,
-  ): Map<String, List<EstablishmentToWing>> = getQueryResultsResponse
+  ): List<AlertCategory> = getQueryResultsResponse
     .resultSet()
     .rows()
     .mapIndexed { index, row ->
@@ -83,14 +84,13 @@ class EstablishmentsToWingsRepository(
       mapRow(page, index, row)
     }
     .filterNotNull()
-    .groupBy { it.establishmentCode }
 
-  private fun mapRow(page: Int, index: Int, row: Row): EstablishmentToWing? {
+  private fun mapRow(page: Int, index: Int, row: Row): AlertCategory? {
     if (page == 1 && index == 0) {
       // first row contains the table headers
       return null
     }
-    return EstablishmentToWing(
+    return AlertCategory(
       row.data()[0].varCharValue(),
       row.data()[1].varCharValue(),
       row.data()[2].varCharValue(),
