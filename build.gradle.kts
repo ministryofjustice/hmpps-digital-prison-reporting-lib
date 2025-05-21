@@ -2,9 +2,9 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.4"
-  kotlin("jvm") version "2.1.10"
-  kotlin("plugin.spring") version "2.1.10"
-  kotlin("plugin.jpa") version "2.1.10"
+  kotlin("jvm") version "2.1.21"
+  kotlin("plugin.spring") version "2.1.21"
+  kotlin("plugin.jpa") version "2.1.21"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "3.1.0"
   id("maven-publish")
@@ -16,7 +16,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.31.3"
+val awsSdkVersion = "2.31.5"
 val testContainersVersion = "1.20.6"
 
 dependencies {
