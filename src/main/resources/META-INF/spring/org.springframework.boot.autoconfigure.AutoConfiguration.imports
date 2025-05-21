@@ -8,6 +8,7 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConf
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategoryRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepositoryAutoConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedShiftSummaryTableHelper
@@ -27,7 +28,9 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepos
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DigitalPrisonReportingExceptionHandler
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.alert.LegacyAlertCategoryCacheConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.estcodesandwings.LegacyEstablishmentCodesToWingsCacheConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ProductDefinitionTokenPolicyChecker
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.RefreshCacheSchedulingService

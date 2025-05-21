@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 8.2.0
+Added Alerts as referenceType 'alert' for the alert parameters.
+
 # 8.1.0
 Added `parent-child-section` report specification template.
 
