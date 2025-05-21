@@ -387,6 +387,7 @@ class AsyncDataApiServiceTest {
     whenever(dashboard.filter).thenReturn(mock<ReportFilter>())
     whenever(singleDashboardProductDefinition.dashboardDataset).thenReturn(dashboardDataset)
     whenever(dashboardDataset.query).thenReturn(query)
+    whenever(dashboardDataset.multiphaseQuery).thenReturn(null)
     whenever(dashboardDataset.schema).thenReturn(schema)
     whenever(schema.field).thenReturn(listOf(field))
     whenever(field.name).thenReturn("fieldName")
@@ -555,8 +556,9 @@ class AsyncDataApiServiceTest {
   @ValueSource(strings = ["NOMIS", "BODMIS"])
   fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getDashboardStatementStatus is called`(datasourceName: String) {
     val productDefinitionRepository = mock<ProductDefinitionRepository>()
-    val singleReportProductDefinition = mock<SingleDashboardProductDefinition>()
+    val singleDashboardProductDefinition = mock<SingleDashboardProductDefinition>()
     val datasource = mock<Datasource>()
+    val dashboardDataset = mock<Dataset>()
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val definitionId = "definitionId"
     val dashboardId = "test-dashboard"
@@ -573,8 +575,9 @@ class AsyncDataApiServiceTest {
     )
     whenever(
       productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId),
-    ).thenReturn(singleReportProductDefinition)
-    whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
+    ).thenReturn(singleDashboardProductDefinition)
+    whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
+    whenever(singleDashboardProductDefinition.dashboardDataset).thenReturn(dashboardDataset)
     whenever(datasource.name).thenReturn(datasourceName)
     whenever(
       athenaApiRepository.getStatementStatus(statementId),
@@ -1364,9 +1367,8 @@ class AsyncDataApiServiceTest {
   private fun dataset(schedule: String? = null): Dataset = Dataset(
     id = "10",
     name = "11",
-    query = "12",
     datasource = "12A",
-    schedule = schedule,
+    query = "12",
     schema = Schema(
       field = listOf(
         SchemaField(
@@ -1377,6 +1379,7 @@ class AsyncDataApiServiceTest {
         ),
       ),
     ),
+    schedule = schedule,
   )
 
   private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {

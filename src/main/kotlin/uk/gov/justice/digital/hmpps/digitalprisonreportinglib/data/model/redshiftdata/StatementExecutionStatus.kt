@@ -22,7 +22,7 @@ data class StatementExecutionStatus(
     example = "0",
     description = "The size in bytes of the returned results. A -1 indicates the value is null.",
   )
-  val resultSize: Long?,
+  val resultSize: Long? = null,
   @Schema(description = "Contains a short description of the error that occurred.")
   val error: String? = null,
   @Schema(

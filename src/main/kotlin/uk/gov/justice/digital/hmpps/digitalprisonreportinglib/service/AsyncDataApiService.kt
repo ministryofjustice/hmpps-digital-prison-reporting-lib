@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.UncategorizedSQLException
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
@@ -47,6 +49,7 @@ class AsyncDataApiService(
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
     const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
     const val FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE = "Filter value does not match pattern:"
+    private val log = LoggerFactory.getLogger(this::class.java)
   }
 
   private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
@@ -96,6 +99,7 @@ class AsyncDataApiService(
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
         preGeneratedDatasetTableId = preGeneratedTableId,
+        multiphaseQuery = productDefinition.reportDataset.multiphaseQuery,
       )
   }
 
@@ -113,13 +117,17 @@ class AsyncDataApiService(
     )
     checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition.dashboardDataset.parameters)
+    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, extractParameters(productDefinition))
+    log.debug("All filters from user are: {}", filters)
+    log.debug("Prompts are: {}", promptsMap)
+    log.debug("Filters only are: {}", filtersOnly)
     return getRepo(productDefinition.datasource.name)
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false),
         sortedAsc = true,
         policyEngineResult = policyEngine.execute(),
-        prompts = buildPrompts(promptsMap, productDefinition.dashboardDataset.parameters),
+        prompts = productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.flatMap { q -> buildPrompts(promptsMap, q.parameters) }?.distinct()
+          ?: buildPrompts(promptsMap, productDefinition.dashboardDataset.parameters),
         userToken = userToken,
         query = productDefinition.dashboardDataset.query,
         reportFilter = productDefinition.dashboard.filter,
@@ -129,8 +137,13 @@ class AsyncDataApiService(
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.dashboard.id,
         reportOrDashboardName = productDefinition.dashboard.name,
+        multiphaseQuery = productDefinition.dashboardDataset.multiphaseQuery,
       )
   }
+
+  private fun extractParameters(productDefinition: SingleDashboardProductDefinition) = productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.mapNotNull { q -> q.parameters }
+    ?.filterNot { p -> p.isEmpty() }?.flatten()?.distinct()
+    ?: productDefinition.dashboardDataset.parameters
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
@@ -147,6 +160,17 @@ class AsyncDataApiService(
   fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
+    return productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
+      getRepo(productDefinition.datasource.name).getStatementStatusForMultiphaseQuery(statementId)
+    }
+      ?: getStatusOrThrowIfTableIsMissing(productDefinition, statementId, tableId)
+  }
+
+  private fun getStatusOrThrowIfTableIsMissing(
+    productDefinition: SingleDashboardProductDefinition,
+    statementId: String,
+    tableId: String?,
+  ): StatementExecutionStatus {
     val statementStatus = getRepo(productDefinition.datasource.name).getStatementStatus(statementId)
     tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
       if (redshiftDataApiRepository.isTableMissing(tableId)) {

@@ -20,4 +20,7 @@ enum class Template {
 
   @SerializedName("parent-child")
   ParentChild,
+
+  @SerializedName("parent-child-section")
+  ParentChildSection,
 }
