@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Primary
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.AthenaError
@@ -23,6 +24,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.sql.Timestamp
+import java.time.Instant
 import java.util.Base64
 
 const val QUERY_STARTED = "STARTED"
@@ -43,6 +46,7 @@ class AthenaApiRepository(
   val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   val athenaWorkgroup: String,
+  val jdbcTemplate: JdbcTemplate? = null,
 ) : AthenaAndRedshiftCommonRepository() {
 
   override fun executeQueryAsync(
@@ -76,7 +80,6 @@ class AthenaApiRepository(
       policyEngineResult,
       sortColumn,
       sortedAsc,
-      datasource,
       it,
     )
   }
@@ -107,10 +110,10 @@ class AthenaApiRepository(
     policyEngineResult: String,
     sortColumn: String?,
     sortedAsc: Boolean,
-    datasource: Datasource,
     multiphaseQuery: List<MultiphaseQuery>,
   ): StatementExecutionResponse {
     // consider executing one insert operation
+    val jdbcTemplate = jdbcTemplate ?: populateJdbcTemplate()
     val multiphaseQuerySortedByIndex = multiphaseQuery.sortedBy { it.index }
     val firstTableId = tableIdGenerator.generateNewExternalTableId()
     val firstQuery = """
@@ -132,7 +135,6 @@ class AthenaApiRepository(
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
     val firstQueryDatasource = multiphaseQuerySortedByIndex[0].datasource
     val statementExecutionResponse = executeQueryAsync(firstQueryDatasource, firstTableId, firstQuery)
-    val jdbcTemplate = populateJdbcTemplate(firstQueryDatasource.name)
     val insertStatement: String =
       buildInsertStatement(
         rootExecutionId = statementExecutionResponse.executionId,
@@ -230,7 +232,9 @@ class AthenaApiRepository(
           ${datasourceCatalog?.let { "catalog,"} ?: "" }
           ${datasourceDatabase?.let { "database," } ?: "" }
           index,
-          query
+          query,
+          sequence_number,
+          last_update
           )
           values (
             '$rootExecutionId',
@@ -239,7 +243,9 @@ class AthenaApiRepository(
             ${datasourceCatalog?.let { "'$it'," } ?: ""}
             ${datasourceDatabase?.let { "'$it'," } ?: ""}
             $index,
-            '${Base64.getEncoder().encodeToString(query.toByteArray())}'
+            '${Base64.getEncoder().encodeToString(query.toByteArray())}',
+            0,
+            ${Timestamp.from(Instant.now())}
           )
   """.trimMargin()
 

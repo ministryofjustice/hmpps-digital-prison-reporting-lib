@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-# 8.2.0
+# 8.2.0 - 8.3.1
 Added Alerts as referenceType 'alert' for the alert parameters.
 
 # 8.1.0
