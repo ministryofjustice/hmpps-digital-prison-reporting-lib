@@ -46,7 +46,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.Timestamp
-import java.time.*
+import java.time.Duration
+import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 class AthenaApiRepositoryTest {
