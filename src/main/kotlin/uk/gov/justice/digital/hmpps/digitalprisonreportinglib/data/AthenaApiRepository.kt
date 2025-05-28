@@ -245,7 +245,7 @@ class AthenaApiRepository(
             $index,
             '${Base64.getEncoder().encodeToString(query.toByteArray())}',
             0,
-            ${Timestamp.from(Instant.now())}
+            '${Timestamp.from(Instant.now())}'
           )
   """.trimMargin()
 
