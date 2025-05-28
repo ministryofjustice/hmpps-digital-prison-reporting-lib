@@ -24,6 +24,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategoryRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprUserAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
@@ -56,6 +57,9 @@ abstract class IntegrationTestBase {
 
   @MockitoBean
   lateinit var establishmentsToWingsRepository: EstablishmentsToWingsRepository
+
+  @MockitoBean
+  lateinit var alertCategoryRepository: AlertCategoryRepository
 
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
