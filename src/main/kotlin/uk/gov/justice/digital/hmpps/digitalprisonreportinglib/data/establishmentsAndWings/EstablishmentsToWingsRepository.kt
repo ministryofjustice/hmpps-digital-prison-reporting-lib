@@ -8,7 +8,7 @@ import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
 import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.Row
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
@@ -19,12 +19,9 @@ class EstablishmentsToWingsRepository(
   override val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   override val athenaWorkgroup: String,
-  val athenaQueryHelper: AthenaQueryHelper = AthenaQueryHelper(),
-) : AthenaApiRepository(athenaClient, tableIdGenerator, athenaWorkgroup) {
+) : AthenaReferenceDataRepository<EstablishmentToWing>(athenaClient, tableIdGenerator, athenaWorkgroup) {
 
   companion object {
-    const val NOMIS_CATALOG = "nomis"
-    const val DIGITAL_PRISON_REPORTING_DB = "DIGITAL_PRISON_REPORTING"
     const val ESTABLISHMENTS_TO_WINGS_QUERY = "SELECT DISTINCT LIVING_UNITS.agy_loc_id as establishment_code, AGENCY_LOCATIONS.description as establishment_name, LIVING_UNITS.AGY_LOC_ID || '-' || LIVING_UNITS.LEVEL_1_CODE as wing FROM OMS_OWNER.LIVING_UNITS JOIN OMS_OWNER.AGENCY_LOCATIONS ON LIVING_UNITS.agy_loc_id = AGENCY_LOCATIONS.agy_loc_id;"
   }
   fun executeStatementWaitAndGetResult(): MutableMap<String, List<EstablishmentToWing>> = try {
@@ -34,7 +31,7 @@ class EstablishmentsToWingsRepository(
       tableId = "notApplicableHere",
       query = ESTABLISHMENTS_TO_WINGS_QUERY,
     ).executionId
-    athenaQueryHelper.waitForQueryToComplete(executionId, this::getStatementStatus)
+    waitForQueryToComplete(executionId, this::getStatementStatus)
     val results = fetchAllResults(executionId)
     stopwatch.stop()
     log.info("List of establishments and wings retrieved successfully in ${stopwatch.time}.")
@@ -85,7 +82,7 @@ class EstablishmentsToWingsRepository(
     .filterNotNull()
     .groupBy { it.establishmentCode }
 
-  private fun mapRow(page: Int, index: Int, row: Row): EstablishmentToWing? {
+  override fun mapRow(page: Int, index: Int, row: Row): EstablishmentToWing? {
     if (page == 1 && index == 0) {
       // first row contains the table headers
       return null
