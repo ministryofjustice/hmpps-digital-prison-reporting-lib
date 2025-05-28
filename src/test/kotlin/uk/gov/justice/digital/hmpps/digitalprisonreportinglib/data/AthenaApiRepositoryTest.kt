@@ -7,7 +7,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -45,7 +44,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
-import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -328,9 +326,9 @@ SELECT * FROM dataset_'
 
   @Test
   fun `executeQueryAsync should run a multiphase query when there is at least one multiphaseQuery defined`() {
-    val timestamp = Timestamp.valueOf("2025-05-28 06:00:00.000000")
-    Mockito.mockStatic(Timestamp::class.java).use { staticTimestampMockUtil ->
-      staticTimestampMockUtil.`when`<Timestamp> { Timestamp.from(any()) }.thenReturn(timestamp)
+    val instant = Instant.parse("2025-05-28T06:00:00Z")
+    Mockito.mockStatic(Instant::class.java).use { staticTimestampMockUtil ->
+      staticTimestampMockUtil.`when`<Instant> { Instant.now() }.thenReturn(instant)
 
       setupMocks()
       val database = "db"
@@ -399,7 +397,7 @@ SELECT * FROM dataset_'
             0,
             'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICAgIFdJVEggKAogICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICApIAogICAgICAgICAgICBBUyAoCiAgICAgICAgICAgIFNFTEVDVCAqIEZST00gVEFCTEUoc3lzdGVtLnF1ZXJ5KHF1ZXJ5ID0+CiAgICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICAgICkpIAogICAgICAgICAgICApOw==',
             0,
-            '2025-05-28 06:00:00.0'
+            '2025-05-28T06:00:00Z'
           )"""
       val secondMultiphaseInsert = """insert into 
           admin.execution_manager (
@@ -422,7 +420,7 @@ SELECT * FROM dataset_'
             1,
             'ICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgQ1JFQVRFIFRBQkxFIEF3c0RhdGFDYXRhbG9nLnJlcG9ydHMudGFibGVJZDIKICAgICAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICkgCiAgICAgICAgICAgICAgQVMgKAogICAgICAgICAgICAgICBXSVRIIGNvbnRleHRfIEFTICgKICAgICAgU0VMRUNUIAogICAgICAnYVVzZXInIEFTIHVzZXJuYW1lLCAKICAgICAgJ2FDYXNlbG9hZCcgQVMgY2FzZWxvYWQsIAogICAgICAnR0VORVJBTCcgQVMgYWNjb3VudF90eXBlIAogICAgICAKICAgICAgKSxwcm9tcHRfIEFTIChTRUxFQ1QgJycgKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvdW50KCopIGFzIHRvdGFsIGZyb20gX2E2MjI3NDE3X2JkYWNfNDBiYl9iYzgxXzQ5Yzc1MGRhYWNkNykscmVwb3J0XyBBUyAoU0VMRUNUICogRlJPTSBkYXRhc2V0XykscG9saWN5XyBBUyAoU0VMRUNUICogRlJPTSByZXBvcnRfIFdIRVJFIDE9MSksZmlsdGVyXyBBUyAoU0VMRUNUICogRlJPTSBwb2xpY3lfIFdIRVJFIDE9MSkKU0VMRUNUICoKICAgICAgICAgIEZST00gZmlsdGVyXyBPUkRFUiBCWSBjb2x1bW5fYSBhc2MKICAgICAgICAgICAgICAp',
             0,
-            '2025-05-28 06:00:00.0'
+            '2025-05-28T06:00:00Z'
           )"""
       verify(jdbcTemplate).execute(firstMultiphaseInsert)
       verify(jdbcTemplate).execute(secondMultiphaseInsert)

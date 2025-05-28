@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
-import java.sql.Timestamp
 import java.time.Instant
 import java.util.Base64
 
@@ -245,7 +244,7 @@ class AthenaApiRepository(
             $index,
             '${Base64.getEncoder().encodeToString(query.toByteArray())}',
             0,
-            '${Timestamp.from(Instant.now())}'
+            '${Instant.now()}'
           )
   """.trimMargin()
 
