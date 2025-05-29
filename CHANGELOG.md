@@ -1,6 +1,10 @@
 Below you can find the changes included in each release.
 
-# 8.2.0 - 8.3.1
+# 8.3.2
+Added sequenceNumber to the multiphase query Redhisft table to address the race condition of an earlier state change overwriting a later one.
+Added last_update to allow for cleaning up the table.
+
+# 8.2.0 - 8.3.1 including 8.3.1-alpha.0
 Added Alerts as referenceType 'alert' for the alert parameters.
 
 # 8.1.0
