@@ -8,8 +8,7 @@ import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
 import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.Row
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.AthenaQueryHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
@@ -20,12 +19,9 @@ class AlertCategoryRepository(
   override val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   override val athenaWorkgroup: String,
-  val athenaQueryHelper: AthenaQueryHelper = AthenaQueryHelper(),
-) : AthenaApiRepository(athenaClient, tableIdGenerator, athenaWorkgroup) {
+) : AthenaReferenceDataRepository<AlertCategory>(athenaClient, tableIdGenerator, athenaWorkgroup) {
 
   companion object {
-    const val NOMIS_CATALOG = "nomis"
-    const val DIGITAL_PRISON_REPORTING_DB = "DIGITAL_PRISON_REPORTING"
     const val ALERT_CATEGORY_QUERY = "SELECT DOMAIN, CODE, DESCRIPTION FROM OMS_OWNER.REFERENCE_CODES WHERE DOMAIN='ALERT' OR DOMAIN IS NULL OR DOMAIN='ALERT_CODE' ORDER BY DOMAIN;"
   }
 
@@ -36,7 +32,7 @@ class AlertCategoryRepository(
       tableId = "notApplicableHere",
       query = ALERT_CATEGORY_QUERY,
     ).executionId
-    athenaQueryHelper.waitForQueryToComplete(executionId, this::getStatementStatus)
+    waitForQueryToComplete(executionId, this::getStatementStatus)
     val results = fetchAllResults(executionId)
     stopwatch.stop()
     log.info("List of alert categories and codes retrieved successfully in ${stopwatch.time}.")
@@ -85,7 +81,7 @@ class AlertCategoryRepository(
     }
     .filterNotNull()
 
-  private fun mapRow(page: Int, index: Int, row: Row): AlertCategory? {
+  override fun mapRow(page: Int, index: Int, row: Row): AlertCategory? {
     if (page == 1 && index == 0) {
       // first row contains the table headers
       return null
