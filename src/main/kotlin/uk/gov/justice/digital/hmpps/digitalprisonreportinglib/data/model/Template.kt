@@ -23,4 +23,10 @@ enum class Template {
 
   @SerializedName("parent-child-section")
   ParentChildSection,
+
+  @SerializedName("row-section")
+  RowSection,
+
+  @SerializedName("row-section-child")
+  RowSectionChild,
 }

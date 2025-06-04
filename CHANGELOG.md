@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 8.3.4
+Added `row-section`and `row-section-child` as supported report template types.
+
 # 8.3.1-alpha.0, 8.3.2 and 8.3.3
 Added sequenceNumber to the multiphase query Redhisft table to address the race condition of an earlier state change overwriting a later one.
 Added last_update to allow for cleaning up the table.
