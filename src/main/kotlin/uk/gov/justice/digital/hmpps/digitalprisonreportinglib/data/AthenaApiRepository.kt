@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
-import java.time.Instant
 import java.util.Base64
 
 const val QUERY_STARTED = "STARTED"
@@ -244,7 +243,7 @@ class AthenaApiRepository(
             $index,
             '${Base64.getEncoder().encodeToString(query.toByteArray())}',
             0,
-            '${Instant.now()}'
+            SYSDATE
           )
   """.trimMargin()
 
