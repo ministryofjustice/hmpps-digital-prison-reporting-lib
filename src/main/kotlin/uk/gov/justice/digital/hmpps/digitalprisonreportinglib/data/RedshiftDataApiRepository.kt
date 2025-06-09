@@ -56,7 +56,7 @@ class RedshiftDataApiRepository(
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String?,
-    multiphaseQuery: List<MultiphaseQuery>?,
+    multiphaseQueries: List<MultiphaseQuery>?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """

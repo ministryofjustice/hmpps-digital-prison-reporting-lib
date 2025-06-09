@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 8.3.5
+Fixed issue with multiphase queries throwing an error when the list of queries contained only a
+single query.
+
 # 8.3.4
 Added `row-section`and `row-section-child` as supported report template types.
 
