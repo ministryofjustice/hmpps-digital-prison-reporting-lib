@@ -367,10 +367,10 @@ SELECT * FROM dataset_'
       multiphaseQueries = multiphaseQuery,
     )
     val firstMultiphaseInsert = """insert into 
-          admin.execution_manager (
+          admin.multiphase_query_state (
           root_execution_id,
           current_execution_id,
-          datasource,
+          datasource_name,
           catalog,
           database,
           index,
@@ -390,10 +390,10 @@ SELECT * FROM dataset_'
             SYSDATE
           )"""
     val secondMultiphaseInsert = """insert into 
-          admin.execution_manager (
+          admin.multiphase_query_state (
           root_execution_id,
           
-          datasource,
+          datasource_name,
           catalog,
           database,
           index,
@@ -458,10 +458,10 @@ SELECT * FROM dataset_'
       multiphaseQueries = multiphaseQuery,
     )
     val firstMultiphaseInsert = """insert into 
-          admin.execution_manager (
+          admin.multiphase_query_state (
           root_execution_id,
           current_execution_id,
-          datasource,
+          datasource_name,
           catalog,
           database,
           index,

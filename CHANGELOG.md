@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 8.4.0
+Changed table name from `execution_manager` to `multiphase_query_state` and column name of this table from `datasource` to `datasource_name`.
+
 # 8.3.5
 Fixed issue with multiphase queries throwing an error when the list of queries contained only a
 single query.
