@@ -517,10 +517,10 @@ class AthenaApiRepository(
     index: Int,
     query: String,
   ) = """insert into 
-          admin.execution_manager (
+          admin.multiphase_query_state (
           root_execution_id,
           ${currentExecutionId?.let { "current_execution_id,"} ?: ""}
-          datasource,
+          datasource_name,
           ${datasourceCatalog?.let { "catalog,"} ?: "" }
           ${datasourceDatabase?.let { "database," } ?: "" }
           index,

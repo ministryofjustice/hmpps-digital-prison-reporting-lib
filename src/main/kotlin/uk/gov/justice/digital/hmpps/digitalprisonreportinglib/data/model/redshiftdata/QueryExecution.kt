@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshi
 data class QueryExecution(
   val rootExecutionId: String,
   val currentExecutionId: String? = null,
-  val datasource: String,
+  val datasourceName: String,
   val catalog: String? = null,
   val database: String? = null,
   val index: Int,

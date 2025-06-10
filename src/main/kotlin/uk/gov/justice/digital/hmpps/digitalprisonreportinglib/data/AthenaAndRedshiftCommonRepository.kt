@@ -137,7 +137,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     mapSqlParameterSource.addValue("rootExecutionId", rootExecutionId)
     val result = jdbcTemplate
       .queryForList(
-        "SELECT * FROM admin.execution_manager WHERE root_execution_id = :rootExecutionId;",
+        "SELECT * FROM admin.multiphase_query_state WHERE root_execution_id = :rootExecutionId;",
         mapSqlParameterSource,
       )
       .map {
@@ -150,7 +150,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
       QueryExecution(
         rootExecutionId = it["root_execution_id"] as String,
         currentExecutionId = it["current_execution_id"] as String?,
-        datasource = it["datasource"] as String,
+        datasourceName = it["datasource_name"] as String,
         catalog = it["catalog"] as String?,
         database = it["database"] as String?,
         index = it["index"] as Int,
