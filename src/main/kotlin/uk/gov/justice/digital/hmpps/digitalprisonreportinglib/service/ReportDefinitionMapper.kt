@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportChild
@@ -73,6 +74,7 @@ class ReportDefinitionMapper(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
       parameters = dataSet.parameters,
+      multiphaseQueries = dataSet.multiphaseQuery,
     ),
     classification = report.classification,
     printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
@@ -129,6 +131,7 @@ class ReportDefinitionMapper(
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset> = emptyList(),
     parameters: List<Parameter>? = null,
+    multiphaseQueries: List<MultiphaseQuery>? = null,
   ): Specification? {
     if (specification == null) {
       return null
@@ -144,7 +147,7 @@ class ReportDefinitionMapper(
         userToken,
         dataProductDefinitionsPath,
         allDatasets,
-      ) + maybeConvertToReportFields(parameters),
+      ) + maybeConvertParametersToReportFields(multiphaseQueries, parameters),
     )
   }
 
@@ -195,7 +198,6 @@ class ReportDefinitionMapper(
     allDatasets: List<Dataset>,
   ): FieldDefinition {
     val schemaField = identifiedHelper.findOrFail(schemaFields, field.name)
-
     return FieldDefinition(
       name = schemaField.name,
       display = populateDisplay(field.display, schemaField.display),

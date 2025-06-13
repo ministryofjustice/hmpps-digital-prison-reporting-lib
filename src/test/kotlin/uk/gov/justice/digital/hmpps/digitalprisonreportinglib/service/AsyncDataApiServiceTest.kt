@@ -57,6 +57,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -452,7 +453,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should deduplicate prompts when calling the AthenaApiRepository to execute a multiphase query`() {
+  fun `should deduplicate prompts when calling the AthenaApiRepository to execute a dashboard multiphase query`() {
     val reportId = "missing-ethnicity-metrics"
     val dashboardId = "test-dashboard-1"
     val productDefinitionRepository: ProductDefinitionRepository = mock<ProductDefinitionRepository>()
@@ -474,10 +475,6 @@ class AsyncDataApiServiceTest {
     val multiphaseQuery2 = MultiphaseQuery(1, datasource, "SELECT * FROM b", listOf(parameter))
     val caseload = "caseloadA"
     val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
-    val prompts = listOf(
-      prompt,
-      prompt,
-    )
     whenever(
       productDefinitionRepository.getSingleDashboardProductDefinition(
         definitionId = reportId,
@@ -551,6 +548,106 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleDashboardProductDefinition.name,
       reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
       reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+    )
+    assertEquals(statementExecutionResponse, actual)
+  }
+
+  @Test
+  fun `should deduplicate prompts when calling the AthenaApiRepository to execute a report multiphase query`() {
+    val reportId = "missing-ethnicity-metrics"
+    val productDefinitionRepository: ProductDefinitionRepository = mock<ProductDefinitionRepository>()
+    val singleReportProductDefinition = mock<SingleReportProductDefinition>()
+    val report = mock<Report>()
+    val specification = mock<Specification>()
+    val reportDataset = mock<Dataset>()
+    val query = ""
+    val datasource = mock<Datasource>()
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
+    val executionId = UUID.randomUUID().toString()
+    val tableId = executionId.replace("-", "_")
+    val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
+    val parameterName = "establishment_code"
+    val parameterValue = "BFI"
+    val parameter = Parameter(0, parameterName, ParameterType.String, FilterType.AutoComplete, "Estabishment Code", true, ReferenceType.ESTABLISHMENT)
+    val multiphaseQuery1 = MultiphaseQuery(0, datasource, "SELECT * FROM a", listOf(parameter))
+    val multiphaseQuery2 = MultiphaseQuery(1, datasource, "SELECT * FROM b", listOf(parameter))
+    val caseload = "caseloadA"
+    val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
+    whenever(
+      productDefinitionRepository.getSingleReportProductDefinition(
+        definitionId = reportId,
+        reportId = reportVariantId,
+      ),
+    ).thenReturn(singleReportProductDefinition)
+    whenever(singleReportProductDefinition.report).thenReturn(report)
+    whenever(singleReportProductDefinition.id).thenReturn(reportId)
+    whenever(singleReportProductDefinition.name).thenReturn("name")
+    whenever(report.id).thenReturn(reportVariantId)
+    whenever(report.specification).thenReturn(specification)
+    whenever(singleReportProductDefinition.name).thenReturn("name2")
+    whenever(report.filter).thenReturn(mock<ReportFilter>())
+    whenever(singleReportProductDefinition.reportDataset).thenReturn(reportDataset)
+    whenever(reportDataset.query).thenReturn(query)
+    whenever(reportDataset.multiphaseQuery).thenReturn(listOf(multiphaseQuery1, multiphaseQuery2))
+    whenever(singleReportProductDefinition.allDatasets).thenReturn(listOf(reportDataset))
+    whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
+    whenever(datasource.name).thenReturn("NOMIS")
+    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
+    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
+    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
+    val policyEngineResult = Policy.PolicyResult.POLICY_DENY
+    whenever(
+      athenaApiRepository.executeQueryAsync(
+        filters = emptyList(),
+        sortedAsc = true,
+        policyEngineResult = policyEngineResult,
+        prompts = listOf(prompt),
+        userToken = authToken,
+        query = singleReportProductDefinition.reportDataset.query,
+        multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
+        reportFilter = singleReportProductDefinition.report.filter,
+        datasource = singleReportProductDefinition.datasource,
+        reportSummaries = emptyList(),
+        allDatasets = singleReportProductDefinition.allDatasets,
+        productDefinitionId = singleReportProductDefinition.id,
+        productDefinitionName = singleReportProductDefinition.name,
+        reportOrDashboardId = singleReportProductDefinition.report.id,
+        reportOrDashboardName = singleReportProductDefinition.report.name,
+      ),
+    ).thenReturn(statementExecutionResponse)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      filters = mapOf(parameterName to parameterValue),
+      sortColumn = null,
+      sortedAsc = true,
+      userToken = authToken,
+    )
+
+    verify(athenaApiRepository, times(1)).executeQueryAsync(
+      filters = emptyList(),
+      sortedAsc = true,
+      policyEngineResult = policyEngineResult,
+      prompts = listOf(prompt),
+      userToken = authToken,
+      query = singleReportProductDefinition.reportDataset.query,
+      multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
+      reportFilter = singleReportProductDefinition.report.filter,
+      datasource = singleReportProductDefinition.datasource,
+      reportSummaries = emptyList(),
+      allDatasets = singleReportProductDefinition.allDatasets,
+      productDefinitionId = singleReportProductDefinition.id,
+      productDefinitionName = singleReportProductDefinition.name,
+      reportOrDashboardId = singleReportProductDefinition.report.id,
+      reportOrDashboardName = singleReportProductDefinition.report.name,
     )
     assertEquals(statementExecutionResponse, actual)
   }

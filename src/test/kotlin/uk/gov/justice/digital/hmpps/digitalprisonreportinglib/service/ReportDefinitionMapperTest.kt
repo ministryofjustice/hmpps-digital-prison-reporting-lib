@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
@@ -950,6 +951,105 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
+  fun `getting single report with parameters as part of a multiphase query maps full data correctly and converts the parameters to filters`() {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Text,
+      display = parameterDisplay,
+      mandatory = true,
+    )
+    val multiphaseQuery = MultiphaseQuery(
+      index = 0,
+      datasource = mock(),
+      query = "SELECT * FROM a",
+      parameters = listOf(parameter),
+    )
+    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery))
+
+    val result = mapper.mapReport(productDefinition, authToken)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedReportField = FieldDefinition(
+      type = FieldType.String,
+      name = parameterName,
+      display = parameterDisplay,
+      mandatory = false,
+      defaultsort = false,
+      sortable = false,
+      calculated = false,
+      filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
+        type = Text,
+        mandatory = true,
+      ),
+      visible = false,
+    )
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
+  fun `getting single report with parameters as part of a multiphase query with referenceType of establishment_code includes all the establishments as static options`() {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Text,
+      display = parameterDisplay,
+      mandatory = true,
+      referenceType = ReferenceType.ESTABLISHMENT,
+    )
+    val multiphaseQuery = MultiphaseQuery(
+      index = 0,
+      datasource = mock(),
+      query = "SELECT * FROM a",
+      parameters = listOf(parameter),
+    )
+    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery))
+    val bfiEstCode = "BFI"
+    val bfiDescription = "BEDFORD (HMP)"
+    val bsiEstCode = "BSI"
+    val bsiDescription = "BRINSFORD (HMP)"
+
+    whenever(
+      establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded(),
+    ).thenReturn(
+      mapOf(
+        bfiEstCode to listOf(
+          EstablishmentToWing(bfiEstCode, bfiDescription, "BFI-G"),
+          EstablishmentToWing(bfiEstCode, bfiDescription, "BFI-E"),
+        ),
+        bsiEstCode to listOf(
+          EstablishmentToWing(bsiEstCode, bsiDescription, "BSI-R"),
+          EstablishmentToWing(bsiDescription, bsiDescription, "BSI-I"),
+        ),
+      ),
+    )
+    val rdfMapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
+
+    val result = rdfMapper.mapReport(productDefinition, authToken)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedStaticOptions = listOf(
+      FilterOption(bfiEstCode, bfiDescription),
+      FilterOption(bsiEstCode, bsiDescription),
+    )
+
+    val expectedReportField = createReportFieldDefinition(parameter, expectedStaticOptions)
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
   fun `Interactive report metadata hint is mapped to the report correctly`() {
     val defaultValue = createProductDefinition("today(-2,DAYS)", interactive = true)
 
@@ -1201,6 +1301,7 @@ class ReportDefinitionMapperTest {
       formula = formula,
       visible = visible,
     ),
+    multiphaseQueries: List<MultiphaseQuery>? = null,
   ): SingleReportProductDefinition = SingleReportProductDefinition(
     id = "1",
     name = "2",
@@ -1227,6 +1328,7 @@ class ReportDefinitionMapperTest {
         ),
       ),
       parameters = parameters,
+      multiphaseQuery = multiphaseQueries,
     ),
     report =
     Report(
