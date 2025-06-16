@@ -28,8 +28,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
@@ -167,6 +169,82 @@ class DashboardDefinitionMapperTest {
       listOf(
         parameter,
       ),
+    )
+    val actual = dashboardDefinitionMapper.toDashboardDefinition(
+      dashboard = dashboard,
+      allDatasets = listOf(dashboardDataset),
+    )
+    val expected = DashboardDefinition(
+      id,
+      name,
+      description,
+      listOf(),
+      listOf(
+        FieldDefinition(
+          name = parameter.name,
+          display = parameter.display,
+          sortable = false,
+          defaultsort = false,
+          type = FieldType.String,
+          mandatory = false,
+          visible = false,
+          filter = FilterDefinition(
+            type = FilterType.AutoComplete,
+            mandatory = parameter.mandatory,
+            interactive = false,
+            staticOptions = listOf(
+              FilterOption(
+                "KMI",
+                "KIRKHAM",
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+    assertEquals(expected, actual)
+    verify(establishmentCodesToWingsCacheService, times(1)).getEstablishmentsAndPopulateCacheIfNeeded()
+  }
+
+  @Test
+  fun `getDashboardDefinition converts multiphase query dataset parameters to filters and returns the dashboard definition`() {
+    whenever(establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded()).then {
+      mapOf("KMI" to listOf(EstablishmentToWing("KMI", "KIRKHAM", "A")))
+    }
+
+    val datasetId = "dataset-id"
+    val id = "age-breakdown-dashboard-1"
+    val name = "test-dashboard-name"
+    val description = "description"
+    val dashboard = Dashboard(
+      id,
+      name,
+      description,
+      datasetId,
+      listOf(),
+    )
+    val parameter = Parameter(
+      0,
+      "paramName",
+      ParameterType.String,
+      AutoComplete,
+      "display",
+      true,
+      ReferenceType.ESTABLISHMENT,
+    )
+    val multiphaseQuery = MultiphaseQuery(
+      index = 0,
+      datasource = mock<Datasource>(),
+      query = "SELECT * FROM a",
+      parameters = listOf(parameter),
+    )
+    val dashboardDataset = Dataset(
+      id = datasetId,
+      name = "name",
+      datasource = "datasource",
+      query = "",
+      schema = Schema(listOf(SchemaField("n", ParameterType.String, "d"))),
+      multiphaseQuery = listOf(multiphaseQuery),
     )
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,

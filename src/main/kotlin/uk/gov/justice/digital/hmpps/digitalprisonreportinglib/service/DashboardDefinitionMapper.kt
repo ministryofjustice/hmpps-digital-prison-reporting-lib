@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
@@ -66,19 +65,24 @@ class DashboardDefinitionMapper(
           },
         )
       },
-      filterFields = dataset.schema.field
-        .filter { it.filter != null }
-        .map { toFilterField(it, allDatasets, userToken) } +
-        (dataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.let { collectAllParametersAndMapToDistinctReportFields(it) } ?: maybeConvertToReportFields(dataset.parameters)),
+      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, userToken),
     )
   }
 
-  private fun collectAllParametersAndMapToDistinctReportFields(queries: List<MultiphaseQuery>): List<FieldDefinition> {
-    val distinctParameters =
-      queries.map { maybeConvertToReportFields(it.parameters) }.filterNot { it.isEmpty() }.flatten().distinct()
-    log.debug("Distinct multiphase converted fields from parameters: $distinctParameters")
-    return distinctParameters
-  }
+  private fun mapAndAggregateAllFilters(
+    dataset: Dataset,
+    allDatasets: List<Dataset>,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, userToken) +
+    maybeConvertParametersToReportFields(dataset.multiphaseQuery, dataset.parameters)
+
+  private fun convertDatasetFilterFieldsToReportFields(
+    dataset: Dataset,
+    allDatasets: List<Dataset>,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ) = dataset.schema.field
+    .filter { it.filter != null }
+    .map { toFilterField(it, allDatasets, userToken) }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
     DashboardVisualisationColumnDefinition(
