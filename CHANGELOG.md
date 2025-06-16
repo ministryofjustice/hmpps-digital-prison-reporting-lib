@@ -1,8 +1,8 @@
 Below you can find the changes included in each release.
 
 # 8.4.1
-Reports support multiphase queries, including parameters (prompts).
-Unified status endpoint behaviour for both reports and dashboards to check for an existing table for completed queries
+- Reports support multiphase queries, including parameters (prompts).
+- Unified status endpoint behaviour for both reports and dashboards to check for an existing table for completed queries
 before returning the "FINISHED" status.
 
 # 8.4.0
