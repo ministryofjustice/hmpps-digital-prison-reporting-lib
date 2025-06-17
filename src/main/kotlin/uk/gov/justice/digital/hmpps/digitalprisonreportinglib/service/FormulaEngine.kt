@@ -58,35 +58,13 @@ class FormulaEngine(
   }
 
   private fun interpolateFormatNumberFormula(formula: String, row: Map<String, Any?>): String {
-    print("1")
-    print("\n")
     val (numColumnNamePlaceholder, numPatternPlaceholder) = formula.substring(FORMAT_NUMBER_FORMULA_PREFIX.length, formula.indexOf(")"))
       .split(",", limit = 2)
-    print("2")
-    print("\n")
-    print(numColumnNamePlaceholder)
-    print("\n")
-    print(numPatternPlaceholder)
-    print("\n")
     val numColumnName = numColumnNamePlaceholder.removeSurrounding(prefix = "\${", suffix = "}")
-    print("3")
-    print("\n")
-    print(numColumnName)
-    print("\n")
     val number = row[numColumnName] ?: return ""
-    print("4")
-    print("\n")
-    print(number)
-    print("\n")
-    if (number is Number) {
-      print("foo")
-      print("\n")
-    }
-    print(removeQuotes(numPatternPlaceholder.trim()))
-    print("\n")
     return when (number) {
         is Number -> DecimalFormat(removeQuotes(numPatternPlaceholder.trim())).format(number)
-      else -> throw IllegalArgumentException("Could not parse date: $number, of type ${number::class}")
+      else -> throw IllegalArgumentException("Could not parse number: $number, of type ${number::class}")
     }
   }
 
