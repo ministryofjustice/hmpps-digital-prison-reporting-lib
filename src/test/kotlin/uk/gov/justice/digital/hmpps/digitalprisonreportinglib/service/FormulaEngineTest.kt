@@ -594,7 +594,7 @@ class FormulaEngineTest {
   }
 
   private fun testFormatNumber(formula: String, input: Number, expectedOutput: String) {
-    val formatNumFormula = "format_number(\${money}, '${formula}')"
+    val formatNumFormula = "format_number(\${money}, '$formula')"
     val name = "LastName6, F"
     val row: Map<String, Any?> = mapOf(
       NAME to name,

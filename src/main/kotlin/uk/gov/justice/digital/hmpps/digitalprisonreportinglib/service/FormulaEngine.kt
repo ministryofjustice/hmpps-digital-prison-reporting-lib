@@ -63,7 +63,7 @@ class FormulaEngine(
     val numColumnName = numColumnNamePlaceholder.removeSurrounding(prefix = "\${", suffix = "}")
     val number = row[numColumnName] ?: return ""
     return when (number) {
-        is Number -> DecimalFormat(removeQuotes(numPatternPlaceholder.trim())).format(number)
+      is Number -> DecimalFormat(removeQuotes(numPatternPlaceholder.trim())).format(number)
       else -> throw IllegalArgumentException("Could not parse number: $number, of type ${number::class}")
     }
   }
