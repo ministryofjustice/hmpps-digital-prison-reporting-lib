@@ -18,6 +18,7 @@ class FormulaEngineTest {
   companion object {
     private const val NAME = "name"
     private const val DATE = "date"
+    private const val MONEY = "money"
     private const val DESTINATION = "destination"
     private const val DESTINATION_CODE = "destination_code"
     private const val PRISON_NUMBER = "prison_number"
@@ -564,6 +565,54 @@ class FormulaEngineTest {
     val expectedRow: Map<String, Any?> = mapOf(
       NAME to name,
       DATE to "01/01/1970",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine accepts various different numerical inputs and formulae, and formats them correctly`() {
+    val formulae = arrayOf("#,##0.00", "#,###", "##.##")
+    val inputs = arrayOf<Number>(123, 123.00, 123.53, 1231.01)
+    testFormatNumber(formulae[0], inputs[0], "123.00")
+    testFormatNumber(formulae[1], inputs[0], "123")
+    testFormatNumber(formulae[2], inputs[0], "123")
+
+    testFormatNumber(formulae[0], inputs[1], "123.00")
+    testFormatNumber(formulae[1], inputs[1], "123")
+    testFormatNumber(formulae[2], inputs[1], "123")
+
+    testFormatNumber(formulae[0], inputs[2], "123.53")
+    testFormatNumber(formulae[1], inputs[2], "124")
+    testFormatNumber(formulae[2], inputs[2], "123.53")
+
+    testFormatNumber(formulae[0], inputs[3], "1,231.01")
+    testFormatNumber(formulae[1], inputs[3], "1,231")
+    testFormatNumber(formulae[2], inputs[3], "1231.01")
+  }
+
+  private fun testFormatNumber(formula: String, input: Number, expectedOutput: String) {
+    val formatNumFormula = "format_number(\${money}, '$formula')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      MONEY to input,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:money",
+        display = "Money",
+        visible = Visible.TRUE,
+        formula = formatNumFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      MONEY to expectedOutput,
       DESTINATION to "Manchester",
       DESTINATION_CODE to "MNCH",
     )
