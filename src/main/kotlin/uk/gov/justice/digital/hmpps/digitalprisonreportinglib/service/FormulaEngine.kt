@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -17,6 +18,7 @@ class FormulaEngine(
   companion object {
     const val MAKE_URL_FORMULA_PREFIX = "make_url("
     const val FORMAT_DATE_FORMULA_PREFIX = "format_date("
+    const val FORMAT_NUMBER_FORMULA_PREFIX = "format_number("
   }
 
   fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> = row.entries.associate { e ->
@@ -38,6 +40,7 @@ class FormulaEngine(
   private fun interpolate(formula: String, row: Map<String, Any?>): String = when {
     formula.startsWith(MAKE_URL_FORMULA_PREFIX) -> interpolateUrlFormula(formula, row)
     formula.startsWith(FORMAT_DATE_FORMULA_PREFIX) -> interpolateFormatDateFormula(formula, row)
+    formula.startsWith(FORMAT_NUMBER_FORMULA_PREFIX) -> interpolateFormatNumberFormula(formula, row)
     else -> interpolateStandardFormula(formula, row)
   }
 
@@ -51,6 +54,39 @@ class FormulaEngine(
       is LocalDateTime -> date.format(DateTimeFormatter.ofPattern(removeQuotes(datePatternPlaceholder.trim())))
       is Date -> SimpleDateFormat(removeQuotes(datePatternPlaceholder.trim())).format(date)
       else -> throw IllegalArgumentException("Could not parse date: $date, of type ${date::class}")
+    }
+  }
+
+  private fun interpolateFormatNumberFormula(formula: String, row: Map<String, Any?>): String {
+    print("1")
+    print("\n")
+    val (numColumnNamePlaceholder, numPatternPlaceholder) = formula.substring(FORMAT_NUMBER_FORMULA_PREFIX.length, formula.indexOf(")"))
+      .split(",", limit = 2)
+    print("2")
+    print("\n")
+    print(numColumnNamePlaceholder)
+    print("\n")
+    print(numPatternPlaceholder)
+    print("\n")
+    val numColumnName = numColumnNamePlaceholder.removeSurrounding(prefix = "\${", suffix = "}")
+    print("3")
+    print("\n")
+    print(numColumnName)
+    print("\n")
+    val number = row[numColumnName] ?: return ""
+    print("4")
+    print("\n")
+    print(number)
+    print("\n")
+    if (number is Number) {
+      print("foo")
+      print("\n")
+    }
+    print(removeQuotes(numPatternPlaceholder.trim()))
+    print("\n")
+    return when (number) {
+        is Number -> DecimalFormat(removeQuotes(numPatternPlaceholder.trim())).format(number)
+      else -> throw IllegalArgumentException("Could not parse date: $number, of type ${number::class}")
     }
   }
 
