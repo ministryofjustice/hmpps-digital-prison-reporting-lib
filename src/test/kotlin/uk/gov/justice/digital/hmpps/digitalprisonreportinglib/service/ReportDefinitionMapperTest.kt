@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Multiselect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
@@ -127,6 +128,7 @@ class ReportDefinitionMapperTest {
           ),
           sortable = true,
           defaultSort = true,
+          sortDirection = SortDirection.DESC,
           formula = null,
           visible = Visible.TRUE,
         ),
@@ -169,6 +171,7 @@ class ReportDefinitionMapperTest {
           ),
           sortable = true,
           defaultSort = true,
+          sortDirection = SortDirection.DESC,
           formula = null,
           visible = Visible.TRUE,
         ),
@@ -287,6 +290,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.visible).isTrue()
     assertThat(field.mandatory).isFalse()
@@ -362,6 +366,7 @@ class ReportDefinitionMapperTest {
               ),
               sortable = true,
               defaultSort = true,
+              sortDirection = SortDirection.DESC,
               formula = null,
               visible = Visible.TRUE,
             ),
@@ -491,6 +496,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
@@ -654,6 +660,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.type).isEqualTo(FieldType.HTML)
     assertThat(field.calculated).isEqualTo(true)
@@ -711,6 +718,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.type).isEqualTo(FieldType.Date)
     assertThat(field.calculated).isEqualTo(true)
@@ -784,6 +792,7 @@ class ReportDefinitionMapperTest {
       mandatory = false,
       defaultsort = false,
       sortable = false,
+      sortDirection = SortDirection.DESC,
       calculated = false,
       filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
         type = Text,
@@ -981,6 +990,7 @@ class ReportDefinitionMapperTest {
       mandatory = false,
       defaultsort = false,
       sortable = false,
+      sortDirection = SortDirection.DESC,
       calculated = false,
       filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
         type = Text,
@@ -1168,6 +1178,7 @@ class ReportDefinitionMapperTest {
     mandatory = false,
     defaultsort = false,
     sortable = false,
+    sortDirection = SortDirection.DESC,
     calculated = false,
     filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
       type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.valueOf(parameter.filterType.toString()),
@@ -1200,6 +1211,7 @@ class ReportDefinitionMapperTest {
           ),
           sortable = true,
           defaultSort = true,
+          sortDirection = SortDirection.DESC,
           formula = null,
           visible = Visible.TRUE,
         ),
@@ -1234,6 +1246,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
@@ -1270,6 +1283,7 @@ class ReportDefinitionMapperTest {
           wordWrap = WordWrap.None,
           sortable = true,
           defaultSort = true,
+          sortDirection = SortDirection.DESC,
           formula = formula,
           visible = Visible.TRUE,
         ),

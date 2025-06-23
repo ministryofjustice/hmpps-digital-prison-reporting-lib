@@ -179,7 +179,8 @@
           "default" : "today(-1,months) - today()"
         },
         "sortable" : true,
-        "defaultsort" : true
+        "defaultsort" : true,
+        "sortDirection" : "ASC"
       }, {
         "name" : "$ref:origin",
         "display" : "From",

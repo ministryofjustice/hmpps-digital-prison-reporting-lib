@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper
@@ -34,13 +35,30 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
         ?.let { listOf(validateAndMapFieldIdDynamicFilter(findFilterDefinition(productDefinition, reportFieldId), reportFieldId, prefix)) }
     } ?: emptyList()
 
-  protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? = definition.report.specification
-    ?.field
-    ?.firstOrNull { it.defaultSort }
-    ?.name
-    ?.removePrefix(REF_PREFIX)
+  protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): Pair<String?, Boolean> {
+    val defaultSortField = definition.report.specification
+      ?.field
+      ?.firstOrNull { it.defaultSort }
 
-  protected fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String? = findSortColumn(sortColumn, productDefinition.reportDataset) ?: calculateDefaultSortColumn(productDefinition)
+    if (defaultSortField == null) {
+      return Pair(null, false)
+    }
+
+    return Pair(defaultSortField.name.removePrefix(REF_PREFIX), defaultSortField.sortDirection == SortDirection.ASC)
+  }
+
+  protected fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?, sortedAsc: Boolean?): Pair<String?, Boolean> {
+    val sortColumn = findSortColumn(sortColumn, productDefinition.reportDataset)
+    if (sortColumn == null) {
+      val (sortColumn, sortDirection) = calculateDefaultSortColumn(productDefinition)
+      val computedSortedAsc = if (sortedAsc != null && sortColumn != null) sortedAsc else sortDirection
+      return Pair(sortColumn, computedSortedAsc)
+    }
+    return Pair(sortColumn,
+      sortedAsc
+          ?: (productDefinition.report.specification?.field?.firstOrNull { it.name == sortColumn }?.sortDirection === SortDirection.ASC)
+    )
+  }
 
   protected fun findSortColumn(
     sortColumn: String?,
