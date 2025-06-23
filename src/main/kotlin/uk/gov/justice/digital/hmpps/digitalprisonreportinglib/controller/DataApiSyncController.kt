@@ -70,7 +70,7 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
     @Min(1)
     pageSize: Long,
     @RequestParam sortColumn: String?,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -131,7 +131,7 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
     @RequestParam(defaultValue = "10")
     @Min(1)
     pageSize: Long,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,

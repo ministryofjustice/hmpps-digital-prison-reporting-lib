@@ -41,7 +41,7 @@ class SyncDataApiService(
     selectedPage: Long,
     pageSize: Long,
     sortColumn: String?,
-    sortedAsc: Boolean,
+    sortedAsc: Boolean?,
     userToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
@@ -54,14 +54,15 @@ class SyncDataApiService(
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+    val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return configuredApiRepository
       .executeQuery(
         query = datasetForFilter?.query ?: productDefinition.reportDataset.query,
         filters = validateAndMapFilters(productDefinition, filters, null, reportFieldId) + dynamicFilter,
         selectedPage = selectedPage,
         pageSize = pageSize,
-        sortColumn = datasetForFilter?.let { findSortColumn(sortColumn, it) } ?: sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
-        sortedAsc = sortedAsc,
+        sortColumn,
+        sortedAsc = computedSortedAsc,
         policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = productDefinition.datasource.name,
