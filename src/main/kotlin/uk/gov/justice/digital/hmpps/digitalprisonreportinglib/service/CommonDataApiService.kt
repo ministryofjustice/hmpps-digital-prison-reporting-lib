@@ -54,9 +54,10 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
       val computedSortedAsc = if (sortedAsc != null && sortColumn != null) sortedAsc else sortDirection
       return Pair(sortColumn, computedSortedAsc)
     }
-    return Pair(sortColumn,
+    return Pair(
+      sortColumn,
       sortedAsc
-          ?: (productDefinition.report.specification?.field?.firstOrNull { it.name == sortColumn }?.sortDirection === SortDirection.ASC)
+        ?: (productDefinition.report.specification?.field?.firstOrNull { it.name == sortColumn }?.sortDirection === SortDirection.ASC),
     )
   }
 
