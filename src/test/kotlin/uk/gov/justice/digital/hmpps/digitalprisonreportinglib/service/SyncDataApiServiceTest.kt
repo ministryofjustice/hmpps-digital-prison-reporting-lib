@@ -254,7 +254,7 @@ class SyncDataApiServiceTest {
         filters = emptyList(),
         selectedPage = selectedPage,
         pageSize = pageSize,
-        sortColumn = estNameSchemaFieldName,
+        sortColumn = "name",
         sortedAsc = sortedAsc,
         policyEngineResult = POLICY_PERMIT,
         dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -269,7 +269,7 @@ class SyncDataApiServiceTest {
       filters = emptyMap(),
       selectedPage = selectedPage,
       pageSize = pageSize,
-      sortColumn = estNameSchemaFieldName,
+      sortColumn = "name",
       sortedAsc = sortedAsc,
       userToken = authToken,
       reportFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -281,7 +281,7 @@ class SyncDataApiServiceTest {
       filters = emptyList(),
       selectedPage = selectedPage,
       pageSize = pageSize,
-      sortColumn = estNameSchemaFieldName,
+      sortColumn = "name",
       sortedAsc = sortedAsc,
       policyEngineResult = POLICY_PERMIT,
       dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -1294,7 +1294,7 @@ class SyncDataApiServiceTest {
 
     val selectedPage = 1L
     val pageSize = 10L
-    val sortedAsc = true
+    val sortedAsc = false
 
     whenever(
       configuredApiRepository.executeQuery(
