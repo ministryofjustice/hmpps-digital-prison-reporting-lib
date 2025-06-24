@@ -599,7 +599,7 @@ class AsyncDataApiServiceTest {
     whenever(
       athenaApiRepository.executeQueryAsync(
         filters = emptyList(),
-        sortedAsc = true,
+        sortedAsc = false,
         policyEngineResult = policyEngineResult,
         prompts = listOf(prompt),
         userToken = authToken,
@@ -634,7 +634,7 @@ class AsyncDataApiServiceTest {
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
       filters = emptyList(),
-      sortedAsc = true,
+      sortedAsc = false,
       policyEngineResult = policyEngineResult,
       prompts = listOf(prompt),
       userToken = authToken,
@@ -1257,7 +1257,7 @@ class AsyncDataApiServiceTest {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
     val pageSize = 20L
-    val sortColumn = "columnA"
+    val sortColumn = "date"
     val sortedAsc = true
 
     whenever(
@@ -1322,7 +1322,7 @@ class AsyncDataApiServiceTest {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker)
     val executionID = UUID.randomUUID().toString()
     whenever(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList(), false),
+      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList(), false, "date"),
     ).thenReturn(expectedRepositoryResult)
 
     whenever(
@@ -1342,7 +1342,7 @@ class AsyncDataApiServiceTest {
       sortedAsc = false,
       userToken = authToken,
     )
-
+    //failing because of dpd sortdirection default sort propagating through sortcolumn
     assertEquals(expectedServiceResult, actual)
   }
 
