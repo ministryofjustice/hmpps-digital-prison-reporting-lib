@@ -184,6 +184,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           .path("/reports/external-movements/last-month")
           .queryParam("selectedPage", 1)
           .queryParam("pageSize", 3)
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
