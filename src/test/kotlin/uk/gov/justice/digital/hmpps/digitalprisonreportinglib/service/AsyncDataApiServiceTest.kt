@@ -1342,7 +1342,6 @@ class AsyncDataApiServiceTest {
       sortedAsc = false,
       userToken = authToken,
     )
-    //failing because of dpd sortdirection default sort propagating through sortcolumn
     assertEquals(expectedServiceResult, actual)
   }
 
