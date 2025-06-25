@@ -7,6 +7,7 @@ data class FieldDefinition(
   val filter: FilterDefinition? = null,
   val sortable: Boolean = true,
   val defaultsort: Boolean = false,
+  val sortDirection: SortDirection? = null,
   val type: FieldType,
   val mandatory: Boolean = false,
   val visible: Boolean = true,
