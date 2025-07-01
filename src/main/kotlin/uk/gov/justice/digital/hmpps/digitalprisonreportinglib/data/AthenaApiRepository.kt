@@ -518,7 +518,7 @@ class AthenaApiRepository(
     index: Int,
     query: String,
   ) = """insert into 
-          admin.multiphase_${QUERY_COL}_state (
+          admin.multiphase_query_state (
           $ROOT_EXECUTION_ID_COL,
           ${currentExecutionId?.let { "$CURRENT_EXECUTION_ID_COL,"} ?: ""}
           $DATASOURCE_NAME_COL,
