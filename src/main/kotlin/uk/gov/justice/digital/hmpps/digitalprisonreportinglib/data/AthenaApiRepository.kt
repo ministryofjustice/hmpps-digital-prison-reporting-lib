@@ -611,6 +611,6 @@ class AthenaApiRepository(
           $innerQuery
                 )
       """.trimIndent()
-    else -> throw RuntimeException("Unsupported DatasourceConnection type.")
+    else -> throw RuntimeException("Unsupported DatasourceConnection type for query execution. Connection: $connection")
   }
 }
