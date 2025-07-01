@@ -12,7 +12,9 @@
       "id": "nomis",
       "name": "NOMIS",
       "database": "nomis_db",
-      "catalog": "nomis"
+      "catalog": "nomis",
+      "connection": "federated",
+      "dialect": "oracle/11g"
     }],
   "dataset" : [ {
     "id" : "external-movements",
