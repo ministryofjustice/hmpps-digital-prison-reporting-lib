@@ -12,8 +12,14 @@ import software.amazon.awssdk.services.athena.model.QueryExecutionContext
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasourceConnection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -170,24 +176,23 @@ class AthenaApiRepository(
     sortColumn: String?,
     sortedAsc: Boolean,
     datasource: Datasource,
-  ) =
-    buildCachedTableQuery(
-      productDefinitionId = productDefinitionId,
-      productDefinitionName  =productDefinitionName,
-      reportOrDashboardId = reportOrDashboardId,
-      reportOrDashboardName = reportOrDashboardName,
-      tableId = tableId,
-      connection = datasource.connection ?: DatasourceConnection.FEDERATED,
-      innerQuery = buildFinalInnerQuery(
-        buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ORACLE11g),
-        buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ORACLE11g),
-        buildDatasetQuery(query),
-        buildReportQuery(reportFilter),
-        buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
-        "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
-        buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
-      ).replace("'", "''")
-    )
+  ) = buildCachedTableQuery(
+    productDefinitionId = productDefinitionId,
+    productDefinitionName = productDefinitionName,
+    reportOrDashboardId = reportOrDashboardId,
+    reportOrDashboardName = reportOrDashboardName,
+    tableId = tableId,
+    connection = datasource.connection ?: DatasourceConnection.FEDERATED,
+    innerQuery = buildFinalInnerQuery(
+      buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ORACLE11g),
+      buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ORACLE11g),
+      buildDatasetQuery(query),
+      buildReportQuery(reportFilter),
+      buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
+      buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
+    ).replace("'", "''"),
+  )
 
   private fun buildPromptsQuery(prompts: List<Prompt>?, dialect: SqlDialect? = SqlDialect.ORACLE11g): String {
     if (prompts.isNullOrEmpty()) {
@@ -327,7 +332,7 @@ class AthenaApiRepository(
   ) {
     val lastQuery = buildCachedTableQuery(
       productDefinitionId = productDefinitionId,
-      productDefinitionName  =productDefinitionName,
+      productDefinitionName = productDefinitionName,
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
       tableId = lastTableId,
@@ -341,7 +346,7 @@ class AthenaApiRepository(
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(sortColumn = sortColumn, sortedAsc = sortedAsc),
       )
-        .replace("\${tableId}", previousTableId)
+        .replace("\${tableId}", previousTableId),
     )
     log.debug("Last multiphase query: {}", lastQuery)
     val lastInsertStatement = buildInsertStatement(
@@ -378,7 +383,7 @@ class AthenaApiRepository(
       val intermediateQuery = multiphaseQuerySortedByIndex[i + 1]
       val intermediateQueryString = buildCachedTableQuery(
         productDefinitionId = productDefinitionId,
-        productDefinitionName  = productDefinitionName,
+        productDefinitionName = productDefinitionName,
         reportOrDashboardId = reportOrDashboardId,
         reportOrDashboardName = reportOrDashboardName,
         tableId = currentTableId,
@@ -391,7 +396,7 @@ class AthenaApiRepository(
           )
             .joinToString(",") +
             "\nSELECT * FROM $DATASET_"
-          ).replace("\${tableId}", previousTableId)
+          ).replace("\${tableId}", previousTableId),
       )
       log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)
       val insertQuery = buildInsertStatement(
@@ -422,7 +427,7 @@ class AthenaApiRepository(
   ): StatementExecutionResponse {
     val firstQuery = buildCachedTableQuery(
       productDefinitionId = productDefinitionId,
-      productDefinitionName  =productDefinitionName,
+      productDefinitionName = productDefinitionName,
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
       tableId = firstTableId,
@@ -435,7 +440,7 @@ class AthenaApiRepository(
         )
           .joinToString(",") +
           "\nSELECT * FROM $DATASET_"
-        ).replace("'", "''")
+        ).replace("'", "''"),
     )
 
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
@@ -485,7 +490,7 @@ class AthenaApiRepository(
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       dynamicFilterFieldId = null,
-      datasource = multiphaseQueries.first().datasource
+      datasource = multiphaseQueries.first().datasource,
     )
     val singleQueryExecutionResult =
       executeQueryAsync(multiphaseQueries.first().datasource, tableId, singleFinalQuery)
@@ -567,7 +572,7 @@ class AthenaApiRepository(
       dynamicFilterFieldId,
       sortColumn,
       sortedAsc,
-      datasource
+      datasource,
     )
 
     return executeQueryAsync(datasource, tableId, finalQuery)
@@ -581,11 +586,9 @@ class AthenaApiRepository(
     tableId: String,
     connection: DatasourceConnection,
     innerQuery: String,
-  ): String {
-    return when (connection)
-    {
-      DatasourceConnection.FEDERATED ->
-        """
+  ): String = when (connection) {
+    DatasourceConnection.FEDERATED ->
+      """
           /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
@@ -596,9 +599,9 @@ class AthenaApiRepository(
            '$innerQuery'
            )) 
           );
-  """.trimIndent()
-      DatasourceConnection.AWS_DATA_CATALOG ->
-        """
+      """.trimIndent()
+    DatasourceConnection.AWS_DATA_CATALOG ->
+      """
             /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
                 CREATE TABLE AwsDataCatalog.reports.$tableId
                 WITH (
@@ -608,7 +611,6 @@ class AthenaApiRepository(
           $innerQuery
                 )
       """.trimIndent()
-      else -> throw RuntimeException("Unsupported DatasourceConnection type.")
-    }
+    else -> throw RuntimeException("Unsupported DatasourceConnection type.")
   }
 }
