@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-#9.0.0
+# 9.0.0
 - All async queries run via Athena. 
 - Removed the Redshift data API status and cancel endpoints as they are not used.
 - Added `connection` and `dialect` fields to `Datasource`.
