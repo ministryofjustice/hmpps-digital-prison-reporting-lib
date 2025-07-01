@@ -204,8 +204,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
   }
 
-
-
   class ReportDefinitionListTest : IntegrationTestBase() {
 
     companion object {

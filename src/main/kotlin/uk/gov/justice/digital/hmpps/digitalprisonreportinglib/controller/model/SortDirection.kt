@@ -4,5 +4,5 @@ import com.fasterxml.jackson.annotation.JsonValue
 
 enum class SortDirection(@JsonValue val value: String) {
   ASC("asc"),
-  DESC("desc")
+  DESC("desc"),
 }

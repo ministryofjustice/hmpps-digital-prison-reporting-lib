@@ -54,9 +54,10 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
       val computedSortedAsc = if (sortedAsc != null && sortColumn != null) sortedAsc else sortDirection
       return Pair(sortColumn, computedSortedAsc)
     }
-    return Pair(sortColumn,
+    return Pair(
+      sortColumn,
       sortedAsc
-          ?: (productDefinition.report.specification?.field?.firstOrNull { it.name.removePrefix(REF_PREFIX) == sortColumn }?.sortDirection?.toString()?.lowercase() === SortDirection.ASC.toString().lowercase())
+        ?: (productDefinition.report.specification?.field?.firstOrNull { it.name.removePrefix(REF_PREFIX) == sortColumn }?.sortDirection?.toString()?.lowercase() === SortDirection.ASC.toString().lowercase()),
     )
   }
 
