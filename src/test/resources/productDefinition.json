@@ -180,7 +180,7 @@
         },
         "sortable" : true,
         "defaultsort" : true,
-        "sortDirection" : "ASC"
+        "sortDirection" : "asc"
       }, {
         "name" : "$ref:origin",
         "display" : "From",
