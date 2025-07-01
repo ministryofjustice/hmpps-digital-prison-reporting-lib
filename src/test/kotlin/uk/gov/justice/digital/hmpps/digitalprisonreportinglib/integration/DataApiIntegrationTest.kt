@@ -134,7 +134,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             .path("/reports/external-movements/last-month")
             .queryParam("selectedPage", 1)
             .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
             .build()
         }
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -143,9 +142,9 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .isOk()
         .expectBody()
         .jsonPath("$.[0].date")
-        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
-        .jsonPath("$.[1].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
 
       assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
