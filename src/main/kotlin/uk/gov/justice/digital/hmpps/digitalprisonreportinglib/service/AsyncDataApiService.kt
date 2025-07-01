@@ -374,17 +374,6 @@ class AsyncDataApiService(
     return true
   }
 
-//  private fun getRepository(datasourceName: String, connection: DatasourceConnection?, firstMultiphaseQueryConnection: DatasourceConnection?): AthenaAndRedshiftCommonRepository = firstMultiphaseQueryConnection?.let {
-//    getRepo(datasourceName, it)
-//  } ?: getRepo(datasourceName, connection)
-//
-//  private fun getRepo(datasourceName: String, datasourceConnection: DatasourceConnection?) = when (datasourceConnection) {
-//    DatasourceConnection.FEDERATED, DatasourceConnection.AWS_DATA_CATALOG -> athenaApiRepository
-//    DatasourceConnection.DATA_WAREHOUSE -> redshiftDataApiRepository
-//    // Keeps backwards compatibility until schema is updated
-//    else -> getRepo(datasourceName)
-//  }
-
   private fun buildPrompts(
     prompts: List<Map.Entry<String, String>>,
     parameters: List<Parameter>?,
