@@ -5,13 +5,17 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.any
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.inOrder
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionResponse
@@ -30,13 +34,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.PROMPT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.REPORT_
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.TRUE_WHERE_CLAUSE
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
@@ -91,14 +89,14 @@ SELECT *
           );
   """.trimIndent()
 
-  private fun multiphaseSqlNonLastQuery() = """            /* dpdId dpdName reportId reportName */
-            CREATE TABLE AwsDataCatalog.reports._a6227417_bdac_40bb_bc81_49c750daacd7 
-            WITH (
-              format = 'PARQUET'
-            ) 
-            AS (
-            SELECT * FROM TABLE(system.query(query =>
-             'WITH context_ AS (
+  private fun multiphaseSqlNonLastQuery() = """          /* dpdId dpdName reportId reportName */
+          CREATE TABLE AwsDataCatalog.reports._a6227417_bdac_40bb_bc81_49c750daacd7 
+          WITH (
+            format = 'PARQUET'
+          ) 
+          AS (
+          SELECT * FROM TABLE(system.query(query =>
+           'WITH context_ AS (
       SELECT 
       ''aUser'' AS username, 
       ''aCaseload'' AS caseload, 
@@ -106,8 +104,8 @@ SELECT *
       FROM DUAL
       ),prompt_ AS (SELECT '''' FROM DUAL),dataset_ AS (SELECT column_a,column_b FROM schema_a.table_a)
 SELECT * FROM dataset_'
-             )) 
-            );"""
+           )) 
+          );"""
 
   private val athenaClient = mock<AthenaClient>()
   private val tableIdGenerator = mock<TableIdGenerator>()
@@ -307,6 +305,139 @@ SELECT * FROM dataset_'
     assertEquals(expected, actual)
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    "$QUERY_SUCCEEDED, $QUERY_FINISHED",
+    "$QUERY_FAILED, $QUERY_FAILED",
+    "$QUERY_QUEUED, $QUERY_SUBMITTED",
+    "$QUERY_CANCELLED, $QUERY_ABORTED",
+  )
+  fun `getStatementStatusForMultiphaseQuery should return the StatementExecutionStatus of one multiphase query mapped correctly`(athenaStatus: String, mappedRedshiftStatus: String) {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val statementId = "statementId"
+    val errorMessageBase64Enc = "ZXhjZXB0aW9u"
+    val errorMessageBase64Dec = "exception"
+    val queryResults: MutableList<Map<String, Any?>> = mutableListOf()
+    if (athenaStatus == QUERY_FAILED) {
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaStatus, ERROR_COL to errorMessageBase64Enc, INDEX_COL to 0))
+    } else {
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaStatus, INDEX_COL to 0))
+    }
+    val mapSqlParameterSource = MapSqlParameterSource()
+    mapSqlParameterSource.addValue("rootExecutionId", statementId)
+
+    whenever(
+      jdbcTemplate.queryForList(
+        anyString(),
+        any(MapSqlParameterSource::class.java),
+      ),
+    ).thenReturn(queryResults)
+
+    val expected = if (athenaStatus == QUERY_FAILED) {
+      StatementExecutionStatus(
+        status = mappedRedshiftStatus,
+        duration = 1,
+        resultRows = 0L,
+        resultSize = 0L,
+        error = errorMessageBase64Dec,
+        stateChangeReason = errorMessageBase64Dec,
+      )
+    } else {
+      StatementExecutionStatus(
+        status = mappedRedshiftStatus,
+        duration = 1,
+        resultRows = 0L,
+        resultSize = 0L,
+      )
+    }
+
+    val actual = athenaApiRepository.getStatementStatusForMultiphaseQuery(statementId, jdbcTemplate)
+
+    val stringArgumentCaptor = argumentCaptor<String>()
+    val mapSqlArgumentCaptor = argumentCaptor<MapSqlParameterSource>()
+    verify(jdbcTemplate, times(1)).queryForList(
+      stringArgumentCaptor.capture(),
+      mapSqlArgumentCaptor.capture(),
+    )
+    assertEquals(stringArgumentCaptor.firstValue, "SELECT $INDEX_COL, $CURRENT_STATE_COL, $ERROR_COL FROM admin.multiphase_query_state WHERE $ROOT_EXECUTION_ID_COL = :rootExecutionId;")
+    assertEquals(mapSqlArgumentCaptor.firstValue.toString(), mapSqlParameterSource.toString())
+    assertEquals(expected, actual)
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "$QUERY_SUCCEEDED, $QUERY_QUEUED, $QUERY_SUBMITTED",
+    "$QUERY_SUCCEEDED, $QUERY_RUNNING, $QUERY_STARTED",
+    "$QUERY_SUCCEEDED, $QUERY_SUCCEEDED, $QUERY_FINISHED",
+    "$QUERY_SUCCEEDED, $QUERY_CANCELLED, $QUERY_ABORTED",
+    "$QUERY_FAILED, $QUERY_SUCCEEDED, $QUERY_FAILED",
+    "$QUERY_CANCELLED, $QUERY_SUCCEEDED, $QUERY_ABORTED",
+    "$QUERY_CANCELLED,, $QUERY_ABORTED",
+    "$QUERY_FAILED,, $QUERY_FAILED",
+    "$QUERY_QUEUED,, $QUERY_SUBMITTED",
+    "$QUERY_RUNNING,, $QUERY_SUBMITTED",
+    "$QUERY_SUCCEEDED,, $QUERY_SUBMITTED",
+  )
+  fun `getStatementStatusForMultiphaseQuery should calculate the aggregate status of all multiphase queries and return the StatementExecutionStatus mapped correctly`(
+    athenaFirstStatus: String,
+    athenaSecondStatus: String?,
+    mappedRedshiftStatus: String,
+  ) {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val statementId = "statementId"
+    val errorMessageBase64Enc = "ZXhjZXB0aW9u"
+    val errorMessageBase64Dec = "exception"
+    val queryResults: MutableList<Map<String, Any?>> = mutableListOf()
+    if (athenaFirstStatus == QUERY_FAILED) {
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaFirstStatus, ERROR_COL to errorMessageBase64Enc, INDEX_COL to 0))
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaSecondStatus, INDEX_COL to 1))
+    } else if (athenaSecondStatus == QUERY_FAILED) {
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaFirstStatus, INDEX_COL to 0))
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaSecondStatus, ERROR_COL to errorMessageBase64Enc, INDEX_COL to 1))
+    } else {
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaFirstStatus, INDEX_COL to 0))
+      queryResults.add(mapOf(CURRENT_STATE_COL to athenaSecondStatus, INDEX_COL to 1))
+    }
+    val expected = if (athenaFirstStatus == QUERY_FAILED || athenaSecondStatus == QUERY_FAILED) {
+      StatementExecutionStatus(
+        status = mappedRedshiftStatus,
+        duration = 1,
+        resultRows = 0L,
+        resultSize = 0L,
+        error = errorMessageBase64Dec,
+        stateChangeReason = errorMessageBase64Dec,
+      )
+    } else {
+      StatementExecutionStatus(
+        status = mappedRedshiftStatus,
+        duration = 1,
+        resultRows = 0L,
+        resultSize = 0L,
+      )
+    }
+    val mapSqlParameterSource = MapSqlParameterSource()
+    mapSqlParameterSource.addValue("rootExecutionId", statementId)
+
+    whenever(
+      jdbcTemplate.queryForList(
+        anyString(),
+        any(MapSqlParameterSource::class.java),
+      ),
+    ).thenReturn(queryResults)
+
+    val actual = athenaApiRepository.getStatementStatusForMultiphaseQuery(statementId, jdbcTemplate)
+
+    val stringArgumentCaptor = argumentCaptor<String>()
+    val mapSqlArgumentCaptor = argumentCaptor<MapSqlParameterSource>()
+    verify(jdbcTemplate, times(1)).queryForList(
+      stringArgumentCaptor.capture(),
+      mapSqlArgumentCaptor.capture(),
+    )
+    assertEquals(stringArgumentCaptor.firstValue, "SELECT $INDEX_COL, $CURRENT_STATE_COL, $ERROR_COL FROM admin.multiphase_query_state WHERE $ROOT_EXECUTION_ID_COL = :rootExecutionId;")
+    assertEquals(mapSqlArgumentCaptor.firstValue.toString(), mapSqlParameterSource.toString())
+    assertEquals(expected, actual)
+  }
+
   @Test
   fun `cancelStatementExecution should call the stopQueryExecution athena api with the correct statement ID and return a successful StatementCancellationResponse`() {
     val statementId = "statementId"
@@ -326,7 +457,7 @@ SELECT * FROM dataset_'
   }
 
   @Test
-  fun `executeQueryAsync should run a multiphase query when there is at least one multiphaseQuery defined`() {
+  fun `executeQueryAsync should run a multiphase query when there are two multiphase queries defined`() {
     val database = "db"
     val catalog = "catalog"
     val startQueryExecutionRequest = setupBasicMocks(
@@ -385,7 +516,7 @@ SELECT * FROM dataset_'
             'catalog',
             'db',
             0,
-            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICAgIFdJVEggKAogICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICApIAogICAgICAgICAgICBBUyAoCiAgICAgICAgICAgIFNFTEVDVCAqIEZST00gVEFCTEUoc3lzdGVtLnF1ZXJ5KHF1ZXJ5ID0+CiAgICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICAgICkpIAogICAgICAgICAgICApOw==',
+            'ICAgICAgICAgIC8qIGRwZElkIGRwZE5hbWUgcmVwb3J0SWQgcmVwb3J0TmFtZSAqLwogICAgICAgICAgQ1JFQVRFIFRBQkxFIEF3c0RhdGFDYXRhbG9nLnJlcG9ydHMuX2E2MjI3NDE3X2JkYWNfNDBiYl9iYzgxXzQ5Yzc1MGRhYWNkNyAKICAgICAgICAgIFdJVEggKAogICAgICAgICAgICBmb3JtYXQgPSAnUEFSUVVFVCcKICAgICAgICAgICkgCiAgICAgICAgICBBUyAoCiAgICAgICAgICBTRUxFQ1QgKiBGUk9NIFRBQkxFKHN5c3RlbS5xdWVyeShxdWVyeSA9PgogICAgICAgICAgICdXSVRIIGNvbnRleHRfIEFTICgKICAgICAgU0VMRUNUIAogICAgICAnJ2FVc2VyJycgQVMgdXNlcm5hbWUsIAogICAgICAnJ2FDYXNlbG9hZCcnIEFTIGNhc2Vsb2FkLCAKICAgICAgJydHRU5FUkFMJycgQVMgYWNjb3VudF90eXBlIAogICAgICBGUk9NIERVQUwKICAgICAgKSxwcm9tcHRfIEFTIChTRUxFQ1QgJycnJyBGUk9NIERVQUwpLGRhdGFzZXRfIEFTIChTRUxFQ1QgY29sdW1uX2EsY29sdW1uX2IgRlJPTSBzY2hlbWFfYS50YWJsZV9hKQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfJwogICAgICAgICAgICkpIAogICAgICAgICAgKTs=',
             0,
             SYSDATE
           )"""
@@ -408,7 +539,7 @@ SELECT * FROM dataset_'
             'catalog',
             'db',
             1,
-            'ICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgQ1JFQVRFIFRBQkxFIEF3c0RhdGFDYXRhbG9nLnJlcG9ydHMudGFibGVJZDIKICAgICAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICkgCiAgICAgICAgICAgICAgQVMgKAogICAgICAgICAgICAgICBXSVRIIGNvbnRleHRfIEFTICgKICAgICAgU0VMRUNUIAogICAgICAnYVVzZXInIEFTIHVzZXJuYW1lLCAKICAgICAgJ2FDYXNlbG9hZCcgQVMgY2FzZWxvYWQsIAogICAgICAnR0VORVJBTCcgQVMgYWNjb3VudF90eXBlIAogICAgICAKICAgICAgKSxwcm9tcHRfIEFTIChTRUxFQ1QgJycgKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvdW50KCopIGFzIHRvdGFsIGZyb20gX2E2MjI3NDE3X2JkYWNfNDBiYl9iYzgxXzQ5Yzc1MGRhYWNkNykscmVwb3J0XyBBUyAoU0VMRUNUICogRlJPTSBkYXRhc2V0XykscG9saWN5XyBBUyAoU0VMRUNUICogRlJPTSByZXBvcnRfIFdIRVJFIDE9MSksZmlsdGVyXyBBUyAoU0VMRUNUICogRlJPTSBwb2xpY3lfIFdIRVJFIDE9MSkKU0VMRUNUICoKICAgICAgICAgIEZST00gZmlsdGVyXyBPUkRFUiBCWSBjb2x1bW5fYSBhc2MKICAgICAgICAgICAgICAp',
+            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KSxyZXBvcnRfIEFTIChTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfKSxwb2xpY3lfIEFTIChTRUxFQ1QgKiBGUk9NIHJlcG9ydF8gV0hFUkUgMT0xKSxmaWx0ZXJfIEFTIChTRUxFQ1QgKiBGUk9NIHBvbGljeV8gV0hFUkUgMT0xKQpTRUxFQ1QgKgogICAgICAgICAgRlJPTSBmaWx0ZXJfIE9SREVSIEJZIGNvbHVtbl9hIGFzYwogICAgICAgICAgICAgICAgKQ==',
             0,
             SYSDATE
           )"""
@@ -420,6 +551,133 @@ SELECT * FROM dataset_'
     verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
     assertEquals(StatementExecutionResponse(tableId2, executionId), actual)
   }
+
+  @Test
+  fun `executeQueryAsync should run a multiphase query when there are three multiphase queries defined`() {
+    val database = "db"
+    val catalog = "catalog"
+    val startQueryExecutionRequest = setupBasicMocks(
+      database = database,
+      catalog = catalog,
+      query = multiphaseSqlNonLastQuery(),
+    )
+    val datasource = Datasource("id", "name", database, catalog, DatasourceConnection.FEDERATED, dialect = SqlDialect.ORACLE11g)
+    val datasource2 = Datasource("id", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
+    val datasource3 = Datasource("id", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
+    val tableId2 = "tableId2"
+    val tableId3 = "tableId3"
+    val query2 = "SELECT count(*) as total from $tableId"
+    val query3 = "SELECT count(*) + 1 as total_plus_one from $tableId2"
+    val multiphaseQuery = listOf(
+      MultiphaseQuery(0, datasource, dpdQuery),
+      MultiphaseQuery(1, datasource2, query2),
+      MultiphaseQuery(2, datasource3, query3),
+    )
+    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+      tableId2,
+      tableId3
+    )
+    val actual = athenaApiRepository.executeQueryAsync(
+      filters = emptyList(),
+      sortColumn = "column_a",
+      sortedAsc = true,
+      policyEngineResult = TRUE_WHERE_CLAUSE,
+      userToken = userToken,
+      query = "",
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
+      multiphaseQueries = multiphaseQuery,
+    )
+    val firstMultiphaseInsert = """insert into 
+          admin.multiphase_query_state (
+          root_execution_id,
+          current_execution_id,
+          datasource_name,
+          catalog,
+          database,
+          index,
+          query,
+          sequence_number,
+          last_update
+          )
+          values (
+            'someId',
+            'someId',
+            'name',
+            'catalog',
+            'db',
+            0,
+            'ICAgICAgICAgIC8qIGRwZElkIGRwZE5hbWUgcmVwb3J0SWQgcmVwb3J0TmFtZSAqLwogICAgICAgICAgQ1JFQVRFIFRBQkxFIEF3c0RhdGFDYXRhbG9nLnJlcG9ydHMuX2E2MjI3NDE3X2JkYWNfNDBiYl9iYzgxXzQ5Yzc1MGRhYWNkNyAKICAgICAgICAgIFdJVEggKAogICAgICAgICAgICBmb3JtYXQgPSAnUEFSUVVFVCcKICAgICAgICAgICkgCiAgICAgICAgICBBUyAoCiAgICAgICAgICBTRUxFQ1QgKiBGUk9NIFRBQkxFKHN5c3RlbS5xdWVyeShxdWVyeSA9PgogICAgICAgICAgICdXSVRIIGNvbnRleHRfIEFTICgKICAgICAgU0VMRUNUIAogICAgICAnJ2FVc2VyJycgQVMgdXNlcm5hbWUsIAogICAgICAnJ2FDYXNlbG9hZCcnIEFTIGNhc2Vsb2FkLCAKICAgICAgJydHRU5FUkFMJycgQVMgYWNjb3VudF90eXBlIAogICAgICBGUk9NIERVQUwKICAgICAgKSxwcm9tcHRfIEFTIChTRUxFQ1QgJycnJyBGUk9NIERVQUwpLGRhdGFzZXRfIEFTIChTRUxFQ1QgY29sdW1uX2EsY29sdW1uX2IgRlJPTSBzY2hlbWFfYS50YWJsZV9hKQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfJwogICAgICAgICAgICkpIAogICAgICAgICAgKTs=',
+            0,
+            SYSDATE
+          )"""
+    val secondMultiphaseInsert = """insert into 
+          admin.multiphase_query_state (
+          root_execution_id,
+          
+          datasource_name,
+          catalog,
+          database,
+          index,
+          query,
+          sequence_number,
+          last_update
+          )
+          values (
+            'someId',
+            
+            'name',
+            'catalog',
+            'db',
+            1,
+            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfCiAgICAgICAgICAgICAgICAp',
+            0,
+            SYSDATE
+          )"""
+    val thirdMultiphaseInsert = """insert into 
+          admin.multiphase_query_state (
+          root_execution_id,
+          
+          datasource_name,
+          catalog,
+          database,
+          index,
+          query,
+          sequence_number,
+          last_update
+          )
+          values (
+            'someId',
+            
+            'name',
+            'catalog',
+            'db',
+            2,
+            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMwogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgKyAxIGFzIHRvdGFsX3BsdXNfb25lIGZyb20gdGFibGVJZDIpLHJlcG9ydF8gQVMgKFNFTEVDVCAqIEZST00gZGF0YXNldF8pLHBvbGljeV8gQVMgKFNFTEVDVCAqIEZST00gcmVwb3J0XyBXSEVSRSAxPTEpLGZpbHRlcl8gQVMgKFNFTEVDVCAqIEZST00gcG9saWN5XyBXSEVSRSAxPTEpClNFTEVDVCAqCiAgICAgICAgICBGUk9NIGZpbHRlcl8gT1JERVIgQlkgY29sdW1uX2EgYXNjCiAgICAgICAgICAgICAgICAp',
+            0,
+            SYSDATE
+          )"""
+    verify(jdbcTemplate).execute(firstMultiphaseInsert)
+    verify(jdbcTemplate).execute(secondMultiphaseInsert)
+    verify(jdbcTemplate).execute(thirdMultiphaseInsert)
+    val inOrder = inOrder(jdbcTemplate)
+    inOrder.verify(jdbcTemplate).execute(firstMultiphaseInsert)
+    inOrder.verify(jdbcTemplate).execute(secondMultiphaseInsert.trimIndent())
+    inOrder.verify(jdbcTemplate).execute(thirdMultiphaseInsert.trimIndent())
+    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
+    assertEquals(StatementExecutionResponse(tableId3, executionId), actual)
+  }
+
 
   @Test
   fun `executeQueryAsync should run a multiphase query once when there is exactly one multiphaseQuery defined`() {
