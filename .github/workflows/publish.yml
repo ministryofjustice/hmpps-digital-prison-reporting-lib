@@ -36,7 +36,7 @@ jobs:
           OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
         run: |
-          CURRENT_VERSION=$($(curl -s --request GET https://repo1.maven.org/maven2/uk/gov/justice/service/hmpps/hmpps-digital-prison-reporting-lib/maven-metadata.xml | grep -oP '(?<=<version>)[^<]+' | grep -v -e '2024-02-27' -e '2024-02-28' | tail -n1))
+          CURRENT_VERSION=$(curl -s --request GET https://repo1.maven.org/maven2/uk/gov/justice/service/hmpps/hmpps-digital-prison-reporting-lib/maven-metadata.xml | grep -oP '(?<=<version>)[^<]+' | grep -v -e '2024-02-27' -e '2024-02-28' | tail -n1)
           echo "Current version: $CURRENT_VERSION"
           echo "current_version=$CURRENT_VERSION" >> "$GITHUB_OUTPUT"
 
