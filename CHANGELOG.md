@@ -1,7 +1,7 @@
 Below you can find the changes included in each release.
 
 # 9.1.0
-- Includes changes from `8.5.0` and `8.4.3` as these two versions were mistakenly published with lower version numbers.
+- Includes changes from `8.5.0` and `8.4.3` as these two versions were mistakenly published with more recent changes than `9.0.0` but with lower version numbers.
 
 # 8.4.3
 - Changed the sort direction field name in the DPD to be all lowercase for consistency with existing DPD field naming conventions.
