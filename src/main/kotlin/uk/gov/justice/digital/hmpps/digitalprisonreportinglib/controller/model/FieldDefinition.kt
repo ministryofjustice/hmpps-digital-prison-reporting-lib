@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model
 
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
+
 data class FieldDefinition(
   val name: String,
   val display: String,

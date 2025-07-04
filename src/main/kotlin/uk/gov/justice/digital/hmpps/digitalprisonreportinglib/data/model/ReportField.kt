@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 import com.google.gson.annotations.SerializedName
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SortDirection
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 
 data class ReportField(
   val name: String,
