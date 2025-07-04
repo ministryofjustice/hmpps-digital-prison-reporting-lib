@@ -1,13 +1,13 @@
 Below you can find the changes included in each release.
 
+# 9.1.0
+- Adds support for format_number formula
+
 # 9.0.0
 - All async queries run via Athena. 
 - Removed the Redshift data API status and cancel endpoints as they are not used.
 - Added `connection` and `dialect` fields to `Datasource`.
-- More information about their usage can be found in the [definitions schema](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema). 
-
-# 8.4.2
-- Adds support for format_number formula
+- More information about their usage can be found in the [definitions schema](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema).
 
 # 8.4.1
 - Reports support multiphase queries, including parameters (prompts).
