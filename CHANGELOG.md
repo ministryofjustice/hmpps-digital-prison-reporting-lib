@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.1.1
+- Changed the sort direction field name in the DPD to be all lowercase for consistency with existing DPD field naming conventions.
+
 # 9.1.0
 - Adds support for sortDirection in DPDs
 
