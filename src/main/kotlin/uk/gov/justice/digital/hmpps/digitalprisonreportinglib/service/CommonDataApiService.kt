@@ -44,7 +44,7 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
       return Pair(null, false)
     }
 
-    return Pair(defaultSortField.name.removePrefix(REF_PREFIX), defaultSortField.sortDirection.toString().lowercase() == SortDirection.ASC.toString().lowercase())
+    return Pair(defaultSortField.name.removePrefix(REF_PREFIX), defaultSortField.sortDirection == SortDirection.ASC)
   }
 
   protected fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?, sortedAsc: Boolean?): Pair<String?, Boolean> {
@@ -57,7 +57,7 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     return Pair(
       sortColumn,
       sortedAsc
-        ?: (productDefinition.report.specification?.field?.firstOrNull { it.name.removePrefix(REF_PREFIX) == sortColumn }?.sortDirection?.toString()?.lowercase() === SortDirection.ASC.toString().lowercase()),
+        ?: (productDefinition.report.specification?.field?.firstOrNull { it.name.removePrefix(REF_PREFIX) == sortColumn }?.sortDirection == SortDirection.ASC),
     )
   }
 

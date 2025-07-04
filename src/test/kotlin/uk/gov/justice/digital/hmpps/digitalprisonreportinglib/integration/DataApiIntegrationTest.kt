@@ -119,9 +119,9 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .isOk()
         .expectBody()
         .jsonPath("$.[0].date")
-        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
-        .jsonPath("$.[1].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
 
       assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
