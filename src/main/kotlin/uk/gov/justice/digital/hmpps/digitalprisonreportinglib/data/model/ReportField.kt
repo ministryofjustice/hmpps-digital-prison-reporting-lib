@@ -11,8 +11,8 @@ data class ReportField(
   val sortable: Boolean = true,
   @SerializedName("defaultsort")
   val defaultSort: Boolean = false,
+  @SerializedName("sortdirection")
   val sortDirection: SortDirection? = null,
-  // Formula and visible are not used yet. This is pending ticket https://dsdmoj.atlassian.net/browse/DPR2-241
   val formula: String? = null,
   val visible: Visible? = null,
 ) : Identified() {
