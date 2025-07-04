@@ -14,6 +14,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -253,7 +254,7 @@ class SyncDataApiServiceTest {
         filters = emptyList(),
         selectedPage = selectedPage,
         pageSize = pageSize,
-        sortColumn = estNameSchemaFieldName,
+        sortColumn = "name",
         sortedAsc = sortedAsc,
         policyEngineResult = POLICY_PERMIT,
         dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -268,7 +269,7 @@ class SyncDataApiServiceTest {
       filters = emptyMap(),
       selectedPage = selectedPage,
       pageSize = pageSize,
-      sortColumn = estNameSchemaFieldName,
+      sortColumn = "name",
       sortedAsc = sortedAsc,
       userToken = authToken,
       reportFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -280,7 +281,7 @@ class SyncDataApiServiceTest {
       filters = emptyList(),
       selectedPage = selectedPage,
       pageSize = pageSize,
-      sortColumn = estNameSchemaFieldName,
+      sortColumn = "name",
       sortedAsc = sortedAsc,
       policyEngineResult = POLICY_PERMIT,
       dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -1232,6 +1233,7 @@ class SyncDataApiServiceTest {
             visible = Visible.TRUE,
             sortable = true,
             defaultSort = false,
+            sortDirection = SortDirection.DESC,
           ),
         ),
         section = null,
@@ -1292,7 +1294,7 @@ class SyncDataApiServiceTest {
 
     val selectedPage = 1L
     val pageSize = 10L
-    val sortedAsc = true
+    val sortedAsc = false
 
     whenever(
       configuredApiRepository.executeQuery(

@@ -220,6 +220,7 @@ class ReportDefinitionMapper(
       },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
+      sortDirection = field.sortDirection,
       type = populateType(schemaField, field),
       mandatory = populateMandatory(field.visible),
       visible = populateVisible(field.visible),

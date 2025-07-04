@@ -6,6 +6,8 @@ import com.github.tomakehurst.wiremock.matching.EqualToPattern
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -32,8 +34,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.REASON
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.TYPE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement4
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 import java.time.LocalDateTime
 
@@ -61,6 +66,114 @@ class DataApiIntegrationTest : IntegrationTestBase() {
             ]
           }
   """.trimIndent()
+
+  /**
+   * Nested test class so we can add a couple entries to the mock db just for these tests
+   */
+  @Nested
+  inner class SortDirectionDataApiIntegrationTest {
+    @BeforeEach
+    fun init() {
+      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.save(PrisonerEntity(9848, "DD105GF", "FirstName6", "LastName6", null))
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD with sortedAsc but no column`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortedAsc", true)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD with column override but no sortedAsc`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD with no column override and no sortDirection`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD but with an override`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", true)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+  }
 
   @Test
   fun `Data API returns value from the repository`() {

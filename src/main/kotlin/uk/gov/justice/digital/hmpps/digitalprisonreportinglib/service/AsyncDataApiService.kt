@@ -57,7 +57,7 @@ class AsyncDataApiService(
     reportVariantId: String,
     filters: Map<String, String>,
     sortColumn: String?,
-    sortedAsc: Boolean,
+    sortedAsc: Boolean?,
     userToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
@@ -76,11 +76,12 @@ class AsyncDataApiService(
       extractParameters(productDefinition.reportDataset, productDefinition.reportDataset.multiphaseQuery),
     )
     val preGeneratedTableId = checkForScheduledDataset(productDefinition)
+    val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return athenaApiRepository
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false) + dynamicFilter,
-        sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
-        sortedAsc = sortedAsc,
+        sortColumn,
+        computedSortedAsc,
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         prompts = buildPrompts(
@@ -187,20 +188,21 @@ class AsyncDataApiService(
     selectedPage: Long,
     pageSize: Long,
     filters: Map<String, String>,
-    sortedAsc: Boolean,
+    sortedAsc: Boolean?,
     sortColumn: String? = null,
     userToken: DprAuthAwareAuthenticationToken?,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+    val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return formatColumnsAndApplyFormulas(
       redshiftDataApiRepository.getPaginatedExternalTableResult(
         tableId,
         selectedPage,
         pageSize,
         validateAndMapFilters(productDefinition, filters, true),
-        sortedAsc = sortedAsc,
+        sortedAsc = computedSortedAsc,
         sortColumn = sortColumn,
       ),
       productDefinition.reportDataset.schema.field,

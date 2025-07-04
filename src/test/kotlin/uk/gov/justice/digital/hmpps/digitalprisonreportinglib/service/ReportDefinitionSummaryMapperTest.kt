@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
@@ -81,6 +82,7 @@ class ReportDefinitionSummaryMapperTest {
           ),
           sortable = true,
           defaultSort = true,
+          sortDirection = SortDirection.DESC,
           formula = null,
           visible = Visible.TRUE,
         ),

@@ -55,7 +55,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   )
   fun asyncConfiguredApiExecuteQuery(
     @RequestParam sortColumn: String?,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     @Parameter(
       description = "$FILTERS_QUERY_DESCRIPTION Note: For legacy nomis and bodmis reports, for filters deriving from DPD parameters(prompts)," +
         "there is no need for these to be suffixed with .start and .end. For example, filters.start_date and filters.end_date are perfectly valid in this case.",
@@ -441,7 +441,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam
     filters: Map<String, String>,
     @RequestParam sortColumn: String?,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> = ResponseEntity
     .status(HttpStatus.OK)

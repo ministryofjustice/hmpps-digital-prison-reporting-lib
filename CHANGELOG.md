@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.1.0
+- Adds support for sortDirection in DPDs
+
 # 9.0.0
 - All async queries run via Athena. 
 - Removed the Redshift data API status and cancel endpoints as they are not used.
