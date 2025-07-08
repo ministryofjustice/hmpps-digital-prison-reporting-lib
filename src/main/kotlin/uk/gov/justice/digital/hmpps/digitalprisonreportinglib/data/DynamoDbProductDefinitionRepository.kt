@@ -23,7 +23,7 @@ class DynamoDbProductDefinitionRepository(
     )
 
     fun getQueryRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
-      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths,))
+      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
 
       return QueryRequest.builder()
         .tableName(properties.getDynamoDbTableArn())

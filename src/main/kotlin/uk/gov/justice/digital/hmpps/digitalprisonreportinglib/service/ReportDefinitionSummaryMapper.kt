@@ -36,7 +36,7 @@ class ReportDefinitionSummaryMapper {
 
   private fun map(
     report: Report,
-    isMissing: Boolean
+    isMissing: Boolean,
   ): VariantDefinitionSummary = VariantDefinitionSummary(
     id = report.id,
     name = report.name,
