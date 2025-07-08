@@ -11,9 +11,9 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.DEFAULT_PATH
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.getQueryRequest
 
 class DynamoDbProductDefinitionRepositoryTest {
@@ -34,12 +34,11 @@ class DynamoDbProductDefinitionRepositoryTest {
   @BeforeEach
   fun setup() {
     val response = mock<QueryResponse>()
-
     given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
     given(response.items()).willReturn(
       listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}")),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
       ),
     )
   }
@@ -51,7 +50,7 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
 
-    then(dynamoDbClient).should().query(getQueryRequest(properties, DEFAULT_PATH))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, DataDefinitionPath.entries.map { it.value }))
   }
 
   @Test
@@ -60,28 +59,42 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
-    then(dynamoDbClient).should().query(getQueryRequest(properties, DEFAULT_PATH))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, DataDefinitionPath.entries.map { it.value }))
   }
 
   @Test
   fun `returns the correct product definitions using a path`() {
-    val path = "dpd/path"
-
+    val path = DataDefinitionPath.MISSING.value
+    val response = mock<QueryResponse>()
+    given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
+    given(response.items()).willReturn(
+      listOf(
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
+      ),
+    )
     val productDefinitions = repo.getProductDefinitions(path)
 
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
-    then(dynamoDbClient).should().query(getQueryRequest(properties, path))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(path)))
   }
 
   @Test
   fun `returns the correct product definition using a path`() {
-    val path = "dpd/path"
+    val path = DataDefinitionPath.MISSING.value
+    val response = mock<QueryResponse>()
+    given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
+    given(response.items()).willReturn(
+      listOf(
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
+      ),
+    )
 
     val productDefinition = repo.getProductDefinition("test2", path)
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
-    then(dynamoDbClient).should().query(getQueryRequest(properties, path))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(path)))
   }
 }

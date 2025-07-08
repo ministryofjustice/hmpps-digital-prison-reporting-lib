@@ -17,6 +17,7 @@ import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -206,8 +207,9 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
       given(response.items()).willReturn(
         listOf(
-          mapOf("definition" to AttributeValue.fromS(productDefinitionJson)),
-          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson)),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
+          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
         ),
       )
       given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
@@ -226,7 +228,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .returnResult()
 
       assertThat(result.responseBody).isNotNull
-      assertThat(result.responseBody).hasSize(2)
+      assertThat(result.responseBody).hasSize(3)
       assertThat(result.responseBody).first().isNotNull
       val otherDefinition = result.responseBody!![1]
       assertThat(otherDefinition).isNotNull
@@ -246,21 +248,29 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.id).isEqualTo("last-month")
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+      assertThat(lastMonthVariant.isMissing).isEqualTo(false)
 
       val lastWeekVariant = definition.variants[1]
       assertThat(lastWeekVariant.id).isEqualTo("last-week")
       assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
       assertThat(lastWeekVariant.name).isEqualTo("Last week")
+      assertThat(lastWeekVariant.isMissing).isEqualTo(false)
 
       val lastYearVariant = definition.variants[2]
       assertThat(lastYearVariant.id).isEqualTo("last-year")
       assertThat(lastYearVariant.description).isEqualTo("All movements in the past year")
       assertThat(lastYearVariant.name).isEqualTo("Last year")
+      assertThat(lastYearVariant.isMissing).isEqualTo(false)
 
       val requestCaptor = ArgumentCaptor.forClass(QueryRequest::class.java)
       then(dynamoDbClient).should().query(requestCaptor.capture())
 
       assertThat(requestCaptor.value.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition")
+
+      val thirdDefinition = result.responseBody!![2]
+      assertThat(thirdDefinition.variants[0].isMissing).isEqualTo(true)
+      assertThat(thirdDefinition.variants[1].isMissing).isEqualTo(true)
+      assertThat(thirdDefinition.variants[2].isMissing).isEqualTo(true)
     }
   }
 
