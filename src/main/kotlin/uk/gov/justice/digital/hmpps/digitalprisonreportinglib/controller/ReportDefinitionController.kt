@@ -43,7 +43,7 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
       description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath")
+    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
     authentication: Authentication,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(

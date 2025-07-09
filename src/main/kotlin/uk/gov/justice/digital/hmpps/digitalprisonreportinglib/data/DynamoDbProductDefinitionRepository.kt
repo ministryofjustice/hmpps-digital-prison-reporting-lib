@@ -17,11 +17,6 @@ class DynamoDbProductDefinitionRepository(
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
-    val DEFAULT_PATHS = listOf(
-      "definitions/prisons/orphanage",
-      "definitions/prisons/missing",
-    )
-
     fun getQueryRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
       val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
 
@@ -36,7 +31,8 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
-    val usePaths = if (path?.isEmpty() == false) listOf(path) else DataDefinitionPath.entries.map { it.value }
+    val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
+    usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
 
     val cachedDefinitions = definitionsCache?.let { cache ->
       path?.let { path -> cache.getIfPresent(path) }
@@ -59,7 +55,7 @@ class DynamoDbProductDefinitionRepository(
       .forEach {
         val definition = gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
         val definitionPath = gson.fromJson(it[properties.dynamoDb.categoryFieldName]!!.s(), String::class.java)
-        definition.path = DataDefinitionPath.entries.first { path -> path.value == definitionPath }
+        definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
         definitionMap[definitionPath]?.add(definition)
       }
 

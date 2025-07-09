@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.assertj.core.api.Assertions.assertThat
+import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
+import org.mockito.hamcrest.MockitoHamcrest.argThat
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
@@ -50,7 +52,7 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
 
-    then(dynamoDbClient).should().query(getQueryRequest(properties, DataDefinitionPath.entries.map { it.value }))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
   }
 
   @Test
@@ -59,25 +61,25 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
-    then(dynamoDbClient).should().query(getQueryRequest(properties, DataDefinitionPath.entries.map { it.value }))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
   }
 
   @Test
   fun `returns the correct product definitions using a path`() {
-    val path = DataDefinitionPath.MISSING.value
+    val path = "some/other/value"
     val response = mock<QueryResponse>()
     given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
     given(response.items()).willReturn(
       listOf(
         mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"some/other/value\"")),
       ),
     )
     val productDefinitions = repo.getProductDefinitions(path)
 
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
-    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(path)))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(DataDefinitionPath.MISSING.value, path)))
   }
 
   @Test
@@ -95,6 +97,6 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
-    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(path)))
+    then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(path, DataDefinitionPath.MISSING.value)))
   }
 }

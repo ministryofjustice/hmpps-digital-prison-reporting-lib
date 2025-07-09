@@ -209,7 +209,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         listOf(
           mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
           mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
-          mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
         ),
       )
       given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
@@ -230,13 +230,13 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(result.responseBody).isNotNull
       assertThat(result.responseBody).hasSize(3)
       assertThat(result.responseBody).first().isNotNull
-      val otherDefinition = result.responseBody!![1]
-      assertThat(otherDefinition).isNotNull
+      val missingEthnicityDefinition = result.responseBody!!.find { it.name == "Missing Ethnicity Metrics" }!!
+      assertThat(missingEthnicityDefinition).isNotNull
+      assertThat(missingEthnicityDefinition.name).isNotNull()
 
-      val definition = result.responseBody!!.first()
+      val definition = result.responseBody!!.find { it.id == "external-movements" }!!
 
       assertThat(definition.name).isEqualTo("External Movements")
-      assertThat(otherDefinition.name).isEqualTo("Missing Ethnicity Metrics")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
       assertThat(definition.variants).hasSize(3)
       assertThat(definition.variants[0]).isNotNull
@@ -267,10 +267,10 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
       assertThat(requestCaptor.value.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition")
 
-      val thirdDefinition = result.responseBody!![2]
-      assertThat(thirdDefinition.variants[0].isMissing).isEqualTo(true)
-      assertThat(thirdDefinition.variants[1].isMissing).isEqualTo(true)
-      assertThat(thirdDefinition.variants[2].isMissing).isEqualTo(true)
+      val externalMovementsTest2Definition = result.responseBody!!.find { it.id == "external-movements-test2" }!!
+      assertThat(externalMovementsTest2Definition.variants[0].isMissing).isEqualTo(true)
+      assertThat(externalMovementsTest2Definition.variants[1].isMissing).isEqualTo(true)
+      assertThat(externalMovementsTest2Definition.variants[2].isMissing).isEqualTo(true)
     }
   }
 

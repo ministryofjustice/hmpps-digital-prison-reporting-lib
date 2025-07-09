@@ -4,4 +4,6 @@ enum class DataDefinitionPath(val value: String) {
   ORPHANAGE("definitions/prisons/orphanage"),
 
   MISSING("definitions/prisons/missing"),
+
+  OTHER("")
 }
