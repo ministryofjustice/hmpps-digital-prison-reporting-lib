@@ -49,6 +49,8 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
+    assertThat(productDefinitions[0].path).isEqualTo(DataDefinitionPath.ORPHANAGE)
+    assertThat(productDefinitions[1].path).isEqualTo(DataDefinitionPath.ORPHANAGE)
 
     then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
   }
@@ -59,6 +61,7 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
+    assertThat(productDefinition.path).isEqualTo(DataDefinitionPath.ORPHANAGE)
     then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
   }
 
@@ -77,6 +80,8 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
+    assertThat(productDefinitions[0].path).isEqualTo(DataDefinitionPath.MISSING)
+    assertThat(productDefinitions[1].path).isEqualTo(DataDefinitionPath.OTHER)
     then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(DataDefinitionPath.MISSING.value, path)))
   }
 
@@ -95,6 +100,7 @@ class DynamoDbProductDefinitionRepositoryTest {
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
+    assertThat(productDefinition.path).isEqualTo(DataDefinitionPath.MISSING)
     then(dynamoDbClient).should().query(getQueryRequest(properties, listOf(path, DataDefinitionPath.MISSING.value)))
   }
 }
