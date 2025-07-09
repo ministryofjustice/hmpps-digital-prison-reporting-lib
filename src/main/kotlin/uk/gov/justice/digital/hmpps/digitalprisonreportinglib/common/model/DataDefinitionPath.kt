@@ -5,5 +5,5 @@ enum class DataDefinitionPath(val value: String) {
 
   MISSING("definitions/prisons/missing"),
 
-  OTHER("")
+  OTHER(""),
 }

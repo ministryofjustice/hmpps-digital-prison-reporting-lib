@@ -1,12 +1,10 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.assertj.core.api.Assertions.assertThat
-import org.hamcrest.Matchers.containsInAnyOrder
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
-import org.mockito.hamcrest.MockitoHamcrest.argThat
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
