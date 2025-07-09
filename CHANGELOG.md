@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.2.0
+- Include missing reports in list of reports returned from /definitions endpoint
+
 # 9.1.0
 - Includes changes from `8.5.0` and `8.4.3` as these two versions were mistakenly published with more recent changes than `9.0.0` but with lower version numbers.
 

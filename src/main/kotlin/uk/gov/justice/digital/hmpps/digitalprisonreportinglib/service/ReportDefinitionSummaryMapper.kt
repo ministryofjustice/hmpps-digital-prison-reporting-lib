@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -23,7 +24,7 @@ class ReportDefinitionSummaryMapper {
     description = productDefinition.description,
     variants = productDefinition.report
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(it) },
+      .map { map(it, productDefinition.path == DataDefinitionPath.MISSING) },
     dashboards = productDefinition.dashboard?.map { map(it) },
     authorised = determineAuth(productDefinition, userToken),
   )
@@ -35,10 +36,12 @@ class ReportDefinitionSummaryMapper {
 
   private fun map(
     report: Report,
+    isMissing: Boolean,
   ): VariantDefinitionSummary = VariantDefinitionSummary(
     id = report.id,
     name = report.name,
     description = report.description,
+    isMissing,
   )
 
   private fun map(

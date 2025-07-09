@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 
@@ -16,15 +17,13 @@ class DynamoDbProductDefinitionRepository(
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
-    const val DEFAULT_PATH = "definitions/prisons/orphanage"
-
-    fun getQueryRequest(properties: AwsProperties, path: String, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
-      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromS(path))
+    fun getQueryRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
+      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
 
       return QueryRequest.builder()
         .tableName(properties.getDynamoDbTableArn())
         .indexName(properties.dynamoDb.categoryIndexName)
-        .keyConditionExpression("${properties.dynamoDb.categoryFieldName} = :${properties.dynamoDb.categoryFieldName}")
+        .keyConditionExpression("contains(:${properties.dynamoDb.categoryFieldName}, ${properties.dynamoDb.categoryFieldName})")
         .expressionAttributeValues(attrValues)
         .exclusiveStartKey(exclusiveStartKey)
         .build()
@@ -32,31 +31,36 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
-    val usePath = path ?: DEFAULT_PATH
+    val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
+    usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
 
     val cachedDefinitions = definitionsCache?.let { cache ->
       path?.let { path -> cache.getIfPresent(path) }
     }
     cachedDefinitions?.let { return it }
 
-    var response = dynamoDbClient.query(getQueryRequest(properties, usePath))
+    var response = dynamoDbClient.query(getQueryRequest(properties, usePaths))
     val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
 
     while (response.hasLastEvaluatedKey()) {
       items.addAll(response.items())
-      response = dynamoDbClient.query(getQueryRequest(properties, usePath, response.lastEvaluatedKey()))
+      response = dynamoDbClient.query(getQueryRequest(properties, usePaths, response.lastEvaluatedKey()))
     }
 
     items.addAll(response.items())
 
-    val definitions = items
+    val definitionMap = usePaths.associateWith { mutableListOf<ProductDefinition>() }
+    items
       .filter { it[properties.dynamoDb.definitionFieldName] != null }
-      .map { gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java) }
+      .forEach {
+        val definition = gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
+        val definitionPath = gson.fromJson(it[properties.dynamoDb.categoryFieldName]!!.s(), String::class.java)
+        definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
+        definitionMap[definitionPath]?.add(definition)
+      }
 
-    if (definitions.isNotEmpty()) {
-      definitionsCache?.put(usePath, definitions)
-    }
+    definitionMap.forEach { definitionsCache?.put(it.key, it.value) }
 
-    return definitions
+    return definitionMap.values.flatten()
   }
 }
