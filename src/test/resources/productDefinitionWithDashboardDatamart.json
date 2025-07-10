@@ -1,0 +1,139 @@
+{
+  "id": "missing-ethnicity-metrics",
+  "name": "Missing Ethnicity Metrics",
+  "description": "Reports about Missing Ethnicity Metrics",
+  "metadata": {
+    "author": "Adam",
+    "version": "1.2.3",
+    "owner": "Eve"
+  },
+  "datasource": [
+    {
+      "id": "datamart",
+      "name": "datamart"
+    }  ],
+  "dataset": [
+    {
+      "id": "establishments",
+      "name": "Establishments",
+      "datasource": "datamart",
+      "query": "SELECT 'AAA' AS establishment_id, 'Aardvark' AS establishment_name UNION SELECT 'BBB' AS establishment_id, 'Bumblebee' AS establishment_name",
+      "schema": {
+        "field": [
+          {
+            "name": "establishment_id",
+            "type": "string",
+            "display": "Establishment ID"
+          },
+          {
+            "name": "establishment_name",
+            "type": "string",
+            "display": "Establishment Name"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-ethnicity-dataset",
+      "name": "Missing Ethnicity By Establishment Dataset",
+      "datasource": "datamart",
+      "query": "SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality",
+      "schema": {
+        "field": [
+          {
+            "name": "establishment_id",
+            "type": "string",
+            "display": "Establishment ID",
+            "filter": {
+              "type": "select",
+              "dynamicoptions": {
+                "returnAsStaticOptions": true,
+                "dataset": "establishments",
+                "name": "establishment_id",
+                "display": "establishment_name",
+                "maximumOptions": 123
+              },
+              "interactive": true
+            }
+          },
+          {
+            "name": "has_ethnicity",
+            "type": "long",
+            "display": "No. of Prisoners without ethnicity"
+          },
+          {
+            "name": "ethnicity_is_missing",
+            "type": "long",
+            "display": "No. of Prisoners with ethnicity"
+          }
+        ]
+      }
+    }
+  ],
+  "dashboard": [
+    {
+      "id": "age-breakdown-dashboard-1",
+      "name": "Age Breakdown Dashboard",
+      "description": "Age Breakdown Dashboard Description",
+      "dataset": "missing-ethnicity-dataset",
+      "section": [
+        {
+          "id": "totals-breakdown",
+          "display": "Totals breakdown",
+          "visualisation": [
+            {
+              "id": "total-prisoners",
+              "type": "list",
+              "display": "Total prisoners by wing",
+              "column": {
+                "key": [
+                  {
+                    "id": "establishment_id",
+                    "display": "Establishmnent ID"
+                  },
+                  {
+                    "id": "wing",
+                    "display": "Wing"
+                  }
+                ],
+                "measure": [
+                  {
+                    "id": "establishment_id",
+                    "display": "Establishmnent ID"
+                  },
+                  {
+                    "id": "wing",
+                    "display": "Wing"
+                  },
+                  {
+                    "id": "total_prisoners",
+                    "display": "Total prisoners"
+                  }
+                ],
+                "expectNull": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "policy": [
+    {
+      "id": "caseload",
+      "type": "row-level",
+      "action": ["(establishment_id='${caseload}')"],
+      "rule": [
+        {
+          "effect": "permit",
+          "condition": [
+            {
+              "match": ["${role}", "ROLE_PRISONS_REPORTING_USER"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "report": []
+}
