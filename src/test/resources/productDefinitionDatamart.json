@@ -1,5 +1,5 @@
 {
-  "id" : "external-movements-with-parameters",
+  "id" : "external-movements",
   "name" : "External Movements",
   "description" : "Reports about prisoner external movements",
   "metadata" : {
@@ -9,39 +9,13 @@
   },
   "datasource" : [
     {
-      "id": "nomis",
-      "name": "NOMIS",
-      "database": "nomis_db",
-      "catalog": "nomis",
-      "connection": "federated",
-      "dialect": "oracle/11g"
+      "id": "datamart",
+      "name": "datamart"
     }],
   "dataset" : [ {
     "id" : "external-movements",
     "name" : "All movements",
     "query" : "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM datamart.domain.movement_movement as movements\nJOIN datamart.domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id",
-    "parameters": [
-      {
-        "index": 0,
-        "name": "establishment_code",
-        "filterType": "autocomplete",
-        "reportFieldType": "string",
-        "display": "Establishment",
-        "description": "@Prompt('Enter NOMS Number',,,mono,free,Not_Persistent,User:1)",
-        "mandatory": "true",
-        "referenceType": "establishment"
-      },
-      {
-        "index": 1,
-        "name": "wing",
-        "filterType": "autocomplete",
-        "reportFieldType": "string",
-        "display": "Wing",
-        "description": "@Prompt('Enter NOMS Number',,,mono,free,Not_Persistent,User:1)",
-        "mandatory": "true",
-        "referenceType": "wing"
-      }
-    ],
     "schema" : {
       "field" : [ {
         "name" : "prisonNumber",
@@ -108,6 +82,19 @@
             "display": "Prisoner Name"
           }]
       }
+    },
+    {
+      "id": "summary-dataset",
+      "name": "Summary Dataset",
+      "datasource": "datamart",
+      "query": "SELECT COUNT(*) AS TOTAL FROM ${tableId}",
+      "schema": {
+        "field": [{
+          "name": "total",
+          "type": "int",
+          "display": "Total"
+        }]
+      }
     }
   ],
   "policy": [
@@ -141,6 +128,9 @@
     "id" : "last-month",
     "name" : "Last month",
     "description" : "All movements in the past month",
+    "metadata" : {
+      "hints" : ["interactive"]
+    },
     "created" : "2023-09-20T14:41:00.000Z",
     "classification": "report classification",
     "version" : "1.2.3",
@@ -153,8 +143,7 @@
     "specification" : {
       "template" : "list-section",
       "section": [ "$ref:direction" ],
-      "field" : [
-        {
+      "field" : [ {
         "name" : "$ref:prisonNumber",
         "sortable" : true,
         "defaultsort" : false,
@@ -190,7 +179,8 @@
           "default" : "today(-1,months) - today()"
         },
         "sortable" : true,
-        "defaultsort" : true
+        "defaultsort" : true,
+        "sortdirection" : "asc"
       }, {
         "name" : "$ref:origin",
         "display" : "From",
@@ -213,6 +203,7 @@
         "wordWrap" : "break-words",
         "filter" : {
           "type" : "Radio",
+          "interactive": true,
           "staticoptions" : [ {
             "name" : "in",
             "display" : "In"
@@ -262,9 +253,23 @@
             }
           ]
         }
+      },{
+        "name" : "$ref:origin_code",
+        "display": "Origin Code",
+        "sortable" : true,
+        "defaultsort" : false,
+        "filter" : {
+          "type" : "caseloads",
+          "mandatory": "false"
+        }
       } ]
     },
-    "destination" : [ ]
+    "destination" : [ ],
+    "summary": [{
+      "id": "summaryId",
+      "template": "page-header",
+      "dataset": "$ref:summary-dataset"
+    }]
   }, {
     "id" : "last-week",
     "name" : "Last week",

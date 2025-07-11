@@ -8,6 +8,7 @@ import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -52,6 +53,11 @@ class AsyncDataApiService(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
+  private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
+    get() = mapOf(
+      "datamart" to redshiftDataApiRepository,
+    )
+
   fun validateAndExecuteStatementAsync(
     reportId: String,
     reportVariantId: String,
@@ -77,7 +83,7 @@ class AsyncDataApiService(
     )
     val preGeneratedTableId = checkForScheduledDataset(productDefinition)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
-    return athenaApiRepository
+    return getRepo(productDefinition.datasource.name)
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false) + dynamicFilter,
         sortColumn,
@@ -125,7 +131,7 @@ class AsyncDataApiService(
     log.debug("All filters from user are: {}", filters)
     log.debug("Prompts are: {}", promptsMap)
     log.debug("Filters only are: {}", filtersOnly)
-    return athenaApiRepository
+    return getRepo(productDefinition.datasource.name)
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false),
         sortedAsc = true,
@@ -278,13 +284,13 @@ class AsyncDataApiService(
   fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    return athenaApiRepository.cancelStatementExecution(statementId)
+    return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
   fun cancelDashboardStatementExecution(statementId: String, definitionId: String, dashboardId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    return athenaApiRepository.cancelStatementExecution(statementId)
+    return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
   fun count(tableId: String): Count = Count(redshiftDataApiRepository.count(tableId))
@@ -350,7 +356,7 @@ class AsyncDataApiService(
     statementId: String,
   ): StatementExecutionStatus = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
     redshiftDataApiRepository.getStatementStatusForMultiphaseQuery(statementId)
-  } ?: athenaApiRepository.getStatementStatus(statementId)
+  } ?: getRepo(datasourceName).getStatementStatus(statementId)
 
   private fun getStatusOrThrowIfTableIsMissing(
     tableId: String?,
@@ -375,6 +381,8 @@ class AsyncDataApiService(
     }
     return true
   }
+
+  private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository = datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), athenaApiRepository)
 
   private fun buildPrompts(
     prompts: List<Map.Entry<String, String>>,
@@ -409,9 +417,3 @@ class AsyncDataApiService(
     .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, schemaFields.map(SchemaField::name)) }
     .map(formulaEngine::applyFormulas)
 }
-
-/*
-Connection:
- - Federated, AWS_DATA_CATALOG -> Only Athena
- - Datawarehouse -> Redshift? - Only for single queries. Cannot support multiphase.
- */

@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 9.2.1
+- Reverted the removal of the Redshift async journey support as this is still being used by platform clients and the alternative
+  to run Athena federated queries to Redshift has not been implemented yet to migrate.
+
 # 9.2.0
 - Include missing reports in list of reports returned from /definitions endpoint
 
@@ -27,10 +31,10 @@ Below you can find the changes included in each release.
 before returning the "FINISHED" status.
 
 # 8.4.0
-Changed table name from `execution_manager` to `multiphase_query_state` and column name of this table from `datasource` to `datasource_name`.
+- Changed table name from `execution_manager` to `multiphase_query_state` and column name of this table from `datasource` to `datasource_name`.
 
 # 8.3.5
-Fixed issue with multiphase queries throwing an error when the list of queries contained only a
+- Fixed issue with multiphase queries throwing an error when the list of queries contained only a
 single query.
 
 # 8.3.4
