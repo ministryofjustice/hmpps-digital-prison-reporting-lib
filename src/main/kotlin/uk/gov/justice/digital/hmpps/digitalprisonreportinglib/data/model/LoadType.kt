@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName
 enum class LoadType {
   @SerializedName("sync")
   SYNC,
+
   @SerializedName("async")
   ASYNC,
 }
