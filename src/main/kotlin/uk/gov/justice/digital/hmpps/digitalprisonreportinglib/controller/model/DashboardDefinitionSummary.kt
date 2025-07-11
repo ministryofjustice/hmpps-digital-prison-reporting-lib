@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model
 
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 
 data class DashboardDefinitionSummary(
   val id: String,

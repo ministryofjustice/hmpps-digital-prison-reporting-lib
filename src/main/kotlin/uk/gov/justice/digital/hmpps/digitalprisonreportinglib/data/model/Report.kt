@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import java.time.LocalDateTime
 
 data class Report(
