@@ -11,6 +11,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
@@ -192,6 +193,7 @@ class ReportDefinitionMapperTest {
       ),
     ),
     child = listOf(ReportChild(childReport.id, listOf("13"))),
+    loadType = LoadType.SYNC,
   )
 
   private val singleReportProductDefinition: SingleReportProductDefinition = SingleReportProductDefinition(

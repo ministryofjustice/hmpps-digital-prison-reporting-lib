@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.3.0
+- Added optional loadType to variant summary and dashboard summary to define loadType in the data product definition.
+
 # 9.2.1
 - Reverted the removal of the Redshift async journey support as this is still being used by platform clients and the alternative
   to run Athena federated queries to Redshift has not been implemented yet to migrate.

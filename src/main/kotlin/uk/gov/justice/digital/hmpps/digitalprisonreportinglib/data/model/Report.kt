@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import java.time.LocalDateTime
 
 data class Report(
@@ -20,6 +21,7 @@ data class Report(
   val metadata: ReportMetadata? = null,
   val child: List<ReportChild>? = null,
   val isMissing: Boolean = false,
+  val loadType: LoadType? = null,
 ) : Identified() {
   override fun getIdentifier() = this.id
 }
