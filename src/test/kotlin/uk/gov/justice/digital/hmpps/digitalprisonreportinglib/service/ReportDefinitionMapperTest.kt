@@ -136,7 +136,7 @@ class ReportDefinitionMapperTest {
     destination = emptyList(),
     classification = "someChildClassification",
     feature = emptyList(),
-    summary = emptyList()
+    summary = emptyList(),
   )
 
   private val fullReport = Report(
@@ -313,7 +313,6 @@ class ReportDefinitionMapperTest {
     val sourceSummary = singleReportProductDefinition.report.summary!!.first()
     assertThat(summary.id).isEqualTo(sourceSummary.id)
     assertThat(summary.template.toString()).isEqualTo(sourceSummary.template.toString())
-    assertThat(summary).isEqualTo(sourceSummary.id)
 
     assertThat(summary.fields.count()).isEqualTo(1)
 
