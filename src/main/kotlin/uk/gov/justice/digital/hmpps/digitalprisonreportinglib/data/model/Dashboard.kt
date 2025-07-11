@@ -7,4 +7,5 @@ data class Dashboard(
   val dataset: String,
   val section: List<DashboardSection>,
   val filter: ReportFilter? = null,
+  val loadType: LoadType? = null,
 )

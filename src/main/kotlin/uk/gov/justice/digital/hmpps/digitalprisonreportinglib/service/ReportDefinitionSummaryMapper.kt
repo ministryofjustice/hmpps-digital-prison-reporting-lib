@@ -42,6 +42,7 @@ class ReportDefinitionSummaryMapper {
     name = report.name,
     description = report.description,
     isMissing,
+    loadType = report.loadType,
   )
 
   private fun map(
@@ -50,5 +51,6 @@ class ReportDefinitionSummaryMapper {
     id = dashboard.id,
     name = dashboard.name,
     description = dashboard.description,
+    loadType = dashboard.loadType
   )
 }

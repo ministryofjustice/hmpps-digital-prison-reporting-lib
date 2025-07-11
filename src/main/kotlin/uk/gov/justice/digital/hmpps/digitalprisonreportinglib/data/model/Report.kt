@@ -20,6 +20,7 @@ data class Report(
   val metadata: ReportMetadata? = null,
   val child: List<ReportChild>? = null,
   val isMissing: Boolean = false,
+  val loadType: LoadType? = null,
 ) : Identified() {
   override fun getIdentifier() = this.id
 }

@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Feature
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
@@ -135,7 +136,7 @@ class ReportDefinitionMapperTest {
     destination = emptyList(),
     classification = "someChildClassification",
     feature = emptyList(),
-    summary = emptyList(),
+    summary = emptyList()
   )
 
   private val fullReport = Report(
@@ -192,6 +193,7 @@ class ReportDefinitionMapperTest {
       ),
     ),
     child = listOf(ReportChild(childReport.id, listOf("13"))),
+    loadType = LoadType.SYNC,
   )
 
   private val singleReportProductDefinition: SingleReportProductDefinition = SingleReportProductDefinition(
@@ -311,6 +313,7 @@ class ReportDefinitionMapperTest {
     val sourceSummary = singleReportProductDefinition.report.summary!!.first()
     assertThat(summary.id).isEqualTo(sourceSummary.id)
     assertThat(summary.template.toString()).isEqualTo(sourceSummary.template.toString())
+    assertThat(summary).isEqualTo(sourceSummary.id)
 
     assertThat(summary.fields.count()).isEqualTo(1)
 

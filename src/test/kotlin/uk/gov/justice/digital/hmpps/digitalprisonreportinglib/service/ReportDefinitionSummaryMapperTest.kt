@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
@@ -90,6 +91,7 @@ class ReportDefinitionSummaryMapperTest {
     ),
     destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
+    loadType = LoadType.SYNC
   )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(
@@ -126,6 +128,7 @@ class ReportDefinitionSummaryMapperTest {
     assertThat(variant.id).isEqualTo(fullProductDefinition.report.first().id)
     assertThat(variant.name).isEqualTo(fullProductDefinition.report.first().name)
     assertThat(variant.description).isEqualTo(fullProductDefinition.report.first().description)
+    assertThat(variant.loadType).isEqualTo(fullProductDefinition.report.first().loadType)
   }
 
   @Test
