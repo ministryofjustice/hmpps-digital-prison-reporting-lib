@@ -51,6 +51,6 @@ class ReportDefinitionSummaryMapper {
     id = dashboard.id,
     name = dashboard.name,
     description = dashboard.description,
-    loadType = dashboard.loadType
+    loadType = dashboard.loadType,
   )
 }

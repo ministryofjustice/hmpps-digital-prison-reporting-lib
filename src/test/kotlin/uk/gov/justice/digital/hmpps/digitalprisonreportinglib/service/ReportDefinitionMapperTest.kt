@@ -136,7 +136,7 @@ class ReportDefinitionMapperTest {
     destination = emptyList(),
     classification = "someChildClassification",
     feature = emptyList(),
-    summary = emptyList()
+    summary = emptyList(),
   )
 
   private val fullReport = Report(
