@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.3.1 
+- Use filterExpression instead of keyConditionExpression and parse paths as a list attribute value and the each one as a string for querying.
+
 # 9.3.0
 - Added optional loadType to variant summary and dashboard summary to define loadType in the data product definition.
 
