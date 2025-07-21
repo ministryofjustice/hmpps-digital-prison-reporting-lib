@@ -4,7 +4,7 @@ import com.google.common.cache.Cache
 import com.google.gson.Gson
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
@@ -17,10 +17,10 @@ class DynamoDbProductDefinitionRepository(
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
-    fun getQueryRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
+    fun getScanRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): ScanRequest {
       val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
 
-      return QueryRequest.builder()
+      return ScanRequest.builder()
         .tableName(properties.getDynamoDbTableArn())
         .indexName(properties.dynamoDb.categoryIndexName)
         .filterExpression("contains(:${properties.dynamoDb.categoryFieldName}, ${properties.dynamoDb.categoryFieldName})")
@@ -39,12 +39,12 @@ class DynamoDbProductDefinitionRepository(
     }
     cachedDefinitions?.let { return it }
 
-    var response = dynamoDbClient.query(getQueryRequest(properties, usePaths))
+    var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
     val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
 
     while (response.hasLastEvaluatedKey()) {
       items.addAll(response.items())
-      response = dynamoDbClient.query(getQueryRequest(properties, usePaths, response.lastEvaluatedKey()))
+      response = dynamoDbClient.scan(getScanRequest(properties, usePaths, response.lastEvaluatedKey()))
     }
 
     items.addAll(response.items())
