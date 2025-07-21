@@ -23,7 +23,7 @@ class DynamoDbProductDefinitionRepository(
       return QueryRequest.builder()
         .tableName(properties.getDynamoDbTableArn())
         .indexName(properties.dynamoDb.categoryIndexName)
-        .keyConditionExpression("contains(:${properties.dynamoDb.categoryFieldName}, ${properties.dynamoDb.categoryFieldName})")
+        .filterExpression("contains(:${properties.dynamoDb.categoryFieldName}, ${properties.dynamoDb.categoryFieldName})")
         .expressionAttributeValues(attrValues)
         .exclusiveStartKey(exclusiveStartKey)
         .build()
