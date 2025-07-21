@@ -37,8 +37,8 @@ class DynamoDbProductDefinitionRepositoryTest {
     given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
     given(response.items()).willReturn(
       listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
       ),
     )
   }
@@ -72,8 +72,8 @@ class DynamoDbProductDefinitionRepositoryTest {
     given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
     given(response.items()).willReturn(
       listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"some/other/value\"")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("some/other/value")),
       ),
     )
     val productDefinitions = repo.getProductDefinitions(path)
@@ -92,7 +92,7 @@ class DynamoDbProductDefinitionRepositoryTest {
     given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
     given(response.items()).willReturn(
       listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
       ),
     )
 

@@ -54,7 +54,7 @@ class DynamoDbProductDefinitionRepository(
       .filter { it[properties.dynamoDb.definitionFieldName] != null }
       .forEach {
         val definition = gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
-        val definitionPath = gson.fromJson(it[properties.dynamoDb.categoryFieldName]!!.s(), String::class.java)
+        val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
         definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
         definitionMap[definitionPath]?.add(definition)
       }

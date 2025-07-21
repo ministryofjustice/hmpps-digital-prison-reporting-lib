@@ -207,9 +207,9 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
       given(response.items()).willReturn(
         listOf(
-          mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
-          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS("\"${DataDefinitionPath.ORPHANAGE.value}\"")),
-          mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS("\"${DataDefinitionPath.MISSING.value}\"")),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
         ),
       )
       given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
