@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
 import com.google.gson.Gson
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
@@ -18,7 +20,7 @@ class DynamoDbProductDefinitionRepository(
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
     fun getQueryRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
-      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
+      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromL(paths.map { AttributeValue.fromS(it) }))
 
       return QueryRequest.builder()
         .tableName(properties.getDynamoDbTableArn())
