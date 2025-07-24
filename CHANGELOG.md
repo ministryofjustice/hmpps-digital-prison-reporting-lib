@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.3.1 - 9.3.3
+- Fixed Dynamo DB issue which was causing an error when trying to read from multiple definition categories (paths).
+
 # 9.3.0
 - Added optional loadType to variant summary and dashboard summary to define loadType in the data product definition.
 
