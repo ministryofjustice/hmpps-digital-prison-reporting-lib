@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovem
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.TEST_TOKEN
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.pgContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
@@ -70,11 +73,24 @@ abstract class IntegrationSystemTestBase {
 
     @JvmField
     val manageUsersMockServer = ManageUsersMockServer()
+    val postgresContainer = PostgresContainer.instance
+
+    @JvmStatic
+    @DynamicPropertySource
+    fun setupClass(registry: DynamicPropertyRegistry) {
+      pgContainer?.run {
+        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", pgContainer::getUsername)
+        registry.add("spring.datasource.password", pgContainer::getPassword)
+        registry.add("spring.datasource.missingreport.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.missingreport.username", pgContainer::getUsername)
+        registry.add("spring.datasource.missingreport.password", pgContainer::getPassword)
+      }
+    }
 
     @BeforeAll
     @JvmStatic
     fun startMocks() {
-      PostgresContainer.startPostgresqlIfNotRunning(5433)
       hmppsAuthMockServer.start()
       hmppsAuthMockServer.stubGrantToken()
       manageUsersMockServer.start()
