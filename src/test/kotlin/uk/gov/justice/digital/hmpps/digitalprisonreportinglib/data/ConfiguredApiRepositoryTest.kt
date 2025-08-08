@@ -1,7 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
 import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -30,8 +34,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9847
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.*
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase
@@ -328,7 +336,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return all the rows on or after the provided start date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2023-04-30", FilterType.DATE_RANGE_START)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -344,7 +352,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return all the rows on or before the provided end date`() {
     val actual = configuredApiRepository.executeQuery(
       REPOSITORY_TEST_QUERY,
-      listOf(Filter("date", "2023-04-25", DATE_RANGE_END)),
+      listOf(Filter("date", "2023-04-25", FilterType.DATE_RANGE_END)),
       1,
       10,
       "date",
@@ -360,7 +368,9 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return all the rows between the provided start and end dates`() {
     val actual = configuredApiRepository.executeQuery(
       REPOSITORY_TEST_QUERY,
-      listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END)),
+      listOf(Filter("date", "2023-04-25", FilterType.DATE_RANGE_START), Filter("date", "2023-05-20",
+        FilterType.DATE_RANGE_END
+      )),
       1,
       10,
       "date",
@@ -376,7 +386,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return all the rows between the provided start and end dates matching the direction filter`() {
     val actual = configuredApiRepository.executeQuery(
       REPOSITORY_TEST_QUERY,
-      listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END), Filter("direction", "in")),
+      listOf(Filter("date", "2023-04-25", FilterType.DATE_RANGE_START), Filter("date", "2023-05-20", FilterType.DATE_RANGE_END), Filter("direction", "in")),
       1,
       10,
       "date",
@@ -393,10 +403,10 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("date", "2023-04-25", DATE_RANGE_START),
-        Filter("date", "2023-05-20", DATE_RANGE_END),
+        Filter("date", "2023-04-25", FilterType.DATE_RANGE_START),
+        Filter("date", "2023-05-20", FilterType.DATE_RANGE_END),
         Filter("direction", "in"),
-        Filter("name", "La", DYNAMIC),
+        Filter("name", "La", FilterType.DYNAMIC),
       ),
       selectedPage = 1,
       pageSize = 10,
@@ -454,10 +464,10 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("date", "2023-04-25", DATE_RANGE_START),
-        Filter("date", "2023-05-20", DATE_RANGE_END),
+        Filter("date", "2023-04-25", FilterType.DATE_RANGE_START),
+        Filter("date", "2023-05-20", FilterType.DATE_RANGE_END),
         Filter("direction", "in"),
-        Filter("name", "Ab", DYNAMIC),
+        Filter("name", "Ab", FilterType.DYNAMIC),
       ),
       selectedPage = 1,
       pageSize = 10,
@@ -474,7 +484,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return no rows if the start date is after the latest table date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2025-01-01", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2025-01-01", FilterType.DATE_RANGE_START)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -490,7 +500,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return no rows if the end date is before the earliest table date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2015-01-01", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2015-01-01", FilterType.DATE_RANGE_END)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -506,7 +516,9 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return no rows if the start date is after the end date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2023-05-01", DATE_RANGE_START), Filter("date", "2023-04-25", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2023-05-01", FilterType.DATE_RANGE_START), Filter("date", "2023-04-25",
+        FilterType.DATE_RANGE_END
+      )),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -554,7 +566,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       prisonerRepository.save(prisoner9846)
       val actual = configuredApiRepository.executeQuery(
         query = REPOSITORY_TEST_QUERY,
-        filters = listOf(Filter("date", "2050-06-01", DATE_RANGE_START), Filter("date", "2050-06-01", DATE_RANGE_END)),
+        filters = listOf(Filter("date", "2050-06-01", FilterType.DATE_RANGE_START), Filter("date", "2050-06-01", FilterType.DATE_RANGE_END)),
         selectedPage = 1,
         pageSize = 1,
         sortColumn = "date",
@@ -584,7 +596,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       prisonerRepository.save(prisoner9848)
       val actual = configuredApiRepository.executeQuery(
         query = REPOSITORY_TEST_QUERY,
-        filters = listOf(Filter("date", "2022-06-01", DATE_RANGE_START), Filter("date", "2024-06-01", DATE_RANGE_END)),
+        filters = listOf(Filter("date", "2022-06-01", FilterType.DATE_RANGE_START), Filter("date", "2024-06-01", FilterType.DATE_RANGE_END)),
         selectedPage = 1,
         pageSize = 10,
         sortColumn = "date",
@@ -659,7 +671,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return only the rows which match the multiselect filter`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("destination_code", "HEI,NSI,LCI", MULTISELECT)),
+      filters = listOf(Filter("destination_code", "HEI,NSI,LCI", FilterType.MULTISELECT)),
       selectedPage = 1,
       pageSize = 20,
       sortColumn = "date",
@@ -676,8 +688,8 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("destination_code", "WWI,NSI,LCI", MULTISELECT),
-        Filter("direction", "out", STANDARD),
+        Filter("destination_code", "WWI,NSI,LCI", FilterType.MULTISELECT),
+        Filter("direction", "out", FilterType.STANDARD),
       ),
       selectedPage = 1,
       pageSize = 20,
@@ -695,8 +707,8 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("destination_code", "WWI,NSI,LCI", MULTISELECT),
-        Filter("direction", "Out", MULTISELECT),
+        Filter("destination_code", "WWI,NSI,LCI", FilterType.MULTISELECT),
+        Filter("direction", "Out", FilterType.MULTISELECT),
       ),
       selectedPage = 1,
       pageSize = 20,
@@ -751,7 +763,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   @Test
   fun `should return a count of rows with a startDate filter`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-05-01", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2023-05-01", FilterType.DATE_RANGE_START)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -764,7 +776,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   @Test
   fun `should return a count of rows with an endDate filter`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-01-31", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2023-01-31", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -777,7 +789,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   @Test
   fun `should return a count of movements with a startDate and an endDate filter`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2023-05-01", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2023-04-30", FilterType.DATE_RANGE_START), Filter("date", "2023-05-01", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -790,7 +802,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   @Test
   fun `should return a count of zero with a date start greater than the latest movement date`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2025-04-30", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2025-04-30", FilterType.DATE_RANGE_START)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -803,7 +815,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   @Test
   fun `should return a count of zero with a date end less than the earliest movement date`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2019-04-30", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2019-04-30", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -816,7 +828,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   @Test
   fun `should return a count of zero if the start date is after the end date`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2019-05-01", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2023-04-30", FilterType.DATE_RANGE_START), Filter("date", "2019-05-01", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
