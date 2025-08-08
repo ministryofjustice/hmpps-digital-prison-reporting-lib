@@ -6,7 +6,6 @@ import org.flywaydb.core.api.MigrationVersion
 import org.springframework.boot.test.context.TestConfiguration
 import javax.sql.DataSource
 
-
 @TestConfiguration
 class TestFlywayConfig(private val mainDataSource: DataSource) {
   @PostConstruct

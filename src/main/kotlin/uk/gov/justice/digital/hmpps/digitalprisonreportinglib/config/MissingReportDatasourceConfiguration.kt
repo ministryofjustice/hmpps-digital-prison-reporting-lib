@@ -11,7 +11,6 @@ import org.springframework.orm.jpa.JpaTransactionManager
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import javax.sql.DataSource
 
-
 @Configuration
 @EnableJpaRepositories(
   basePackages = ["uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport"],
@@ -25,20 +24,16 @@ class MissingReportDatasourceConfiguration {
 
   @Bean
   @ConfigurationProperties("spring.datasource.missingreport.hikari")
-  fun missingReportDataSource(missingReportDataSourceProperties: DataSourceProperties) =
-    missingReportDataSourceProperties.initializeDataSourceBuilder().build()
+  fun missingReportDataSource(missingReportDataSourceProperties: DataSourceProperties) = missingReportDataSourceProperties.initializeDataSourceBuilder().build()
 
   @Bean
-  fun missingReportEntityManagerFactory(missingReportDataSource: DataSource) =
-    LocalContainerEntityManagerFactoryBean().apply {
-      setDataSource(missingReportDataSource)
-      setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
-      persistenceUnitName = "missingreportsubmission"
-      setPackagesToScan("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport")
-    }
-
+  fun missingReportEntityManagerFactory(missingReportDataSource: DataSource) = LocalContainerEntityManagerFactoryBean().apply {
+    setDataSource(missingReportDataSource)
+    setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
+    persistenceUnitName = "missingreportsubmission"
+    setPackagesToScan("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport")
+  }
 
   @Bean
-  fun missingReportTransactionManager(@Qualifier("missingReportEntityManagerFactory") missingReportEntityManagerFactory: LocalContainerEntityManagerFactoryBean) =
-    JpaTransactionManager(missingReportEntityManagerFactory.getObject()!!)
+  fun missingReportTransactionManager(@Qualifier("missingReportEntityManagerFactory") missingReportEntityManagerFactory: LocalContainerEntityManagerFactoryBean) = JpaTransactionManager(missingReportEntityManagerFactory.getObject()!!)
 }

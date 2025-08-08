@@ -26,30 +26,29 @@ class LibConfiguration {
 
   @Bean
   @ConfigurationProperties("spring.datasource.hikari")
-  fun mainDataSource(mainDataSourceProperties: DataSourceProperties) =
-    mainDataSourceProperties.initializeDataSourceBuilder().build()
+  fun mainDataSource(mainDataSourceProperties: DataSourceProperties) = mainDataSourceProperties.initializeDataSourceBuilder().build()
 
   @Bean
-  fun mainEntityManagerFactory(mainDataSource: DataSource,
-                               @Value("#{'\${dpr.lib.modelPackages:}'.split(',')}") modelPackages: List<String>
+  fun mainEntityManagerFactory(
+    mainDataSource: DataSource,
+    @Value("#{'\${dpr.lib.modelPackages:}'.split(',')}") modelPackages: List<String>,
   ): LocalContainerEntityManagerFactoryBean {
     val mutableModelPackages = modelPackages.filter { it != "" }.toMutableList()
     if (!mutableModelPackages.contains("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")) {
       mutableModelPackages.add("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")
     }
-    println("mutableModelPackages: ${mutableModelPackages.toString()}")
+    println("mutableModelPackages: $mutableModelPackages")
     return LocalContainerEntityManagerFactoryBean().apply {
       setDataSource(mainDataSource)
       setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
       setPackagesToScan(
-        *mutableModelPackages.toTypedArray()
+        *mutableModelPackages.toTypedArray(),
       )
     }
   }
 
   @Bean
-  fun mainTransactionManager(@Qualifier("mainEntityManagerFactory") mainEntityManagerFactory: LocalContainerEntityManagerFactoryBean) =
-    JpaTransactionManager(mainEntityManagerFactory.getObject()!!)
+  fun mainTransactionManager(@Qualifier("mainEntityManagerFactory") mainEntityManagerFactory: LocalContainerEntityManagerFactoryBean) = JpaTransactionManager(mainEntityManagerFactory.getObject()!!)
 }
 
 /**

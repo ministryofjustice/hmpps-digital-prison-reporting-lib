@@ -9,19 +9,19 @@ import java.time.LocalDateTime
 @Entity
 @Table(name = "movement_movement", schema = "domain")
 data class ExternalMovementEntity(
-    @Id val id: Long,
-    val prisoner: Long,
-    val date: LocalDateTime,
-    val time: LocalDateTime,
-    val origin: String?,
-    @Column(name = "origin_code")
-    val originCode: String?,
-    val destination: String?,
-    @Column(name = "destination_code")
-    val destinationCode: String?,
-    val direction: String?,
-    val type: String?,
-    val reason: String,
-    @Column(name = "IS_CLOSED")
+  @Id val id: Long,
+  val prisoner: Long,
+  val date: LocalDateTime,
+  val time: LocalDateTime,
+  val origin: String?,
+  @Column(name = "origin_code")
+  val originCode: String?,
+  val destination: String?,
+  @Column(name = "destination_code")
+  val destinationCode: String?,
+  val direction: String?,
+  val type: String?,
+  val reason: String,
+  @Column(name = "IS_CLOSED")
   val isClosed: Boolean? = null,
 )

@@ -95,7 +95,7 @@ class ReportDefinitionController(
   @PostMapping("/definitions/{reportId}/{variantId}/requestMissing")
   @Operation(
     description = "Submit a request for a missing report",
-    security = [ SecurityRequirement(name = "bearer-jwt")]
+    security = [ SecurityRequirement(name = "bearer-jwt")],
   )
   fun requestMissing(
     @PathVariable("reportId")
@@ -109,11 +109,11 @@ class ReportDefinitionController(
     @RequestBody body: String?,
     authentication: Authentication,
   ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
-      MissingReportSubmissionRequest(
-        (authentication as DprAuthAwareAuthenticationToken).getUsername(),
-        reportId,
-        variantId,
-        body,
-      ),
-    )
+    MissingReportSubmissionRequest(
+      (authentication as DprAuthAwareAuthenticationToken).getUsername(),
+      reportId,
+      variantId,
+      body,
+    ),
+  )
 }

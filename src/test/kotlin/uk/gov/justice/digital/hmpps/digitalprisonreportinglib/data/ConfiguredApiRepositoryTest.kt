@@ -368,9 +368,14 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return all the rows between the provided start and end dates`() {
     val actual = configuredApiRepository.executeQuery(
       REPOSITORY_TEST_QUERY,
-      listOf(Filter("date", "2023-04-25", FilterType.DATE_RANGE_START), Filter("date", "2023-05-20",
-        FilterType.DATE_RANGE_END
-      )),
+      listOf(
+        Filter("date", "2023-04-25", FilterType.DATE_RANGE_START),
+        Filter(
+          "date",
+          "2023-05-20",
+          FilterType.DATE_RANGE_END,
+        ),
+      ),
       1,
       10,
       "date",
@@ -516,9 +521,14 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   fun `should return no rows if the start date is after the end date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2023-05-01", FilterType.DATE_RANGE_START), Filter("date", "2023-04-25",
-        FilterType.DATE_RANGE_END
-      )),
+      filters = listOf(
+        Filter("date", "2023-05-01", FilterType.DATE_RANGE_START),
+        Filter(
+          "date",
+          "2023-04-25",
+          FilterType.DATE_RANGE_END,
+        ),
+      ),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
