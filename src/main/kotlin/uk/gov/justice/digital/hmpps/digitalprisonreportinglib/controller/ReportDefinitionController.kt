@@ -8,18 +8,26 @@ import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MissingReportSubmissionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmission
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.MissingReportService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
 
 @Validated
 @RestController
 @Tag(name = "Report Definition API")
-class ReportDefinitionController(val reportDefinitionService: ReportDefinitionService) {
+class ReportDefinitionController(
+  val reportDefinitionService: ReportDefinitionService,
+  val missingReportService: MissingReportService,
+) {
 
   companion object {
     const val DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION = """This optional parameter sets the path of the directory of the data product definition files your application will use.
@@ -83,4 +91,29 @@ class ReportDefinitionController(val reportDefinitionService: ReportDefinitionSe
     if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     dataProductDefinitionsPath,
   )
+
+  @PostMapping("/definitions/{reportId}/{variantId}/requestMissing")
+  @Operation(
+    description = "Submit a request for a missing report",
+    security = [ SecurityRequirement(name = "bearer-jwt")]
+  )
+  fun requestMissing(
+    @PathVariable("reportId")
+    reportId: String,
+    @Parameter(
+      description = "The ID of the variant definition.",
+      example = "list",
+    )
+    @PathVariable("variantId")
+    variantId: String,
+    @RequestBody body: String?,
+    authentication: Authentication,
+  ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
+      MissingReportSubmissionRequest(
+        (authentication as DprAuthAwareAuthenticationToken).getUsername(),
+        reportId,
+        variantId,
+        body,
+      ),
+    )
 }

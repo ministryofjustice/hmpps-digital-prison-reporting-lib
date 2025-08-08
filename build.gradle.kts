@@ -36,6 +36,11 @@ dependencies {
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 
+  // Postgres dependencies
+  implementation("org.flywaydb:flyway-core")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
+  implementation("org.postgresql:postgresql:42.5.0")
+
   // Testing
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.0")
   testImplementation("com.h2database:h2")

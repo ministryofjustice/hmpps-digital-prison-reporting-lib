@@ -1,11 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DynamicTest
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestFactory
 import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -14,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.PRISON_NUMBER
@@ -24,7 +19,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner5
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionIn
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.allExternalMovements
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement2
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement3
@@ -33,30 +27,21 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionOut
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9846
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9847
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.MULTISELECT
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase
 import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class ConfiguredApiRepositoryTest {
-
+class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   companion object {
-
     const val REPOSITORY_TEST_QUERY = "SELECT " +
       "prisoners.number AS prisonNumber," +
       "CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name," +
@@ -85,27 +70,10 @@ class ConfiguredApiRepositoryTest {
 
   val productDefinition = mock<SingleReportProductDefinition>()
 
-  @Autowired
-  lateinit var externalMovementRepository: ExternalMovementRepository
-
-  @Autowired
-  lateinit var prisonerRepository: PrisonerRepository
-
-  @Autowired
-  lateinit var configuredApiRepository: ConfiguredApiRepository
-
-  @MockitoBean
-  lateinit var asyncDataApiService: AsyncDataApiService
-
   @BeforeEach
-  fun setup() {
+  override fun setup() {
+    super.setup()
     whenever(productDefinition.report).thenReturn(mock<Report>())
-    allExternalMovements.forEach {
-      externalMovementRepository.save(it)
-    }
-    allPrisoners.forEach {
-      prisonerRepository.save(it)
-    }
   }
 
   @Test
@@ -1013,16 +981,16 @@ class ConfiguredApiRepositoryTest {
   }
 
   object AllMovementPrisoners {
-    const val PRISON_NUMBER = "PRISONNUMBER"
-    const val NAME = "NAME"
-    const val DATE = "DATE"
-    const val DIRECTION = "DIRECTION"
-    const val TYPE = "TYPE"
-    const val ORIGIN = "ORIGIN"
-    const val ORIGIN_CODE = "ORIGIN_CODE"
-    const val DESTINATION = "DESTINATION"
-    const val DESTINATION_CODE = "DESTINATION_CODE"
-    const val REASON = "REASON"
+    const val PRISON_NUMBER = "prisonnumber"
+    const val NAME = "name"
+    const val DATE = "date"
+    const val DIRECTION = "direction"
+    const val TYPE = "type"
+    const val ORIGIN = "origin"
+    const val ORIGIN_CODE = "origin_code"
+    const val DESTINATION = "destination"
+    const val DESTINATION_CODE = "destination_code"
+    const val REASON = "reason"
 
     val movementPrisoner1 = mapOf(
       PRISON_NUMBER to "G2504UV",

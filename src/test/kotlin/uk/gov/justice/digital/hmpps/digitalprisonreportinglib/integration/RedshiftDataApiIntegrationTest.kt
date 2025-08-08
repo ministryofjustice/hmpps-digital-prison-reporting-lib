@@ -9,6 +9,8 @@ import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.UncategorizedSQLException
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
@@ -29,8 +31,13 @@ import java.sql.SQLException
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
 
-  @MockitoBean
-  lateinit var productDefinitionRepository: ProductDefinitionRepository
+  companion object {
+    @JvmStatic
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
+      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+    }
+  }
 
   @Test
   fun `Calling the report async execute statement endpoint calls the asyncDataApiService with the correct arguments`() {

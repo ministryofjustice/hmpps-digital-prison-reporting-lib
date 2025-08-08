@@ -37,8 +37,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement4
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementEntity
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 import java.time.LocalDateTime
 

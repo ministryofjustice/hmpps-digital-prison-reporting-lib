@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.transaction.annotation.Transactional
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import java.sql.Timestamp
 import javax.sql.DataSource
 
+@Transactional(transactionManager = "mainTransactionManager")
 abstract class RepositoryHelper {
   companion object {
     @JvmStatic
@@ -51,7 +53,7 @@ abstract class RepositoryHelper {
       context.getBean(dataSourceName, DataSource::class) as DataSource
     } else {
       log.warn("No DataSource Bean found with name: {}", dataSourceName)
-      context.getBean(DataSource::class.java) as DataSource
+      context.getBean("mainDataSource", DataSource::class.java) as DataSource
     }
     return dataSource
   }
