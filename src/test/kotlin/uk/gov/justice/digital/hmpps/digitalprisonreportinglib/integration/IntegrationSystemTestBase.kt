@@ -74,7 +74,7 @@ abstract class IntegrationSystemTestBase {
     @BeforeAll
     @JvmStatic
     fun startMocks() {
-      PostgresContainer.startPostgresqlIfNotRunning()
+      PostgresContainer.startPostgresqlIfNotRunning(5433)
       hmppsAuthMockServer.start()
       hmppsAuthMockServer.stubGrantToken()
       manageUsersMockServer.start()

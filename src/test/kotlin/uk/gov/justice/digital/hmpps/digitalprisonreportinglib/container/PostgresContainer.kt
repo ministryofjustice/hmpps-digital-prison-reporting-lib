@@ -13,7 +13,7 @@ import java.net.ServerSocket
 
 object PostgresContainer {
   private val log = LoggerFactory.getLogger(this::class.java)
-  fun startPostgresqlIfNotRunning(): PostgreSQLContainer<Nothing>? {
+  fun startPostgresqlIfNotRunning(port: Int = 5433): PostgreSQLContainer<Nothing>? {
     if (isPostgresRunning()) {
       return null
     }
@@ -23,7 +23,7 @@ object PostgresContainer {
     return PostgreSQLContainer<Nothing>("postgres:16").apply {
       withEnv("HOSTNAME_EXTERNAL", "localhost")
       withDatabaseName("datamart")
-      withExposedPorts(5432)
+      withExposedPorts(port)
       withUsername("test")
       withPassword("test")
       setWaitStrategy(Wait.forListeningPort())
