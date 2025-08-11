@@ -10,7 +10,7 @@ class MissingReportService(
   private val missingReportSubmissionsRepository: MissingReportSubmissionsRepository,
 ) {
   fun createMissingReportSubmission(
-      missingReportSubmissionRequest: MissingReportSubmissionRequest,
+    missingReportSubmissionRequest: MissingReportSubmissionRequest,
   ): MissingReportSubmission {
     val (userId, reportId, reportVariantId, reason) = missingReportSubmissionRequest
     val submission = MissingReportSubmission(userId, reportId, reportVariantId, reason)
