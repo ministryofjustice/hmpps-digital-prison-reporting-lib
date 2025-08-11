@@ -39,7 +39,6 @@ class LibConfiguration {
     if (!mutableModelPackages.contains("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")) {
       mutableModelPackages.add("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")
     }
-    println("mutableModelPackages: $mutableModelPackages")
     return LocalContainerEntityManagerFactoryBean().apply {
       setDataSource(mainDataSource)
       setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
