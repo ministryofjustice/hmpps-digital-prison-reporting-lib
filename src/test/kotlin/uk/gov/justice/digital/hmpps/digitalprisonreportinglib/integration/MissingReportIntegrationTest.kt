@@ -29,7 +29,7 @@ class MissingReportIntegrationTest : IntegrationTestBase() {
   @Test
   fun `posting a missing report submission works as intended`() {
     val result = webTestClient.post()
-      .uri("/definitions/external-movements/last-month/requestMissing")
+      .uri("/definitions/external-movements/last-month/missingRequest")
       .bodyValue("a reason")
       .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
       .exchange()

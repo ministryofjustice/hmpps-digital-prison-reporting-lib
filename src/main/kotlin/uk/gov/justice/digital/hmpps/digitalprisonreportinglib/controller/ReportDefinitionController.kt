@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmission
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.MissingReportService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
 
 @Validated
@@ -92,7 +92,7 @@ class ReportDefinitionController(
     dataProductDefinitionsPath,
   )
 
-  @PostMapping("/definitions/{reportId}/{variantId}/requestMissing")
+  @PostMapping("/definitions/{reportId}/{variantId}/missingRequest")
   @Operation(
     description = "Submit a request for a missing report",
     security = [ SecurityRequirement(name = "bearer-jwt")],
