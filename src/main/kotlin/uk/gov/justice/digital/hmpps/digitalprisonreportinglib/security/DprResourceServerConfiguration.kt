@@ -31,7 +31,7 @@ class DprResourceServerConfiguration(
   @Bean
   fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
     oauth2 { tokenConverter = DefaultDprAuthAwareTokenConverter(caseloadProvider) }
-    securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**") }
+    securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**", "/missingRequest/**") }
     anyRequestRole { defaultRole = authorisedRole.removePrefix("ROLE_") }
   }
 }

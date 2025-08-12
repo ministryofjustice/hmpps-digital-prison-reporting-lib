@@ -22,7 +22,7 @@ class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
   @Test
   fun `using the missing report endpoint does not work`() {
     webTestClient.post()
-      .uri("/definitions/external-movements/last-month/missingRequest")
+      .uri("/missingRequest/external-movements/last-month")
       .bodyValue("a reason")
       .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
       .exchange()
@@ -53,7 +53,7 @@ class MissingReportIntegrationTest : IntegrationTestBase() {
   @Test
   fun `posting a missing report submission works as intended`() {
     val result = webTestClient.post()
-      .uri("/definitions/external-movements/last-month/missingRequest")
+      .uri("/missingRequest/external-movements/last-month")
       .bodyValue("a reason")
       .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
       .exchange()

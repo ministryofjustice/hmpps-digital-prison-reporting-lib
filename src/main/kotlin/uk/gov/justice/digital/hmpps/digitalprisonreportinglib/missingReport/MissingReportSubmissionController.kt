@@ -24,7 +24,7 @@ class MissingReportSubmissionController(
 ) {
 
   @ConditionalOnBean(MissingReportService::class)
-  @PostMapping("/definitions/{reportId}/{variantId}/missingRequest")
+  @PostMapping("/missingRequest/{reportId}/{variantId}")
   @Operation(
     description = "Submit a request for a missing report",
     security = [ SecurityRequirement(name = "bearer-jwt")],
