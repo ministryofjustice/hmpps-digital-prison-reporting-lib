@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
-import org.springframework.http.HttpStatus.NOT_IMPLEMENTED
 import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.UncategorizedSQLException
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
-import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
