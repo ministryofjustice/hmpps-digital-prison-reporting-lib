@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.http.HttpStatus.NOT_IMPLEMENTED
 import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.UncategorizedSQLException
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.server.ResponseStatusException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
@@ -31,6 +33,18 @@ class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(ActiveStatementsExceededException::class)
   @ResponseStatus(TOO_MANY_REQUESTS)
   fun handleRedshiftActiveStatementsExceededException(e: Exception): ResponseEntity<ErrorResponse> = respondWithTooManyRequests(e)
+
+  @ExceptionHandler(ResponseStatusException::class)
+  @ResponseStatus(NOT_IMPLEMENTED)
+  fun handleNotImplemented(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
+    .status(NOT_IMPLEMENTED)
+    .body(
+      ErrorResponse(
+        status = NOT_IMPLEMENTED,
+        userMessage = "Endpoint is not implemented: ${e.message}",
+        developerMessage = e.message,
+      ),
+    )
 
   @ExceptionHandler(MethodArgumentTypeMismatchException::class)
   fun handleTypeMismatch(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)

@@ -86,9 +86,6 @@ abstract class IntegrationTestBase {
         registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
         registry.add("spring.datasource.username", pgContainer::getUsername)
         registry.add("spring.datasource.password", pgContainer::getPassword)
-        registry.add("spring.datasource.missingreport.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource.missingreport.username", pgContainer::getUsername)
-        registry.add("spring.datasource.missingreport.password", pgContainer::getPassword)
       }
     }
 

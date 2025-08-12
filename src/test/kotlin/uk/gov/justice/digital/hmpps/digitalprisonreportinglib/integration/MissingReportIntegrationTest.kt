@@ -7,7 +7,28 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationSystemTestBase.Companion.manageUsersMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationSystemTestBase.Companion.postgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmission
+
+class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
+  companion object {
+    @JvmStatic
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
+      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+    }
+  }
+
+  @Test
+  fun `using the missing report endpoint does not work`() {
+    webTestClient.post()
+      .uri("/definitions/external-movements/last-month/missingRequest")
+      .bodyValue("a reason")
+      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .exchange()
+      .expectStatus().isEqualTo(501)
+  }
+}
 
 class MissingReportIntegrationTest : IntegrationTestBase() {
   companion object {
@@ -17,6 +38,9 @@ class MissingReportIntegrationTest : IntegrationTestBase() {
       registry.add("dpr.lib.aws.dynamodb.enabled") { "true" }
       registry.add("dpr.lib.aws.accountId") { "1" }
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+      registry.add("spring.datasource.missingreport.url", postgresContainer!!::getJdbcUrl)
+      registry.add("spring.datasource.missingreport.username", postgresContainer::getUsername)
+      registry.add("spring.datasource.missingreport.password", postgresContainer::getPassword)
     }
   }
 

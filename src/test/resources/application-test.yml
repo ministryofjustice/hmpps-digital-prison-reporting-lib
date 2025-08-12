@@ -11,15 +11,7 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 2
       pool-name: Pool-One
-    missingreport:
-      driver-class-name: org.postgresql.Driver
-      url: jdbc:postgresql://localhost:5432/datamart
-      username: test
-      password: test
-      hikari:
-        maximum-pool-size: 10
-        minimum-idle: 2
-        pool-name: Pool-Two
+
   flyway:
     enabled: false
 

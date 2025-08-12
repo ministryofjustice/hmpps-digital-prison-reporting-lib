@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.4.0
+- Added support for missing report submissions
+
 # 9.3.1 - 9.3.3
 - Fixed Dynamo DB issue which was causing an error when trying to read from multiple definition categories (paths).
 

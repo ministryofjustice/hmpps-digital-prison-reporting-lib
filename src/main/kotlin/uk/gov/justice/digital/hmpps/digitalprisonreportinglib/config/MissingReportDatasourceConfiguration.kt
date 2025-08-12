@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config
 
 import org.hibernate.jpa.HibernatePersistenceProvider
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -12,6 +13,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import javax.sql.DataSource
 
 @Configuration
+@ConditionalOnProperty("spring.datasource.missingreport.url")
 @EnableJpaRepositories(
   basePackages = ["uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport"],
   entityManagerFactoryRef = "missingReportEntityManagerFactory",

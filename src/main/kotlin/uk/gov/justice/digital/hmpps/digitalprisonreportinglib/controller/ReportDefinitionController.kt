@@ -4,6 +4,10 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
+import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MissingReportSubmissionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -26,7 +31,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 @Tag(name = "Report Definition API")
 class ReportDefinitionController(
   val reportDefinitionService: ReportDefinitionService,
-  val missingReportService: MissingReportService,
+  val missingReportService: MissingReportService?,
 ) {
 
   companion object {
@@ -92,6 +97,7 @@ class ReportDefinitionController(
     dataProductDefinitionsPath,
   )
 
+  @ConditionalOnProperty("spring.datasource.missingreport.url")
   @PostMapping("/definitions/{reportId}/{variantId}/missingRequest")
   @Operation(
     description = "Submit a request for a missing report",
@@ -108,12 +114,18 @@ class ReportDefinitionController(
     variantId: String,
     @RequestBody body: String?,
     authentication: Authentication,
-  ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
-    MissingReportSubmissionRequest(
-      (authentication as DprAuthAwareAuthenticationToken).getUsername(),
-      reportId,
-      variantId,
-      body,
-    ),
-  )
+  ): MissingReportSubmission {
+    // No properties for missing report submissions have been entered, so this feature is not enabled
+    if (missingReportService == null) {
+      throw ResponseStatusException(HttpStatusCode.valueOf(501), "This feature is not enabled")
+    }
+    return missingReportService!!.createMissingReportSubmission(
+      MissingReportSubmissionRequest(
+        (authentication as DprAuthAwareAuthenticationToken).getUsername(),
+        reportId,
+        variantId,
+        body,
+      ),
+    )
+  }
 }
