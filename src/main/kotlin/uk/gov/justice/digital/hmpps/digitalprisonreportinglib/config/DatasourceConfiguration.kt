@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config
 
 import org.hibernate.jpa.HibernatePersistenceProvider
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -26,12 +25,10 @@ class DatasourceConfiguration {
   @Bean
   fun mainEntityManagerFactory(
     mainDataSource: DataSource,
-  ): LocalContainerEntityManagerFactoryBean {
-    return LocalContainerEntityManagerFactoryBean().apply {
-      setDataSource(mainDataSource)
-      setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
-      setPackagesToScan("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")
-    }
+  ): LocalContainerEntityManagerFactoryBean = LocalContainerEntityManagerFactoryBean().apply {
+    setDataSource(mainDataSource)
+    setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
+    setPackagesToScan("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")
   }
 
   @Bean
