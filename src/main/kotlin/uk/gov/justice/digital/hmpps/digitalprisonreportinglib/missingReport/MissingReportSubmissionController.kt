@@ -40,14 +40,12 @@ class MissingReportSubmissionController(
     variantId: String,
     @RequestBody body: String?,
     authentication: Authentication,
-  ): MissingReportSubmission {
-    return missingReportService.createMissingReportSubmission(
-      MissingReportSubmissionRequest(
-        (authentication as DprAuthAwareAuthenticationToken).getUsername(),
-        reportId,
-        variantId,
-        body,
-      ),
-    )
-  }
+  ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
+    MissingReportSubmissionRequest(
+      (authentication as DprAuthAwareAuthenticationToken).getUsername(),
+      reportId,
+      variantId,
+      body,
+    ),
+  )
 }
