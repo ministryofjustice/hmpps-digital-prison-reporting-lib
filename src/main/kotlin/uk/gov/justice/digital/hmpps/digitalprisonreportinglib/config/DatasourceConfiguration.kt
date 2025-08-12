@@ -26,18 +26,11 @@ class DatasourceConfiguration {
   @Bean
   fun mainEntityManagerFactory(
     mainDataSource: DataSource,
-    @Value("#{'\${dpr.lib.modelPackages:}'.split(',')}") modelPackages: List<String>,
   ): LocalContainerEntityManagerFactoryBean {
-    val mutableModelPackages = modelPackages.filter { it != "" }.toMutableList()
-    if (!mutableModelPackages.contains("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")) {
-      mutableModelPackages.add("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")
-    }
     return LocalContainerEntityManagerFactoryBean().apply {
       setDataSource(mainDataSource)
       setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
-      setPackagesToScan(
-        *mutableModelPackages.toTypedArray(),
-      )
+      setPackagesToScan("uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model")
     }
   }
 
