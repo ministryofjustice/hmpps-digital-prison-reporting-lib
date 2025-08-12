@@ -51,7 +51,7 @@ abstract class RepositoryHelper {
       context.getBean(dataSourceName, DataSource::class) as DataSource
     } else {
       log.warn("No DataSource Bean found with name: {}", dataSourceName)
-      context.getBean(DataSource::class.java) as DataSource
+      context.getBean("mainDataSource", DataSource::class.java) as DataSource
     }
     return dataSource
   }

@@ -19,7 +19,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 @Validated
 @RestController
 @Tag(name = "Report Definition API")
-class ReportDefinitionController(val reportDefinitionService: ReportDefinitionService) {
+class ReportDefinitionController(
+  val reportDefinitionService: ReportDefinitionService,
+) {
 
   companion object {
     const val DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION = """This optional parameter sets the path of the directory of the data product definition files your application will use.

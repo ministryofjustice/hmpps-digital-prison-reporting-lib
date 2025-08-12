@@ -1,69 +1,36 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase
 import java.time.LocalDateTime
 
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class ConfiguredApiRepositoryTestContainersTest {
-
-  @Autowired
-  lateinit var externalMovementRepository: ExternalMovementRepository
-
-  @Autowired
-  lateinit var prisonerRepository: PrisonerRepository
-
-  @Autowired
-  lateinit var configuredApiRepository: ConfiguredApiRepository
-
-  @MockitoBean
-  lateinit var asyncDataApiService: AsyncDataApiService
+class ConfiguredApiRepositoryTestContainersTest : IntegrationTestBase() {
 
   companion object {
-    @DynamicPropertySource
     @JvmStatic
-    fun registerDynamicProperties(registry: DynamicPropertyRegistry) {
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
-      registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl)
-      registry.add("spring.datasource.username", postgreSQLContainer::getUsername)
-      registry.add("spring.datasource.password", postgreSQLContainer::getPassword)
-      registry.add("spring.datasource.driver-class-name", postgreSQLContainer::getDriverClassName)
-      registry.add("spring.jpa.database-platform", "org.hibernate.dialect.PostgreSQLDialect"::toString)
     }
-
-    @Container
-    private val postgreSQLContainer = PostgreSQLContainer<Nothing>("postgres:latest")
   }
 
   private val policyEngineResult = "TRUE"
   private val dataSourceName = "datamart"
-
-  @BeforeEach
-  fun setup() {
-    ConfiguredApiRepositoryTest.AllMovements.allExternalMovements.forEach {
-      externalMovementRepository.save(it)
-    }
-    ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners.forEach {
-      prisonerRepository.save(it)
-    }
-  }
 
   @Test
   fun `should return all the rows that match the boolean filter`() {
