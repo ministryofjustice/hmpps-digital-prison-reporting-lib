@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovem
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.TEST_TOKEN
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.pgContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
@@ -78,13 +77,13 @@ abstract class IntegrationSystemTestBase {
     @JvmStatic
     @DynamicPropertySource
     fun setupClass(registry: DynamicPropertyRegistry) {
-      pgContainer?.run {
-        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource.username", pgContainer::getUsername)
-        registry.add("spring.datasource.password", pgContainer::getPassword)
-        registry.add("spring.datasource.missingreport.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource.missingreport.username", pgContainer::getUsername)
-        registry.add("spring.datasource.missingreport.password", pgContainer::getPassword)
+      postgresContainer?.run {
+        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", postgresContainer::getUsername)
+        registry.add("spring.datasource.password", postgresContainer::getPassword)
+        registry.add("spring.datasource.missingreport.url", postgresContainer::getJdbcUrl)
+        registry.add("spring.datasource.missingreport.username", postgresContainer::getUsername)
+        registry.add("spring.datasource.missingreport.password", postgresContainer::getPassword)
       }
     }
 

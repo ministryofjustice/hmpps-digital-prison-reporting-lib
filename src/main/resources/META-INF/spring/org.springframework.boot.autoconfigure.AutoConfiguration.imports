@@ -34,3 +34,6 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.alert.LegacyAlertC
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.estcodesandwings.LegacyEstablishmentCodesToWingsCacheConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ProductDefinitionTokenPolicyChecker
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.RefreshCacheSchedulingService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.MissingReportDatasourceConfiguration
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.LibConfiguration
