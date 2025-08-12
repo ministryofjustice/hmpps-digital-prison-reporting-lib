@@ -13,7 +13,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import javax.sql.DataSource
 
 @Configuration
-class LibConfiguration {
+class DatasourceConfiguration {
   @Bean
   @Primary
   @ConfigurationProperties("spring.datasource")
