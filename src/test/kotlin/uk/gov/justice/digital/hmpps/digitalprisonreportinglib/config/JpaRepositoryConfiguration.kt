@@ -5,8 +5,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 
 @EnableJpaRepositories(
   basePackages = ["uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data"],
-  entityManagerFactoryRef = "mainEntityManagerFactory",
-  transactionManagerRef = "mainTransactionManager",
 )
 @Configuration
 class JpaRepositoryConfiguration
