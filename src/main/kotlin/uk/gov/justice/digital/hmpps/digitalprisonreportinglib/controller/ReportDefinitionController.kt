@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatusCode
 import org.springframework.security.core.Authentication
@@ -29,7 +30,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 @Tag(name = "Report Definition API")
 class ReportDefinitionController(
   val reportDefinitionService: ReportDefinitionService,
-  val missingReportService: MissingReportService?,
 ) {
 
   companion object {
@@ -94,36 +94,4 @@ class ReportDefinitionController(
     if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     dataProductDefinitionsPath,
   )
-
-  @ConditionalOnProperty("spring.datasource.missingreport.url")
-  @PostMapping("/definitions/{reportId}/{variantId}/missingRequest")
-  @Operation(
-    description = "Submit a request for a missing report",
-    security = [ SecurityRequirement(name = "bearer-jwt")],
-  )
-  fun requestMissing(
-    @PathVariable("reportId")
-    reportId: String,
-    @Parameter(
-      description = "The ID of the variant definition.",
-      example = "list",
-    )
-    @PathVariable("variantId")
-    variantId: String,
-    @RequestBody body: String?,
-    authentication: Authentication,
-  ): MissingReportSubmission {
-    // No properties for missing report submissions have been entered, so this feature is not enabled
-    if (missingReportService == null) {
-      throw ResponseStatusException(HttpStatusCode.valueOf(501), "This feature is not enabled")
-    }
-    return missingReportService!!.createMissingReportSubmission(
-      MissingReportSubmissionRequest(
-        (authentication as DprAuthAwareAuthenticationToken).getUsername(),
-        reportId,
-        variantId,
-        body,
-      ),
-    )
-  }
 }

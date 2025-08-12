@@ -26,7 +26,7 @@ class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
       .bodyValue("a reason")
       .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
       .exchange()
-      .expectStatus().isEqualTo(501)
+      .expectStatus().isEqualTo(404)
   }
 }
 

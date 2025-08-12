@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
@@ -34,14 +35,14 @@ class DigitalPrisonReportingExceptionHandler {
   @ResponseStatus(TOO_MANY_REQUESTS)
   fun handleRedshiftActiveStatementsExceededException(e: Exception): ResponseEntity<ErrorResponse> = respondWithTooManyRequests(e)
 
-  @ExceptionHandler(ResponseStatusException::class)
-  @ResponseStatus(NOT_IMPLEMENTED)
+  @ExceptionHandler(NoResourceFoundException::class)
+  @ResponseStatus(NOT_FOUND)
   fun handleNotImplemented(e: Exception): ResponseEntity<ErrorResponse> = ResponseEntity
-    .status(NOT_IMPLEMENTED)
+    .status(NOT_FOUND)
     .body(
       ErrorResponse(
-        status = NOT_IMPLEMENTED,
-        userMessage = "Endpoint is not implemented: ${e.message}",
+        status = NOT_FOUND,
+        userMessage = "Endpoint does not exist: ${e.message}",
         developerMessage = e.message,
       ),
     )
