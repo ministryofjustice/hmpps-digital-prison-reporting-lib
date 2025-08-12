@@ -19,6 +19,8 @@ object PostgresContainer {
 
     return PostgreSQLContainer<Nothing>("postgres:16").apply {
       withEnv("HOSTNAME_EXTERNAL", "localhost")
+      // Tests startup faster than connections can be let go - without this, you get too many clients exception
+      withCommand("postgres", "-c", "max_connections=1000")
       withDatabaseName("datamart")
       withUsername("test")
       withPassword("test")
