@@ -45,13 +45,15 @@ abstract class RepositoryHelper {
   }
 
   private fun findDataSource(dataSourceName: String?): DataSource {
+    val mainDataSource = "dataSource"
     val dataSource = if (dataSourceName == null) {
-      context.getBean(DataSource::class.java) as DataSource
+      // Get the default DataSource if no specific name was passed as a parameter.
+      context.getBean(mainDataSource, DataSource::class.java) as DataSource
     } else if (context.containsBean(dataSourceName)) {
       context.getBean(dataSourceName, DataSource::class) as DataSource
     } else {
       log.warn("No DataSource Bean found with name: {}", dataSourceName)
-      context.getBean("mainDataSource", DataSource::class.java) as DataSource
+      context.getBean(mainDataSource, DataSource::class.java) as DataSource
     }
     return dataSource
   }
