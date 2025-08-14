@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 9.4.1
+- Use the default Spring DataSource by name in the RepositoryHelper when there is no specific one passed as a parameter. 
+This. Fixes an error where Spring fails to find the right DataSource bean.
+
 # 9.4.0
 - Added support for missing report submissions
 
