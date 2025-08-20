@@ -1,8 +1,13 @@
 Below you can find the changes included in each release.
 
+# 9.4.2
+- Removed DataSourceConfiguration as the creation of a main DataSource already takes place by defining the default datasource properties.
+- Fixed selection of the main DataSource in RepositoryHelper.
+- Removed the missingReportDataSourceProperties bean creation as this conflicts with the default DataSourceProperties when Spring tries to create the main DataSource. Now the DataSourceProperties are created from the configuration properties using Binder.
+
 # 9.4.1
 - Use the default Spring DataSource by name in the RepositoryHelper when there is no specific one passed as a parameter. 
-This. Fixes an error where Spring fails to find the right DataSource bean.
+This fixes an error where Spring fails to find the right DataSource bean.
 
 # 9.4.0
 - Added support for missing report submissions

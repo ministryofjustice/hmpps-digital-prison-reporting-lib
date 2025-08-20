@@ -45,17 +45,24 @@ abstract class RepositoryHelper {
   }
 
   private fun findDataSource(dataSourceName: String?): DataSource {
-    val mainDataSource = "dataSource"
     val dataSource = if (dataSourceName == null) {
-      // Get the default DataSource if no specific name was passed as a parameter.
-      context.getBean(mainDataSource, DataSource::class.java) as DataSource
+      getMainDataSource()
     } else if (context.containsBean(dataSourceName)) {
       context.getBean(dataSourceName, DataSource::class) as DataSource
     } else {
       log.warn("No DataSource Bean found with name: {}", dataSourceName)
-      context.getBean(mainDataSource, DataSource::class.java) as DataSource
+      getMainDataSource()
     }
     return dataSource
+  }
+
+  private fun getMainDataSource(): DataSource {
+    val mainDataSource = "dataSource"
+    return if (context.containsBean(mainDataSource)) {
+      context.getBean(mainDataSource, DataSource::class) as DataSource
+    } else {
+      context.getBean(DataSource::class.java) as DataSource
+    }
   }
 
   protected fun transformTimestampToLocalDateTime(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->
