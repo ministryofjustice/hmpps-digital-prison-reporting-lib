@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
-# 9.4.3
-- Fix the Hikari config of the missingReportDataSource. 
+# 9.4.4
+- Added FlywayConfig to AutoConfiguration.imports.
+
+# 9.4.3 
+- Fixed the Hikari config of the missingReportDataSource. 
 
 # 9.4.2
 - Removed DataSourceConfiguration as the creation of a main DataSource already takes place by defining the default datasource properties.
