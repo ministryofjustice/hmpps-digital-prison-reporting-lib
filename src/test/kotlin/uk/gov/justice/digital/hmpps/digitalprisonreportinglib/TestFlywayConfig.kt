@@ -7,11 +7,11 @@ import org.springframework.boot.test.context.TestConfiguration
 import javax.sql.DataSource
 
 @TestConfiguration
-class TestFlywayConfig(private val mainDataSource: DataSource) {
+class TestFlywayConfig(private val dataSource: DataSource) {
   @PostConstruct
   fun init() {
     Flyway.configure()
-      .dataSource(mainDataSource)
+      .dataSource(dataSource)
       .schemas("domain")
       .baselineOnMigrate(true)
       .target(MigrationVersion.LATEST)
