@@ -11,6 +11,12 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 2
       pool-name: Pool-One
+    missingreport:
+      driver-class-name: org.postgresql.Driver
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 5
+        pool-name: missing-report
 
   flyway:
     enabled: false

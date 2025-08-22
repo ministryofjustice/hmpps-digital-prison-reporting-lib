@@ -1,13 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config
 
+import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.hibernate.jpa.HibernatePersistenceProvider
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.bind.Binder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,7 +16,6 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import javax.sql.DataSource
 
 @Configuration
-@AutoConfigureAfter(DataSourceAutoConfiguration::class)
 @ConditionalOnProperty("spring.datasource.missingreport.url")
 @EnableJpaRepositories(
   basePackages = ["uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport"],
@@ -30,16 +27,19 @@ class MissingReportDatasourceConfiguration(
 ) {
 
   @Bean
-  @ConfigurationProperties("spring.datasource.missingreport.hikari")
-  fun missingReportDataSource(
-    missingReportDataSourceProperties: DataSourceProperties,
-  ): DataSource {
+  fun missingReportDataSource(): DataSource {
     val properties = Binder.get(environment).bind("spring.datasource.missingreport", DataSourceProperties::class.java)
       .orElseThrow { IllegalStateException("No spring.datasource.missingreport config found.") }
-    return properties
-      .initializeDataSourceBuilder()
-      .type(HikariDataSource::class.java)
-      .build()
+    val hikariConfig = Binder.get(environment)
+      .bind("spring.datasource.missingreport.hikari", HikariConfig::class.java)
+      .orElse(HikariConfig())
+
+    hikariConfig.jdbcUrl = properties.url
+    hikariConfig.username = properties.username
+    hikariConfig.password = properties.password
+    hikariConfig.driverClassName = properties.driverClassName
+
+    return HikariDataSource(hikariConfig)
   }
 
   @Bean
