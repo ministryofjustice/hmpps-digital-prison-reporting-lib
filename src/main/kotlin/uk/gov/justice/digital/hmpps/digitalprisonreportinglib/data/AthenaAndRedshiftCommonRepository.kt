@@ -80,6 +80,33 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     return result
   }
 
+  fun getDashboardPaginatedExternalTableResult(
+    tableId: String,
+    selectedPage: Long,
+    pageSize: Long? = null,
+    filters: List<ConfiguredApiRepository.Filter>,
+    sortedAsc: Boolean = false,
+    sortColumn: String? = null,
+    jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
+  ): List<Map<String, Any?>> {
+    val stopwatch = StopWatch.createStarted()
+    val whereClause = buildFiltersWhereClause(filters)
+    val paginationSql = pageSize?.let { "LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize" } ?: if (selectedPage == 1L) "" else return emptyList()
+    val query = "SELECT * FROM reports.$tableId WHERE $whereClause ${buildOrderByClause(sortColumn, sortedAsc) } $paginationSql;"
+    log.debug("Query to get results: {}", query)
+    val result = jdbcTemplate
+      .queryForList(
+        query,
+        MapSqlParameterSource(),
+      )
+      .map {
+        transformTimestampToLocalDateTime(it)
+      }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return result
+  }
+
   fun isTableMissing(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Boolean {
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate

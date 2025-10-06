@@ -222,14 +222,14 @@ class AsyncDataApiService(
     dashboardId: String,
     dataProductDefinitionsPath: String? = null,
     selectedPage: Long,
-    pageSize: Long,
+    pageSize: Long? = null,
     filters: Map<String, String>,
     userToken: DprAuthAwareAuthenticationToken?,
   ): List<List<Map<String, Any?>>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return listOf(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(
+      redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
         tableId = tableId,
         selectedPage = selectedPage,
         pageSize = pageSize,
