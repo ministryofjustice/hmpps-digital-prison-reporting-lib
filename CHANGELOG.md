@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.4.5
+- The endpoint to retrieve dashboard results now has no default if pageSize query is not provided and it returns all the results in one response.
+
 # 9.4.4
 - Added FlywayConfig to AutoConfiguration.imports.
 

@@ -478,9 +478,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam(defaultValue = "1")
     @Min(1)
     selectedPage: Long,
-    @RequestParam(defaultValue = "10")
-    @Min(1)
-    pageSize: Long,
+    pageSize: Long? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
