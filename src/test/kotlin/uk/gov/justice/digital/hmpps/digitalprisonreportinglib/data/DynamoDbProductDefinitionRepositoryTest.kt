@@ -34,7 +34,7 @@ class DynamoDbProductDefinitionRepositoryTest {
     definitionsCache = CacheBuilder.newBuilder()
       .expireAfterWrite(30, TimeUnit.MINUTES)
       .concurrencyLevel(Runtime.getRuntime().availableProcessors())
-      .build()
+      .build(),
   )
 
   @BeforeEach
