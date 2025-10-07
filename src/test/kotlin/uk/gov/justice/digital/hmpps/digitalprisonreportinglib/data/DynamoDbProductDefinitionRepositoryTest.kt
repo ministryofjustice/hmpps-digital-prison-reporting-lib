@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import com.google.common.cache.CacheBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.getScanRequest
+import java.util.concurrent.TimeUnit
 
 class DynamoDbProductDefinitionRepositoryTest {
 
@@ -29,6 +31,10 @@ class DynamoDbProductDefinitionRepositoryTest {
     gson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     properties = properties,
     identifiedHelper = IdentifiedHelper(),
+    definitionsCache = CacheBuilder.newBuilder()
+      .expireAfterWrite(30, TimeUnit.MINUTES)
+      .concurrencyLevel(Runtime.getRuntime().availableProcessors())
+      .build(),
   )
 
   @BeforeEach
@@ -102,5 +108,22 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinition.id).isEqualTo("test2")
     assertThat(productDefinition.path).isEqualTo(DataDefinitionPath.MISSING)
     then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(path, DataDefinitionPath.MISSING.value)))
+  }
+
+  @Test
+  fun `returns definitions from missing as well as main path if cache is loaded`() {
+    val response = mock<ScanResponse>()
+    given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
+    given(response.items()).willReturn(
+      listOf(
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
+      ),
+    )
+    val productDefinitions = repo.getProductDefinitions()
+    assertThat(productDefinitions).hasSize(2)
+
+    // Run the get again, which will hit the cache
+    assertThat(repo.getProductDefinitions()).hasSize(2)
   }
 }

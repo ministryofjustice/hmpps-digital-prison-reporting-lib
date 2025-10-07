@@ -8,6 +8,8 @@ import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import kotlin.collections.flatMap
+import kotlin.collections.flatten
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
@@ -34,10 +36,14 @@ class DynamoDbProductDefinitionRepository(
     val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
     usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
 
-    val cachedDefinitions = definitionsCache?.let { cache ->
-      path?.let { path -> cache.getIfPresent(path) }
+    val cachedDefinitions = usePaths.flatMap { usePath ->
+      definitionsCache?.let { cache ->
+        usePath.let { path -> cache.getIfPresent(path) }
+      }.orEmpty()
     }
-    cachedDefinitions?.let { return it }
+    if (cachedDefinitions.isNotEmpty()) {
+      return cachedDefinitions
+    }
 
     var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
     val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
