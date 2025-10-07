@@ -36,7 +36,6 @@ class DynamoDbProductDefinitionRepository(
     val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
     usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
 
-
     val cachedDefinitions = usePaths.flatMap { usePath ->
       definitionsCache?.let { cache ->
         usePath.let { path -> cache.getIfPresent(path) }
