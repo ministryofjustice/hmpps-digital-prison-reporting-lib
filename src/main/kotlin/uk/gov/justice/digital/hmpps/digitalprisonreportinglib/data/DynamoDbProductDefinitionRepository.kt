@@ -50,7 +50,7 @@ class DynamoDbProductDefinitionRepository(
     val ddbCallStopWatch = StopWatch.createStarted()
     val response = dynamoDbClient.getItem(getItemRequest)
     ddbCallStopWatch.stop()
-    log.debug("DynamoDB call for product definition {} {} took overall: {}", definitionId, path, ddbCallStopWatch.time)
+    log.debug("DynamoDB call for product definition {} {} took: {}", definitionId, path, ddbCallStopWatch.time)
     if (!response.hasItem()) {
       throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
@@ -58,7 +58,7 @@ class DynamoDbProductDefinitionRepository(
     val deserialisationStopwatch = StopWatch.createStarted()
     val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
     deserialisationStopwatch.stop()
-    log.debug("Deserialisation of product definition {} {} took overall: {}", definitionId, path, overallStopwatch.time)
+    log.debug("Deserialisation of product definition {} {} took: {}", definitionId, path, deserialisationStopwatch.time)
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
     definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
     overallStopwatch.stop()
@@ -67,6 +67,7 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
+    val overallStopwatch = StopWatch.createStarted()
     val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
     usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
 
@@ -79,6 +80,7 @@ class DynamoDbProductDefinitionRepository(
       return cachedDefinitions
     }
 
+    val scanStopwatch = StopWatch.createStarted()
     var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
     val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
 
@@ -86,6 +88,8 @@ class DynamoDbProductDefinitionRepository(
       items.addAll(response.items())
       response = dynamoDbClient.scan(getScanRequest(properties, usePaths, response.lastEvaluatedKey()))
     }
+    scanStopwatch.stop()
+    log.debug("DynamoDB scan for product definitions took: {}", scanStopwatch.time)
 
     items.addAll(response.items())
 
@@ -93,14 +97,18 @@ class DynamoDbProductDefinitionRepository(
     items
       .filter { it[properties.dynamoDb.definitionFieldName] != null }
       .forEach {
+        val deserialisationStopwatch = StopWatch.createStarted()
         val definition = gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
+        deserialisationStopwatch.stop()
+        log.debug("Deserialisation of product definition {} took: {}", definition.id, deserialisationStopwatch.time)
         val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
         definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
         definitionMap[definitionPath]?.add(definition)
       }
 
     definitionMap.forEach { definitionsCache?.put(it.key, it.value) }
-
+    overallStopwatch.stop()
+    log.debug("Getting product definitions took overall: {}", overallStopwatch.time)
     return definitionMap.values.flatten()
   }
 }
