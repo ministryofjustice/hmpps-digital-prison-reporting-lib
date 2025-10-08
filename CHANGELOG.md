@@ -1,5 +1,14 @@
 Below you can find the changes included in each release.
 
+# 9.4.8
+- Fixed the issue in getProductDefinition with assigning always the orphanage path regardless of which path was being passed.
+
+# 9.4.7
+- Get single product definition uses DynamoDB with partition and sort keys instead of iterating over the entire list of definitions.
+
+# 9.4.6
+- Attempt to ensure getProductDefinitions retrieves from all paths necessary in cache.
+
 # 9.4.5
 - The endpoint to retrieve dashboard results now has no default if pageSize query is not provided and it returns all the results in one response.
 
