@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import com.google.common.cache.Cache
 import com.google.gson.Gson
 import jakarta.validation.ValidationException
+import org.apache.commons.lang3.time.StopWatch
+import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
@@ -20,6 +22,7 @@ class DynamoDbProductDefinitionRepository(
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
     fun getScanRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): ScanRequest {
       val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
 
@@ -34,8 +37,9 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
-    val path = if (dataProductDefinitionsPath.isNullOrBlank()) dataProductDefinitionsPath else DataDefinitionPath.ORPHANAGE.value
-    val keyMap = hashMapOf<String?, AttributeValue?>(
+    val overallStopwatch = StopWatch.createStarted()
+    val path = if (dataProductDefinitionsPath.isNullOrBlank()) DataDefinitionPath.ORPHANAGE.value else dataProductDefinitionsPath
+    val keyMap = hashMapOf<String, AttributeValue>(
       "data-product-id" to AttributeValue.builder().s(definitionId).build(),
       "category" to AttributeValue.builder().s(path).build(),
     )
@@ -43,15 +47,22 @@ class DynamoDbProductDefinitionRepository(
       .tableName(properties.getDynamoDbTableArn())
       .key(keyMap)
       .build()
+    val ddbCallStopWatch = StopWatch.createStarted()
     val response = dynamoDbClient.getItem(getItemRequest)
-
+    ddbCallStopWatch.stop()
+    log.debug("DynamoDB call for product definition {} {} took overall: {}", definitionId, path, ddbCallStopWatch.time)
     if (!response.hasItem()) {
       throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
     val item = response.item()
+    val deserialisationStopwatch = StopWatch.createStarted()
     val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
+    deserialisationStopwatch.stop()
+    log.debug("Deserialisation of product definition {} {} took overall: {}", definitionId, path, overallStopwatch.time)
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
     definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
+    overallStopwatch.stop()
+    log.debug("Getting product definition for {} {} took overall: {}", definitionId, path, overallStopwatch.time)
     return definition
   }
 
