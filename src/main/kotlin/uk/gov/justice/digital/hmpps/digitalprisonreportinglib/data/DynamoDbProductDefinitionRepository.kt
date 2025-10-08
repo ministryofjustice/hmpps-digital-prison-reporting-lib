@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 
-
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
   private val properties: AwsProperties,
