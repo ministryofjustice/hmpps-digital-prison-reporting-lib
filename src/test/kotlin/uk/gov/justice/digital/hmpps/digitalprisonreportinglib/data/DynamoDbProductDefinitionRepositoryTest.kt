@@ -10,6 +10,8 @@ import org.mockito.kotlin.given
 import org.mockito.kotlin.then
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
@@ -63,12 +65,17 @@ class DynamoDbProductDefinitionRepositoryTest {
 
   @Test
   fun `returns the correct product definition`() {
+    val response = mock<GetItemResponse>()
+    given(response.hasItem()).willReturn(true)
+    given(response.item()).willReturn(
+      mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
+    )
+    given(dynamoDbClient.getItem(any(GetItemRequest::class.java))).willReturn(response)
     val productDefinition = repo.getProductDefinition("test2")
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
-    assertThat(productDefinition.path).isEqualTo(DataDefinitionPath.ORPHANAGE)
-    then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
+    assertThat(productDefinition.path).isEqualTo(DataDefinitionPath.MISSING)
   }
 
   @Test
@@ -94,20 +101,18 @@ class DynamoDbProductDefinitionRepositoryTest {
   @Test
   fun `returns the correct product definition using a path`() {
     val path = DataDefinitionPath.MISSING.value
-    val response = mock<ScanResponse>()
-    given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
-    given(response.items()).willReturn(
-      listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
-      ),
+    val response = mock<GetItemResponse>()
+    given(response.hasItem()).willReturn(true)
+    given(response.item()).willReturn(
+      mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
     )
+    given(dynamoDbClient.getItem(any(GetItemRequest::class.java))).willReturn(response)
 
     val productDefinition = repo.getProductDefinition("test2", path)
 
     assertThat(productDefinition).isNotNull
     assertThat(productDefinition.id).isEqualTo("test2")
     assertThat(productDefinition.path).isEqualTo(DataDefinitionPath.MISSING)
-    then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(path, DataDefinitionPath.MISSING.value)))
   }
 
   @Test

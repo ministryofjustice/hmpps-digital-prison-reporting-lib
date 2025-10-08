@@ -2,14 +2,15 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
 import com.google.gson.Gson
+import jakarta.validation.ValidationException
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import kotlin.collections.flatMap
-import kotlin.collections.flatten
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
@@ -30,6 +31,28 @@ class DynamoDbProductDefinitionRepository(
         .exclusiveStartKey(exclusiveStartKey)
         .build()
     }
+  }
+
+  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
+    val path = if (dataProductDefinitionsPath.isNullOrBlank()) dataProductDefinitionsPath else DataDefinitionPath.ORPHANAGE.value
+    val keyMap = hashMapOf<String?, AttributeValue?>(
+      "data-product-id" to AttributeValue.builder().s(definitionId).build(),
+      "category" to AttributeValue.builder().s(path).build(),
+    )
+    val getItemRequest = GetItemRequest.builder()
+      .tableName(properties.getDynamoDbTableArn())
+      .key(keyMap)
+      .build()
+    val response = dynamoDbClient.getItem(getItemRequest)
+
+    if (!response.hasItem()) {
+      throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
+    }
+    val item = response.item()
+    val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
+    val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
+    definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
+    return definition
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
