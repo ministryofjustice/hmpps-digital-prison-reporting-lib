@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
 import com.google.gson.Gson
+import jakarta.validation.ValidationException
 import org.springframework.http.HttpMethod
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
@@ -11,6 +12,7 @@ import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
@@ -46,7 +48,7 @@ class DynamoDbProductDefinitionRepository(
     val response = dynamoDbClient.getItem(getItemRequest)
 
     if (!response.hasItem()) {
-      throw NoResourceFoundException(HttpMethod.GET, "/definitions/$definitionId")
+      throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
     val item = response.item()
     val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
