@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import com.google.common.cache.Cache
 import com.google.gson.Gson
 import jakarta.validation.ValidationException
-import org.springframework.http.HttpMethod
-import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
