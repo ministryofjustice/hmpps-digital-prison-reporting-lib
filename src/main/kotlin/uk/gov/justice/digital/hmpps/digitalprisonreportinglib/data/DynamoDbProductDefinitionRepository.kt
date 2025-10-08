@@ -2,14 +2,16 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
 import com.google.gson.Gson
+import org.springframework.http.HttpMethod
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import kotlin.collections.flatMap
-import kotlin.collections.flatten
+
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
@@ -19,17 +21,40 @@ class DynamoDbProductDefinitionRepository(
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
-    fun getScanRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): ScanRequest {
+
+    fun getQueryRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): QueryRequest {
       val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
 
-      return ScanRequest.builder()
+      return QueryRequest.builder()
         .tableName(properties.getDynamoDbTableArn())
         .indexName(properties.dynamoDb.categoryIndexName)
-        .filterExpression("contains(:${properties.dynamoDb.categoryFieldName}, ${properties.dynamoDb.categoryFieldName})")
+        .keyConditionExpression("contains(:${properties.dynamoDb.categoryFieldName}, ${properties.dynamoDb.categoryFieldName})")
         .expressionAttributeValues(attrValues)
         .exclusiveStartKey(exclusiveStartKey)
         .build()
     }
+  }
+
+  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
+    val path = if (dataProductDefinitionsPath.isNullOrBlank()) dataProductDefinitionsPath else DataDefinitionPath.ORPHANAGE.value
+    val keyMap = hashMapOf<String?, AttributeValue?>(
+      "data-product-id" to AttributeValue.builder().s(definitionId).build(),
+      "category" to AttributeValue.builder().s(path).build(),
+    )
+    val getItemRequest = GetItemRequest.builder()
+      .tableName(properties.getDynamoDbTableArn())
+      .key(keyMap)
+      .build()
+    val response = dynamoDbClient.getItem(getItemRequest)
+
+    if (!response.hasItem()) {
+      throw NoResourceFoundException(HttpMethod.GET, "/definitions/$definitionId")
+    }
+    val item = response.item()
+    val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
+    val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
+    definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
+    return definition
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinition> {
@@ -45,12 +70,12 @@ class DynamoDbProductDefinitionRepository(
       return cachedDefinitions
     }
 
-    var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
+    var response = dynamoDbClient.query(getQueryRequest(properties, usePaths))
     val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
 
     while (response.hasLastEvaluatedKey()) {
       items.addAll(response.items())
-      response = dynamoDbClient.scan(getScanRequest(properties, usePaths, response.lastEvaluatedKey()))
+      response = dynamoDbClient.query(getQueryRequest(properties, usePaths, response.lastEvaluatedKey()))
     }
 
     items.addAll(response.items())
