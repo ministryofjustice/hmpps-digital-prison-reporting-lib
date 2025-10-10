@@ -132,7 +132,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         stateChangeReason = it.error,
       )
     }
-      ?: executions.firstOrNull { it.currentState == QUERY_CANCELLED }?.let {
+      ?: executions.firstOrNull { isCancelled(it.currentState) }?.let {
         StatementExecutionStatus(
           status = QUERY_ABORTED,
           duration = 1,
@@ -154,9 +154,12 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
       QUERY_RUNNING to QUERY_STARTED,
       QUERY_SUCCEEDED to QUERY_FINISHED,
       QUERY_CANCELLED to QUERY_ABORTED,
+      QUERY_CANCELED to QUERY_ABORTED,
     )
     return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }
+
+  private fun isCancelled(state: String?) = state == QUERY_CANCELLED || state == QUERY_CANCELED
 
   private fun getExecutions(rootExecutionId: String, jdbcTemplate: NamedParameterJdbcTemplate): List<MultiphaseQueryExecution> {
     val stopwatch = StopWatch.createStarted()

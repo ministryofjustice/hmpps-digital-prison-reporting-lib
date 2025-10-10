@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.4.9
+- Fixed issue in which when Athena would return "CANCELED" with single "L" the query would not be cancelled.
+
 # 9.4.8
 - Fixed the issue in getProductDefinition with assigning always the orphanage path regardless of which path was being passed.
 
