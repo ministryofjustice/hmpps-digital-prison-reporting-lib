@@ -50,7 +50,32 @@ class ReportDefinitionController(
     authentication: Authentication,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
     renderMethod,
-    if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    authentication as? DprAuthAwareAuthenticationToken,
+    dataProductDefinitionsPath,
+  )
+
+  @GetMapping("/definitions/{reportId}")
+  @Operation(
+    description = "Gets report definition summary",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+  )
+  fun definitionSummary(
+    @Parameter(
+      description = "The ID of the report definition.",
+      example = "external-movements",
+    )
+    @PathVariable("reportId")
+    reportId: String,
+    @Parameter(
+      description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
+    authentication: Authentication,
+  ): ReportDefinitionSummary = reportDefinitionService.getDefinitionSummary(
+    reportId,
+    authentication as? DprAuthAwareAuthenticationToken,
     dataProductDefinitionsPath,
   )
 
@@ -82,7 +107,7 @@ class ReportDefinitionController(
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
     reportId,
     variantId,
-    if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    authentication as? DprAuthAwareAuthenticationToken,
     dataProductDefinitionsPath,
   )
 }
