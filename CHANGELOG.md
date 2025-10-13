@@ -1,4 +1,6 @@
 Below you can find the changes included in each release.
+# 9.4.10
+- Added endpoint to get a single report summary by definitionId
 
 # 9.4.9
 - Fixed issue in which when Athena would return "CANCELED" with single "L" the query would not be cancelled.
