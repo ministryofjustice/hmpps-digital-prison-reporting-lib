@@ -786,7 +786,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .jsonPath("variants").isArray()
       .jsonPath("dashboards").isEmpty()
       .jsonPath("authorised").isEqualTo(true)
-
   }
 
   @Test
@@ -801,7 +800,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isBadRequest()
-
   }
 
   class ReportDefinitionParametersListTest : IntegrationTestBase() {
