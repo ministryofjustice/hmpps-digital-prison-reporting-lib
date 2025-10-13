@@ -25,6 +25,12 @@ class ReportDefinitionService(
     .map { summaryMapper.map(it, renderMethod, userToken) }
     .filter { containsReportVariantsOrDashboards(it) }
 
+  fun getDefinitionSummary(
+    reportId: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
+  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath).let { summaryMapper.map(it, null, userToken) }
+
   fun getDefinition(
     reportId: String,
     variantId: String,

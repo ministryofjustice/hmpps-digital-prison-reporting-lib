@@ -767,6 +767,41 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Single definition summary is returned`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/external-movements")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("id").isEqualTo("external-movements")
+      .jsonPath("name").isEqualTo("External Movements")
+      .jsonPath("description").isEqualTo("Reports about prisoner external movements")
+      .jsonPath("variants").isArray()
+      .jsonPath("dashboards").isEmpty()
+      .jsonPath("authorised").isEqualTo(true)
+  }
+
+  @Test
+  fun `Single definition summary is not returned`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/foobar")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isBadRequest()
+  }
+
   class ReportDefinitionParametersListTest : IntegrationTestBase() {
 
     companion object {
