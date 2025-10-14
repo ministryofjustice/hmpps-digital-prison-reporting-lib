@@ -1,5 +1,6 @@
 Below you can find the changes included in each release.
-# 9.4.10
+
+# 9.5.0
 - Added endpoint to get a single report summary by definitionId
 
 # 9.4.9
