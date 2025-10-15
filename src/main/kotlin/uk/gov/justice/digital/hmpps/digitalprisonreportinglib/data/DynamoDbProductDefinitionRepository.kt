@@ -71,13 +71,14 @@ class DynamoDbProductDefinitionRepository(
     val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
     usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
 
-    val cachedDefinitions = usePaths.flatMap { usePath ->
+    val cachedDefinitions = usePaths.map { usePath ->
       definitionsCache?.let { cache ->
         usePath.let { path -> cache.getIfPresent(path) }
       }.orEmpty()
     }
-    if (cachedDefinitions.isNotEmpty()) {
-      return cachedDefinitions
+    // Make sure every path has results
+    if (cachedDefinitions.all { it.isNotEmpty() }) {
+      return cachedDefinitions.flatten()
     }
 
     val scanStopwatch = StopWatch.createStarted()
