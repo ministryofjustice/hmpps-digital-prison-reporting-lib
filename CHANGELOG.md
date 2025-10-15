@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.5.1
+- Fixed small bug in caching for get all product definitions where if a a specific path was queried for after the cache was populated, it wouldn't search the cache for it properly
+
 # 9.5.0
 - Added endpoint to get a single report summary by definitionId
 
