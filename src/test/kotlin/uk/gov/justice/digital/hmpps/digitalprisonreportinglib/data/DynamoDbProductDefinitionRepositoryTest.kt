@@ -95,12 +95,11 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
     assertThat(productDefinitions[0].path).isEqualTo(DataDefinitionPath.MISSING)
-      assertThat(productDefinitions[1].path).isEqualTo(DataDefinitionPath.ORPHANAGE)
+    assertThat(productDefinitions[1].path).isEqualTo(DataDefinitionPath.ORPHANAGE)
     assertThat(productDefinitions[0].id).isEqualTo("test1")
     assertThat(productDefinitions[1].id).isEqualTo("test2")
 
     then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
-
 
     given(response.items()).willReturn(
       listOf(
