@@ -78,24 +78,44 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinition.path).isEqualTo(DataDefinitionPath.MISSING)
   }
 
+  // This is to ensure that other paths are working and that the cache isn't being 'sticky' when it has data in from one set of paths already
   @Test
-  fun `returns the correct product definitions using a path`() {
+  fun `returns the correct product definitions using a path after first querying for the default`() {
     val path = "some/other/value"
     val response = mock<ScanResponse>()
     given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
     given(response.items()).willReturn(
       listOf(
         mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS("some/other/value")),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
       ),
     )
-    val productDefinitions = repo.getProductDefinitions(path)
+    val productDefinitions = repo.getProductDefinitions()
 
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
     assertThat(productDefinitions[0].path).isEqualTo(DataDefinitionPath.MISSING)
-    assertThat(productDefinitions[1].path).isEqualTo(DataDefinitionPath.OTHER)
-    then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(DataDefinitionPath.MISSING.value, path)))
+      assertThat(productDefinitions[1].path).isEqualTo(DataDefinitionPath.ORPHANAGE)
+    assertThat(productDefinitions[0].id).isEqualTo("test1")
+    assertThat(productDefinitions[1].id).isEqualTo("test2")
+
+    then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
+
+
+    given(response.items()).willReturn(
+      listOf(
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
+        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test3\"}"), "category" to AttributeValue.fromS(path)),
+      ),
+    )
+    val productDefinitions2 = repo.getProductDefinitions(path)
+
+    assertThat(productDefinitions2).isNotNull
+    assertThat(productDefinitions2.count()).isEqualTo(2)
+    assertThat(productDefinitions2[0].path).isEqualTo(DataDefinitionPath.MISSING)
+    assertThat(productDefinitions2[1].path).isEqualTo(DataDefinitionPath.OTHER)
+    assertThat(productDefinitions2[0].id).isEqualTo("test1")
+    assertThat(productDefinitions2[1].id).isEqualTo("test3")
   }
 
   @Test
