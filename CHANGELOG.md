@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.5.2
+- Enabled cross join for multiphase queries. The following placeholder: {table[n]} will be replaced with the corresponding table ID of the n index multiphase query.
+
 # 9.5.1
 - Fixed small bug in caching for get all product definitions where if a a specific path was queried for after the cache was populated, it wouldn't search the cache for it properly
 

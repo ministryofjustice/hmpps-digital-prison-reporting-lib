@@ -61,6 +61,10 @@ class AthenaApiRepository(
   val jdbcTemplate: JdbcTemplate? = null,
 ) : AthenaAndRedshiftCommonRepository() {
 
+  companion object {
+    val tableIdRegex = "\\{table\\[(\\d+)]}".toRegex()
+  }
+
   override fun executeQueryAsync(
     filters: List<ConfiguredApiRepository.Filter>,
     sortColumn: String?,
@@ -268,21 +272,20 @@ class AthenaApiRepository(
         jdbcTemplate,
       )
     }
-    val firstTableId = tableIdGenerator.generateNewExternalTableId()
+    val indexToTableId: Map<Int, String> = multiphaseQueries.associate { it.index to tableIdGenerator.generateNewExternalTableId() }
     val multiphaseQuerySortedByIndex = multiphaseQueries.sortedBy { it.index }
     val firstStatementExecutionResponse = buildExecuteAndInsertFirstQueryIntoMultiphaseTable(
       productDefinitionId,
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      firstTableId,
       userToken,
       prompts,
       multiphaseQuerySortedByIndex,
       jdbcTemplate,
+      indexToTableId,
     )
-    val previousTableId = buildAndInsertIntermediateQueryIntoMultiphaseTable(
-      firstTableId,
+    buildAndInsertIntermediateQueryIntoMultiphaseTable(
       multiphaseQuerySortedByIndex,
       productDefinitionId,
       productDefinitionName,
@@ -292,14 +295,13 @@ class AthenaApiRepository(
       prompts,
       firstStatementExecutionResponse,
       jdbcTemplate,
+      indexToTableId,
     )
-    val lastTableId = tableIdGenerator.generateNewExternalTableId()
     buildAndInsertLastQueryIntoMultiphaseTable(
       productDefinitionId,
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      lastTableId,
       userToken,
       prompts,
       multiphaseQuerySortedByIndex,
@@ -307,11 +309,14 @@ class AthenaApiRepository(
       policyEngineResult,
       sortColumn,
       sortedAsc,
-      previousTableId,
       firstStatementExecutionResponse,
       jdbcTemplate,
+      indexToTableId,
     )
-    return StatementExecutionResponse(lastTableId, firstStatementExecutionResponse.executionId)
+    return StatementExecutionResponse(
+      tableId = indexToTableId[multiphaseQuerySortedByIndex.last().index]!!,
+      executionId = firstStatementExecutionResponse.executionId,
+    )
   }
 
   private fun buildAndInsertLastQueryIntoMultiphaseTable(
@@ -319,7 +324,6 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    lastTableId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
@@ -327,27 +331,26 @@ class AthenaApiRepository(
     policyEngineResult: String,
     sortColumn: String?,
     sortedAsc: Boolean,
-    previousTableId: String,
     firstStatementExecutionResponse: StatementExecutionResponse,
     jdbcTemplate: JdbcTemplate,
+    indexToTableId: Map<Int, String>,
   ) {
     val lastQuery = buildCachedTableQuery(
       productDefinitionId = productDefinitionId,
       productDefinitionName = productDefinitionName,
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
-      tableId = lastTableId,
+      tableId = indexToTableId[multiphaseQuerySortedByIndex.last().index]!!,
       connection = multiphaseQuerySortedByIndex.last().datasource.connection ?: DatasourceConnection.AWS_DATA_CATALOG,
       innerQuery = buildFinalInnerQuery(
         buildContextQuery(userToken, multiphaseQuerySortedByIndex.last().datasource.dialect ?: SqlDialect.ATHENA3),
         buildPromptsQuery(prompts, multiphaseQuerySortedByIndex.last().datasource.dialect ?: SqlDialect.ATHENA3),
-        buildDatasetQuery(multiphaseQuerySortedByIndex.last().query),
+        buildDatasetQuery(interpolateQuery(multiphaseQuerySortedByIndex.last().query, indexToTableId)),
         buildReportQuery(reportFilter),
         buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(sortColumn = sortColumn, sortedAsc = sortedAsc),
-      )
-        .replace("\${tableId}", previousTableId),
+      ),
     )
     log.debug("Last multiphase query: {}", lastQuery)
     val lastInsertStatement = buildInsertStatement(
@@ -363,7 +366,6 @@ class AthenaApiRepository(
   }
 
   private fun buildAndInsertIntermediateQueryIntoMultiphaseTable(
-    firstTableId: String,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
     productDefinitionId: String,
     productDefinitionName: String,
@@ -373,31 +375,30 @@ class AthenaApiRepository(
     prompts: List<Prompt>?,
     firstStatementExecutionResponse: StatementExecutionResponse,
     jdbcTemplate: JdbcTemplate,
-  ): String {
-    var previousTableId = firstTableId
+    indexToTableId: Map<Int, String>,
+  ) {
     List(
       multiphaseQuerySortedByIndex
         .drop(1)
         .dropLast(1).size,
     ) { i ->
-      val currentTableId = tableIdGenerator.generateNewExternalTableId()
       val intermediateQuery = multiphaseQuerySortedByIndex[i + 1]
       val intermediateQueryString = buildCachedTableQuery(
         productDefinitionId = productDefinitionId,
         productDefinitionName = productDefinitionName,
         reportOrDashboardId = reportOrDashboardId,
         reportOrDashboardName = reportOrDashboardName,
-        tableId = currentTableId,
+        tableId = indexToTableId[intermediateQuery.index]!!,
         connection = intermediateQuery.datasource.connection ?: DatasourceConnection.AWS_DATA_CATALOG,
         innerQuery = (
           listOf(
             buildContextQuery(userToken, intermediateQuery.datasource.dialect ?: SqlDialect.ATHENA3),
             buildPromptsQuery(prompts, intermediateQuery.datasource.dialect ?: SqlDialect.ATHENA3),
-            buildDatasetQuery(intermediateQuery.query),
+            buildDatasetQuery(interpolateQuery(intermediateQuery.query, indexToTableId)),
           )
             .joinToString(",") +
             "\nSELECT * FROM $DATASET_"
-          ).replace("\${tableId}", previousTableId),
+          ),
       )
       log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)
       val insertQuery = buildInsertStatement(
@@ -410,9 +411,14 @@ class AthenaApiRepository(
       )
       log.debug("Inserting into admin table: {}", insertQuery)
       jdbcTemplate.execute(insertQuery)
-      previousTableId = currentTableId
     }
-    return previousTableId
+  }
+
+  private fun interpolateQuery(
+    query: String,
+    indexToTableId: Map<Int, String>,
+  ): String = tableIdRegex.replace(query) { matchResult ->
+    indexToTableId[matchResult.groupValues[1].toInt()]!!
   }
 
   private fun buildExecuteAndInsertFirstQueryIntoMultiphaseTable(
@@ -420,18 +426,19 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    firstTableId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
     jdbcTemplate: JdbcTemplate,
+    indexToTableId: Map<Int, String>,
   ): StatementExecutionResponse {
+    val tableId = indexToTableId[multiphaseQuerySortedByIndex[0].index]!!
     val firstQuery = buildCachedTableQuery(
       productDefinitionId = productDefinitionId,
       productDefinitionName = productDefinitionName,
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
-      tableId = firstTableId,
+      tableId = tableId,
       connection = multiphaseQuerySortedByIndex[0].datasource.connection ?: DatasourceConnection.FEDERATED,
       innerQuery = (
         listOf(
@@ -446,7 +453,7 @@ class AthenaApiRepository(
 
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
     val firstQueryDatasource = multiphaseQuerySortedByIndex[0].datasource
-    val statementExecutionResponse = executeQueryAsync(firstQueryDatasource, firstTableId, firstQuery)
+    val statementExecutionResponse = executeQueryAsync(firstQueryDatasource, tableId, firstQuery)
     val insertStatement: String =
       buildInsertStatement(
         rootExecutionId = statementExecutionResponse.executionId,
