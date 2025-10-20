@@ -196,7 +196,7 @@ class AthenaApiRepository(
       buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
       "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
       buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
-    ).replace("'", "''"),
+    ),
   )
 
   private fun buildPromptsQuery(prompts: List<Prompt>?, dialect: SqlDialect? = SqlDialect.ORACLE11g): String {
@@ -448,7 +448,7 @@ class AthenaApiRepository(
         )
           .joinToString(",") +
           "\nSELECT * FROM $DATASET_"
-        ).replace("'", "''"),
+        ),
     )
 
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
@@ -604,7 +604,7 @@ class AthenaApiRepository(
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           '$innerQuery'
+           '${innerQuery.replace("'", "''")}'
            )) 
           );
       """.trimIndent()
@@ -616,7 +616,7 @@ class AthenaApiRepository(
                   format = 'PARQUET'
                 ) 
                 AS (
-          $innerQuery
+          ${innerQuery.replace("'", "''")}
                 )
       """.trimIndent()
     else -> throw RuntimeException("Unsupported DatasourceConnection type for query execution. Connection: $connection")

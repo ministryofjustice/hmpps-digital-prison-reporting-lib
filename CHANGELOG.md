@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.5.3
+- Fixed missing replacement of double quotes in certain phases of multiphase queries.
+
 # 9.5.2
 - Enabled cross join for multiphase queries. The following placeholder: {table[n]} will be replaced with the corresponding table ID of the n index multiphase query.
 
