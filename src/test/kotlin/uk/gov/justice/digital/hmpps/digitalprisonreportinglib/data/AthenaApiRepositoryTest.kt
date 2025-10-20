@@ -474,7 +474,7 @@ SELECT * FROM dataset_'
       query = multiphaseSqlNonLastQuery(),
     )
     val datasource = Datasource("id", "name", database, catalog)
-    val query2 = "SELECT count(*) as total from {table[0]}"
+    val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
       MultiphaseQuery(0, datasource, dpdQuery),
       MultiphaseQuery(1, datasource, query2),

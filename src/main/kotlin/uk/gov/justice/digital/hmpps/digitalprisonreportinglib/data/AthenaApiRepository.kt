@@ -62,7 +62,7 @@ class AthenaApiRepository(
 ) : AthenaAndRedshiftCommonRepository() {
 
   companion object {
-    val tableIdRegex = "\\{table\\[(\\d+)]}".toRegex()
+    val tableIdRegex = "\\$\\{table\\[(\\d+)]}".toRegex()
   }
 
   override fun executeQueryAsync(
