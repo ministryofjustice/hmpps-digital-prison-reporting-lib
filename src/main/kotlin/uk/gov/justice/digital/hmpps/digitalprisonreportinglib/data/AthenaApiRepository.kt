@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Primary
@@ -187,6 +188,7 @@ class AthenaApiRepository(
     reportOrDashboardId = reportOrDashboardId,
     reportOrDashboardName = reportOrDashboardName,
     tableId = tableId,
+    // For single non-multiphase queries we keep existing functionality to run as Nomis queries.
     connection = datasource.connection ?: DatasourceConnection.FEDERATED,
     innerQuery = buildFinalInnerQuery(
       buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ORACLE11g),
@@ -341,7 +343,7 @@ class AthenaApiRepository(
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
       tableId = indexToTableId[multiphaseQuerySortedByIndex.last().index]!!,
-      connection = multiphaseQuerySortedByIndex.last().datasource.connection ?: DatasourceConnection.AWS_DATA_CATALOG,
+      connection = multiphaseQuerySortedByIndex.last().datasource.connection ?: throwNoConnectionDefinedException(multiphaseQuerySortedByIndex.last().index),
       innerQuery = buildFinalInnerQuery(
         buildContextQuery(userToken, multiphaseQuerySortedByIndex.last().datasource.dialect ?: SqlDialect.ATHENA3),
         buildPromptsQuery(prompts, multiphaseQuerySortedByIndex.last().datasource.dialect ?: SqlDialect.ATHENA3),
@@ -364,6 +366,8 @@ class AthenaApiRepository(
     log.debug("Inserting into admin table: {}", lastInsertStatement)
     jdbcTemplate.execute(lastInsertStatement)
   }
+
+  private fun throwNoConnectionDefinedException(index: Int): Nothing = throw ValidationException("Query at index $index has no connection defined in its datasource.")
 
   private fun buildAndInsertIntermediateQueryIntoMultiphaseTable(
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
@@ -389,7 +393,8 @@ class AthenaApiRepository(
         reportOrDashboardId = reportOrDashboardId,
         reportOrDashboardName = reportOrDashboardName,
         tableId = indexToTableId[intermediateQuery.index]!!,
-        connection = intermediateQuery.datasource.connection ?: DatasourceConnection.AWS_DATA_CATALOG,
+        // For every subsequent query apart from the first connection is required.
+        connection = intermediateQuery.datasource.connection ?: throwNoConnectionDefinedException(intermediateQuery.index),
         innerQuery = (
           listOf(
             buildContextQuery(userToken, intermediateQuery.datasource.dialect ?: SqlDialect.ATHENA3),
@@ -439,6 +444,7 @@ class AthenaApiRepository(
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
       tableId = tableId,
+      // Default the first multiphase query to federated mainly for backward compatibility with existing Nomis queries.
       connection = multiphaseQuerySortedByIndex[0].datasource.connection ?: DatasourceConnection.FEDERATED,
       innerQuery = (
         listOf(
@@ -616,7 +622,7 @@ class AthenaApiRepository(
                   format = 'PARQUET'
                 ) 
                 AS (
-          ${innerQuery.replace("'", "''")}
+          $innerQuery
                 )
       """.trimIndent()
     else -> throw RuntimeException("Unsupported DatasourceConnection type for query execution. Connection: $connection")
