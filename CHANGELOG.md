@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.5.4
+- Fixed ${table[n]} regex as the dollar sign prefix was missing.
+
 # 9.5.3
 - Fixed missing replacement of double quotes in certain phases of multiphase queries.
 
