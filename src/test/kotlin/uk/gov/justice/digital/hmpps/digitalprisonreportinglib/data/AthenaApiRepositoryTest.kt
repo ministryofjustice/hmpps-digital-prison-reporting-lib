@@ -474,7 +474,7 @@ SELECT * FROM dataset_'
       query = multiphaseSqlNonLastQuery(),
     )
     val datasource = Datasource("id", "name", database, catalog)
-    val query2 = "SELECT count(*) as total from {table[0]}"
+    val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
       MultiphaseQuery(0, datasource, dpdQuery),
       MultiphaseQuery(1, datasource, query2),
@@ -574,8 +574,8 @@ SELECT * FROM dataset_'
     val datasource3 = Datasource("id", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
     val tableId2 = "tableId2"
     val tableId3 = "tableId3"
-    val query2 = "SELECT count(*) as total from {table[0]}"
-    val query3 = "SELECT count(*) + 1 as total_plus_one from {table[1]}"
+    val query2 = "SELECT count(*) as total from \${table[0]}"
+    val query3 = "SELECT count(*) + 1 as total_plus_one from \${table[1]}"
     val multiphaseQuery = listOf(
       MultiphaseQuery(0, datasource, dpdQuery),
       MultiphaseQuery(1, datasource2, query2),
