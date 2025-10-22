@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.5.6
+- When a multiphase query references an invalid table index a validation error is thrown.
+
 # 9.5.5
 - Wrap in double quotes only federated passthrough multiphase queries. 
 - Only first query defaults to federated if no datasource connection is defined while the rest throw an error.
