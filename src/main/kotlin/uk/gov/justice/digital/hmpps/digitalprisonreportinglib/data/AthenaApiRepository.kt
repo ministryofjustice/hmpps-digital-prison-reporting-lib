@@ -167,6 +167,9 @@ class AthenaApiRepository(
 
   override fun buildDatasetQuery(query: String) = if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
+  private fun findTableIdOrThrow(indexToTableId: Map<Int, String>, index: Int): String = indexToTableId[index]
+    ?: throw ValidationException("Invalid index. There is no table at index $index.")
+
   private fun buildSingleFinalQueryWithExternalTable(
     productDefinitionId: String,
     productDefinitionName: String,
@@ -316,7 +319,7 @@ class AthenaApiRepository(
       indexToTableId,
     )
     return StatementExecutionResponse(
-      tableId = indexToTableId[multiphaseQuerySortedByIndex.last().index]!!,
+      tableId = findTableIdOrThrow(indexToTableId, multiphaseQuerySortedByIndex.last().index),
       executionId = firstStatementExecutionResponse.executionId,
     )
   }
@@ -342,7 +345,7 @@ class AthenaApiRepository(
       productDefinitionName = productDefinitionName,
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
-      tableId = indexToTableId[multiphaseQuerySortedByIndex.last().index]!!,
+      tableId = findTableIdOrThrow(indexToTableId, multiphaseQuerySortedByIndex.last().index),
       connection = multiphaseQuerySortedByIndex.last().datasource.connection ?: throwNoConnectionDefinedException(multiphaseQuerySortedByIndex.last().index),
       innerQuery = buildFinalInnerQuery(
         buildContextQuery(userToken, multiphaseQuerySortedByIndex.last().datasource.dialect ?: SqlDialect.ATHENA3),
@@ -392,7 +395,7 @@ class AthenaApiRepository(
         productDefinitionName = productDefinitionName,
         reportOrDashboardId = reportOrDashboardId,
         reportOrDashboardName = reportOrDashboardName,
-        tableId = indexToTableId[intermediateQuery.index]!!,
+        tableId = findTableIdOrThrow(indexToTableId, intermediateQuery.index),
         // For every subsequent query apart from the first connection is required.
         connection = intermediateQuery.datasource.connection ?: throwNoConnectionDefinedException(intermediateQuery.index),
         innerQuery = (
@@ -423,7 +426,7 @@ class AthenaApiRepository(
     query: String,
     indexToTableId: Map<Int, String>,
   ): String = tableIdRegex.replace(query) { matchResult ->
-    indexToTableId[matchResult.groupValues[1].toInt()]!!
+    findTableIdOrThrow(indexToTableId, matchResult.groupValues[1].toInt())
   }
 
   private fun buildExecuteAndInsertFirstQueryIntoMultiphaseTable(
@@ -437,7 +440,7 @@ class AthenaApiRepository(
     jdbcTemplate: JdbcTemplate,
     indexToTableId: Map<Int, String>,
   ): StatementExecutionResponse {
-    val tableId = indexToTableId[multiphaseQuerySortedByIndex[0].index]!!
+    val tableId = findTableIdOrThrow(indexToTableId, multiphaseQuerySortedByIndex[0].index)
     val firstQuery = buildCachedTableQuery(
       productDefinitionId = productDefinitionId,
       productDefinitionName = productDefinitionName,
@@ -600,9 +603,11 @@ class AthenaApiRepository(
     tableId: String,
     connection: DatasourceConnection,
     innerQuery: String,
-  ): String = when (connection) {
-    DatasourceConnection.FEDERATED ->
-      """
+  ): String {
+    val fullQuery =
+      when (connection) {
+        DatasourceConnection.FEDERATED ->
+          """
           /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
@@ -613,9 +618,10 @@ class AthenaApiRepository(
            '${innerQuery.replace("'", "''")}'
            )) 
           );
-      """.trimIndent()
-    DatasourceConnection.AWS_DATA_CATALOG ->
-      """
+          """.trimIndent()
+
+        DatasourceConnection.AWS_DATA_CATALOG ->
+          """
             /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
                 CREATE TABLE AwsDataCatalog.reports.$tableId
                 WITH (
@@ -624,7 +630,11 @@ class AthenaApiRepository(
                 AS (
           $innerQuery
                 )
-      """.trimIndent()
-    else -> throw RuntimeException("Unsupported DatasourceConnection type for query execution. Connection: $connection")
+          """.trimIndent()
+
+        else -> throw RuntimeException("Unsupported DatasourceConnection type for query execution. Connection: $connection")
+      }
+    log.debug("Full query is: {}", fullQuery)
+    return fullQuery
   }
 }
