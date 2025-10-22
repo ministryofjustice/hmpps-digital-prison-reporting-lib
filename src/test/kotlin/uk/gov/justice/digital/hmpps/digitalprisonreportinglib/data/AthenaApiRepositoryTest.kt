@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import jakarta.validation.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -473,11 +475,12 @@ SELECT * FROM dataset_'
       catalog = catalog,
       query = multiphaseSqlNonLastQuery(),
     )
-    val datasource = Datasource("id", "name", database, catalog)
+    val datasource1 = Datasource("id", "name", database, catalog)
+    val datasource2 = Datasource("id2", "name2", database, catalog, DatasourceConnection.AWS_DATA_CATALOG)
     val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
-      MultiphaseQuery(0, datasource, dpdQuery),
-      MultiphaseQuery(1, datasource, query2),
+      MultiphaseQuery(0, datasource1, dpdQuery),
+      MultiphaseQuery(1, datasource2, query2),
     )
     val tableId2 = "tableId2"
 
@@ -543,14 +546,15 @@ SELECT * FROM dataset_'
           values (
             'someId',
             
-            'name',
+            'name2',
             'catalog',
             'db',
             1,
-            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICcnYVVzZXInJyBBUyB1c2VybmFtZSwgCiAgICAgICcnYUNhc2Vsb2FkJycgQVMgY2FzZWxvYWQsIAogICAgICAnJ0dFTkVSQUwnJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJycnICksZGF0YXNldF8gQVMgKFNFTEVDVCBjb3VudCgqKSBhcyB0b3RhbCBmcm9tIF9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcpLHJlcG9ydF8gQVMgKFNFTEVDVCAqIEZST00gZGF0YXNldF8pLHBvbGljeV8gQVMgKFNFTEVDVCAqIEZST00gcmVwb3J0XyBXSEVSRSAxPTEpLGZpbHRlcl8gQVMgKFNFTEVDVCAqIEZST00gcG9saWN5XyBXSEVSRSAxPTEpClNFTEVDVCAqCiAgICAgICAgICBGUk9NIGZpbHRlcl8gT1JERVIgQlkgY29sdW1uX2EgYXNjCiAgICAgICAgICAgICAgICAp',
+            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KSxyZXBvcnRfIEFTIChTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfKSxwb2xpY3lfIEFTIChTRUxFQ1QgKiBGUk9NIHJlcG9ydF8gV0hFUkUgMT0xKSxmaWx0ZXJfIEFTIChTRUxFQ1QgKiBGUk9NIHBvbGljeV8gV0hFUkUgMT0xKQpTRUxFQ1QgKgogICAgICAgICAgRlJPTSBmaWx0ZXJfIE9SREVSIEJZIGNvbHVtbl9hIGFzYwogICAgICAgICAgICAgICAgKQ==',
             0,
             SYSDATE
           )"""
+
     verify(jdbcTemplate).execute(firstMultiphaseInsert)
     verify(jdbcTemplate).execute(secondMultiphaseInsert)
     val inOrder = inOrder(jdbcTemplate)
@@ -648,7 +652,7 @@ SELECT * FROM dataset_'
             'catalog',
             'db',
             1,
-            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICcnYVVzZXInJyBBUyB1c2VybmFtZSwgCiAgICAgICcnYUNhc2Vsb2FkJycgQVMgY2FzZWxvYWQsIAogICAgICAnJ0dFTkVSQUwnJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJycnICksZGF0YXNldF8gQVMgKFNFTEVDVCBjb3VudCgqKSBhcyB0b3RhbCBmcm9tIF9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcpClNFTEVDVCAqIEZST00gZGF0YXNldF8KICAgICAgICAgICAgICAgICk=',
+            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfCiAgICAgICAgICAgICAgICAp',
             0,
             SYSDATE
           )"""
@@ -671,7 +675,7 @@ SELECT * FROM dataset_'
             'catalog',
             'db',
             2,
-            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMwogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICcnYVVzZXInJyBBUyB1c2VybmFtZSwgCiAgICAgICcnYUNhc2Vsb2FkJycgQVMgY2FzZWxvYWQsIAogICAgICAnJ0dFTkVSQUwnJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJycnICksZGF0YXNldF8gQVMgKFNFTEVDVCBjb3VudCgqKSArIDEgYXMgdG90YWxfcGx1c19vbmUgZnJvbSB0YWJsZUlkMikscmVwb3J0XyBBUyAoU0VMRUNUICogRlJPTSBkYXRhc2V0XykscG9saWN5XyBBUyAoU0VMRUNUICogRlJPTSByZXBvcnRfIFdIRVJFIDE9MSksZmlsdGVyXyBBUyAoU0VMRUNUICogRlJPTSBwb2xpY3lfIFdIRVJFIDE9MSkKU0VMRUNUICoKICAgICAgICAgIEZST00gZmlsdGVyXyBPUkRFUiBCWSBjb2x1bW5fYSBhc2MKICAgICAgICAgICAgICAgICk=',
+            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMwogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgKyAxIGFzIHRvdGFsX3BsdXNfb25lIGZyb20gdGFibGVJZDIpLHJlcG9ydF8gQVMgKFNFTEVDVCAqIEZST00gZGF0YXNldF8pLHBvbGljeV8gQVMgKFNFTEVDVCAqIEZST00gcmVwb3J0XyBXSEVSRSAxPTEpLGZpbHRlcl8gQVMgKFNFTEVDVCAqIEZST00gcG9saWN5XyBXSEVSRSAxPTEpClNFTEVDVCAqCiAgICAgICAgICBGUk9NIGZpbHRlcl8gT1JERVIgQlkgY29sdW1uX2EgYXNjCiAgICAgICAgICAgICAgICAp',
             0,
             SYSDATE
           )"""
@@ -751,6 +755,53 @@ SELECT * FROM dataset_'
     verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
     verify(athenaClient, times(1)).startQueryExecution(any(StartQueryExecutionRequest::class.java))
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+  }
+
+  @Test
+  fun `executeQueryAsync should throw an error when a subsequent multiphase query does not define a datasource connection`() {
+    val database = "db"
+    val catalog = "catalog"
+    setupBasicMocks(
+      database = database,
+      catalog = catalog,
+      query = multiphaseSqlNonLastQuery(),
+    )
+    val datasource1 = Datasource("id", "name", database, catalog)
+    val datasource2 = Datasource("id2", "name2", database, catalog)
+    val query2 = "SELECT count(*) as total from \${table[0]}"
+    val multiphaseQuery = listOf(
+      MultiphaseQuery(0, datasource1, dpdQuery),
+      MultiphaseQuery(1, datasource2, query2),
+    )
+    val tableId2 = "tableId2"
+
+    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+      tableId2,
+    )
+    val exception = assertThrows(ValidationException::class.java) {
+      athenaApiRepository.executeQueryAsync(
+        filters = emptyList(),
+        sortColumn = "column_a",
+        sortedAsc = true,
+        policyEngineResult = TRUE_WHERE_CLAUSE,
+        userToken = userToken,
+        query = "",
+        reportFilter = productDefinition.report.filter,
+        datasource = productDefinition.datasource,
+        reportSummaries = productDefinition.report.summary,
+        allDatasets = productDefinition.allDatasets,
+        productDefinitionId = productDefinition.id,
+        productDefinitionName = productDefinition.name,
+        reportOrDashboardId = productDefinition.report.id,
+        reportOrDashboardName = productDefinition.report.name,
+        multiphaseQueries = multiphaseQuery,
+      )
+    }
+    assertEquals(exception.message, "Query at index 1 has no connection defined in its datasource.")
   }
 
   private fun setupBasicMocks(

@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 9.5.5
+- Wrap in double quotes only federated passthrough multiphase queries. 
+- Only first query defaults to federated if no datasource connection is defined while the rest throw an error.
+
 # 9.5.4
 - Fixed ${table[n]} regex as the dollar sign prefix was missing.
 
