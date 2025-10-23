@@ -29,6 +29,10 @@ class DigitalPrisonReportingExceptionHandler {
   @ResponseStatus(BAD_REQUEST)
   fun handleRedshiftDataValidationException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
+  @ExceptionHandler(IllegalArgumentException::class)
+  @ResponseStatus(BAD_REQUEST)
+  fun handleIllegalArgumentExceptionException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
+
   @ExceptionHandler(ActiveStatementsExceededException::class)
   @ResponseStatus(TOO_MANY_REQUESTS)
   fun handleRedshiftActiveStatementsExceededException(e: Exception): ResponseEntity<ErrorResponse> = respondWithTooManyRequests(e)

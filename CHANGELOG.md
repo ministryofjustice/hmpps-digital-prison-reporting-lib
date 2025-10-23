@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.5.7
+- IllegalArgumentException is mapped to a Bad Request response instead of throwing a 500 error.
+
 # 9.5.6
 - When a multiphase query references an invalid table index a validation error is thrown.
 
