@@ -164,7 +164,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
   private fun getExecutions(rootExecutionId: String, jdbcTemplate: NamedParameterJdbcTemplate): List<MultiphaseQueryExecution> {
     val stopwatch = StopWatch.createStarted()
     val mapSqlParameterSource = MapSqlParameterSource()
-    log.debug("Retrieving query executions...")
+    log.debug("Retrieving query executions for rootExecutionId $rootExecutionId ...")
     mapSqlParameterSource.addValue("rootExecutionId", rootExecutionId)
     val result = jdbcTemplate
       .queryForList(

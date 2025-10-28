@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.5.8
+- Added more logging around retrieving the status of multiphase queries.
+
 # 9.5.7
 - IllegalArgumentException is mapped to a Bad Request response instead of throwing a 500 error.
 
