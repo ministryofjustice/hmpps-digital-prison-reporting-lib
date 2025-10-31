@@ -74,6 +74,7 @@ abstract class DefinitionMapper(
     interactive = filterDefinition.interactive ?: false,
     defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
     defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) },
+    index = filterDefinition.index,
   )
 
   protected fun populateStaticOptions(
@@ -159,6 +160,7 @@ abstract class DefinitionMapper(
       mandatory = parameter.mandatory,
       interactive = false,
       staticOptions = populateStaticOptionsForParameter(parameter),
+      index = parameter.index,
     ),
   )
 

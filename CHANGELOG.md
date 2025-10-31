@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.6.0
+- Filters support an index.
+
 # 9.5.8
 - Added more logging around retrieving the status of multiphase queries.
 
