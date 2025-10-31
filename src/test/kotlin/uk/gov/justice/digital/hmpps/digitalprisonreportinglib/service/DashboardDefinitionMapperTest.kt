@@ -192,6 +192,7 @@ class DashboardDefinitionMapperTest {
             type = FilterType.AutoComplete,
             mandatory = parameter.mandatory,
             interactive = false,
+            index = parameter.index,
             staticOptions = listOf(
               FilterOption(
                 "KMI",
@@ -268,6 +269,7 @@ class DashboardDefinitionMapperTest {
             type = FilterType.AutoComplete,
             mandatory = parameter.mandatory,
             interactive = false,
+            index = parameter.index,
             staticOptions = listOf(
               FilterOption(
                 "KMI",

@@ -794,6 +794,7 @@ class ReportDefinitionMapperTest {
       filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
         type = Text,
         mandatory = true,
+        index = 0,
       ),
       visible = false,
     )
@@ -991,6 +992,7 @@ class ReportDefinitionMapperTest {
       filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
         type = Text,
         mandatory = true,
+        index = parameter.index,
       ),
       visible = false,
     )
@@ -1179,6 +1181,7 @@ class ReportDefinitionMapperTest {
       type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.valueOf(parameter.filterType.toString()),
       mandatory = true,
       staticOptions = expectedStaticOptions,
+      index = parameter.index,
     ),
     visible = false,
   )
