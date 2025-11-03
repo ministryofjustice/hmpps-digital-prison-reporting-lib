@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
+import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductCollectionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
@@ -8,10 +10,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 class ProductCollectionService(
   val productCollectionRepository: ProductCollectionRepository,
 ) {
-  fun getProductCollections(userToken: DprAuthAwareAuthenticationToken?): Collection<ProductCollectionDTO> {
+  fun getProductCollections(userToken: DprAuthAwareAuthenticationToken?): Collection<ProductCollectionSummary> {
     // Set this to "NULL" if theres no values, which will fail the check, if a collection has any caseloadId attributes linked to it
     val caseloadIds = userToken?.getCaseLoadIds()?.takeIf { it.isNotEmpty() } ?: listOf("NULL")
-    val groupBy = productCollectionRepository.findAllCollections(caseloadIds)
+    val groupBy = productCollectionRepository.findAll(caseloadIds)
       .groupBy { it.id }
       .values
     val results = groupBy
@@ -20,10 +22,14 @@ class ProductCollectionService(
         if (firstEntry == null) {
           throw IllegalStateException("After grouping by productCollection id, somehow list of collections was empty")
         }
-        val products = entry.filter { it.product_id != null }.map { ProductCollectionProduct(it.product_id!!) }
-        listOf(ProductCollectionDTO(firstEntry.id, firstEntry.name, firstEntry.version, firstEntry.owner_name, products))
+        listOf(ProductCollectionSummary(firstEntry.id, firstEntry.name, firstEntry.version, firstEntry.owner_name))
       }
       .flatten()
     return results
+  }
+
+  fun findById(id: String): ProductCollectionDTO {
+    val result = productCollectionRepository.findById(id).orElseThrow { NoResourceFoundException(HttpMethod.GET, "/productCollections/$id") }
+    return result.let { ProductCollectionDTO(it.id, it.name, it.version, it.ownerName, it.products) }
   }
 }

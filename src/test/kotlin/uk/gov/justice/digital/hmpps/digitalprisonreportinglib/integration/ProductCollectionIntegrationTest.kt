@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionAttribute
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionDTO
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionProduct
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprUserAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
@@ -150,7 +151,7 @@ class ProductCollectionIntegrationTest {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody<Collection<ProductCollectionDTO>>()
+      .expectBody<Collection<ProductCollectionSummary>>()
       .returnResult()
       .responseBody
 
@@ -236,7 +237,7 @@ class ProductCollectionIntegrationTest {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody<Collection<ProductCollectionDTO>>()
+      .expectBody<Collection<ProductCollectionSummary>>()
       .returnResult()
       .responseBody
 
@@ -302,7 +303,7 @@ class ProductCollectionIntegrationTest {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody<Collection<ProductCollectionDTO>>()
+      .expectBody<Collection<ProductCollectionSummary>>()
       .returnResult()
       .responseBody
 
@@ -357,11 +358,112 @@ class ProductCollectionIntegrationTest {
       .exchange()
       .expectStatus()
       .isOk
-      .expectBody<Collection<ProductCollectionDTO>>()
+      .expectBody<Collection<ProductCollectionSummary>>()
       .returnResult()
       .responseBody
 
     assertThat(productCollections?.filter { it.name == "coll2" }).hasSize(1)
     assertThat(productCollections).size().isEqualTo(1)
+  }
+
+  @Test
+  fun `Getting single product collection by id succeeds`() {
+    stubMeCaseloadsResponse(
+      """
+      {
+        "username": "TESTUSER1",
+        "active": true,
+        "accountType": "GENERAL",
+        "activeCaseload": {
+          "id": "ABC",
+          "name": "ABCPRISON (ABC)"
+        },
+        "caseloads": [
+          {
+            "id": "ABC",
+            "name": "ABCPRISON (ABC)"
+          }
+        ]
+      }
+      """.trimIndent(),
+      wireMockServer,
+    )
+    val coll1 = productCollectionRepository.save(
+      ProductCollection(
+        "coll2",
+        "1",
+        "jane",
+        setOf(ProductCollectionProduct("456")),
+        setOf(
+          ProductCollectionAttribute("caseloads", "DEF"),
+        ),
+      ),
+    )
+
+    val productCollections = webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/productCollections/${coll1.id}")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole), jwtAuthorisationHelper = jwtAuthorisationHelper))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody<ProductCollectionDTO>()
+      .returnResult()
+      .responseBody
+
+    assertThat(productCollections).isNotNull()
+    assertThat(productCollections!!.products).hasSize(1)
+    assertThat(productCollections.name).isEqualTo("coll2")
+    assertThat(productCollections.id).isEqualTo(coll1.id)
+  }
+
+  @Test
+  fun `Getting single product collection by id fails`() {
+    stubMeCaseloadsResponse(
+      """
+      {
+        "username": "TESTUSER1",
+        "active": true,
+        "accountType": "GENERAL",
+        "activeCaseload": {
+          "id": "ABC",
+          "name": "ABCPRISON (ABC)"
+        },
+        "caseloads": [
+          {
+            "id": "ABC",
+            "name": "ABCPRISON (ABC)"
+          }
+        ]
+      }
+      """.trimIndent(),
+      wireMockServer,
+    )
+    productCollectionRepository.save(
+      ProductCollection(
+        "coll2",
+        "1",
+        "jane",
+        setOf(ProductCollectionProduct("456")),
+        setOf(
+          ProductCollectionAttribute("caseloads", "ABC"),
+          ProductCollectionAttribute("caseloads", "DEF"),
+        ),
+      ),
+    )
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/productCollections/abc123")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole), jwtAuthorisationHelper = jwtAuthorisationHelper))
+      .exchange()
+      .expectStatus()
+      .isNotFound
   }
 }
