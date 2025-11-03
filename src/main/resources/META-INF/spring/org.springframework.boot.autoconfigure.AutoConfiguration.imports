@@ -38,3 +38,6 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.MissingReportDatasourceConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.FlywayConfig
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionController
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollection
