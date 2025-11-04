@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
+import jakarta.validation.ValidationException
 import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.resource.NoResourceFoundException
@@ -29,7 +30,7 @@ class ProductCollectionService(
   }
 
   fun findById(id: String): ProductCollectionDTO {
-    val result = productCollectionRepository.findById(id).orElseThrow { NoResourceFoundException(HttpMethod.GET, "/productCollections/$id") }
+    val result = productCollectionRepository.findById(id).orElseThrow { ValidationException("Invalid product collection id specified: $id") }
     return result.let { ProductCollectionDTO(it.id!!, it.name, it.version, it.ownerName, it.products) }
   }
 }
