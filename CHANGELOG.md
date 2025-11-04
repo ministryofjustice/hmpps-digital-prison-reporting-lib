@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.7.0
+- Added endpoints to get product collections and get a single collection by id
+
 # 9.6.0
 - Filters support an index.
 

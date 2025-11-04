@@ -464,6 +464,6 @@ class ProductCollectionIntegrationTest {
       .headers(setAuthorisation(roles = listOf(authorisedRole), jwtAuthorisationHelper = jwtAuthorisationHelper))
       .exchange()
       .expectStatus()
-      .isNotFound
+      .isBadRequest
   }
 }
