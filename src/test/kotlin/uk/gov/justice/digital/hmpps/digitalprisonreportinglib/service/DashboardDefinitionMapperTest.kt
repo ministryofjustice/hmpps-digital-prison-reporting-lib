@@ -10,6 +10,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardOptionDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnsDefinition
@@ -96,6 +97,13 @@ class DashboardDefinitionMapperTest {
                   ),
                   expectNulls = true,
                 ),
+                options= DashboardOptionDefinition(
+                  useRagColour = false,
+                  baseColour = null,
+                  buckets = null,
+                  showLatest = true,
+                  columnsAsList = false
+                )
               ),
             ),
           ),
