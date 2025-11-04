@@ -30,6 +30,6 @@ class ProductCollectionService(
 
   fun findById(id: String): ProductCollectionDTO {
     val result = productCollectionRepository.findById(id).orElseThrow { NoResourceFoundException(HttpMethod.GET, "/productCollections/$id") }
-    return result.let { ProductCollectionDTO(it.id, it.name, it.version, it.ownerName, it.products) }
+    return result.let { ProductCollectionDTO(it.id!!, it.name, it.version, it.ownerName, it.products) }
   }
 }

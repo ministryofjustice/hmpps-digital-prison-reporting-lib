@@ -27,7 +27,7 @@ class ProductCollectionController(val productCollectionService: ProductCollectio
 
   @GetMapping("/productCollections/{id}")
   @Operation(
-    description = "Gets all product collections",
+    description = "Gets product collection by id",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getCollections(
@@ -37,6 +37,5 @@ class ProductCollectionController(val productCollectionService: ProductCollectio
     )
     @PathVariable("id")
     id: String,
-    authentication: Authentication,
   ): ProductCollectionDTO = productCollectionService.findById(id)
 }

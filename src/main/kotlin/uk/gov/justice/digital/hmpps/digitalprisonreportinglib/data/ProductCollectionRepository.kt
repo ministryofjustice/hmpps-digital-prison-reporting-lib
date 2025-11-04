@@ -17,7 +17,7 @@ interface ProductCollectionRepository : JpaRepository<ProductCollection, String>
             ELSE 'fail'
           END) AS status
         FROM product_.product_collection_attributes
-        WHERE attribute_name in ('role', 'caseloads')
+        WHERE attribute_name in ('caseloads')
         GROUP BY product_collection_id, attribute_name
       ),
       failing_attributes AS (
