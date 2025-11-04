@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
 import jakarta.validation.ValidationException
-import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
-import org.springframework.web.servlet.resource.NoResourceFoundException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductCollectionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
