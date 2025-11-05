@@ -30,7 +30,7 @@ class DprSystemAuthResourceConfiguration(
   @Bean
   fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
     oauth2 { tokenConverter = DprSystemAuthAwareTokenConverter(userPermissionProvider) }
-    securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**", "/missingRequest/**") }
+    securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**", "/missingRequest/**", "/productCollections/**") }
     anyRequestRole { defaultRole = systemRole.removePrefix("ROLE_") }
   }
 }

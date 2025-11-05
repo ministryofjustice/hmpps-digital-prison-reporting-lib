@@ -1,5 +1,18 @@
 Below you can find the changes included in each release.
 
+# 9.7.2
+- Added matrix-timeseries and line-timeseries to DashboardVisualisationType.
+- Do not throw NPE if no multiphase query executions are found when requesting the status. 
+
+# 9.7.1
+- Updated dashboards to support heatmap functionality.
+
+# 9.7.0
+- Added endpoints to get product collections and get a single collection by id
+
+# 9.6.0
+- Filters support an index.
+
 # 9.5.8
 - Added more logging around retrieving the status of multiphase queries.
 
