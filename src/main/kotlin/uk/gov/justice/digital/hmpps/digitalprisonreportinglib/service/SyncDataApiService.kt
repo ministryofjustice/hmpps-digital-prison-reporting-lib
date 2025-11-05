@@ -155,7 +155,7 @@ class SyncDataApiService(
         selectedPage = selectedPage,
         pageSize = pageSize,
         sortColumn,
-        sortedAsc = sortedAsc?: true,
+        sortedAsc = sortedAsc ?: true,
         policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         dataSourceName = dashboardDefinition.datasource.name,
@@ -164,7 +164,7 @@ class SyncDataApiService(
       .map { row ->
         formatColumnNamesToSourceFieldNamesCasing(
           row,
-          dashboardDefinition.dashboardDataset.schema.field.map(SchemaField::name)
+          dashboardDefinition.dashboardDataset.schema.field.map(SchemaField::name),
         )
       }
       .map { row -> toMetricData(row) }

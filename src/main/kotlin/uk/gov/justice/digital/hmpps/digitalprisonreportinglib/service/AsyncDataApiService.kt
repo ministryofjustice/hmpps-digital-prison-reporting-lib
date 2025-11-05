@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
