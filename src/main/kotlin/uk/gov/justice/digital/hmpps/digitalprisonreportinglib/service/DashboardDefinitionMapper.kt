@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AggregateTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardBucketDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardOptionDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnsDefinition
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.U
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisationColumn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
@@ -58,9 +61,10 @@ class DashboardDefinitionMapper(
               columns = DashboardVisualisationColumnsDefinition(
                 keys = visualisation.column.key?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.column.key) },
                 measures = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure),
-                filters = visualisation.column.filters?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
+                filters = visualisation.column.filter?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
                 expectNulls = visualisation.column.expectNull,
               ),
+              options = mapToDashboardOptionDefinition(visualisation),
             )
           },
         )
@@ -68,6 +72,14 @@ class DashboardDefinitionMapper(
       filterFields = mapAndAggregateAllFilters(dataset, allDatasets, userToken),
     )
   }
+
+  private fun mapToDashboardOptionDefinition(visualisation: DashboardVisualisation): DashboardOptionDefinition = DashboardOptionDefinition(
+    useRagColour = visualisation.option?.useRagColour ?: false,
+    baseColour = visualisation.option?.baseColour,
+    buckets = visualisation.option?.bucket?.map { DashboardBucketDefinition(it.min, it.max, it.hexColour) },
+    showLatest = visualisation.option?.showLatest ?: true,
+    columnsAsList = visualisation.option?.columnsAsList ?: false,
+  )
 
   private fun mapAndAggregateAllFilters(
     dataset: Dataset,

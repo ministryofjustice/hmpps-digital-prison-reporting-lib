@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.7.1
+- Updated dashboards to support heatmap functionality.
+
 # 9.7.0
 - Added endpoints to get product collections and get a single collection by id
 
