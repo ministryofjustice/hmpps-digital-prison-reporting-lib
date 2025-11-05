@@ -19,5 +19,5 @@ enum class DashboardVisualisationTypeDefinition(@JsonValue val type: String) {
 
   MATRIX_TIMESERIES("matrix-timeseries"),
 
-  LINE_TIMESERIES("line-timeseries")
+  LINE_TIMESERIES("line-timeseries"),
 }

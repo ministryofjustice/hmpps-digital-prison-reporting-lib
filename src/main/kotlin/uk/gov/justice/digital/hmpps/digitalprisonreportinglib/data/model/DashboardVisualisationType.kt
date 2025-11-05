@@ -28,5 +28,5 @@ enum class DashboardVisualisationType {
   MATRIX_TIMESERIES,
 
   @SerializedName("line-timeseries")
-  LINE_TIMESERIES
+  LINE_TIMESERIES,
 }
