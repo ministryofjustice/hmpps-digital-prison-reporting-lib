@@ -16,4 +16,8 @@ enum class DashboardVisualisationTypeDefinition(@JsonValue val type: String) {
   SCORECARD("scorecard"),
 
   SCORECARD_GROUP("scorecard-group"),
+
+  MATRIX_TIMESERIES("matrix-timeseries"),
+
+  LINE_TIMESERIES("line-timeseries"),
 }

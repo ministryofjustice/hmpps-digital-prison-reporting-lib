@@ -141,7 +141,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         )
       }
       ?: StatementExecutionStatus(
-        status = executions.maxByOrNull { it.index }!!.currentState?.let { mapAthenaStateToRedshiftState(it) } ?: QUERY_SUBMITTED,
+        status = executions.maxByOrNull { it.index }?.currentState?.let { mapAthenaStateToRedshiftState(it) } ?: QUERY_SUBMITTED,
         duration = 1,
         resultRows = 0,
         resultSize = 0,
