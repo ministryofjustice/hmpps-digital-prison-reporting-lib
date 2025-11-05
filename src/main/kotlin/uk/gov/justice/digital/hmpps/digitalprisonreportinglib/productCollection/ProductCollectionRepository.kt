@@ -1,9 +1,7 @@
-package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
+package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollection
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionResult
 
 interface ProductCollectionRepository : JpaRepository<ProductCollection, String> {
   @Query(
