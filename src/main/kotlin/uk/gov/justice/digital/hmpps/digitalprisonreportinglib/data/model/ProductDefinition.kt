@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 
