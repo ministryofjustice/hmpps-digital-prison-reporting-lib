@@ -10,7 +10,6 @@ data class ProductDefinition(
   val name: String,
   val description: String? = null,
   val scheduled: Boolean? = false,
-  val loadType: LoadType? = null,
   val metadata: MetaData,
   var path: DataDefinitionPath? = DataDefinitionPath.ORPHANAGE,
   val datasource: List<Datasource> = emptyList(),
