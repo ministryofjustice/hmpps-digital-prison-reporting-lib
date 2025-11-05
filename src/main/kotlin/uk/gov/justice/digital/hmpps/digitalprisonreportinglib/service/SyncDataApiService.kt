@@ -130,6 +130,46 @@ class SyncDataApiService(
     )
   }
 
+  fun validateAndFetchDataForDashboard(
+    reportId: String,
+    dashboardId: String,
+    filters: Map<String, String>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean?,
+    userToken: DprAuthAwareAuthenticationToken?,
+    reportFieldId: Set<String>? = null,
+    prefix: String? = null,
+    dataProductDefinitionsPath: String? = null,
+    datasetForFilter: Dataset? = null,
+  ): List<Map<String, Any?>> {
+    val dashboardDefinition = productDefinitionRepository
+      .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
+    checkAuth(dashboardDefinition, userToken)
+    val policyEngine = PolicyEngine(dashboardDefinition.policy, userToken)
+    return configuredApiRepository
+      .executeQuery(
+        query = datasetForFilter?.query ?: dashboardDefinition.dashboardDataset.query,
+        filters = validateAndMapFilters(dashboardDefinition, filters, false),
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn,
+        sortedAsc = sortedAsc?: true,
+        policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
+        dynamicFilterFieldId = reportFieldId,
+        dataSourceName = dashboardDefinition.datasource.name,
+        reportFilter = dashboardDefinition.dashboard.filter,
+      )
+      .map { row ->
+        formatColumnNamesToSourceFieldNamesCasing(
+          row,
+          dashboardDefinition.dashboardDataset.schema.field.map(SchemaField::name)
+        )
+      }
+      .map { row -> toMetricData(row) }
+  }
+
   private fun checkAuth(
     productDefinition: WithPolicy,
     userToken: DprAuthAwareAuthenticationToken?,

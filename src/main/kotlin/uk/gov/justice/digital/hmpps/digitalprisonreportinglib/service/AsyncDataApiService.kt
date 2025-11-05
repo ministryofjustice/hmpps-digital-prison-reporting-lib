@@ -370,8 +370,6 @@ class AsyncDataApiService(
     return statementStatus
   }
 
-  private fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> = row.entries.associate { e -> e.key to MetricData(e.value) }
-
   private fun checkAuth(
     productDefinition: WithPolicy,
     userToken: DprAuthAwareAuthenticationToken?,
