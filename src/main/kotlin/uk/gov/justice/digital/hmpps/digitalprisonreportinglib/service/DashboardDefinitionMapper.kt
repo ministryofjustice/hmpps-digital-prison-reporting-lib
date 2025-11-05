@@ -104,7 +104,7 @@ class DashboardDefinitionMapper(
       it.unit?.let { type -> UnitTypeDefinition.valueOf(type.toString()) },
       it.displayValue,
       it.axis,
-      it.optional
+      it.optional,
     )
   }
 
