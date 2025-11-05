@@ -23,4 +23,10 @@ enum class DashboardVisualisationType {
 
   @SerializedName("scorecard-group")
   SCORECARD_GROUP,
+
+  @SerializedName("matrix-timeseries")
+  MATRIX_TIMESERIES,
+
+  @SerializedName("line-timeseries")
+  LINE_TIMESERIES
 }
