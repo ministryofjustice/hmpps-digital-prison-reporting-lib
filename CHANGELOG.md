@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.7.6
+- Added Dashboard sync functionality.
+
 # 9.7.5
 - Updated the display field of the DashboardVisualisationColumn and DashboardVisualisationColumnDefinition as optional.
 

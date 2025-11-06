@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionG
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -85,7 +86,7 @@ class SyncDataApiServiceTest {
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-    listOf("productDefinition.json"),
+    listOf("productDefinition.json", "productDefinitionWithDashboard.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper,
   )
@@ -1385,5 +1386,63 @@ class SyncDataApiServiceTest {
       reportFilter = singleReportProductDefinition.report.filter,
     )
     assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `should call the repository with the corresponding arguments and get a list of rows for dashboard when both range and non range filters are provided`() {
+    val expectedDashboardResult = listOf(
+      mapOf(
+        "establishment_id" to "OUT",
+        "has_ethnicity" to "4000",
+        "ethnicity_is_missing" to "2",
+      ),
+    )
+    val expectedDashboardServiceResult = listOf(
+      mapOf(
+        "establishment_id" to MetricData("OUT"),
+        "has_ethnicity" to MetricData("4000"),
+        "ethnicity_is_missing" to MetricData("2"),
+      ),
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dashboardId = "missing-ethnicity-metrics"
+    val dashboardReportId = "age-breakdown-dashboard-1"
+    val singleReportProductDefinition =
+      productDefinitionRepository.getSingleDashboardProductDefinition(dashboardId, dashboardReportId)
+    val dataSet = singleReportProductDefinition.dashboardDataset
+
+    val dataSourceName = singleReportProductDefinition.datasource.name
+
+    whenever(
+      configuredApiRepository.executeQuery(
+        query = dataSet.query,
+        filters = emptyList(),
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        policyEngineResult = "FALSE",
+        dataSourceName = dataSourceName,
+        reportFilter = null,
+      ),
+    ).thenReturn(expectedDashboardResult)
+
+    val actual = configuredApiService.validateAndFetchDataForDashboard(dashboardId, dashboardReportId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      query = dataSet.query,
+      filters = emptyList(),
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      policyEngineResult = "FALSE",
+      dataSourceName = dataSourceName,
+      reportFilter = null,
+    )
+    assertEquals(expectedDashboardServiceResult, actual)
   }
 }
