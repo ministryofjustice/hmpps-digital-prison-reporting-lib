@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.8.0
+- Added Dashboard sync functionality.
+
 # 9.7.2
 - Added matrix-timeseries and line-timeseries to DashboardVisualisationType.
 - Do not throw NPE if no multiphase query executions are found when requesting the status. 
