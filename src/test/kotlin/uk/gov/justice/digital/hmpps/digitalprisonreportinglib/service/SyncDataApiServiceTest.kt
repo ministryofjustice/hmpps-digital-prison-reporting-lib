@@ -86,7 +86,7 @@ class SyncDataApiServiceTest {
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-    listOf("productDefinition.json","productDefinitionWithDashboard.json"),
+    listOf("productDefinition.json", "productDefinitionWithDashboard.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper,
   )
