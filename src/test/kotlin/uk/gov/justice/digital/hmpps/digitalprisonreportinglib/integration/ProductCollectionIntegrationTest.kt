@@ -23,11 +23,11 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductCollectionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionAttribute
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionDTO
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionProduct
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprUserAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService

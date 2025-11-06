@@ -1,5 +1,14 @@
 Below you can find the changes included in each release.
 
+# 9.7.5
+- Updated the display field of the DashboardVisualisationColumn and DashboardVisualisationColumnDefinition as optional.
+
+# 9.7.4
+- Updating JPA config so that we exclude the specific MissingReport stuff that uses a different datasource, and have normal Spring behaviour for the rest, which is to scan from the base package down
+
+# 9.7.3
+- Added "optional" field to DashboardVisualisationColumnDefinition. 
+
 # 9.7.2
 - Added matrix-timeseries and line-timeseries to DashboardVisualisationType.
 - Do not throw NPE if no multiphase query executions are found when requesting the status. 

@@ -8,6 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
 
+@MissingReportDatasourceFilter
 @Entity
 @Table(schema = "missingreportsubmission", name = "missing_report_submission")
 class MissingReportSubmission(
@@ -25,4 +26,5 @@ class MissingReportSubmission(
   val id: Int? = null
 }
 
+@MissingReportDatasourceFilter
 interface MissingReportSubmissionsRepository : JpaRepository<MissingReportSubmission, Int>
