@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductCollectionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Service
