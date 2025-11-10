@@ -6,11 +6,12 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationSystemTestBase.Companion.manageUsersMockServer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationSystemTestBase.Companion.postgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmission
 
 class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
+
   companion object {
     @JvmStatic
     @DynamicPropertySource
@@ -32,15 +33,28 @@ class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
 
 class MissingReportIntegrationTest : IntegrationTestBase() {
   companion object {
+
+    val pgContainer = PostgresContainer.instance
+
+    @JvmStatic
+    @DynamicPropertySource
+    fun setupClass(registry: DynamicPropertyRegistry) {
+      pgContainer?.run {
+        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", pgContainer::getUsername)
+        registry.add("spring.datasource.password", pgContainer::getPassword)
+        registry.add("spring.datasource.missingreport.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.missingreport.username", pgContainer::getUsername)
+        registry.add("spring.datasource.missingreport.password", pgContainer::getPassword)
+      }
+    }
+
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
       registry.add("dpr.lib.aws.dynamodb.enabled") { "true" }
       registry.add("dpr.lib.aws.accountId") { "1" }
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
-      registry.add("spring.datasource.missingreport.url", postgresContainer!!::getJdbcUrl)
-      registry.add("spring.datasource.missingreport.username", postgresContainer::getUsername)
-      registry.add("spring.datasource.missingreport.password", postgresContainer::getPassword)
     }
   }
 

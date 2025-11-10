@@ -16,6 +16,6 @@ class MissingReportService(
   ): MissingReportSubmission {
     val (userId, reportId, reportVariantId, reason) = missingReportSubmissionRequest
     val submission = MissingReportSubmission(userId, reportId, reportVariantId, reason)
-    return missingReportSubmissionsRepository.saveAndFlush(submission)
+    return missingReportSubmissionsRepository.save(submission)
   }
 }

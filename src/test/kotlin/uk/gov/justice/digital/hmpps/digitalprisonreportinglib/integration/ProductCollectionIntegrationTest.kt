@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration
+import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -20,6 +21,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
+import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
@@ -45,13 +47,19 @@ class ProductCollectionIntegrationTest {
   lateinit var webTestClient: WebTestClient
 
   @Autowired
-  protected lateinit var jwtAuthorisationHelper: JwtAuthorisationHelper
+  lateinit var jwtAuthorisationHelper: JwtAuthorisationHelper
 
   @Autowired
   lateinit var authenticationHelper: TestAuthenticationHelper
 
   @Autowired
   lateinit var productCollectionRepository: ProductCollectionRepository
+
+  @Autowired
+  lateinit var entityManager: EntityManager
+
+  @Autowired
+  lateinit var transactionTemplate: TransactionTemplate
 
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
@@ -98,8 +106,9 @@ class ProductCollectionIntegrationTest {
   @BeforeEach
   fun setup() {
     wireMockServer.resetAll()
-    productCollectionRepository.deleteAll()
-    productCollectionRepository.flush()
+    transactionTemplate.executeWithoutResult {
+      entityManager.createNativeQuery("TRUNCATE product_.product_collection CASCADE").executeUpdate()
+    }
     val jwt = mock<Jwt>()
     val authentication = mock<DprUserAuthAwareAuthenticationToken>()
     whenever(jwt.tokenValue).then { TEST_TOKEN }
@@ -137,9 +146,9 @@ class ProductCollectionIntegrationTest {
       """.trimIndent(),
       wireMockServer,
     )
-    val pc1 = productCollectionRepository.saveAndFlush(ProductCollection("coll1", "1", "bob", emptySet(), emptySet()))
-    val pc2 = productCollectionRepository.saveAndFlush(ProductCollection("coll2", "1", "jane", emptySet(), emptySet()))
-    val pc3 = productCollectionRepository.saveAndFlush(ProductCollection("coll3", "1", "marley", emptySet(), emptySet()))
+    val pc1 = productCollectionRepository.save(ProductCollection("coll1", "1", "bob", emptySet(), emptySet()))
+    val pc2 = productCollectionRepository.save(ProductCollection("coll2", "1", "jane", emptySet(), emptySet()))
+    val pc3 = productCollectionRepository.save(ProductCollection("coll3", "1", "marley", emptySet(), emptySet()))
 
     val productCollections = webTestClient.get()
       .uri { uriBuilder: UriBuilder ->

@@ -20,14 +20,14 @@ class ProductCollectionService(
         if (firstEntry == null) {
           throw IllegalStateException("After grouping by productCollection id, somehow list of collections was empty")
         }
-        listOf(ProductCollectionSummary(firstEntry.id, firstEntry.name, firstEntry.version, firstEntry.owner_name))
+        listOf(ProductCollectionSummary(firstEntry.id, firstEntry.name, firstEntry.version, firstEntry.ownerName))
       }
       .flatten()
     return results
   }
 
   fun findById(id: String): ProductCollectionDTO {
-    val result = productCollectionRepository.findById(id).orElseThrow { ValidationException("Invalid product collection id specified: $id") }
+    val result = productCollectionRepository.findById(id) ?: throw ValidationException("Invalid product collection id specified: $id")
     return result.let { ProductCollectionDTO(it.id!!, it.name, it.version, it.ownerName, it.products) }
   }
 }

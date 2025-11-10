@@ -1,11 +1,15 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
+import jakarta.persistence.EntityManager
+import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
-interface ProductCollectionRepository : JpaRepository<ProductCollection, String> {
-  @Query(
-    """
+@Repository
+class ProductCollectionRepository(
+  private val entityManager: EntityManager,
+) {
+  companion object {
+    const val FIND_ALL_QUERY = """
       WITH attribute_checks AS (
         SELECT
           product_collection_id,
@@ -29,8 +33,18 @@ interface ProductCollectionRepository : JpaRepository<ProductCollection, String>
       WHERE pc.id NOT IN (
         SELECT product_collection_id FROM failing_attributes
       )
-    """,
-    nativeQuery = true,
-  )
-  fun findAll(caseloads: List<String>): Collection<ProductCollectionResult>
+    """
+  }
+
+  fun findAll(caseloads: List<String>): Collection<ProductCollectionResult> = entityManager.createNativeQuery(
+    FIND_ALL_QUERY,
+    ProductCollectionResult::class.java,
+  ).setParameter("caseloads", caseloads).resultList.filterIsInstance<ProductCollectionResult>()
+
+  fun findById(id: String): ProductCollection? = entityManager.find(ProductCollection::class.java, id)
+
+  fun flush() = entityManager.flush()
+
+  @Transactional(value = "transactionManager")
+  fun save(productCollection: ProductCollection): ProductCollection = entityManager.merge(productCollection)
 }

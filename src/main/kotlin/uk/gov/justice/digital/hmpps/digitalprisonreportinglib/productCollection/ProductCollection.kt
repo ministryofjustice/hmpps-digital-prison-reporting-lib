@@ -2,16 +2,28 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
+import jakarta.persistence.ColumnResult
+import jakarta.persistence.ConstructorResult
 import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
+import jakarta.persistence.SqlResultSetMapping
 import jakarta.persistence.Table
 
 @Entity
 @Table(schema = "product_", name = "product_collection")
+@SqlResultSetMapping(
+  name = "ProductCollectionResult",
+  classes = [
+    ConstructorResult(
+      targetClass = ProductCollectionResult::class,
+      columns = [ColumnResult(name = "id"), ColumnResult(name = "name"), ColumnResult(name = "version"), ColumnResult(name = "owner_name"), ColumnResult(name = "attribute_name"), ColumnResult(name = "attribute_value")],
+    ),
+  ],
+)
 class ProductCollection(
   @Column(nullable = false)
   val name: String,
