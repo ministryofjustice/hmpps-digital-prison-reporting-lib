@@ -149,8 +149,8 @@ class ProductCollectionIntegrationTest {
     val pc1 = productCollectionRepository.save(
       ProductCollection(name = "coll1", version = "1", ownerName = "bob", products = mutableSetOf(), attributes = mutableSetOf()),
     )
-    val pc2 = productCollectionRepository.save(ProductCollection("coll2", "1", "jane", emptySet(), emptySet()))
-    val pc3 = productCollectionRepository.save(ProductCollection("coll3", "1", "marley", emptySet(), emptySet()))
+    val pc2 = productCollectionRepository.save(ProductCollection("coll2", "1", "jane", mutableSetOf(), mutableSetOf()))
+    val pc3 = productCollectionRepository.save(ProductCollection("coll3", "1", "marley", mutableSetOf(), mutableSetOf()))
 
     val productCollections = webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
