@@ -11,6 +11,7 @@ data class ProductCollectionResult(
   val name: String,
   val version: String,
   val ownerName: String,
-  val attributeName: String?,
-  val attributeValue: String?,
+  val productId: String? = null,
+  val attributeName: String? = null,
+  val attributeValue: String? = null,
 )
