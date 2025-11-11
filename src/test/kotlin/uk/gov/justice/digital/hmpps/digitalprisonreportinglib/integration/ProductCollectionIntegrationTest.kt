@@ -149,8 +149,8 @@ class ProductCollectionIntegrationTest {
     val pc1 = productCollectionRepository.save(
       ProductCollection(name = "coll1", version = "1", ownerName = "bob", products = mutableSetOf(), attributes = mutableSetOf()),
     )
-//    val pc2 = productCollectionRepository.save(ProductCollection("coll2", "1", "jane", emptySet(), emptySet()))
-//    val pc3 = productCollectionRepository.save(ProductCollection("coll3", "1", "marley", emptySet(), emptySet()))
+    val pc2 = productCollectionRepository.save(ProductCollection("coll2", "1", "jane", emptySet(), emptySet()))
+    val pc3 = productCollectionRepository.save(ProductCollection("coll3", "1", "marley", emptySet(), emptySet()))
 
     val productCollections = webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -167,8 +167,8 @@ class ProductCollectionIntegrationTest {
       .responseBody
 
     assertThat(productCollections?.filter { it.name == pc1.name }).hasSize(1)
-    //    assertThat(productCollections?.filter { it.name == pc2.name }).hasSize(1)
-    //    assertThat(productCollections?.filter { it.name == pc3.name }).hasSize(1)
+    assertThat(productCollections?.filter { it.name == pc2.name }).hasSize(1)
+    assertThat(productCollections?.filter { it.name == pc3.name }).hasSize(1)
     assertThat(productCollections).size().isEqualTo(1)
   }
 

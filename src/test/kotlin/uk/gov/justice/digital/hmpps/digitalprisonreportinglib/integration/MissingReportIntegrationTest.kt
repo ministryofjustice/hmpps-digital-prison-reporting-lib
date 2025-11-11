@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationSystemTestBase.Companion.manageUsersMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmission
 
@@ -33,8 +32,6 @@ class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
 
 class MissingReportIntegrationTest : IntegrationTestBase() {
   companion object {
-
-    val pgContainer = PostgresContainer.instance
 
     @JvmStatic
     @DynamicPropertySource
