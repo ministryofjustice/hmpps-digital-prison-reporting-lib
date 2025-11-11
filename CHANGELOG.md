@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.7.7
+- Fixed JPA configuration overwriting Spring autoconfig when using this library in apps that have JPA classes
+
 # 9.7.6
 - Added Dashboard sync functionality.
 
