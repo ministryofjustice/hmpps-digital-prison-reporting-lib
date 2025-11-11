@@ -169,7 +169,7 @@ class ProductCollectionIntegrationTest {
     assertThat(productCollections?.filter { it.name == pc1.name }).hasSize(1)
     assertThat(productCollections?.filter { it.name == pc2.name }).hasSize(1)
     assertThat(productCollections?.filter { it.name == pc3.name }).hasSize(1)
-    assertThat(productCollections).size().isEqualTo(1)
+    assertThat(productCollections).size().isEqualTo(3)
   }
 
   @Test
