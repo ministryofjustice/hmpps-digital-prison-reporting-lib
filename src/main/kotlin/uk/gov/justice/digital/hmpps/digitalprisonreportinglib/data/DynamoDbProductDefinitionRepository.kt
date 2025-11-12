@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
@@ -36,7 +37,7 @@ class DynamoDbProductDefinitionRepository(
     }
   }
 
-  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
+  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): AnyProductDefinition {
     val overallStopwatch = StopWatch.createStarted()
     val path = if (dataProductDefinitionsPath.isNullOrBlank()) DataDefinitionPath.ORPHANAGE.value else dataProductDefinitionsPath
     val keyMap = hashMapOf<String, AttributeValue>(
@@ -66,7 +67,7 @@ class DynamoDbProductDefinitionRepository(
     return definition
   }
 
-  override fun getProductDefinitions(path: String?): List<ProductDefinition> {
+  override fun getProductDefinitions(path: String?): List<AnyProductDefinition> {
     val overallStopwatch = StopWatch.createStarted()
     val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
     usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
