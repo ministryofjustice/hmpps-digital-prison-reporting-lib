@@ -2,6 +2,11 @@ server:
   shutdown: immediate
 
 spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/datamart
@@ -11,12 +16,9 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 2
       pool-name: Pool-One
+    # only have driver-class-name here because we dont want to intialise the missingreport stuff generally
     missingreport:
       driver-class-name: org.postgresql.Driver
-      hikari:
-        maximum-pool-size: 10
-        minimum-idle: 5
-        pool-name: missing-report
 
   flyway:
     enabled: false
@@ -46,4 +48,13 @@ hmpps:
 
 logging:
   level:
+    org:
+      springframework:
+        jdbc:
+          core:
+            StatementCreatorUtils: TRACE
+            JdbcTemplate: DEBUG
+
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     uk.gov.justice.digital.hmpps.digitalprisonreportinglib: debug
