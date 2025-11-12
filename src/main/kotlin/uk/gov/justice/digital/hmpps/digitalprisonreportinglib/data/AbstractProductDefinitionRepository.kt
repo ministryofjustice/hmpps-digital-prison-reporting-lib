@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
