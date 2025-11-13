@@ -64,7 +64,7 @@ class DashboardDefinitionMapper(
                 filters = visualisation.column.filter?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
                 expectNulls = visualisation.column.expectNull,
               ),
-              options = visualisation.option?.let { mapToDashboardOptionDefinition(visualisation)},
+              options = visualisation.option?.let { mapToDashboardOptionDefinition(visualisation) },
             )
           },
         )
