@@ -97,13 +97,6 @@ class DashboardDefinitionMapperTest {
                   ),
                   expectNulls = true,
                 ),
-                options = DashboardOptionDefinition(
-                  useRagColour = false,
-                  baseColour = null,
-                  buckets = null,
-                  showLatest = true,
-                  columnsAsList = false,
-                ),
               ),
             ),
           ),
