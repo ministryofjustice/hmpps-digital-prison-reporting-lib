@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
-abstract class Identified {
+interface Identified {
   companion object {
     const val REF_PREFIX = "\$ref:"
   }
 
-  abstract fun getIdentifier(): String
+  fun getIdentifier(): String
 }

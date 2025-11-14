@@ -15,6 +15,6 @@ data class ReportField(
   val sortDirection: SortDirection? = null,
   val formula: String? = null,
   val visible: Visible? = null,
-) : Identified() {
+) : Identified {
   override fun getIdentifier() = this.name
 }
