@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import java.time.LocalDateTime
 
-interface AnyReport: Identified {
+interface AnyReport : Identified {
   val id: String
   val name: String
   val description: String?

@@ -35,28 +35,6 @@ class ProductDefinitionRepositoryAutoConfig(
     identifiedHelper,
   )
 
-  /*
-  @Bean
-  @ConditionalOnExpression(
-    "T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.definition.locations:}') " +
-      "&& !T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.dataProductDefinitions.host:}')",
-  )
-  @ConditionalOnMissingBean(ProductDefinitionRepository::class)
-  fun dataProductDefinitionsRepository(
-    dprDefinitionGson: Gson,
-    definitionsCache: Cache<String, List<ProductDefinition>>? = null,
-    authenticationHelper: HmppsAuthenticationHolder,
-    identifiedHelper: IdentifiedHelper,
-  ): ProductDefinitionRepository = ClientDataProductDefinitionsRepository(
-    RestTemplate(
-      listOf(GsonHttpMessageConverter(dprDefinitionGson)),
-    ),
-    definitionsHost,
-    definitionsCache,
-    authenticationHelper,
-    identifiedHelper,
-  )
-  */
   @Bean
   @ConditionalOnMissingBean(ProductDefinitionRepository::class)
   @ConditionalOnBean(DynamoDbClient::class)

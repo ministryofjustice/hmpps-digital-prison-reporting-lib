@@ -31,7 +31,8 @@ data class ProductDefinition(
   override val report: List<Report> = emptyList(),
   override val policy: List<Policy> = emptyList(),
   override val dashboard: List<Dashboard>? = null,
-) : WithPolicy, AnyProductDefinition
+) : WithPolicy,
+  AnyProductDefinition
 
 data class ProductDefinitionSummary(
   override val id: String,

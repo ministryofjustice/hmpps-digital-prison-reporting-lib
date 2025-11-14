@@ -102,7 +102,7 @@ class DynamoDbProductDefinitionRepository(
     return definitionMap.values.flatten()
   }
 
-  private fun doScan(usePaths: MutableList<String>) : MutableList<Map<String, AttributeValue>> {
+  private fun doScan(usePaths: MutableList<String>): MutableList<Map<String, AttributeValue>> {
     val scanStopwatch = StopWatch.createStarted()
     var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
     val items: MutableList<Map<String, AttributeValue>> = mutableListOf()

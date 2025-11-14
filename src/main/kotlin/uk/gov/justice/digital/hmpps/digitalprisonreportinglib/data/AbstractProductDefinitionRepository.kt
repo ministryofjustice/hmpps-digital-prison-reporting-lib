@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProd
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
 abstract class AbstractProductDefinitionRepository(
   private val identifiedHelper: IdentifiedHelper,

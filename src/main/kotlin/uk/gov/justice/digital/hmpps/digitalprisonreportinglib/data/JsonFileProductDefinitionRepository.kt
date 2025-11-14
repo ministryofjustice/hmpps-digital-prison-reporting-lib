@@ -21,5 +21,4 @@ class JsonFileProductDefinitionRepository(
     .first()
 
   fun doGetProductDefinitions(path: String?): List<ProductDefinition> = resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinition>() {}.type) }
-
 }
