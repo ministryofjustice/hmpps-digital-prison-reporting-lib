@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportLite
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
@@ -1240,6 +1241,32 @@ class SyncDataApiServiceTest {
         section = null,
       ),
     )
+    val reportLite = ReportLite(
+      id = "6",
+      name = "7",
+      //created = LocalDateTime.MAX,
+      //version = "8",
+      dataset = "\$ref:datasetId",
+      render = RenderMethod.SVG,
+      //classification = "someClassification",
+      /*specification = Specification(
+        template = Template.List,
+        field = listOf(
+          ReportField(
+            name = "\$ref:9",
+            display = "Number 9",
+            formula = "",
+            visible = Visible.TRUE,
+            sortable = true,
+            defaultSort = false,
+            sortDirection = SortDirection.DESC,
+          ),
+        ),
+        section = null,
+      ),
+
+       */
+    )
     val policy = Policy(
       "caseload",
       PolicyType.ROW_LEVEL,
@@ -1255,7 +1282,7 @@ class SyncDataApiServiceTest {
         version = "5",
       ),
       report = listOf(
-        report,
+        reportLite,
       ),
     )
     val expectedRepositoryResult = listOf(

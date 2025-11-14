@@ -41,5 +41,5 @@ data class ProductDefinitionSummary(
   override val metadata: MetaData,
   override var path: DataDefinitionPath? = DataDefinitionPath.ORPHANAGE,
   override val dataset: List<Dataset> = emptyList(),
-  override val report: List<Report> = emptyList(),
+  override val report: List<ReportLite> = emptyList(),
 ) : AnyProductDefinition
