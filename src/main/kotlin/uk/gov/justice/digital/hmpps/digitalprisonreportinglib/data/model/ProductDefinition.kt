@@ -14,7 +14,7 @@ interface AnyProductDefinition : WithPolicy {
   val datasource: List<Datasource> get() = emptyList()
   val dataset: List<Dataset> get() = emptyList()
   var path: DataDefinitionPath?
-  val report: List<Report> get() = emptyList()
+  val report: List<AnyReport> get() = emptyList()
   override val policy: List<Policy> get() = emptyList()
   val dashboard: List<Dashboard>? get() = null
 }
@@ -33,10 +33,11 @@ data class ProductDefinition(
   override val dashboard: List<Dashboard>? = null,
 ) : WithPolicy, AnyProductDefinition
 
-data class MissingProductDefinition(
+data class ProductDefinitionSummary(
   override val id: String,
   override val name: String,
   override val description: String? = null,
   override val metadata: MetaData,
-  override var path: DataDefinitionPath? = DataDefinitionPath.MISSING,
+  override var path: DataDefinitionPath? = DataDefinitionPath.ORPHANAGE,
+  override val report: List<Report> = emptyList(),
 ) : AnyProductDefinition

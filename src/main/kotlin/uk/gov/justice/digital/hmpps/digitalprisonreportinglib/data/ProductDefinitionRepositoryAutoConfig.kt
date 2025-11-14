@@ -5,17 +5,14 @@ import com.google.common.cache.CacheBuilder
 import com.google.gson.Gson
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.converter.json.GsonHttpMessageConverter
-import org.springframework.web.client.RestTemplate
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
-import uk.gov.justice.hmpps.kotlin.auth.HmppsAuthenticationHolder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import java.util.concurrent.TimeUnit
 
 @Configuration
@@ -38,6 +35,7 @@ class ProductDefinitionRepositoryAutoConfig(
     identifiedHelper,
   )
 
+  /*
   @Bean
   @ConditionalOnExpression(
     "T(org.springframework.util.StringUtils).isEmpty('\${dpr.lib.definition.locations:}') " +
@@ -58,7 +56,7 @@ class ProductDefinitionRepositoryAutoConfig(
     authenticationHelper,
     identifiedHelper,
   )
-
+  */
   @Bean
   @ConditionalOnMissingBean(ProductDefinitionRepository::class)
   @ConditionalOnBean(DynamoDbClient::class)
@@ -66,7 +64,7 @@ class ProductDefinitionRepositoryAutoConfig(
     dprDefinitionGson: Gson,
     dynamoDbClient: DynamoDbClient,
     properties: AwsProperties,
-    definitionsCache: Cache<String, List<ProductDefinition>>?,
+    definitionsCache: Cache<String, List<ProductDefinitionSummary>>?,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,

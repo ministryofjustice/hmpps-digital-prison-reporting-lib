@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyReport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
@@ -36,7 +37,7 @@ class ReportDefinitionSummaryMapper {
   ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, userToken)
 
   private fun map(
-    report: Report,
+    report: AnyReport,
     isMissing: Boolean,
   ): VariantDefinitionSummary = VariantDefinitionSummary(
     id = report.id,
