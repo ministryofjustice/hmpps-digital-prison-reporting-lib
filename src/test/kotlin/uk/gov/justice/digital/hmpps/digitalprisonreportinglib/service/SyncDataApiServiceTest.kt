@@ -38,8 +38,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportLite
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportLite
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
@@ -1244,11 +1244,11 @@ class SyncDataApiServiceTest {
     val reportLite = ReportLite(
       id = "6",
       name = "7",
-      //created = LocalDateTime.MAX,
-      //version = "8",
+      // created = LocalDateTime.MAX,
+      // version = "8",
       dataset = "\$ref:datasetId",
       render = RenderMethod.SVG,
-      //classification = "someClassification",
+      // classification = "someClassification",
       /*specification = Specification(
         template = Template.List,
         field = listOf(
