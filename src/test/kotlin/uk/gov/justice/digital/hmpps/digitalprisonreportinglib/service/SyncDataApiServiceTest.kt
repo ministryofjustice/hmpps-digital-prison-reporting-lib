@@ -1244,28 +1244,8 @@ class SyncDataApiServiceTest {
     val reportLite = ReportLite(
       id = "6",
       name = "7",
-      // created = LocalDateTime.MAX,
-      // version = "8",
       dataset = "\$ref:datasetId",
-      render = RenderMethod.SVG,
-      // classification = "someClassification",
-      /*specification = Specification(
-        template = Template.List,
-        field = listOf(
-          ReportField(
-            name = "\$ref:9",
-            display = "Number 9",
-            formula = "",
-            visible = Visible.TRUE,
-            sortable = true,
-            defaultSort = false,
-            sortDirection = SortDirection.DESC,
-          ),
-        ),
-        section = null,
-      ),
-
-       */
+      render = RenderMethod.SVG
     )
     val policy = Policy(
       "caseload",
