@@ -1245,7 +1245,7 @@ class SyncDataApiServiceTest {
       id = "6",
       name = "7",
       dataset = "\$ref:datasetId",
-      render = RenderMethod.SVG
+      render = RenderMethod.SVG,
     )
     val policy = Policy(
       "caseload",
