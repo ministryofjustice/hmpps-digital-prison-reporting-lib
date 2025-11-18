@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.7.9
+- Updated definitions endpoint, to cache only summary product definitions.
+
 # 9.7.8
 - Dashboard definition update: Map options to dashboard definition only if they are present in the DPD.
 

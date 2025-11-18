@@ -12,13 +12,14 @@ import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
   private val properties: AwsProperties,
   private val gson: Gson,
-  private val definitionsCache: Cache<String, List<ProductDefinition>>? = null,
+  private val definitionsCache: Cache<String, List<ProductDefinitionSummary>>? = null,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
@@ -66,7 +67,7 @@ class DynamoDbProductDefinitionRepository(
     return definition
   }
 
-  override fun getProductDefinitions(path: String?): List<ProductDefinition> {
+  override fun getProductDefinitions(path: String?): List<ProductDefinitionSummary> {
     val overallStopwatch = StopWatch.createStarted()
     val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
     usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
@@ -81,6 +82,27 @@ class DynamoDbProductDefinitionRepository(
       return cachedDefinitions.flatten()
     }
 
+    val items = doScan(usePaths)
+    val definitionMap = usePaths.associateWith { mutableListOf<ProductDefinitionSummary>() }
+    items
+      .filter { it[properties.dynamoDb.definitionFieldName] != null }
+      .forEach {
+        val deserialisationStopwatch = StopWatch.createStarted()
+        val definition = gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinitionSummary::class.java)
+        deserialisationStopwatch.stop()
+        log.debug("Deserialisation of product definition {} took: {}", definition.id, deserialisationStopwatch.time)
+        val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
+        definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
+        definitionMap[definitionPath]?.add(definition)
+      }
+
+    definitionMap.forEach { definitionsCache?.put(it.key, it.value) }
+    overallStopwatch.stop()
+    log.debug("Getting product definitions took overall: {}", overallStopwatch.time)
+    return definitionMap.values.flatten()
+  }
+
+  private fun doScan(usePaths: MutableList<String>): MutableList<Map<String, AttributeValue>> {
     val scanStopwatch = StopWatch.createStarted()
     var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
     val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
@@ -93,23 +115,6 @@ class DynamoDbProductDefinitionRepository(
     log.debug("DynamoDB scan for product definitions took: {}", scanStopwatch.time)
 
     items.addAll(response.items())
-
-    val definitionMap = usePaths.associateWith { mutableListOf<ProductDefinition>() }
-    items
-      .filter { it[properties.dynamoDb.definitionFieldName] != null }
-      .forEach {
-        val deserialisationStopwatch = StopWatch.createStarted()
-        val definition = gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
-        deserialisationStopwatch.stop()
-        log.debug("Deserialisation of product definition {} took: {}", definition.id, deserialisationStopwatch.time)
-        val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
-        definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
-        definitionMap[definitionPath]?.add(definition)
-      }
-
-    definitionMap.forEach { definitionsCache?.put(it.key, it.value) }
-    overallStopwatch.stop()
-    log.debug("Getting product definitions took overall: {}", overallStopwatch.time)
-    return definitionMap.values.flatten()
+    return items
   }
 }

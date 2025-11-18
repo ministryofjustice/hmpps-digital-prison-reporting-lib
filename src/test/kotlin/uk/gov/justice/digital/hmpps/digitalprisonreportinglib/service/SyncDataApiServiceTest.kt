@@ -35,10 +35,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportLite
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
@@ -1240,13 +1241,19 @@ class SyncDataApiServiceTest {
         section = null,
       ),
     )
+    val reportLite = ReportLite(
+      id = "6",
+      name = "7",
+      dataset = "\$ref:datasetId",
+      render = RenderMethod.SVG,
+    )
     val policy = Policy(
       "caseload",
       PolicyType.ROW_LEVEL,
       listOf("TRUE"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
-    val productDefinition = ProductDefinition(
+    val productDefinition = ProductDefinitionSummary(
       id = "1",
       name = "2",
       metadata = MetaData(
@@ -1254,10 +1261,8 @@ class SyncDataApiServiceTest {
         owner = "4",
         version = "5",
       ),
-      policy = listOf(policy),
-      dataset = listOf(dataSet),
       report = listOf(
-        report,
+        reportLite,
       ),
     )
     val expectedRepositoryResult = listOf(
