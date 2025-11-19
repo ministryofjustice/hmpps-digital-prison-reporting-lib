@@ -34,7 +34,7 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
 
   // Postgres dependencies
   implementation("org.flywaydb:flyway-core")
