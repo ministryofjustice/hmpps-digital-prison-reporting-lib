@@ -570,7 +570,7 @@ class ReportDefinitionMapperTest {
     )
 
     whenever(
-      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any()),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),

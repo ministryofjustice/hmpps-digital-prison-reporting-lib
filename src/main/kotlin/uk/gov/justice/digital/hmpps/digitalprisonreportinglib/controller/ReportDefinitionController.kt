@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 @Tag(name = "Report Definition API")
 class ReportDefinitionController(
   val reportDefinitionService: ReportDefinitionService,
+  val filterHelper: FilterHelper,
 ) {
 
   companion object {
@@ -103,11 +106,18 @@ class ReportDefinitionController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
     authentication: Authentication,
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
-    reportId,
-    variantId,
-    authentication as? DprAuthAwareAuthenticationToken,
-    dataProductDefinitionsPath,
+    reportId = reportId,
+    variantId = variantId,
+    userToken = authentication as? DprAuthAwareAuthenticationToken,
+    dataProductDefinitionsPath = dataProductDefinitionsPath,
+    filters = filterHelper.filtersOnly(filters),
   )
 }

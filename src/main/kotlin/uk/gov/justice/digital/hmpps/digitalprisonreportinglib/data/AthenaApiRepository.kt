@@ -16,7 +16,6 @@ import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasourceConnection
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
@@ -204,19 +203,6 @@ class AthenaApiRepository(
     ),
   )
 
-  private fun buildPromptsQuery(prompts: List<Prompt>?, dialect: SqlDialect? = SqlDialect.ORACLE11g): String {
-    if (prompts.isNullOrEmpty()) {
-      return "$PROMPT AS (SELECT '' ${if (isOracleDialect(dialect)) "FROM DUAL" else ""})"
-    }
-    val promptsCte = prompts.joinToString(", ") { prompt -> buildPromptsQueryBasedOnType(prompt) }
-    return "$PROMPT AS (SELECT $promptsCte ${if (isOracleDialect(dialect)) "FROM DUAL" else ""})"
-  }
-
-  private fun buildPromptsQueryBasedOnType(prompt: Prompt): String = when (prompt.type) {
-    Date -> "TO_DATE('${prompt.value}','yyyy-mm-dd') AS ${prompt.name}"
-    else -> "'${prompt.value}' AS ${prompt.name}"
-  }
-
   private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?, dialect: SqlDialect? = null): String = """WITH $CONTEXT AS (
       SELECT 
       '${userToken?.getUsername()}' AS username, 
@@ -224,8 +210,6 @@ class AthenaApiRepository(
       'GENERAL' AS account_type 
       ${if (isOracleDialect(dialect)) "FROM DUAL" else ""}
       )"""
-
-  private fun isOracleDialect(dialect: SqlDialect? = null): Boolean = dialect?.let { it == SqlDialect.ORACLE11g } ?: true
 
   private fun buildFinalInnerQuery(
     context: String,
