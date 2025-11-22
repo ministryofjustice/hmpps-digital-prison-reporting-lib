@@ -38,7 +38,12 @@ class ReportDefinitionMapper(
   alertCategoryCacheService: AlertCategoryCacheService,
 ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService) {
 
-  fun mapReport(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition = SingleVariantReportDefinition(
+  fun mapReport(
+    definition: SingleReportProductDefinition,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
+    filters: Map<String, String>? = null,
+  ): SingleVariantReportDefinition = SingleVariantReportDefinition(
     id = definition.id,
     name = definition.name,
     description = definition.description,
@@ -50,6 +55,7 @@ class ReportDefinitionMapper(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = definition.allDatasets,
       allReports = definition.allReports,
+      filters = filters,
     ),
   )
 
@@ -61,6 +67,7 @@ class ReportDefinitionMapper(
     dataProductDefinitionsPath: String? = null,
     allDatasets: List<Dataset>,
     allReports: List<Report>,
+    filters: Map<String, String>? = null,
   ): VariantDefinition = VariantDefinition(
     id = report.id,
     name = report.name,
@@ -75,6 +82,8 @@ class ReportDefinitionMapper(
       allDatasets = allDatasets,
       parameters = dataSet.parameters,
       multiphaseQueries = dataSet.multiphaseQuery,
+      reportDataset = dataSet,
+      filters = filters,
     ),
     classification = report.classification,
     printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
@@ -132,6 +141,8 @@ class ReportDefinitionMapper(
     allDatasets: List<Dataset> = emptyList(),
     parameters: List<Parameter>? = null,
     multiphaseQueries: List<MultiphaseQuery>? = null,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): Specification? {
     if (specification == null) {
       return null
@@ -140,13 +151,15 @@ class ReportDefinitionMapper(
       template = Template.valueOf(specification.template.toString()),
       sections = specification.section?.map { it.removePrefix(REF_PREFIX) } ?: emptyList(),
       fields = mapToReportFieldDefinitions(
-        specification,
-        schemaFields,
-        productDefinitionId,
-        reportVariantId,
-        userToken,
-        dataProductDefinitionsPath,
-        allDatasets,
+        specification = specification,
+        schemaFields = schemaFields,
+        productDefinitionId = productDefinitionId,
+        reportVariantId = reportVariantId,
+        userToken = userToken,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        allDatasets = allDatasets,
+        reportDataset = reportDataset,
+        filters = filters,
       ) + maybeConvertParametersToReportFields(multiphaseQueries, parameters),
     )
   }
@@ -176,6 +189,8 @@ class ReportDefinitionMapper(
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ) = specification.field.map {
     mapField(
       field = it,
@@ -185,6 +200,8 @@ class ReportDefinitionMapper(
       userToken = userToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
+      reportDataset = reportDataset,
+      filters = filters,
     )
   }
 
@@ -196,6 +213,8 @@ class ReportDefinitionMapper(
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): FieldDefinition {
     val schemaField = identifiedHelper.findOrFail(schemaFields, field.name)
     return FieldDefinition(
@@ -214,6 +233,8 @@ class ReportDefinitionMapper(
             userToken = userToken,
             dataProductDefinitionsPath = dataProductDefinitionsPath,
             allDatasets = allDatasets,
+            reportDataset = reportDataset,
+            filters = filters,
           ),
           userToken = userToken,
         )

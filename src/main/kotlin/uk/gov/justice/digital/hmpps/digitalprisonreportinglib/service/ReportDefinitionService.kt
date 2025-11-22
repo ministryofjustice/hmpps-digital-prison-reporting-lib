@@ -36,6 +36,7 @@ class ReportDefinitionService(
     variantId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
+    filters: Map<String, String>? = null,
   ): SingleVariantReportDefinition {
     val singleReportDefinitionDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
     checkAuth(singleReportDefinitionDefinition, userToken)
@@ -43,6 +44,7 @@ class ReportDefinitionService(
       definition = singleReportDefinitionDefinition,
       userToken = userToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filters = filters,
     )
   }
 
