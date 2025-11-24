@@ -14,9 +14,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
@@ -26,7 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.util.Base64
 
 @Service
@@ -329,19 +326,6 @@ class AsyncDataApiService(
     return "_$updatedId"
   }
 
-  private fun buildPrompts(
-    multiphaseQuery: List<MultiphaseQuery>?,
-    promptsMap: List<Map.Entry<String, String>>,
-    parameters: List<Parameter>?,
-  ) = (
-    multiphaseQuery?.takeIf { it.isNotEmpty() }?.flatMap { q -> buildPrompts(promptsMap, q.parameters) }?.distinct()
-      ?: buildPrompts(promptsMap, parameters)
-    )
-
-  private fun extractParameters(dashboardDataset: Dataset, multiphaseQuery: List<MultiphaseQuery>? = null) = multiphaseQuery?.takeIf { it.isNotEmpty() }?.mapNotNull { q -> q.parameters }
-    ?.filterNot { p -> p.isEmpty() }?.flatten()?.distinct()
-    ?: dashboardDataset.parameters
-
   private fun getStatementExecutionStatus(
     multiphaseQuery: List<MultiphaseQuery>?,
     datasourceName: String,
@@ -381,30 +365,7 @@ class AsyncDataApiService(
 
   private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository = datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), athenaApiRepository)
 
-  private fun buildPrompts(
-    prompts: List<Map.Entry<String, String>>,
-    parameters: List<Parameter>?,
-  ): List<Prompt> = prompts.mapNotNull { entry ->
-    mapToMatchingParameter(entry, parameters)
-      ?.let { Prompt(entry.key, entry.value, it.filterType) }
-  }
-
-  private fun mapToMatchingParameter(
-    entry: Map.Entry<String, String>,
-    parameters: List<Parameter>?,
-  ) = parameters?.firstOrNull { parameter -> parameter.name == entry.key }
-
   private fun <K, V> toMap(entries: List<Map.Entry<K, V>>): Map<K, V> = entries.associate { it.toPair() }
-
-  private fun partitionToPromptsAndFilters(
-    filters: Map<String, String>,
-    parameters: List<Parameter>?,
-  ) = filters.asIterable().partition { e -> isPrompt(e, parameters) }
-
-  private fun isPrompt(
-    e: Map.Entry<String, String>,
-    parameters: List<Parameter>?,
-  ) = parameters?.any { it.name == e.key } ?: false
 
   private fun formatColumnsAndApplyFormulas(
     records: List<Map<String, Any?>>,

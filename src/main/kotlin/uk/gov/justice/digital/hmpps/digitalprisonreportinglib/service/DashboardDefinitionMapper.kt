@@ -40,7 +40,12 @@ class DashboardDefinitionMapper(
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
-  fun toDashboardDefinition(dashboard: Dashboard, allDatasets: List<Dataset>, userToken: DprAuthAwareAuthenticationToken? = null): DashboardDefinition {
+  fun toDashboardDefinition(
+    dashboard: Dashboard,
+    allDatasets: List<Dataset>,
+    userToken: DprAuthAwareAuthenticationToken? = null,
+    filters: Map<String, String>? = null,
+  ): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
     return DashboardDefinition(
@@ -69,7 +74,7 @@ class DashboardDefinitionMapper(
           },
         )
       },
-      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, userToken),
+      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, userToken, filters),
     )
   }
 
@@ -85,16 +90,18 @@ class DashboardDefinitionMapper(
     dataset: Dataset,
     allDatasets: List<Dataset>,
     userToken: DprAuthAwareAuthenticationToken?,
-  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, userToken) +
+    filters: Map<String, String>?,
+  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, userToken, filters) +
     maybeConvertParametersToReportFields(dataset.multiphaseQuery, dataset.parameters)
 
   private fun convertDatasetFilterFieldsToReportFields(
     dataset: Dataset,
     allDatasets: List<Dataset>,
     userToken: DprAuthAwareAuthenticationToken?,
+    filters: Map<String, String>?,
   ) = dataset.schema.field
     .filter { it.filter != null }
-    .map { toFilterField(it, allDatasets, userToken) }
+    .map { toFilterField(it, allDatasets, userToken, dataset, filters) }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
     DashboardVisualisationColumnDefinition(
@@ -112,6 +119,8 @@ class DashboardDefinitionMapper(
     schemaField: SchemaField,
     allDatasets: List<Dataset>,
     userToken: DprAuthAwareAuthenticationToken?,
+    dashboardDataset: Dataset,
+    filters: Map<String, String>?,
   ) = FieldDefinition(
     name = schemaField.name,
     display = schemaField.display,
@@ -123,6 +132,8 @@ class DashboardDefinitionMapper(
           filterDefinition = schemaField.filter,
           allDatasets = allDatasets,
           userToken = userToken,
+          dashboardDataset = dashboardDataset,
+          filters = filters,
         ),
       )
     },
@@ -132,6 +143,8 @@ class DashboardDefinitionMapper(
     filterDefinition: FilterDefinition,
     allDatasets: List<Dataset>,
     userToken: DprAuthAwareAuthenticationToken?,
+    dashboardDataset: Dataset,
+    filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == FilterType.Caseloads) {
       return userToken?.getCaseLoads()?.map { FilterOption(it.id, it.name) }
@@ -146,6 +159,8 @@ class DashboardDefinitionMapper(
               allDatasets,
               dynamicFilterDatasetId,
               dynamicFilterOption.maximumOptions,
+              dashboardDataset,
+              filters,
             )
           }
       } ?: filterDefinition.staticOptions?.map(this::map)

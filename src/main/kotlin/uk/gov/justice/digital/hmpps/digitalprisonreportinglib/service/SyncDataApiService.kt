@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
 @Service
 class SyncDataApiService(
@@ -82,6 +83,7 @@ class SyncDataApiService(
     pageSize: Long,
     sortColumn: String,
     dataset: Dataset,
+    prompts: List<Prompt>? = null,
   ): List<Map<String, Any?>> {
     val formulaEngine = FormulaEngine(emptyList(), env, identifiedHelper)
     return configuredApiRepository
@@ -94,6 +96,7 @@ class SyncDataApiService(
         sortedAsc = true,
         policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
         dataSourceName = dataset.datasource,
+        prompts = prompts,
       )
       .let { records ->
         formatColumnsAndApplyFormulas(

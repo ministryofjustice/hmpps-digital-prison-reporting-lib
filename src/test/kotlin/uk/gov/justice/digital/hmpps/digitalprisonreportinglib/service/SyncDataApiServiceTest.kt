@@ -713,6 +713,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -743,6 +744,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -791,6 +793,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -807,6 +810,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -843,6 +847,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -859,6 +864,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_DYNAMIC_FILTER_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -1003,6 +1009,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -1030,6 +1037,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -1077,6 +1085,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -1103,6 +1112,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_DYNAMIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -1140,6 +1150,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),

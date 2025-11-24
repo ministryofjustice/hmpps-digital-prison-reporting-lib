@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.8.0
+- Added support for prompts on interactive dynamic filters.
+
 # 9.7.9
 - Updated definitions endpoint, to cache only summary product definitions.
 

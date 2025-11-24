@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -57,7 +58,7 @@ class DashboardDefinitionMapperTest {
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
-    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any())).then {
+    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull())).then {
       listOf(
         mapOf("establishment_id" to "AAA", "establishment_name" to "Aardvark"),
         mapOf("establishment_id" to "BBB", "establishment_name" to "Bumblebee"),
@@ -131,6 +132,7 @@ class DashboardDefinitionMapperTest {
       pageSize = eq(123L),
       sortColumn = eq("establishment_id"),
       dataset = any(),
+      prompts = anyOrNull(),
     )
   }
 

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
@@ -19,7 +21,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardD
 @Validated
 @RestController
 @Tag(name = "Metric Definition API")
-class DashboardDefinitionController(val dashboardDefinitionService: DashboardDefinitionService) {
+class DashboardDefinitionController(
+  val dashboardDefinitionService: DashboardDefinitionService,
+  val filterHelper: FilterHelper,
+) {
 
   @GetMapping("/definitions/{dataProductDefinitionId}/dashboards/{dashboardId}")
   @Operation(
@@ -45,11 +50,18 @@ class DashboardDefinitionController(val dashboardDefinitionService: DashboardDef
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
     authentication: Authentication,
   ): DashboardDefinition = dashboardDefinitionService.getDashboardDefinition(
     dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
     dataProductDefinitionsPath = dataProductDefinitionsPath,
     userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    filters = filterHelper.filtersOnly(filters),
   )
 }
