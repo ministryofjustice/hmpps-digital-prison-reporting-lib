@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
@@ -82,39 +83,41 @@ class DynamoDbProductDefinitionRepository(
       return cachedDefinitions.flatten()
     }
 
-    val items = doScan(usePaths)
     val definitionMap = usePaths.associateWith { mutableListOf<ProductDefinitionSummary>() }
-    items
-      .filter { it[properties.dynamoDb.definitionFieldName] != null }
-      .forEach {
-        val deserialisationStopwatch = StopWatch.createStarted()
-        val definition = gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinitionSummary::class.java)
-        deserialisationStopwatch.stop()
-        log.debug("Deserialisation of product definition {} took: {}", definition.id, deserialisationStopwatch.time)
-        val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
-        definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
-        definitionMap[definitionPath]?.add(definition)
-      }
-
-    definitionMap.forEach { definitionsCache?.put(it.key, it.value) }
+    scanAndPopulateDefinitionsMap(usePaths, definitionMap)
     overallStopwatch.stop()
     log.debug("Getting product definitions took overall: {}", overallStopwatch.time)
     return definitionMap.values.flatten()
   }
 
-  private fun doScan(usePaths: MutableList<String>): MutableList<Map<String, AttributeValue>> {
+  private fun scanAndPopulateDefinitionsMap(usePaths: MutableList<String>, definitionMap: Map<String, MutableList<ProductDefinitionSummary>>) {
     val scanStopwatch = StopWatch.createStarted()
     var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
-    val items: MutableList<Map<String, AttributeValue>> = mutableListOf()
 
     while (response.hasLastEvaluatedKey()) {
-      items.addAll(response.items())
+      addToDefinitionsMap(response, definitionMap)
       response = dynamoDbClient.scan(getScanRequest(properties, usePaths, response.lastEvaluatedKey()))
     }
     scanStopwatch.stop()
     log.debug("DynamoDB scan for product definitions took: {}", scanStopwatch.time)
 
-    items.addAll(response.items())
-    return items
+    addToDefinitionsMap(response, definitionMap)
+  }
+
+  private fun addToDefinitionsMap(response: ScanResponse, definitionMap: Map<String, MutableList<ProductDefinitionSummary>>) {
+    response.items()
+      .filter { it[properties.dynamoDb.definitionFieldName] != null }
+      .forEach {
+        val deserialisationStopwatch = StopWatch.createStarted()
+        val definition =
+          gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinitionSummary::class.java)
+        deserialisationStopwatch.stop()
+        log.debug("Deserialisation of product definition {} took: {}", definition.id, deserialisationStopwatch.time)
+        val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
+        definition.path =
+          DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
+        definitionMap[definitionPath]?.add(definition)
+      }
+    definitionMap.forEach { definitionsCache?.put(it.key, it.value) }
   }
 }
