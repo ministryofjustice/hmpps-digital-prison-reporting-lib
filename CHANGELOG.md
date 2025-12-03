@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.8.2
+- Added default_value formula.
+
 # 9.8.1
 - The DynamoDbProductDefinitionRepository no longer stores all the fetched items in memory before processing them, but instead processes each results page as it is being fetched. 
  This aims to reduce the overall memory usage which causes an Out Of Memory error.  

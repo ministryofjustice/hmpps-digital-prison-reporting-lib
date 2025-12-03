@@ -593,6 +593,62 @@ class FormulaEngineTest {
     testFormatNumber(formulae[2], inputs[3], "1231.01")
   }
 
+  @Test
+  fun `formula engine uses the default value provided to the default_value formula if the first parameter is null or empty`() {
+    val defaultValueFormula = "default_value(\${prison_number},'-')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to null,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:$PRISON_NUMBER",
+        display = PRISON_NUMBER,
+        visible = Visible.TRUE,
+        formula = defaultValueFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to "-",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `formula engine uses the first parameter value provided to the default_value formula when this is not null or empty`() {
+    val defaultValueFormula = "default_value(\${prison_number},'-')"
+    val name = "LastName6, F"
+    val row: Map<String, Any?> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to "A123",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:$PRISON_NUMBER",
+        display = PRISON_NUMBER,
+        visible = Visible.TRUE,
+        formula = defaultValueFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to "A123",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
   private fun testFormatNumber(formula: String, input: Number, expectedOutput: String) {
     val formatNumFormula = "format_number(\${money}, '$formula')"
     val name = "LastName6, F"
