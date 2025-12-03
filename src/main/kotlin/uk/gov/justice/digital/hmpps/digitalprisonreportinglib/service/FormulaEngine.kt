@@ -19,6 +19,7 @@ class FormulaEngine(
     const val MAKE_URL_FORMULA_PREFIX = "make_url("
     const val FORMAT_DATE_FORMULA_PREFIX = "format_date("
     const val FORMAT_NUMBER_FORMULA_PREFIX = "format_number("
+    const val DEFAULT_VALUE_FORMULA_PREFIX = "default_value("
   }
 
   fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> = row.entries.associate { e ->
@@ -41,6 +42,7 @@ class FormulaEngine(
     formula.startsWith(MAKE_URL_FORMULA_PREFIX) -> interpolateUrlFormula(formula, row)
     formula.startsWith(FORMAT_DATE_FORMULA_PREFIX) -> interpolateFormatDateFormula(formula, row)
     formula.startsWith(FORMAT_NUMBER_FORMULA_PREFIX) -> interpolateFormatNumberFormula(formula, row)
+    formula.startsWith(DEFAULT_VALUE_FORMULA_PREFIX) -> interpolateDefaultValueFormula(formula, row)
     else -> interpolateStandardFormula(formula, row)
   }
 
@@ -91,5 +93,12 @@ class FormulaEngine(
     val href = interpolateStandardFormula(hrefPlaceholder, row)
     val linkText = interpolateStandardFormula(linkTextPlaceholder, row)
     return """<a href=$href ${if (newTab.uppercase() == "TRUE") "target=\"_blank\"" else ""}>$linkText</a>"""
+  }
+
+  private fun interpolateDefaultValueFormula(formula: String, row: Map<String, Any?>): String {
+    val (parameterToCheck, defaultValue) = formula.substring(DEFAULT_VALUE_FORMULA_PREFIX.length, formula.indexOf(")"))
+      .split(",")
+    val interpolatedValue = interpolateStandardFormula(parameterToCheck, row)
+    return interpolatedValue.ifBlank { defaultValue.removeSurrounding("\'", "\'") }
   }
 }
