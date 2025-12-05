@@ -649,6 +649,90 @@ class FormulaEngineTest {
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
 
+  @Test
+  fun `formula engine makes all characters lowercase when lower function is called`() {
+    val lowerCaseFormula = "lower(\${name})"
+    val row: Map<String, Any?> = mapOf(
+      NAME to "LastName6, F",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:$NAME",
+        display = NAME,
+        visible = Visible.TRUE,
+        formula = lowerCaseFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to "lastname6, f",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `formula engine makes all characters uppercase when upper function is called`() {
+    val lowerCaseFormula = "upper(\${name})"
+    val row: Map<String, Any?> = mapOf(
+      NAME to "LastName6, F",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:$NAME",
+        display = NAME,
+        visible = Visible.TRUE,
+        formula = lowerCaseFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to "LASTNAME6, F",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `formula engine makes first character of every word uppercase and the rest lowercase when wordcap function is called`() {
+    val lowerCaseFormula = "wordcap(\${name})"
+    val row: Map<String, Any?> = mapOf(
+      NAME to "JoHN D, sMiTh",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:$NAME",
+        display = NAME,
+        visible = Visible.TRUE,
+        formula = lowerCaseFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to "John D, Smith",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `formula engine makes first character of every word uppercase and the rest lowercase when proper function is called`() {
+    val lowerCaseFormula = "proper(\${name})"
+    val row: Map<String, Any?> = mapOf(
+      NAME to "JoHN D, sMiTh",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:$NAME",
+        display = NAME,
+        visible = Visible.TRUE,
+        formula = lowerCaseFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to "John D, Smith",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
   private fun testFormatNumber(formula: String, input: Number, expectedOutput: String) {
     val formatNumFormula = "format_number(\${money}, '$formula')"
     val name = "LastName6, F"
