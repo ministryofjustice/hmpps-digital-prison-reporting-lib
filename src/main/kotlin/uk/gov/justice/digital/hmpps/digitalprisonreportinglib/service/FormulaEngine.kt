@@ -133,6 +133,5 @@ class FormulaEngine(
   private fun applyProperAndWordCapCase(
     originalCase: String,
     row: Map<String, Any?>,
-  ): String = interpolateStandardFormula(originalCase, row).split(" ").joinToString(" ")
-  { it.lowercase().replaceFirstChar { s -> s.titlecase(Locale.getDefault()) } }
+  ): String = interpolateStandardFormula(originalCase, row).split(" ").joinToString(" ") { it.lowercase().replaceFirstChar { s -> s.uppercase() } }
 }
