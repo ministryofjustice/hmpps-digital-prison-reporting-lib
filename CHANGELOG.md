@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.8.3
+- Added proper, wordcap, upper and lower formulas.
+
 # 9.8.2
 - Added default_value formula.
 
