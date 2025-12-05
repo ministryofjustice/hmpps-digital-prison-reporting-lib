@@ -20,6 +20,10 @@ class FormulaEngine(
     const val FORMAT_DATE_FORMULA_PREFIX = "format_date("
     const val FORMAT_NUMBER_FORMULA_PREFIX = "format_number("
     const val DEFAULT_VALUE_FORMULA_PREFIX = "default_value("
+    const val LOWER_FORMULA_PREFIX = "lower("
+    const val UPPER_FORMULA_PREFIX = "upper("
+    const val WORDCAP_FORMULA_PREFIX = "wordcap("
+    const val PROPER_FORMULA_PREFIX = "proper("
   }
 
   fun applyFormulas(row: Map<String, Any?>): Map<String, Any?> = row.entries.associate { e ->
@@ -43,6 +47,10 @@ class FormulaEngine(
     formula.startsWith(FORMAT_DATE_FORMULA_PREFIX) -> interpolateFormatDateFormula(formula, row)
     formula.startsWith(FORMAT_NUMBER_FORMULA_PREFIX) -> interpolateFormatNumberFormula(formula, row)
     formula.startsWith(DEFAULT_VALUE_FORMULA_PREFIX) -> interpolateDefaultValueFormula(formula, row)
+    formula.startsWith(LOWER_FORMULA_PREFIX) -> interpolateLowerFormula(formula, row)
+    formula.startsWith(UPPER_FORMULA_PREFIX) -> interpolateUpperFormula(formula, row)
+    formula.startsWith(WORDCAP_FORMULA_PREFIX) -> interpolateWordcapFormula(formula, row)
+    formula.startsWith(PROPER_FORMULA_PREFIX) -> interpolateProperFormula(formula, row)
     else -> interpolateStandardFormula(formula, row)
   }
 
@@ -101,4 +109,30 @@ class FormulaEngine(
     val interpolatedValue = interpolateStandardFormula(parameterToCheck, row)
     return interpolatedValue.ifBlank { defaultValue.removeSurrounding("\'", "\'") }
   }
+
+  private fun interpolateLowerFormula(formula: String, row: Map<String, Any?>): String {
+    val originalCase = formula.substring(LOWER_FORMULA_PREFIX.length, formula.indexOf(")"))
+    return interpolateStandardFormula(originalCase, row).lowercase()
+  }
+
+  private fun interpolateUpperFormula(formula: String, row: Map<String, Any?>): String {
+    val originalCase = formula.substring(UPPER_FORMULA_PREFIX.length, formula.indexOf(")"))
+    return interpolateStandardFormula(originalCase, row).uppercase()
+  }
+
+  private fun interpolateWordcapFormula(formula: String, row: Map<String, Any?>): String {
+    val originalCase = formula.substring(WORDCAP_FORMULA_PREFIX.length, formula.indexOf(")"))
+    return applyProperAndWordCapCase(originalCase, row)
+  }
+
+  private fun interpolateProperFormula(formula: String, row: Map<String, Any?>): String {
+    val originalCase = formula.substring(PROPER_FORMULA_PREFIX.length, formula.indexOf(")"))
+    return applyProperAndWordCapCase(originalCase, row)
+  }
+
+  private fun applyProperAndWordCapCase(
+    originalCase: String,
+    row: Map<String, Any?>,
+  ): String = interpolateStandardFormula(originalCase, row).split(" ").joinToString(" ")
+  { it.lowercase().replaceFirstChar { s -> s.titlecase(Locale.getDefault()) } }
 }
