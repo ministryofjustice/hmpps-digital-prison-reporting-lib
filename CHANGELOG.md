@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.8.5
+- Support of the plus sign for concatenation in formulas.
+
 # 9.8.4
 - Added support in dashboards for filtering rows by null value.
 
