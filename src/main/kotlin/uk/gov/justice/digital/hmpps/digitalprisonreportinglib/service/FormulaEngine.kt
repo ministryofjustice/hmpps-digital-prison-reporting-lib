@@ -8,6 +8,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.text.split
 
 class FormulaEngine(
   private val reportFields: List<ReportField>,
@@ -90,8 +91,10 @@ class FormulaEngine(
           .replace("\${$it}", row.getOrElse(it) { "" }.toString()),
       )
     }
-    return sb.toString()
+    return interpolatePlusSignConcat(sb.toString())
   }
+
+  private fun interpolatePlusSignConcat(s: String): String = s.split('+').joinToString("") { it.trim().trim('\'') }
 
   private fun interpolateUrlFormula(formula: String, row: Map<String, Any?>): String {
     val interpolatedEnv =
@@ -100,7 +103,7 @@ class FormulaEngine(
       .split(",")
     val href = interpolateStandardFormula(hrefPlaceholder, row)
     val linkText = interpolateStandardFormula(linkTextPlaceholder, row)
-    return """<a href=$href ${if (newTab.uppercase() == "TRUE") "target=\"_blank\"" else ""}>$linkText</a>"""
+    return """<a href='$href' ${if (newTab.uppercase() == "TRUE") "target=\"_blank\"" else ""}>$linkText</a>"""
   }
 
   private fun interpolateDefaultValueFormula(formula: String, row: Map<String, Any?>): String {
