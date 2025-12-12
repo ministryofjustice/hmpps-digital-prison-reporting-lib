@@ -733,6 +733,56 @@ class FormulaEngineTest {
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
 
+  @Test
+  fun `formula engine concats strings when the plus operator is used`() {
+    val formula = "'Name: ' + \${name}"
+    val row: Map<String, Any?> = mapOf(
+      NAME to "John D, Smith",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:$NAME",
+        display = NAME,
+        visible = Visible.TRUE,
+        formula = formula,
+      ),
+    )
+    val expectedRow: Map<String, Any?> = mapOf(
+      NAME to "Name: John D, Smith",
+    )
+    val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine concatenates strings and variables inside make_url formula`() {
+    val makeUrlFormula = "make_url('https://prisoner-' + \${env} + '.digital.prison.service.justice.gov.uk/prisoner/' + '\${prison_number}',\${name},TRUE)"
+    val prisonNumber = "ABC123"
+    val name = "LastName6, F"
+    val row: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination",
+        display = "Destination",
+        visible = Visible.TRUE,
+        formula = makeUrlFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "<a href=\'https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' target=\"_blank\">$name</a>",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields, "dev")
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
   private fun testFormatNumber(formula: String, input: Number, expectedOutput: String) {
     val formatNumFormula = "format_number(\${money}, '$formula')"
     val name = "LastName6, F"
