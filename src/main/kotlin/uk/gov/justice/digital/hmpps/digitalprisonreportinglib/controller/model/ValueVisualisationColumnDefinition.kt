@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model
 
-class ValueVisualisationColumnDefinition(
+data class ValueVisualisationColumnDefinition(
   val id: String,
   val equals: String?,
 )

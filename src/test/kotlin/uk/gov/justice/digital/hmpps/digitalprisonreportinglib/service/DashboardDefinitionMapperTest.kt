@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ValueVisualisationColumn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -94,6 +96,9 @@ class DashboardDefinitionMapperTest {
                     DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
+                  ),
+                  filters = listOf(
+                    ValueVisualisationColumnDefinition(id = "establishment_id", equals = null)
                   ),
                   expectNulls = true,
                 ),
