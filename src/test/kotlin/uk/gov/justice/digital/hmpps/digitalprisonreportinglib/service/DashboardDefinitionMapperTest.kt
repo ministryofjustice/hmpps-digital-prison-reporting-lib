@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -94,6 +95,9 @@ class DashboardDefinitionMapperTest {
                     DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
+                  ),
+                  filters = listOf(
+                    ValueVisualisationColumnDefinition(id = "establishment_id", equals = null),
                   ),
                   expectNulls = true,
                 ),
