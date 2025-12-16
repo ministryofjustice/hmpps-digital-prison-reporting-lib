@@ -6,4 +6,7 @@ data class DashboardOptionDefinition(
   val buckets: List<DashboardBucketDefinition>? = null,
   val showLatest: Boolean? = null,
   val columnsAsList: Boolean? = null,
+  val horizontal: Boolean? = null,
+  val xStacked: Boolean? = null,
+  val yStacked: Boolean? = null,
 )

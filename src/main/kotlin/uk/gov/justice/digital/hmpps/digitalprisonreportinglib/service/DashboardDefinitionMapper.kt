@@ -84,6 +84,9 @@ class DashboardDefinitionMapper(
     buckets = visualisation.option?.bucket?.map { DashboardBucketDefinition(it.min, it.max, it.hexColour) },
     showLatest = visualisation.option?.showLatest ?: true,
     columnsAsList = visualisation.option?.columnsAsList ?: false,
+    horizontal = visualisation.option?.horizontal,
+    xStacked = visualisation.option?.xStacked,
+    yStacked = visualisation.option?.yStacked,
   )
 
   private fun mapAndAggregateAllFilters(
