@@ -21,8 +21,7 @@ class S3ApiService(
     try {
       val response = s3Client.headObject(request)
       return !response.deleteMarker()
-    }
-    catch (exception: Exception) {
+    } catch (exception: Exception) {
       when (exception) {
         is NoSuchKeyException -> {
           return false

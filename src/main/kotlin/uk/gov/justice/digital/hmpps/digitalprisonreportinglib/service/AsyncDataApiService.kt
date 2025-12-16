@@ -4,7 +4,6 @@ import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
-import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
@@ -16,7 +15,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
@@ -274,7 +272,7 @@ class AsyncDataApiService(
   // Request data from the summary table.
   // If it doesn't exist, create it (waiting for creation to complete).
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-  fun checkDataExistsAndFetch (tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition): List<Map<String, Any?>>? {
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition): List<Map<String, Any?>>? {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
     val s3DataExists = s3ApiService.doesObjectExist(tableSummaryId)
 

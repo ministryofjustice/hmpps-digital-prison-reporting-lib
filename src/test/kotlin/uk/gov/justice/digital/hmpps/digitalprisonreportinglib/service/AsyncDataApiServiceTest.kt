@@ -20,7 +20,6 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import org.springframework.jdbc.UncategorizedSQLException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -67,7 +66,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
-import java.sql.SQLException
 import java.util.UUID
 
 class AsyncDataApiServiceTest {
@@ -124,10 +122,10 @@ class AsyncDataApiServiceTest {
     whenever(authToken.getActiveCaseLoadId()).thenReturn("WWI")
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf("WWI"))
     whenever(
-      redshiftDataApiRepository.isTableMissing(any(), anyOrNull())
+      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
     whenever(
-      s3ApiService.doesObjectExist(any())
+      s3ApiService.doesObjectExist(any()),
     ).thenReturn(false)
   }
 
@@ -893,17 +891,16 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.isTableMissing(tableId),
     ).thenReturn(true)
     whenever(
-      redshiftDataApiRepository.isTableMissing(any(), anyOrNull())
+      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
 
-
     val status = asyncDataApiService.getStatementStatus(
-        statementId = statementId,
-        reportId = "external-movements",
-        reportVariantId = "last-month",
-        userToken = authToken,
-        tableId = tableId,
-      )
+      statementId = statementId,
+      reportId = "external-movements",
+      reportVariantId = "last-month",
+      userToken = authToken,
+      tableId = tableId,
+    )
     assertThat(status.status).isEqualTo("EXPIRED")
     verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
     verify(athenaApiRepository, times(1)).getStatementStatus(eq(statementId))
@@ -970,7 +967,7 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.isTableMissing(tableId),
     ).thenReturn(false)
     whenever(
-      redshiftDataApiRepository.isTableMissing(any(), anyOrNull())
+      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(false)
 
     whenever(
@@ -1535,7 +1532,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
     whenever(
-      s3ApiService.doesObjectExist(any())
+      s3ApiService.doesObjectExist(any()),
     ).thenReturn(false)
 
     val actual = configuredApiService.getSummaryResult(
@@ -1567,10 +1564,10 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
     whenever(
-      redshiftDataApiRepository.isTableMissing(any(), anyOrNull())
+      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
-        whenever(
-      s3ApiService.doesObjectExist(any())
+    whenever(
+      s3ApiService.doesObjectExist(any()),
     ).thenReturn(true)
 
     val actual = configuredApiService.getSummaryResult(
@@ -1602,10 +1599,10 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
     whenever(
-      redshiftDataApiRepository.isTableMissing(any(), anyOrNull())
+      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(false)
     whenever(
-      s3ApiService.doesObjectExist(any())
+      s3ApiService.doesObjectExist(any()),
     ).thenReturn(false)
 
     val actual = configuredApiService.getSummaryResult(
@@ -1681,10 +1678,10 @@ class AsyncDataApiServiceTest {
   @Test
   fun `should return table id if definition scheduled and dataset available`() {
     whenever(
-      redshiftDataApiRepository.isTableMissing(any(), anyOrNull())
+      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(false)
     whenever(
-      s3ApiService.doesObjectExist(any())
+      s3ApiService.doesObjectExist(any()),
     ).thenReturn(true)
     val definitionWithSchedule = definition(
       scheduled = true,
