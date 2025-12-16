@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.8.6
+- Added horizontal, xStacked, yStacked to DashboardOption and DashboardOptionDefinition.
+
 # 9.8.5
 - Support of the plus sign for concatenation in formulas.
 
