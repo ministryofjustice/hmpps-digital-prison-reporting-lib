@@ -67,7 +67,7 @@ class ConfiguredApiRepository(
     reportFilter: ReportFilter?,
   ): String = prompts?.takeIf { it.isNotEmpty() }?.let {
     buildFinalQuery(
-      prompts = buildPromptsQuery(it, SqlDialect.REDSHIFT4),
+      prompts = "WITH " + buildPromptsQuery(it, SqlDialect.REDSHIFT4),
       datasetQuery = buildDatasetQuery(query),
       reportQuery = buildReportQuery(reportFilter),
       policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
