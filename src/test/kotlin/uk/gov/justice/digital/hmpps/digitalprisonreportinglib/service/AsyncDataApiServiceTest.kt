@@ -966,9 +966,6 @@ class AsyncDataApiServiceTest {
     whenever(
       redshiftDataApiRepository.isTableMissing(tableId),
     ).thenReturn(false)
-    whenever(
-      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
-    ).thenReturn(false)
 
     whenever(
       athenaApiRepository.getStatementStatus(statementId),
