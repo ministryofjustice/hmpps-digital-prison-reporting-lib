@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.8.7
+- Added missing with clause to dynamic filter prompt_ CTE.
+
 # 9.8.6
 - Added horizontal, xStacked, yStacked to DashboardOption and DashboardOptionDefinition.
 
