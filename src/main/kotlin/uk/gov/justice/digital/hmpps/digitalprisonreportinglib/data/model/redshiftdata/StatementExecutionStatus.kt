@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 data class StatementExecutionStatus(
   @Schema(
-    examples = ["FINISHED", "SUBMITTED", "STARTED", "PICKED", "FAILED", "ALL", "ABORTED"],
+    examples = ["FINISHED", "SUBMITTED", "STARTED", "PICKED", "FAILED", "ALL", "ABORTED", "EXPIRED"],
     description = "The status of the statement execution.",
   )
   val status: String,
