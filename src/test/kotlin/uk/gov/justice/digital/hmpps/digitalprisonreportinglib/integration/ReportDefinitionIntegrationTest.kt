@@ -15,8 +15,9 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import software.amazon.awssdk.services.dynamodb.model.QueryRequest
-import software.amazon.awssdk.services.dynamodb.model.QueryResponse
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest
+import software.amazon.awssdk.services.dynamodb.model.ScanResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -137,57 +138,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class ClientReportDefinitionListTest : IntegrationTestBase() {
-
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.dataProductDefinitions.host") { "http://localhost:9999" }
-      }
-    }
-
-    @Test
-    fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
-      val result = webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path("/definitions")
-            .queryParam("dataProductDefinitionsPath", "definitions/prisons/orphanage")
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBodyList<ReportDefinitionSummary>()
-        .returnResult()
-
-      assertThat(result.responseBody).isNotNull
-      assertThat(result.responseBody).hasSize(1)
-      assertThat(result.responseBody).first().isNotNull
-
-      val definition = result.responseBody!!.first()
-
-      assertThat(definition.name).isEqualTo("External Movements")
-      assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-      assertThat(definition.variants).hasSize(3)
-      assertThat(definition.variants[0]).isNotNull
-      assertThat(definition.variants[1]).isNotNull
-
-      val lastMonthVariant = definition.variants[0]
-
-      assertThat(lastMonthVariant.id).isEqualTo("last-month")
-      assertThat(lastMonthVariant.name).isEqualTo("Last month")
-      assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
-
-      val lastWeekVariant = definition.variants[1]
-      assertThat(lastWeekVariant.id).isEqualTo("last-week")
-      assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
-      assertThat(lastWeekVariant.name).isEqualTo("Last week")
-    }
-  }
-
   class DynamoDbReportDefinitionListTest : IntegrationTestBase() {
 
     companion object {
@@ -201,16 +151,17 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
-      val response = Mockito.mock<QueryResponse>()
+      val response = Mockito.mock<ScanResponse>()
       val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
       val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
       given(response.items()).willReturn(
         listOf(
-          mapOf("definition" to AttributeValue.fromS(productDefinitionJson)),
-          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson)),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+          mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
         ),
       )
-      given(dynamoDbClient.query(any(QueryRequest::class.java))).willReturn(response)
+      given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
 
       val result = webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
@@ -226,15 +177,15 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .returnResult()
 
       assertThat(result.responseBody).isNotNull
-      assertThat(result.responseBody).hasSize(2)
+      assertThat(result.responseBody).hasSize(3)
       assertThat(result.responseBody).first().isNotNull
-      val otherDefinition = result.responseBody!![1]
-      assertThat(otherDefinition).isNotNull
+      val missingEthnicityDefinition = result.responseBody!!.find { it.name == "Missing Ethnicity Metrics" }!!
+      assertThat(missingEthnicityDefinition).isNotNull
+      assertThat(missingEthnicityDefinition.name).isNotNull()
 
-      val definition = result.responseBody!!.first()
+      val definition = result.responseBody!!.find { it.id == "external-movements" }!!
 
       assertThat(definition.name).isEqualTo("External Movements")
-      assertThat(otherDefinition.name).isEqualTo("Missing Ethnicity Metrics")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
       assertThat(definition.variants).hasSize(3)
       assertThat(definition.variants[0]).isNotNull
@@ -246,21 +197,29 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.id).isEqualTo("last-month")
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+      assertThat(lastMonthVariant.isMissing).isEqualTo(false)
 
       val lastWeekVariant = definition.variants[1]
       assertThat(lastWeekVariant.id).isEqualTo("last-week")
       assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
       assertThat(lastWeekVariant.name).isEqualTo("Last week")
+      assertThat(lastWeekVariant.isMissing).isEqualTo(false)
 
       val lastYearVariant = definition.variants[2]
       assertThat(lastYearVariant.id).isEqualTo("last-year")
       assertThat(lastYearVariant.description).isEqualTo("All movements in the past year")
       assertThat(lastYearVariant.name).isEqualTo("Last year")
+      assertThat(lastYearVariant.isMissing).isEqualTo(false)
 
-      val requestCaptor = ArgumentCaptor.forClass(QueryRequest::class.java)
-      then(dynamoDbClient).should().query(requestCaptor.capture())
+      val requestCaptor = ArgumentCaptor.forClass(ScanRequest::class.java)
+      then(dynamoDbClient).should().scan(requestCaptor.capture())
 
       assertThat(requestCaptor.value.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition")
+
+      val externalMovementsTest2Definition = result.responseBody!!.find { it.id == "external-movements-test2" }!!
+      assertThat(externalMovementsTest2Definition.variants[0].isMissing).isEqualTo(true)
+      assertThat(externalMovementsTest2Definition.variants[1].isMissing).isEqualTo(true)
+      assertThat(externalMovementsTest2Definition.variants[2].isMissing).isEqualTo(true)
     }
   }
 
@@ -755,6 +714,41 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
       prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
     }
+  }
+
+  @Test
+  fun `Single definition summary is returned`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/external-movements")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("id").isEqualTo("external-movements")
+      .jsonPath("name").isEqualTo("External Movements")
+      .jsonPath("description").isEqualTo("Reports about prisoner external movements")
+      .jsonPath("variants").isArray()
+      .jsonPath("dashboards").isEmpty()
+      .jsonPath("authorised").isEqualTo(true)
+  }
+
+  @Test
+  fun `Single definition summary is not returned`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/foobar")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isBadRequest()
   }
 
   class ReportDefinitionParametersListTest : IntegrationTestBase() {

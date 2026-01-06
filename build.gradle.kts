@@ -16,7 +16,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.31.5"
+val awsSdkVersion = "2.31.48"
 val testContainersVersion = "1.21.0"
 
 dependencies {
@@ -24,7 +24,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-  implementation("com.google.code.gson:gson:2.12.1")
+  implementation("com.google.code.gson:gson:2.13.2")
   implementation("com.google.guava:guava:33.4.8-jre")
 
   // AWS
@@ -34,7 +34,12 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
+
+  // Postgres dependencies
+  implementation("org.flywaydb:flyway-core")
+  runtimeOnly("org.flywaydb:flyway-database-postgresql")
+  implementation("org.postgresql:postgresql:42.5.0")
 
   // Testing
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.0")
@@ -161,8 +166,8 @@ project.getTasksByName("check", false).forEach {
 nexusPublishing {
   repositories {
     create("sonatype") {
-      nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-      snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+      nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
       username.set(System.getenv("OSSRH_USERNAME"))
       password.set(System.getenv("OSSRH_PASSWORD"))
     }

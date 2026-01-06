@@ -14,10 +14,12 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -33,10 +35,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportLite
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
@@ -84,7 +87,7 @@ class SyncDataApiServiceTest {
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-    listOf("productDefinition.json"),
+    listOf("productDefinition.json", "productDefinitionWithDashboard.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper,
   )
@@ -253,7 +256,7 @@ class SyncDataApiServiceTest {
         filters = emptyList(),
         selectedPage = selectedPage,
         pageSize = pageSize,
-        sortColumn = estNameSchemaFieldName,
+        sortColumn = "name",
         sortedAsc = sortedAsc,
         policyEngineResult = POLICY_PERMIT,
         dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -268,7 +271,7 @@ class SyncDataApiServiceTest {
       filters = emptyMap(),
       selectedPage = selectedPage,
       pageSize = pageSize,
-      sortColumn = estNameSchemaFieldName,
+      sortColumn = "name",
       sortedAsc = sortedAsc,
       userToken = authToken,
       reportFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -280,7 +283,7 @@ class SyncDataApiServiceTest {
       filters = emptyList(),
       selectedPage = selectedPage,
       pageSize = pageSize,
-      sortColumn = estNameSchemaFieldName,
+      sortColumn = "name",
       sortedAsc = sortedAsc,
       policyEngineResult = POLICY_PERMIT,
       dynamicFilterFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
@@ -710,6 +713,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -740,6 +744,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -788,6 +793,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -804,6 +810,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -840,6 +847,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -856,6 +864,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_DYNAMIC_FILTER_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -1000,6 +1009,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -1027,6 +1037,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -1074,6 +1085,7 @@ class SyncDataApiServiceTest {
       any(),
       any(),
       any(),
+      any(),
     )
   }
 
@@ -1100,6 +1112,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals(SyncDataApiService.INVALID_DYNAMIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -1137,6 +1150,7 @@ class SyncDataApiServiceTest {
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
+      any(),
       any(),
       any(),
       any(),
@@ -1232,10 +1246,17 @@ class SyncDataApiServiceTest {
             visible = Visible.TRUE,
             sortable = true,
             defaultSort = false,
+            sortDirection = SortDirection.DESC,
           ),
         ),
         section = null,
       ),
+    )
+    val reportLite = ReportLite(
+      id = "6",
+      name = "7",
+      dataset = "\$ref:datasetId",
+      render = RenderMethod.SVG,
     )
     val policy = Policy(
       "caseload",
@@ -1243,7 +1264,7 @@ class SyncDataApiServiceTest {
       listOf("TRUE"),
       listOf(Rule(Effect.PERMIT, emptyList())),
     )
-    val productDefinition = ProductDefinition(
+    val productDefinition = ProductDefinitionSummary(
       id = "1",
       name = "2",
       metadata = MetaData(
@@ -1251,10 +1272,8 @@ class SyncDataApiServiceTest {
         owner = "4",
         version = "5",
       ),
-      policy = listOf(policy),
-      dataset = listOf(dataSet),
       report = listOf(
-        report,
+        reportLite,
       ),
     )
     val expectedRepositoryResult = listOf(
@@ -1292,7 +1311,7 @@ class SyncDataApiServiceTest {
 
     val selectedPage = 1L
     val pageSize = 10L
-    val sortedAsc = true
+    val sortedAsc = false
 
     whenever(
       configuredApiRepository.executeQuery(
@@ -1383,5 +1402,63 @@ class SyncDataApiServiceTest {
       reportFilter = singleReportProductDefinition.report.filter,
     )
     assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
+  fun `should call the repository with the corresponding arguments and get a list of rows for dashboard when both range and non range filters are provided`() {
+    val expectedDashboardResult = listOf(
+      mapOf(
+        "establishment_id" to "OUT",
+        "has_ethnicity" to "4000",
+        "ethnicity_is_missing" to "2",
+      ),
+    )
+    val expectedDashboardServiceResult = listOf(
+      mapOf(
+        "establishment_id" to MetricData("OUT"),
+        "has_ethnicity" to MetricData("4000"),
+        "ethnicity_is_missing" to MetricData("2"),
+      ),
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val sortColumn = "date"
+    val sortedAsc = true
+    val dashboardId = "missing-ethnicity-metrics"
+    val dashboardReportId = "age-breakdown-dashboard-1"
+    val singleReportProductDefinition =
+      productDefinitionRepository.getSingleDashboardProductDefinition(dashboardId, dashboardReportId)
+    val dataSet = singleReportProductDefinition.dashboardDataset
+
+    val dataSourceName = singleReportProductDefinition.datasource.name
+
+    whenever(
+      configuredApiRepository.executeQuery(
+        query = dataSet.query,
+        filters = emptyList(),
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        policyEngineResult = "FALSE",
+        dataSourceName = dataSourceName,
+        reportFilter = null,
+      ),
+    ).thenReturn(expectedDashboardResult)
+
+    val actual = configuredApiService.validateAndFetchDataForDashboard(dashboardId, dashboardReportId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
+
+    verify(configuredApiRepository, times(1)).executeQuery(
+      query = dataSet.query,
+      filters = emptyList(),
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      policyEngineResult = "FALSE",
+      dataSourceName = dataSourceName,
+      reportFilter = null,
+    )
+    assertEquals(expectedDashboardServiceResult, actual)
   }
 }

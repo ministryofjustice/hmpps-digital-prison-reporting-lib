@@ -70,7 +70,7 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
     @Min(1)
     pageSize: Long,
     @RequestParam sortColumn: String?,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -131,7 +131,7 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
     @RequestParam(defaultValue = "10")
     @Min(1)
     pageSize: Long,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -244,5 +244,70 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
       .status(HttpStatus.OK)
       .headers(headers)
       .body(Count(0))
+  }
+
+  @GetMapping("/reports/{reportId}/dashboards/{dashboardId}")
+  @Operation(
+    description = "Returns the dataset for the given report ID and dashboard ID filtered by the filters provided in the query.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = ResponseHeader.NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun configuredApiDatasetForDashboard(
+    @RequestParam(defaultValue = "1")
+    @Min(1)
+    selectedPage: Long,
+    @RequestParam(defaultValue = "10")
+    @Min(1)
+    pageSize: Long,
+    @RequestParam sortColumn: String?,
+    @RequestParam sortedAsc: Boolean?,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("dashboardId") dashboardId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
+    dataProductDefinitionsPath: String? = null,
+    authentication: Authentication,
+  ): ResponseEntity<List<Map<String, Any?>>> = try {
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        dataApiSyncService.validateAndFetchDataForDashboard(
+          reportId = reportId,
+          dashboardId = dashboardId,
+          filters = filterHelper.filtersOnly(filters),
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+        ),
+      )
+  } catch (exception: NoDataAvailableException) {
+    val headers = HttpHeaders()
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+
+    ResponseEntity
+      .status(HttpStatus.OK)
+      .headers(headers)
+      .body(emptyList())
   }
 }

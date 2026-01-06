@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportChild
@@ -37,7 +38,12 @@ class ReportDefinitionMapper(
   alertCategoryCacheService: AlertCategoryCacheService,
 ) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService) {
 
-  fun mapReport(definition: SingleReportProductDefinition, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): SingleVariantReportDefinition = SingleVariantReportDefinition(
+  fun mapReport(
+    definition: SingleReportProductDefinition,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
+    filters: Map<String, String>? = null,
+  ): SingleVariantReportDefinition = SingleVariantReportDefinition(
     id = definition.id,
     name = definition.name,
     description = definition.description,
@@ -49,6 +55,7 @@ class ReportDefinitionMapper(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = definition.allDatasets,
       allReports = definition.allReports,
+      filters = filters,
     ),
   )
 
@@ -60,6 +67,7 @@ class ReportDefinitionMapper(
     dataProductDefinitionsPath: String? = null,
     allDatasets: List<Dataset>,
     allReports: List<Report>,
+    filters: Map<String, String>? = null,
   ): VariantDefinition = VariantDefinition(
     id = report.id,
     name = report.name,
@@ -73,6 +81,9 @@ class ReportDefinitionMapper(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
       parameters = dataSet.parameters,
+      multiphaseQueries = dataSet.multiphaseQuery,
+      reportDataset = dataSet,
+      filters = filters,
     ),
     classification = report.classification,
     printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
@@ -129,6 +140,9 @@ class ReportDefinitionMapper(
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset> = emptyList(),
     parameters: List<Parameter>? = null,
+    multiphaseQueries: List<MultiphaseQuery>? = null,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): Specification? {
     if (specification == null) {
       return null
@@ -137,14 +151,16 @@ class ReportDefinitionMapper(
       template = Template.valueOf(specification.template.toString()),
       sections = specification.section?.map { it.removePrefix(REF_PREFIX) } ?: emptyList(),
       fields = mapToReportFieldDefinitions(
-        specification,
-        schemaFields,
-        productDefinitionId,
-        reportVariantId,
-        userToken,
-        dataProductDefinitionsPath,
-        allDatasets,
-      ) + maybeConvertToReportFields(parameters),
+        specification = specification,
+        schemaFields = schemaFields,
+        productDefinitionId = productDefinitionId,
+        reportVariantId = reportVariantId,
+        userToken = userToken,
+        dataProductDefinitionsPath = dataProductDefinitionsPath,
+        allDatasets = allDatasets,
+        reportDataset = reportDataset,
+        filters = filters,
+      ) + maybeConvertParametersToReportFields(multiphaseQueries, parameters),
     )
   }
 
@@ -173,6 +189,8 @@ class ReportDefinitionMapper(
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ) = specification.field.map {
     mapField(
       field = it,
@@ -182,6 +200,8 @@ class ReportDefinitionMapper(
       userToken = userToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
+      reportDataset = reportDataset,
+      filters = filters,
     )
   }
 
@@ -193,9 +213,10 @@ class ReportDefinitionMapper(
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): FieldDefinition {
     val schemaField = identifiedHelper.findOrFail(schemaFields, field.name)
-
     return FieldDefinition(
       name = schemaField.name,
       display = populateDisplay(field.display, schemaField.display),
@@ -212,12 +233,15 @@ class ReportDefinitionMapper(
             userToken = userToken,
             dataProductDefinitionsPath = dataProductDefinitionsPath,
             allDatasets = allDatasets,
+            reportDataset = reportDataset,
+            filters = filters,
           ),
           userToken = userToken,
         )
       },
       sortable = field.sortable,
       defaultsort = field.defaultSort,
+      sortDirection = field.sortDirection,
       type = populateType(schemaField, field),
       mandatory = populateMandatory(field.visible),
       visible = populateVisible(field.visible),

@@ -1,6 +1,176 @@
 Below you can find the changes included in each release.
 
-# 8.2.0
+# 9.8.7
+- Added missing with clause to dynamic filter prompt_ CTE.
+
+# 9.8.6
+- Added horizontal, xStacked, yStacked to DashboardOption and DashboardOptionDefinition.
+
+# 9.8.5
+- Support of the plus sign for concatenation in formulas.
+
+# 9.8.4
+- Added support in dashboards for filtering rows by null value.
+
+# 9.8.3
+- Added proper, wordcap, upper and lower formulas.
+
+# 9.8.2
+- Added default_value formula.
+
+# 9.8.1
+- The DynamoDbProductDefinitionRepository no longer stores all the fetched items in memory before processing them, but instead processes each results page as it is being fetched. 
+ This aims to reduce the overall memory usage which causes an Out Of Memory error.  
+
+# 9.8.0
+- Added support for prompts on interactive dynamic filters.
+
+# 9.7.9
+- Updated definitions endpoint, to cache only summary product definitions.
+
+# 9.7.8
+- Dashboard definition update: Map options to dashboard definition only if they are present in the DPD.
+
+# 9.7.7
+- Fixed JPA configuration overwriting Spring autoconfig when using this library in apps that have JPA classes
+
+# 9.7.6
+- Added Dashboard sync functionality.
+
+# 9.7.5
+- Updated the display field of the DashboardVisualisationColumn and DashboardVisualisationColumnDefinition as optional.
+
+# 9.7.4
+- Updating JPA config so that we exclude the specific MissingReport stuff that uses a different datasource, and have normal Spring behaviour for the rest, which is to scan from the base package down
+
+# 9.7.3
+- Added "optional" field to DashboardVisualisationColumnDefinition. 
+
+# 9.7.2
+- Added matrix-timeseries and line-timeseries to DashboardVisualisationType.
+- Do not throw NPE if no multiphase query executions are found when requesting the status. 
+
+# 9.7.1
+- Updated dashboards to support heatmap functionality.
+
+# 9.7.0
+- Added endpoints to get product collections and get a single collection by id
+
+# 9.6.0
+- Filters support an index.
+
+# 9.5.8
+- Added more logging around retrieving the status of multiphase queries.
+
+# 9.5.7
+- IllegalArgumentException is mapped to a Bad Request response instead of throwing a 500 error.
+
+# 9.5.6
+- When a multiphase query references an invalid table index a validation error is thrown.
+
+# 9.5.5
+- Wrap in double quotes only federated passthrough multiphase queries. 
+- Only first query defaults to federated if no datasource connection is defined while the rest throw an error.
+
+# 9.5.4
+- Fixed ${table[n]} regex as the dollar sign prefix was missing.
+
+# 9.5.3
+- Fixed missing replacement of double quotes in certain phases of multiphase queries.
+
+# 9.5.2
+- Enabled cross join for multiphase queries. The following placeholder: {table[n]} will be replaced with the corresponding table ID of the n index multiphase query.
+
+# 9.5.1
+- Fixed small bug in caching for get all product definitions where if a a specific path was queried for after the cache was populated, it wouldn't search the cache for it properly
+
+# 9.5.0
+- Added endpoint to get a single report summary by definitionId
+
+# 9.4.9
+- Fixed issue in which when Athena would return "CANCELED" with single "L" the query would not be cancelled.
+
+# 9.4.8
+- Fixed the issue in getProductDefinition with assigning always the orphanage path regardless of which path was being passed.
+
+# 9.4.7
+- Get single product definition uses DynamoDB with partition and sort keys instead of iterating over the entire list of definitions.
+
+# 9.4.6
+- Attempt to ensure getProductDefinitions retrieves from all paths necessary in cache.
+
+# 9.4.5
+- The endpoint to retrieve dashboard results now has no default if pageSize query is not provided and it returns all the results in one response.
+
+# 9.4.4
+- Added FlywayConfig to AutoConfiguration.imports.
+
+# 9.4.3 
+- Fixed the Hikari config of the missingReportDataSource. 
+
+# 9.4.2
+- Removed DataSourceConfiguration as the creation of a main DataSource already takes place by defining the default datasource properties.
+- Fixed selection of the main DataSource in RepositoryHelper.
+- Removed the missingReportDataSourceProperties bean creation as this conflicts with the default DataSourceProperties when Spring tries to create the main DataSource. Now the DataSourceProperties are created from the configuration properties using Binder.
+
+# 9.4.1
+- Use the default Spring DataSource by name in the RepositoryHelper when there is no specific one passed as a parameter. 
+This fixes an error where Spring fails to find the right DataSource bean.
+
+# 9.4.0
+- Added support for missing report submissions
+
+# 9.3.1 - 9.3.3
+- Fixed Dynamo DB issue which was causing an error when trying to read from multiple definition categories (paths).
+
+# 9.3.0
+- Added optional loadType to variant summary and dashboard summary to define loadType in the data product definition.
+
+# 9.2.1
+- Reverted the removal of the Redshift async journey support as this is still being used by platform clients and the alternative
+  to run Athena federated queries to Redshift has not been implemented yet to migrate.
+
+# 9.2.0
+- Include missing reports in list of reports returned from /definitions endpoint
+
+# 9.1.0
+- Includes changes from `8.5.0` and `8.4.3` as these two versions were mistakenly published with more recent changes than `9.0.0` but with lower version numbers.
+
+# 8.4.3
+- Changed the sort direction field name in the DPD to be all lowercase for consistency with existing DPD field naming conventions.
+
+# 8.5.0
+- Adds support for sortDirection in DPDs
+
+# 9.0.0
+- All async queries run via Athena. 
+- Removed the Redshift data API status and cancel endpoints as they are not used.
+- Added `connection` and `dialect` fields to `Datasource`.
+- More information about their usage can be found in the [definitions schema](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema). 
+
+# 8.4.2
+- Adds support for format_number formula
+
+# 8.4.1
+- Reports support multiphase queries, including parameters (prompts).
+- Unified status endpoint behaviour for both reports and dashboards to check for an existing table for completed queries
+before returning the "FINISHED" status.
+
+# 8.4.0
+- Changed table name from `execution_manager` to `multiphase_query_state` and column name of this table from `datasource` to `datasource_name`.
+
+# 8.3.5
+- Fixed issue with multiphase queries throwing an error when the list of queries contained only a
+single query.
+
+# 8.3.4
+Added `row-section`and `row-section-child` as supported report template types.
+
+# 8.3.1-alpha.0, 8.3.2 and 8.3.3
+Added sequenceNumber to the multiphase query Redhisft table to address the race condition of an earlier state change overwriting a later one.
+Added last_update to allow for cleaning up the table.
+
+# 8.2.0 - 8.3.1
 Added Alerts as referenceType 'alert' for the alert parameters.
 
 # 8.1.0

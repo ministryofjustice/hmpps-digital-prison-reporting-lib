@@ -9,8 +9,12 @@
   },
   "datasource" : [
     {
-      "id": "datamart",
-      "name": "datamart"
+      "id": "nomis",
+      "name": "NOMIS",
+      "database": "nomis_db",
+      "catalog": "nomis",
+      "connection": "federated",
+      "dialect": "oracle/11g"
     }],
   "dataset" : [ {
     "id" : "external-movements",
@@ -179,7 +183,8 @@
           "default" : "today(-1,months) - today()"
         },
         "sortable" : true,
-        "defaultsort" : true
+        "defaultsort" : true,
+        "sortdirection" : "asc"
       }, {
         "name" : "$ref:origin",
         "display" : "From",

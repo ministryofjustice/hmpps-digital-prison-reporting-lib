@@ -8,8 +8,11 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.Timestamp
 import javax.sql.DataSource
 
@@ -46,14 +49,23 @@ abstract class RepositoryHelper {
 
   private fun findDataSource(dataSourceName: String?): DataSource {
     val dataSource = if (dataSourceName == null) {
-      context.getBean(DataSource::class.java) as DataSource
+      getMainDataSource()
     } else if (context.containsBean(dataSourceName)) {
       context.getBean(dataSourceName, DataSource::class) as DataSource
     } else {
       log.warn("No DataSource Bean found with name: {}", dataSourceName)
-      context.getBean(DataSource::class.java) as DataSource
+      getMainDataSource()
     }
     return dataSource
+  }
+
+  private fun getMainDataSource(): DataSource {
+    val mainDataSource = "dataSource"
+    return if (context.containsBean(mainDataSource)) {
+      context.getBean(mainDataSource, DataSource::class) as DataSource
+    } else {
+      context.getBean(DataSource::class.java) as DataSource
+    }
   }
 
   protected fun transformTimestampToLocalDateTime(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->
@@ -129,6 +141,21 @@ abstract class RepositoryHelper {
   protected fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) = sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
 
   private fun calculateSortingDirection(sortedAsc: Boolean): String = if (sortedAsc) "asc" else "desc"
+
+  protected fun buildPromptsQuery(prompts: List<Prompt>?, dialect: SqlDialect? = SqlDialect.ORACLE11g): String {
+    if (prompts.isNullOrEmpty()) {
+      return "$PROMPT AS (SELECT '' ${if (isOracleDialect(dialect)) "FROM DUAL" else ""})"
+    }
+    val promptsCte = prompts.joinToString(", ") { prompt -> buildPromptsQueryBasedOnType(prompt) }
+    return "$PROMPT AS (SELECT $promptsCte ${if (isOracleDialect(dialect)) "FROM DUAL" else ""})"
+  }
+
+  protected fun isOracleDialect(dialect: SqlDialect? = null): Boolean = dialect?.let { it == SqlDialect.ORACLE11g } ?: true
+
+  private fun buildPromptsQueryBasedOnType(prompt: Prompt): String = when (prompt.type) {
+    Date -> "TO_DATE('${prompt.value}','yyyy-mm-dd') AS ${prompt.name}"
+    else -> "'${prompt.value}' AS ${prompt.name}"
+  }
 
   enum class FilterType(val suffix: String = "") {
     STANDARD,

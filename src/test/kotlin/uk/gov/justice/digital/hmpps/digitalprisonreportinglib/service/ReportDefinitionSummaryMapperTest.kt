@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
@@ -81,6 +83,7 @@ class ReportDefinitionSummaryMapperTest {
           ),
           sortable = true,
           defaultSort = true,
+          sortDirection = SortDirection.DESC,
           formula = null,
           visible = Visible.TRUE,
         ),
@@ -88,6 +91,7 @@ class ReportDefinitionSummaryMapperTest {
     ),
     destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
+    loadType = LoadType.SYNC,
   )
 
   private val fullProductDefinition: ProductDefinition = ProductDefinition(
@@ -124,6 +128,7 @@ class ReportDefinitionSummaryMapperTest {
     assertThat(variant.id).isEqualTo(fullProductDefinition.report.first().id)
     assertThat(variant.name).isEqualTo(fullProductDefinition.report.first().name)
     assertThat(variant.description).isEqualTo(fullProductDefinition.report.first().description)
+    assertThat(variant.loadType).isEqualTo(fullProductDefinition.report.first().loadType)
   }
 
   @Test

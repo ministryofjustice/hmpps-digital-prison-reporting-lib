@@ -55,7 +55,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
   )
   fun asyncConfiguredApiExecuteQuery(
     @RequestParam sortColumn: String?,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     @Parameter(
       description = "$FILTERS_QUERY_DESCRIPTION Note: For legacy nomis and bodmis reports, for filters deriving from DPD parameters(prompts)," +
         "there is no need for these to be suffixed with .start and .end. For example, filters.start_date and filters.end_date are perfectly valid in this case.",
@@ -266,40 +266,6 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       ),
     )
 
-  @GetMapping("/statements/{statementId}/status")
-  @Operation(
-    description = "Returns the status of the statement execution based on the statement ID provided." +
-      "The following status values can be returned: \n" +
-      "ABORTED - The query run was stopped by the user.\n" +
-      "ALL - A status value that includes all query statuses. This value can be used to filter results.\n" +
-      "FAILED - The query run failed.\n" +
-      "FINISHED - The query has finished running.\n" +
-      "PICKED - The query has been chosen to be run.\n" +
-      "STARTED - The query run has started.\n" +
-      "SUBMITTED - The query was submitted, but not yet processed.\n" +
-      "Note: When the status is FAILED the error field of the response will be populated." +
-      "ResultRows is the number of rows returned from the SQL statement. A -1 indicates the value is null." +
-      "ResultSize is the size in bytes of the returned results. A -1 indicates the value is null.\n",
-    security = [SecurityRequirement(name = "bearer-jwt")],
-  )
-  fun getQueryExecutionStatus(
-    @PathVariable("statementId") statementId: String,
-    @Parameter(
-      description = "External table ID.",
-      example = "reports._6b3c6dfb_f601_4795_8ee5_2ad65b7fb283",
-    )
-    @RequestParam(
-      "tableId",
-      required = false,
-    )
-    tableId: String? = null,
-    authentication: Authentication,
-  ): ResponseEntity<StatementExecutionStatus> = ResponseEntity
-    .status(HttpStatus.OK)
-    .body(
-      asyncDataApiService.getStatementStatus(statementId, tableId),
-    )
-
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
   @Operation(
     description = "Cancels the execution of a running query.",
@@ -360,20 +326,6 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
         userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         dataProductDefinitionsPath,
       ),
-    )
-
-  @DeleteMapping("/statements/{statementId}")
-  @Operation(
-    description = "Cancels the execution of a running query.",
-    security = [SecurityRequirement(name = "bearer-jwt")],
-  )
-  fun cancelQueryExecution(
-    @PathVariable("statementId") statementId: String,
-    authentication: Authentication,
-  ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
-    .status(HttpStatus.OK)
-    .body(
-      asyncDataApiService.cancelStatementExecution(statementId),
     )
 
   @GetMapping("/report/tables/{tableId}/count")
@@ -489,7 +441,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam
     filters: Map<String, String>,
     @RequestParam sortColumn: String?,
-    @RequestParam(defaultValue = "false") sortedAsc: Boolean,
+    @RequestParam sortedAsc: Boolean?,
     authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> = ResponseEntity
     .status(HttpStatus.OK)
@@ -526,9 +478,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam(defaultValue = "1")
     @Min(1)
     selectedPage: Long,
-    @RequestParam(defaultValue = "10")
-    @Min(1)
-    pageSize: Long,
+    pageSize: Long? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,

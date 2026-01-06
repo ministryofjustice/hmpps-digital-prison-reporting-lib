@@ -13,17 +13,24 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategoryRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprUserAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
@@ -31,6 +38,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("test")
+@Import(TestFlywayConfig::class)
 abstract class IntegrationTestBase {
 
   @Value("\${dpr.lib.user.role}")
@@ -51,6 +59,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var authenticationHelper: TestAuthenticationHelper
 
+  @Autowired
+  lateinit var configuredApiRepository: ConfiguredApiRepository
+
   @MockitoBean
   lateinit var dynamoDbClient: DynamoDbClient
 
@@ -58,11 +69,25 @@ abstract class IntegrationTestBase {
   lateinit var establishmentsToWingsRepository: EstablishmentsToWingsRepository
 
   @MockitoBean
+  lateinit var alertCategoryRepository: AlertCategoryRepository
+
+  @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
 
   companion object {
 
     lateinit var wireMockServer: WireMockServer
+    val pgContainer = PostgresContainer.instance
+
+    @JvmStatic
+    @DynamicPropertySource
+    fun setupClass(registry: DynamicPropertyRegistry) {
+      pgContainer?.run {
+        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", pgContainer::getUsername)
+        registry.add("spring.datasource.password", pgContainer::getPassword)
+      }
+    }
 
     @BeforeAll
     @JvmStatic
@@ -115,41 +140,34 @@ abstract class IntegrationTestBase {
   }
 
   protected fun stubMeCaseloadsResponse(body: String) {
-    wireMockServer.stubFor(
-      WireMock.get("/users/me/caseloads").willReturn(
-        WireMock.aResponse()
-          .withStatus(HttpStatus.OK.value())
-          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody(body),
-      ),
-    )
+    stubMeCaseloadsResponse(body, wireMockServer)
   }
 
   protected fun createCaseloadJsonResponse(activeCaseloadId: String) =
     """
+      {
+        "username": "TESTUSER1",
+        "active": true,
+        "accountType": "GENERAL",
+        "activeCaseload": {
+          "id": "$activeCaseloadId",
+          "name": "WANDSWORTH (HMP)"
+        },
+        "caseloads": [
           {
-            "username": "TESTUSER1",
-            "active": true,
-            "accountType": "GENERAL",
-            "activeCaseload": {
-              "id": "$activeCaseloadId",
-              "name": "WANDSWORTH (HMP)"
-            },
-            "caseloads": [
-              {
-                "id": "WWI",
-                "name": "WANDSWORTH (HMP)"
-              },
-              {
-                "id": "AKI",
-                "name": "Acklington (HMP)"
-              },
-              {
-                "id": "LWSTMC",
-                "name": "Lowestoft (North East Suffolk) Magistrat"
-              }
-            ]
+            "id": "WWI",
+            "name": "WANDSWORTH (HMP)"
+          },
+          {
+            "id": "AKI",
+            "name": "Acklington (HMP)"
+          },
+          {
+            "id": "LWSTMC",
+            "name": "Lowestoft (North East Suffolk) Magistrat"
           }
+        ]
+      }
     """.trimIndent()
 
   protected fun setAuthorisation(
@@ -163,3 +181,26 @@ abstract class IntegrationTestBase {
     roles = roles,
   )
 }
+
+fun stubMeCaseloadsResponse(body: String, wiremockServer: WireMockServer) {
+  wiremockServer.stubFor(
+    WireMock.get("/users/me/caseloads").willReturn(
+      WireMock.aResponse()
+        .withStatus(HttpStatus.OK.value())
+        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .withBody(body),
+    ),
+  )
+}
+
+fun setAuthorisation(
+  user: String = "request-user",
+  roles: List<String> = emptyList(),
+  scopes: List<String> = emptyList(),
+  jwtAuthorisationHelper: JwtAuthorisationHelper,
+): (HttpHeaders) -> Unit = jwtAuthorisationHelper.setAuthorisationHeader(
+  clientId = "hmpps-digital-prison-reporting-api",
+  username = user,
+  scope = scopes,
+  roles = roles,
+)
