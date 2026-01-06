@@ -1,5 +1,23 @@
 Below you can find the changes included in each release.
 
+# 9.8.7
+- Added missing with clause to dynamic filter prompt_ CTE.
+
+# 9.8.6
+- Added horizontal, xStacked, yStacked to DashboardOption and DashboardOptionDefinition.
+
+# 9.8.5
+- Support of the plus sign for concatenation in formulas.
+
+# 9.8.4
+- Added support in dashboards for filtering rows by null value.
+
+# 9.8.3
+- Added proper, wordcap, upper and lower formulas.
+
+# 9.8.2
+- Added default_value formula.
+
 # 9.8.1
 - The DynamoDbProductDefinitionRepository no longer stores all the fetched items in memory before processing them, but instead processes each results page as it is being fetched. 
  This aims to reduce the overall memory usage which causes an Out Of Memory error.  

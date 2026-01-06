@@ -16,15 +16,15 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.31.5"
-val testContainersVersion = "1.20.6"
+val awsSdkVersion = "2.31.48"
+val testContainersVersion = "1.21.0"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-  implementation("com.google.code.gson:gson:2.12.1")
+  implementation("com.google.code.gson:gson:2.13.2")
   implementation("com.google.guava:guava:33.4.8-jre")
 
   // AWS
@@ -34,7 +34,7 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
 
   // Postgres dependencies
   implementation("org.flywaydb:flyway-core")
