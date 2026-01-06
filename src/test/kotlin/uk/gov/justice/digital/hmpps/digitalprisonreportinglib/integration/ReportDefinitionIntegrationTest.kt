@@ -138,57 +138,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class ClientReportDefinitionListTest : IntegrationTestBase() {
-
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.dataProductDefinitions.host") { "http://localhost:9999" }
-      }
-    }
-
-    @Test
-    fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
-      val result = webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path("/definitions")
-            .queryParam("dataProductDefinitionsPath", "definitions/prisons/orphanage")
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBodyList<ReportDefinitionSummary>()
-        .returnResult()
-
-      assertThat(result.responseBody).isNotNull
-      assertThat(result.responseBody).hasSize(1)
-      assertThat(result.responseBody).first().isNotNull
-
-      val definition = result.responseBody!!.first()
-
-      assertThat(definition.name).isEqualTo("External Movements")
-      assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-      assertThat(definition.variants).hasSize(3)
-      assertThat(definition.variants[0]).isNotNull
-      assertThat(definition.variants[1]).isNotNull
-
-      val lastMonthVariant = definition.variants[0]
-
-      assertThat(lastMonthVariant.id).isEqualTo("last-month")
-      assertThat(lastMonthVariant.name).isEqualTo("Last month")
-      assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
-
-      val lastWeekVariant = definition.variants[1]
-      assertThat(lastWeekVariant.id).isEqualTo("last-week")
-      assertThat(lastWeekVariant.description).isEqualTo("All movements in the past week")
-      assertThat(lastWeekVariant.name).isEqualTo("Last week")
-    }
-  }
-
   class DynamoDbReportDefinitionListTest : IntegrationTestBase() {
 
     companion object {
@@ -765,6 +714,41 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
       prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
     }
+  }
+
+  @Test
+  fun `Single definition summary is returned`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/external-movements")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("id").isEqualTo("external-movements")
+      .jsonPath("name").isEqualTo("External Movements")
+      .jsonPath("description").isEqualTo("Reports about prisoner external movements")
+      .jsonPath("variants").isArray()
+      .jsonPath("dashboards").isEmpty()
+      .jsonPath("authorised").isEqualTo(true)
+  }
+
+  @Test
+  fun `Single definition summary is not returned`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/foobar")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isBadRequest()
   }
 
   class ReportDefinitionParametersListTest : IntegrationTestBase() {

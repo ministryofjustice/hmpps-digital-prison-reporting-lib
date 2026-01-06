@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
 @Service
 class SyncDataApiService(
@@ -82,6 +83,7 @@ class SyncDataApiService(
     pageSize: Long,
     sortColumn: String,
     dataset: Dataset,
+    prompts: List<Prompt>? = null,
   ): List<Map<String, Any?>> {
     val formulaEngine = FormulaEngine(emptyList(), env, identifiedHelper)
     return configuredApiRepository
@@ -94,6 +96,7 @@ class SyncDataApiService(
         sortedAsc = true,
         policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
         dataSourceName = dataset.datasource,
+        prompts = prompts,
       )
       .let { records ->
         formatColumnsAndApplyFormulas(
@@ -128,6 +131,46 @@ class SyncDataApiService(
         productDefinition = productDefinition,
       ),
     )
+  }
+
+  fun validateAndFetchDataForDashboard(
+    reportId: String,
+    dashboardId: String,
+    filters: Map<String, String>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean?,
+    userToken: DprAuthAwareAuthenticationToken?,
+    reportFieldId: Set<String>? = null,
+    prefix: String? = null,
+    dataProductDefinitionsPath: String? = null,
+    datasetForFilter: Dataset? = null,
+  ): List<Map<String, Any?>> {
+    val dashboardDefinition = productDefinitionRepository
+      .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
+    checkAuth(dashboardDefinition, userToken)
+    val policyEngine = PolicyEngine(dashboardDefinition.policy, userToken)
+    return configuredApiRepository
+      .executeQuery(
+        query = datasetForFilter?.query ?: dashboardDefinition.dashboardDataset.query,
+        filters = validateAndMapFilters(dashboardDefinition, filters, false),
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn,
+        sortedAsc = sortedAsc ?: true,
+        policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
+        dynamicFilterFieldId = reportFieldId,
+        dataSourceName = dashboardDefinition.datasource.name,
+        reportFilter = dashboardDefinition.dashboard.filter,
+      )
+      .map { row ->
+        formatColumnNamesToSourceFieldNamesCasing(
+          row,
+          dashboardDefinition.dashboardDataset.schema.field.map(SchemaField::name),
+        )
+      }
+      .map { row -> toMetricData(row) }
   }
 
   private fun checkAuth(

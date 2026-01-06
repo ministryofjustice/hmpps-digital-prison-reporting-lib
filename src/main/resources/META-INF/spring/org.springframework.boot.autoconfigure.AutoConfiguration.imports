@@ -36,5 +36,9 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.estcodesandwings.L
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ProductDefinitionTokenPolicyChecker
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.RefreshCacheSchedulingService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmissionsRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.MissingReportDatasourceConfiguration
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.FlywayConfig
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionController
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionRepository

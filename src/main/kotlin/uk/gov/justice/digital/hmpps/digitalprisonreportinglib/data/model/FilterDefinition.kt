@@ -16,4 +16,5 @@ data class FilterDefinition(
   val interactive: Boolean? = false,
   val defaultGranularity: Granularity? = null,
   val defaultQuickFilterValue: QuickFilter? = null,
+  val index: Int? = null,
 )

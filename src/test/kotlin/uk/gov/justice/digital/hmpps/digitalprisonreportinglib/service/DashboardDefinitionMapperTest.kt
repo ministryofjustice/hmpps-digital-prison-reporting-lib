@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -57,7 +59,7 @@ class DashboardDefinitionMapperTest {
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
-    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any())).then {
+    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull())).then {
       listOf(
         mapOf("establishment_id" to "AAA", "establishment_name" to "Aardvark"),
         mapOf("establishment_id" to "BBB", "establishment_name" to "Bumblebee"),
@@ -93,6 +95,9 @@ class DashboardDefinitionMapperTest {
                     DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
+                  ),
+                  filters = listOf(
+                    ValueVisualisationColumnDefinition(id = "establishment_id", equals = null),
                   ),
                   expectNulls = true,
                 ),
@@ -131,6 +136,7 @@ class DashboardDefinitionMapperTest {
       pageSize = eq(123L),
       sortColumn = eq("establishment_id"),
       dataset = any(),
+      prompts = anyOrNull(),
     )
   }
 
@@ -192,6 +198,7 @@ class DashboardDefinitionMapperTest {
             type = FilterType.AutoComplete,
             mandatory = parameter.mandatory,
             interactive = false,
+            index = parameter.index,
             staticOptions = listOf(
               FilterOption(
                 "KMI",
@@ -268,6 +275,7 @@ class DashboardDefinitionMapperTest {
             type = FilterType.AutoComplete,
             mandatory = parameter.mandatory,
             interactive = false,
+            index = parameter.index,
             staticOptions = listOf(
               FilterOption(
                 "KMI",

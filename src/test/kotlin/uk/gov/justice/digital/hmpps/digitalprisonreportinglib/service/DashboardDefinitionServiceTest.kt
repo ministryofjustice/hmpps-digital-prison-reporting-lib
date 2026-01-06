@@ -32,7 +32,7 @@ class DashboardDefinitionServiceTest {
     val definitionId = "missing-ethnicity-metrics"
     val dashboardId = "age-breakdown-dashboard-1"
 
-    whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), any())).doReturn(dashboardDefinition)
+    whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), any(), anyOrNull())).doReturn(dashboardDefinition)
     whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any(), anyOrNull())).doReturn(productDefinition)
     whenever(productDefinition.dashboard).doReturn(dashboard)
     whenever(productDefinition.allDatasets).doReturn(allDatasets)
@@ -43,7 +43,7 @@ class DashboardDefinitionServiceTest {
       userToken = userToken,
     )
 
-    assertThat(dashboardDefinition).isEqualTo(actual)
+    assertThat(actual).isEqualTo(dashboardDefinition)
 
     verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
     verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets, userToken)

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import jakarta.validation.ValidationException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Primary
@@ -15,7 +16,6 @@ import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasourceConnection
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
@@ -34,6 +34,7 @@ const val QUERY_ABORTED = "ABORTED"
 const val QUERY_FAILED = "FAILED"
 const val QUERY_SUCCEEDED = "SUCCEEDED"
 const val QUERY_CANCELLED = "CANCELLED"
+const val QUERY_CANCELED = "CANCELED"
 const val QUERY_RUNNING = "RUNNING"
 const val QUERY_QUEUED = "QUEUED"
 const val QUERY_SUBMITTED = "SUBMITTED"
@@ -59,6 +60,10 @@ class AthenaApiRepository(
   val athenaWorkgroup: String,
   val jdbcTemplate: JdbcTemplate? = null,
 ) : AthenaAndRedshiftCommonRepository() {
+
+  companion object {
+    val tableIdRegex = "\\$\\{table\\[(\\d+)]}".toRegex()
+  }
 
   override fun executeQueryAsync(
     filters: List<ConfiguredApiRepository.Filter>,
@@ -161,6 +166,9 @@ class AthenaApiRepository(
 
   override fun buildDatasetQuery(query: String) = if (query.contains("$DATASET_ AS", ignoreCase = true)) query else """$DATASET_ AS ($query)"""
 
+  private fun findTableIdOrThrow(indexToTableId: Map<Int, String>, index: Int): String = indexToTableId[index]
+    ?: throw ValidationException("Invalid index. There is no table at index $index.")
+
   private fun buildSingleFinalQueryWithExternalTable(
     productDefinitionId: String,
     productDefinitionName: String,
@@ -182,6 +190,7 @@ class AthenaApiRepository(
     reportOrDashboardId = reportOrDashboardId,
     reportOrDashboardName = reportOrDashboardName,
     tableId = tableId,
+    // For single non-multiphase queries we keep existing functionality to run as Nomis queries.
     connection = datasource.connection ?: DatasourceConnection.FEDERATED,
     innerQuery = buildFinalInnerQuery(
       buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ORACLE11g),
@@ -191,21 +200,8 @@ class AthenaApiRepository(
       buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
       "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
       buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
-    ).replace("'", "''"),
+    ),
   )
-
-  private fun buildPromptsQuery(prompts: List<Prompt>?, dialect: SqlDialect? = SqlDialect.ORACLE11g): String {
-    if (prompts.isNullOrEmpty()) {
-      return "$PROMPT AS (SELECT '' ${if (isOracleDialect(dialect)) "FROM DUAL" else ""})"
-    }
-    val promptsCte = prompts.joinToString(", ") { prompt -> buildPromptsQueryBasedOnType(prompt) }
-    return "$PROMPT AS (SELECT $promptsCte ${if (isOracleDialect(dialect)) "FROM DUAL" else ""})"
-  }
-
-  private fun buildPromptsQueryBasedOnType(prompt: Prompt): String = when (prompt.type) {
-    Date -> "TO_DATE('${prompt.value}','yyyy-mm-dd') AS ${prompt.name}"
-    else -> "'${prompt.value}' AS ${prompt.name}"
-  }
 
   private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?, dialect: SqlDialect? = null): String = """WITH $CONTEXT AS (
       SELECT 
@@ -214,8 +210,6 @@ class AthenaApiRepository(
       'GENERAL' AS account_type 
       ${if (isOracleDialect(dialect)) "FROM DUAL" else ""}
       )"""
-
-  private fun isOracleDialect(dialect: SqlDialect? = null): Boolean = dialect?.let { it == SqlDialect.ORACLE11g } ?: true
 
   private fun buildFinalInnerQuery(
     context: String,
@@ -267,21 +261,20 @@ class AthenaApiRepository(
         jdbcTemplate,
       )
     }
-    val firstTableId = tableIdGenerator.generateNewExternalTableId()
+    val indexToTableId: Map<Int, String> = multiphaseQueries.associate { it.index to tableIdGenerator.generateNewExternalTableId() }
     val multiphaseQuerySortedByIndex = multiphaseQueries.sortedBy { it.index }
     val firstStatementExecutionResponse = buildExecuteAndInsertFirstQueryIntoMultiphaseTable(
       productDefinitionId,
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      firstTableId,
       userToken,
       prompts,
       multiphaseQuerySortedByIndex,
       jdbcTemplate,
+      indexToTableId,
     )
-    val previousTableId = buildAndInsertIntermediateQueryIntoMultiphaseTable(
-      firstTableId,
+    buildAndInsertIntermediateQueryIntoMultiphaseTable(
       multiphaseQuerySortedByIndex,
       productDefinitionId,
       productDefinitionName,
@@ -291,14 +284,13 @@ class AthenaApiRepository(
       prompts,
       firstStatementExecutionResponse,
       jdbcTemplate,
+      indexToTableId,
     )
-    val lastTableId = tableIdGenerator.generateNewExternalTableId()
     buildAndInsertLastQueryIntoMultiphaseTable(
       productDefinitionId,
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      lastTableId,
       userToken,
       prompts,
       multiphaseQuerySortedByIndex,
@@ -306,11 +298,14 @@ class AthenaApiRepository(
       policyEngineResult,
       sortColumn,
       sortedAsc,
-      previousTableId,
       firstStatementExecutionResponse,
       jdbcTemplate,
+      indexToTableId,
     )
-    return StatementExecutionResponse(lastTableId, firstStatementExecutionResponse.executionId)
+    return StatementExecutionResponse(
+      tableId = findTableIdOrThrow(indexToTableId, multiphaseQuerySortedByIndex.last().index),
+      executionId = firstStatementExecutionResponse.executionId,
+    )
   }
 
   private fun buildAndInsertLastQueryIntoMultiphaseTable(
@@ -318,7 +313,6 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    lastTableId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
@@ -326,27 +320,26 @@ class AthenaApiRepository(
     policyEngineResult: String,
     sortColumn: String?,
     sortedAsc: Boolean,
-    previousTableId: String,
     firstStatementExecutionResponse: StatementExecutionResponse,
     jdbcTemplate: JdbcTemplate,
+    indexToTableId: Map<Int, String>,
   ) {
     val lastQuery = buildCachedTableQuery(
       productDefinitionId = productDefinitionId,
       productDefinitionName = productDefinitionName,
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
-      tableId = lastTableId,
-      connection = multiphaseQuerySortedByIndex.last().datasource.connection ?: DatasourceConnection.AWS_DATA_CATALOG,
+      tableId = findTableIdOrThrow(indexToTableId, multiphaseQuerySortedByIndex.last().index),
+      connection = multiphaseQuerySortedByIndex.last().datasource.connection ?: throwNoConnectionDefinedException(multiphaseQuerySortedByIndex.last().index),
       innerQuery = buildFinalInnerQuery(
         buildContextQuery(userToken, multiphaseQuerySortedByIndex.last().datasource.dialect ?: SqlDialect.ATHENA3),
         buildPromptsQuery(prompts, multiphaseQuerySortedByIndex.last().datasource.dialect ?: SqlDialect.ATHENA3),
-        buildDatasetQuery(multiphaseQuerySortedByIndex.last().query),
+        buildDatasetQuery(interpolateQuery(multiphaseQuerySortedByIndex.last().query, indexToTableId)),
         buildReportQuery(reportFilter),
         buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(sortColumn = sortColumn, sortedAsc = sortedAsc),
-      )
-        .replace("\${tableId}", previousTableId),
+      ),
     )
     log.debug("Last multiphase query: {}", lastQuery)
     val lastInsertStatement = buildInsertStatement(
@@ -361,8 +354,9 @@ class AthenaApiRepository(
     jdbcTemplate.execute(lastInsertStatement)
   }
 
+  private fun throwNoConnectionDefinedException(index: Int): Nothing = throw ValidationException("Query at index $index has no connection defined in its datasource.")
+
   private fun buildAndInsertIntermediateQueryIntoMultiphaseTable(
-    firstTableId: String,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
     productDefinitionId: String,
     productDefinitionName: String,
@@ -372,31 +366,31 @@ class AthenaApiRepository(
     prompts: List<Prompt>?,
     firstStatementExecutionResponse: StatementExecutionResponse,
     jdbcTemplate: JdbcTemplate,
-  ): String {
-    var previousTableId = firstTableId
+    indexToTableId: Map<Int, String>,
+  ) {
     List(
       multiphaseQuerySortedByIndex
         .drop(1)
         .dropLast(1).size,
     ) { i ->
-      val currentTableId = tableIdGenerator.generateNewExternalTableId()
       val intermediateQuery = multiphaseQuerySortedByIndex[i + 1]
       val intermediateQueryString = buildCachedTableQuery(
         productDefinitionId = productDefinitionId,
         productDefinitionName = productDefinitionName,
         reportOrDashboardId = reportOrDashboardId,
         reportOrDashboardName = reportOrDashboardName,
-        tableId = currentTableId,
-        connection = intermediateQuery.datasource.connection ?: DatasourceConnection.AWS_DATA_CATALOG,
+        tableId = findTableIdOrThrow(indexToTableId, intermediateQuery.index),
+        // For every subsequent query apart from the first connection is required.
+        connection = intermediateQuery.datasource.connection ?: throwNoConnectionDefinedException(intermediateQuery.index),
         innerQuery = (
           listOf(
             buildContextQuery(userToken, intermediateQuery.datasource.dialect ?: SqlDialect.ATHENA3),
             buildPromptsQuery(prompts, intermediateQuery.datasource.dialect ?: SqlDialect.ATHENA3),
-            buildDatasetQuery(intermediateQuery.query),
+            buildDatasetQuery(interpolateQuery(intermediateQuery.query, indexToTableId)),
           )
             .joinToString(",") +
             "\nSELECT * FROM $DATASET_"
-          ).replace("\${tableId}", previousTableId),
+          ),
       )
       log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)
       val insertQuery = buildInsertStatement(
@@ -409,9 +403,14 @@ class AthenaApiRepository(
       )
       log.debug("Inserting into admin table: {}", insertQuery)
       jdbcTemplate.execute(insertQuery)
-      previousTableId = currentTableId
     }
-    return previousTableId
+  }
+
+  private fun interpolateQuery(
+    query: String,
+    indexToTableId: Map<Int, String>,
+  ): String = tableIdRegex.replace(query) { matchResult ->
+    findTableIdOrThrow(indexToTableId, matchResult.groupValues[1].toInt())
   }
 
   private fun buildExecuteAndInsertFirstQueryIntoMultiphaseTable(
@@ -419,18 +418,20 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    firstTableId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
     jdbcTemplate: JdbcTemplate,
+    indexToTableId: Map<Int, String>,
   ): StatementExecutionResponse {
+    val tableId = findTableIdOrThrow(indexToTableId, multiphaseQuerySortedByIndex[0].index)
     val firstQuery = buildCachedTableQuery(
       productDefinitionId = productDefinitionId,
       productDefinitionName = productDefinitionName,
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
-      tableId = firstTableId,
+      tableId = tableId,
+      // Default the first multiphase query to federated mainly for backward compatibility with existing Nomis queries.
       connection = multiphaseQuerySortedByIndex[0].datasource.connection ?: DatasourceConnection.FEDERATED,
       innerQuery = (
         listOf(
@@ -440,12 +441,12 @@ class AthenaApiRepository(
         )
           .joinToString(",") +
           "\nSELECT * FROM $DATASET_"
-        ).replace("'", "''"),
+        ),
     )
 
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
     val firstQueryDatasource = multiphaseQuerySortedByIndex[0].datasource
-    val statementExecutionResponse = executeQueryAsync(firstQueryDatasource, firstTableId, firstQuery)
+    val statementExecutionResponse = executeQueryAsync(firstQueryDatasource, tableId, firstQuery)
     val insertStatement: String =
       buildInsertStatement(
         rootExecutionId = statementExecutionResponse.executionId,
@@ -586,9 +587,11 @@ class AthenaApiRepository(
     tableId: String,
     connection: DatasourceConnection,
     innerQuery: String,
-  ): String = when (connection) {
-    DatasourceConnection.FEDERATED ->
-      """
+  ): String {
+    val fullQuery =
+      when (connection) {
+        DatasourceConnection.FEDERATED ->
+          """
           /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
@@ -596,12 +599,13 @@ class AthenaApiRepository(
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           '$innerQuery'
+           '${innerQuery.replace("'", "''")}'
            )) 
           );
-      """.trimIndent()
-    DatasourceConnection.AWS_DATA_CATALOG ->
-      """
+          """.trimIndent()
+
+        DatasourceConnection.AWS_DATA_CATALOG ->
+          """
             /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
                 CREATE TABLE AwsDataCatalog.reports.$tableId
                 WITH (
@@ -610,7 +614,11 @@ class AthenaApiRepository(
                 AS (
           $innerQuery
                 )
-      """.trimIndent()
-    else -> throw RuntimeException("Unsupported DatasourceConnection type for query execution. Connection: $connection")
+          """.trimIndent()
+
+        else -> throw RuntimeException("Unsupported DatasourceConnection type for query execution. Connection: $connection")
+      }
+    log.debug("Full query is: {}", fullQuery)
+    return fullQuery
   }
 }

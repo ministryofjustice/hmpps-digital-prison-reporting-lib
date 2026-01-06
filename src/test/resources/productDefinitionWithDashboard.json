@@ -114,6 +114,12 @@
                     "display": "Total prisoners"
                   }
                 ],
+                "filter": [
+                  {
+                    "id": "establishment_id",
+                    "equals": null
+                  }
+                ],
                 "expectNull": true
               }
             }

@@ -80,6 +80,33 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     return result
   }
 
+  fun getDashboardPaginatedExternalTableResult(
+    tableId: String,
+    selectedPage: Long,
+    pageSize: Long? = null,
+    filters: List<ConfiguredApiRepository.Filter>,
+    sortedAsc: Boolean = false,
+    sortColumn: String? = null,
+    jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
+  ): List<Map<String, Any?>> {
+    val stopwatch = StopWatch.createStarted()
+    val whereClause = buildFiltersWhereClause(filters)
+    val paginationSql = pageSize?.let { "LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize" } ?: if (selectedPage == 1L) "" else return emptyList()
+    val query = "SELECT * FROM reports.$tableId WHERE $whereClause ${buildOrderByClause(sortColumn, sortedAsc) } $paginationSql;"
+    log.debug("Query to get results: {}", query)
+    val result = jdbcTemplate
+      .queryForList(
+        query,
+        MapSqlParameterSource(),
+      )
+      .map {
+        transformTimestampToLocalDateTime(it)
+      }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return result
+  }
+
   fun isTableMissing(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Boolean {
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate
@@ -105,7 +132,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         stateChangeReason = it.error,
       )
     }
-      ?: executions.firstOrNull { it.currentState == QUERY_CANCELLED }?.let {
+      ?: executions.firstOrNull { isCancelled(it.currentState) }?.let {
         StatementExecutionStatus(
           status = QUERY_ABORTED,
           duration = 1,
@@ -114,7 +141,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         )
       }
       ?: StatementExecutionStatus(
-        status = executions.maxByOrNull { it.index }!!.currentState?.let { mapAthenaStateToRedshiftState(it) } ?: QUERY_SUBMITTED,
+        status = executions.maxByOrNull { it.index }?.currentState?.let { mapAthenaStateToRedshiftState(it) } ?: QUERY_SUBMITTED,
         duration = 1,
         resultRows = 0,
         resultSize = 0,
@@ -127,14 +154,17 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
       QUERY_RUNNING to QUERY_STARTED,
       QUERY_SUCCEEDED to QUERY_FINISHED,
       QUERY_CANCELLED to QUERY_ABORTED,
+      QUERY_CANCELED to QUERY_ABORTED,
     )
     return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }
 
+  private fun isCancelled(state: String?) = state == QUERY_CANCELLED || state == QUERY_CANCELED
+
   private fun getExecutions(rootExecutionId: String, jdbcTemplate: NamedParameterJdbcTemplate): List<MultiphaseQueryExecution> {
     val stopwatch = StopWatch.createStarted()
     val mapSqlParameterSource = MapSqlParameterSource()
-    log.debug("Retrieving query executions...")
+    log.debug("Retrieving query executions for rootExecutionId $rootExecutionId ...")
     mapSqlParameterSource.addValue("rootExecutionId", rootExecutionId)
     val result = jdbcTemplate
       .queryForList(

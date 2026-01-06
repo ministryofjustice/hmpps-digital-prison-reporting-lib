@@ -65,6 +65,12 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                           "display": "Total prisoners"
                         }
                       ],
+                      "filters":[
+                        {
+                          "id": "establishment_id",
+                          "equals": null
+                        }
+                      ],
                       "expectNulls": true
                     }
             }]
