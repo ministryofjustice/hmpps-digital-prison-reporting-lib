@@ -1,5 +1,12 @@
 Below you can find the changes included in each release.
 
+# 9.9.0
+- Updated various libraries for security purposes:
+  - com.google.code.gson:gson
+  - org.springdoc:springdoc-openapi-starter-webmvc-ui
+  - awsSdkVersion
+  - org.testcontainers:postgresql
+
 # 9.8.7
 - Added missing with clause to dynamic filter prompt_ CTE.
 
