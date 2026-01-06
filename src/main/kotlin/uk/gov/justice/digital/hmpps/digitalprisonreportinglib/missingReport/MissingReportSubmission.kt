@@ -6,16 +6,15 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.springframework.data.jpa.repository.JpaRepository
 
 @Entity
 @Table(schema = "missingreportsubmission", name = "missing_report_submission")
 class MissingReportSubmission(
-  @Column(nullable = false)
+  @Column(nullable = false, name = "userid")
   val userId: String,
-  @Column(nullable = false)
+  @Column(nullable = false, name = "reportid")
   val reportId: String,
-  @Column(nullable = false)
+  @Column(nullable = false, name = "reportvariantid")
   val reportVariantId: String,
   @Column(nullable = true)
   val reason: String?,
@@ -24,5 +23,3 @@ class MissingReportSubmission(
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   val id: Int? = null
 }
-
-interface MissingReportSubmissionsRepository : JpaRepository<MissingReportSubmission, Int>

@@ -25,11 +25,18 @@ class ReportDefinitionService(
     .map { summaryMapper.map(it, renderMethod, userToken) }
     .filter { containsReportVariantsOrDashboards(it) }
 
+  fun getDefinitionSummary(
+    reportId: String,
+    userToken: DprAuthAwareAuthenticationToken?,
+    dataProductDefinitionsPath: String? = null,
+  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath).let { summaryMapper.map(it, null, userToken) }
+
   fun getDefinition(
     reportId: String,
     variantId: String,
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
+    filters: Map<String, String>? = null,
   ): SingleVariantReportDefinition {
     val singleReportDefinitionDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
     checkAuth(singleReportDefinitionDefinition, userToken)
@@ -37,6 +44,7 @@ class ReportDefinitionService(
       definition = singleReportDefinitionDefinition,
       userToken = userToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filters = filters,
     )
   }
 

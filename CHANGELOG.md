@@ -1,5 +1,107 @@
 Below you can find the changes included in each release.
 
+# 9.8.7
+- Added missing with clause to dynamic filter prompt_ CTE.
+
+# 9.8.6
+- Added horizontal, xStacked, yStacked to DashboardOption and DashboardOptionDefinition.
+
+# 9.8.5
+- Support of the plus sign for concatenation in formulas.
+
+# 9.8.4
+- Added support in dashboards for filtering rows by null value.
+
+# 9.8.3
+- Added proper, wordcap, upper and lower formulas.
+
+# 9.8.2
+- Added default_value formula.
+
+# 9.8.1
+- The DynamoDbProductDefinitionRepository no longer stores all the fetched items in memory before processing them, but instead processes each results page as it is being fetched. 
+ This aims to reduce the overall memory usage which causes an Out Of Memory error.  
+
+# 9.8.0
+- Added support for prompts on interactive dynamic filters.
+
+# 9.7.9
+- Updated definitions endpoint, to cache only summary product definitions.
+
+# 9.7.8
+- Dashboard definition update: Map options to dashboard definition only if they are present in the DPD.
+
+# 9.7.7
+- Fixed JPA configuration overwriting Spring autoconfig when using this library in apps that have JPA classes
+
+# 9.7.6
+- Added Dashboard sync functionality.
+
+# 9.7.5
+- Updated the display field of the DashboardVisualisationColumn and DashboardVisualisationColumnDefinition as optional.
+
+# 9.7.4
+- Updating JPA config so that we exclude the specific MissingReport stuff that uses a different datasource, and have normal Spring behaviour for the rest, which is to scan from the base package down
+
+# 9.7.3
+- Added "optional" field to DashboardVisualisationColumnDefinition. 
+
+# 9.7.2
+- Added matrix-timeseries and line-timeseries to DashboardVisualisationType.
+- Do not throw NPE if no multiphase query executions are found when requesting the status. 
+
+# 9.7.1
+- Updated dashboards to support heatmap functionality.
+
+# 9.7.0
+- Added endpoints to get product collections and get a single collection by id
+
+# 9.6.0
+- Filters support an index.
+
+# 9.5.8
+- Added more logging around retrieving the status of multiphase queries.
+
+# 9.5.7
+- IllegalArgumentException is mapped to a Bad Request response instead of throwing a 500 error.
+
+# 9.5.6
+- When a multiphase query references an invalid table index a validation error is thrown.
+
+# 9.5.5
+- Wrap in double quotes only federated passthrough multiphase queries. 
+- Only first query defaults to federated if no datasource connection is defined while the rest throw an error.
+
+# 9.5.4
+- Fixed ${table[n]} regex as the dollar sign prefix was missing.
+
+# 9.5.3
+- Fixed missing replacement of double quotes in certain phases of multiphase queries.
+
+# 9.5.2
+- Enabled cross join for multiphase queries. The following placeholder: {table[n]} will be replaced with the corresponding table ID of the n index multiphase query.
+
+# 9.5.1
+- Fixed small bug in caching for get all product definitions where if a a specific path was queried for after the cache was populated, it wouldn't search the cache for it properly
+
+# 9.5.0
+- Added endpoint to get a single report summary by definitionId
+
+# 9.4.9
+- Fixed issue in which when Athena would return "CANCELED" with single "L" the query would not be cancelled.
+
+# 9.4.8
+- Fixed the issue in getProductDefinition with assigning always the orphanage path regardless of which path was being passed.
+
+# 9.4.7
+- Get single product definition uses DynamoDB with partition and sort keys instead of iterating over the entire list of definitions.
+
+# 9.4.6
+- Attempt to ensure getProductDefinitions retrieves from all paths necessary in cache.
+
+# 9.4.5
+- The endpoint to retrieve dashboard results now has no default if pageSize query is not provided and it returns all the results in one response.
+
 # 9.4.4
 - Added FlywayConfig to AutoConfiguration.imports.
 

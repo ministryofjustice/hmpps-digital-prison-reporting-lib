@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
 abstract class AbstractProductDefinitionRepository(
   private val identifiedHelper: IdentifiedHelper,
@@ -39,7 +39,7 @@ abstract class AbstractProductDefinitionRepository(
     dashboardId: String,
     dataProductDefinitionsPath: String?,
   ): SingleDashboardProductDefinition {
-    val productDefinition: ProductDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
+    val productDefinition: AnyProductDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
     val dashboard = productDefinition.dashboard?.firstOrNull { it.id == dashboardId }
       ?: throw ValidationException("Invalid report dashboard id provided: $dashboardId")
 
@@ -57,9 +57,4 @@ abstract class AbstractProductDefinitionRepository(
       allDatasets = productDefinition.dataset,
     )
   }
-
-  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition = getProductDefinitions(dataProductDefinitionsPath)
-    .filter { it.id == definitionId }
-    .ifEmpty { throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId") }
-    .first()
 }

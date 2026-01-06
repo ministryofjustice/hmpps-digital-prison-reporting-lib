@@ -140,41 +140,34 @@ abstract class IntegrationTestBase {
   }
 
   protected fun stubMeCaseloadsResponse(body: String) {
-    wireMockServer.stubFor(
-      WireMock.get("/users/me/caseloads").willReturn(
-        WireMock.aResponse()
-          .withStatus(HttpStatus.OK.value())
-          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody(body),
-      ),
-    )
+    stubMeCaseloadsResponse(body, wireMockServer)
   }
 
   protected fun createCaseloadJsonResponse(activeCaseloadId: String) =
     """
+      {
+        "username": "TESTUSER1",
+        "active": true,
+        "accountType": "GENERAL",
+        "activeCaseload": {
+          "id": "$activeCaseloadId",
+          "name": "WANDSWORTH (HMP)"
+        },
+        "caseloads": [
           {
-            "username": "TESTUSER1",
-            "active": true,
-            "accountType": "GENERAL",
-            "activeCaseload": {
-              "id": "$activeCaseloadId",
-              "name": "WANDSWORTH (HMP)"
-            },
-            "caseloads": [
-              {
-                "id": "WWI",
-                "name": "WANDSWORTH (HMP)"
-              },
-              {
-                "id": "AKI",
-                "name": "Acklington (HMP)"
-              },
-              {
-                "id": "LWSTMC",
-                "name": "Lowestoft (North East Suffolk) Magistrat"
-              }
-            ]
+            "id": "WWI",
+            "name": "WANDSWORTH (HMP)"
+          },
+          {
+            "id": "AKI",
+            "name": "Acklington (HMP)"
+          },
+          {
+            "id": "LWSTMC",
+            "name": "Lowestoft (North East Suffolk) Magistrat"
           }
+        ]
+      }
     """.trimIndent()
 
   protected fun setAuthorisation(
@@ -188,3 +181,26 @@ abstract class IntegrationTestBase {
     roles = roles,
   )
 }
+
+fun stubMeCaseloadsResponse(body: String, wiremockServer: WireMockServer) {
+  wiremockServer.stubFor(
+    WireMock.get("/users/me/caseloads").willReturn(
+      WireMock.aResponse()
+        .withStatus(HttpStatus.OK.value())
+        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .withBody(body),
+    ),
+  )
+}
+
+fun setAuthorisation(
+  user: String = "request-user",
+  roles: List<String> = emptyList(),
+  scopes: List<String> = emptyList(),
+  jwtAuthorisationHelper: JwtAuthorisationHelper,
+): (HttpHeaders) -> Unit = jwtAuthorisationHelper.setAuthorisationHeader(
+  clientId = "hmpps-digital-prison-reporting-api",
+  username = user,
+  scope = scopes,
+  roles = roles,
+)

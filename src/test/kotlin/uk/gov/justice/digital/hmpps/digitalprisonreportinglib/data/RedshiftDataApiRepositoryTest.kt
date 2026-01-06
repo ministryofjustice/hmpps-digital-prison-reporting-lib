@@ -618,6 +618,141 @@ SELECT *
   }
 
   @Test
+  fun `getDashboardPaginatedExternalTableResult should make a paginated JDBC call and return the existing results`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      identifiedHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
+
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(expected)
+
+    val actual = redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
+      tableId = TABLE_ID,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      filters = emptyList(),
+      jdbcTemplate = jdbcTemplate,
+    )
+
+    assertEquals(expected, actual)
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT * FROM reports.$TABLE_ID WHERE 1=1  LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+      any<MapSqlParameterSource>(),
+    )
+  }
+
+  @Test
+  fun `getDashboardPaginatedExternalTableResult should make JDBC call and return all results without pagination when no pageSize is provided`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      identifiedHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val selectedPage = 1L
+    val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
+
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(expected)
+
+    val actual = redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
+      tableId = TABLE_ID,
+      selectedPage = selectedPage,
+      filters = emptyList(),
+      jdbcTemplate = jdbcTemplate,
+    )
+
+    assertEquals(expected, actual)
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT * FROM reports.$TABLE_ID WHERE 1=1  ;"),
+      any<MapSqlParameterSource>(),
+    )
+  }
+
+  @Test
+  fun `getDashboardPaginatedExternalTableResult should not make JDBC call and return an empty list when no pageSize is provided and selectedPage is greater than 1`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      identifiedHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+
+    val actual = redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
+      tableId = TABLE_ID,
+      selectedPage = 2L,
+      filters = emptyList(),
+      jdbcTemplate = jdbcTemplate,
+    )
+
+    assertEquals(emptyList<Map<String, Any?>>(), actual)
+    verify(jdbcTemplate, times(0)).queryForList(
+      any<String>(),
+      any<MapSqlParameterSource>(),
+    )
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "true,asc",
+    "false,desc",
+  )
+  fun `getDashboardPaginatedExternalTableResult with filters and sorting should make a paginated JDBC call and return the existing results`(sortedAsc: Boolean, ascOrDesc: String) {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val sortColumn = "columnA"
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      identifiedHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val selectedPage = 1L
+    val pageSize = 10L
+    val expected = listOf<Map<String, Any?>>(movementPrisoner1, movementPrisoner2)
+
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>())).thenReturn(expected)
+
+    val filters = listOf(
+      Filter("filterName1", "filterValue1"),
+      Filter("filterName2", "filterValue2"),
+    )
+    val actual = redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
+      tableId = TABLE_ID,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      filters = filters,
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+      jdbcTemplate = jdbcTemplate,
+    )
+
+    assertEquals(expected, actual)
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT * FROM reports.$TABLE_ID WHERE lower(filterName1) = 'filtervalue1' AND lower(filterName2) = 'filtervalue2' ORDER BY $sortColumn $ascOrDesc LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize;"),
+      any<MapSqlParameterSource>(),
+    )
+  }
+
+  @Test
   fun `getFullExternalTableResult should make an unpaginated JDBC call and return the existing results`() {
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
     val redshiftDataApiRepository = RedshiftDataApiRepository(

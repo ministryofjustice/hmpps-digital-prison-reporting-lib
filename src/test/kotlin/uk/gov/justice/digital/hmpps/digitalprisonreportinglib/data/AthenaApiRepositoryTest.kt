@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import jakarta.validation.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -473,11 +475,12 @@ SELECT * FROM dataset_'
       catalog = catalog,
       query = multiphaseSqlNonLastQuery(),
     )
-    val datasource = Datasource("id", "name", database, catalog)
-    val query2 = "SELECT count(*) as total from $tableId"
+    val datasource1 = Datasource("id", "name", database, catalog)
+    val datasource2 = Datasource("id2", "name2", database, catalog, DatasourceConnection.AWS_DATA_CATALOG)
+    val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
-      MultiphaseQuery(0, datasource, dpdQuery),
-      MultiphaseQuery(1, datasource, query2),
+      MultiphaseQuery(0, datasource1, dpdQuery),
+      MultiphaseQuery(1, datasource2, query2),
     )
     val tableId2 = "tableId2"
 
@@ -543,7 +546,7 @@ SELECT * FROM dataset_'
           values (
             'someId',
             
-            'name',
+            'name2',
             'catalog',
             'db',
             1,
@@ -551,6 +554,7 @@ SELECT * FROM dataset_'
             0,
             SYSDATE
           )"""
+
     verify(jdbcTemplate).execute(firstMultiphaseInsert)
     verify(jdbcTemplate).execute(secondMultiphaseInsert)
     val inOrder = inOrder(jdbcTemplate)
@@ -574,8 +578,8 @@ SELECT * FROM dataset_'
     val datasource3 = Datasource("id", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
     val tableId2 = "tableId2"
     val tableId3 = "tableId3"
-    val query2 = "SELECT count(*) as total from $tableId"
-    val query3 = "SELECT count(*) + 1 as total_plus_one from $tableId2"
+    val query2 = "SELECT count(*) as total from \${table[0]}"
+    val query3 = "SELECT count(*) + 1 as total_plus_one from \${table[1]}"
     val multiphaseQuery = listOf(
       MultiphaseQuery(0, datasource, dpdQuery),
       MultiphaseQuery(1, datasource2, query2),
@@ -751,6 +755,100 @@ SELECT * FROM dataset_'
     verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
     verify(athenaClient, times(1)).startQueryExecution(any(StartQueryExecutionRequest::class.java))
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+  }
+
+  @Test
+  fun `executeQueryAsync should throw an error when a subsequent multiphase query does not define a datasource connection`() {
+    val database = "db"
+    val catalog = "catalog"
+    setupBasicMocks(
+      database = database,
+      catalog = catalog,
+      query = multiphaseSqlNonLastQuery(),
+    )
+    val datasource1 = Datasource("id", "name", database, catalog)
+    val datasource2 = Datasource("id2", "name2", database, catalog)
+    val query2 = "SELECT count(*) as total from \${table[0]}"
+    val multiphaseQuery = listOf(
+      MultiphaseQuery(0, datasource1, dpdQuery),
+      MultiphaseQuery(1, datasource2, query2),
+    )
+    val tableId2 = "tableId2"
+
+    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+      tableId2,
+    )
+    val exception = assertThrows(ValidationException::class.java) {
+      athenaApiRepository.executeQueryAsync(
+        filters = emptyList(),
+        sortColumn = "column_a",
+        sortedAsc = true,
+        policyEngineResult = TRUE_WHERE_CLAUSE,
+        userToken = userToken,
+        query = "",
+        reportFilter = productDefinition.report.filter,
+        datasource = productDefinition.datasource,
+        reportSummaries = productDefinition.report.summary,
+        allDatasets = productDefinition.allDatasets,
+        productDefinitionId = productDefinition.id,
+        productDefinitionName = productDefinition.name,
+        reportOrDashboardId = productDefinition.report.id,
+        reportOrDashboardName = productDefinition.report.name,
+        multiphaseQueries = multiphaseQuery,
+      )
+    }
+    assertEquals(exception.message, "Query at index 1 has no connection defined in its datasource.")
+  }
+
+  @Test
+  fun `executeQueryAsync should throw an error when a multiphase query references an invalid table index`() {
+    val database = "db"
+    val catalog = "catalog"
+    setupBasicMocks(
+      database = database,
+      catalog = catalog,
+      query = multiphaseSqlNonLastQuery(),
+    )
+    val datasource1 = Datasource("id", "name", database, catalog)
+    val datasource2 = Datasource("id2", "name2", database, catalog, DatasourceConnection.FEDERATED)
+    val query2 = "SELECT count(*) as total from \${table[5]}"
+    val multiphaseQuery = listOf(
+      MultiphaseQuery(0, datasource1, dpdQuery),
+      MultiphaseQuery(1, datasource2, query2),
+    )
+    val tableId2 = "tableId2"
+
+    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      tableId,
+      tableId2,
+    )
+    val exception = assertThrows(ValidationException::class.java) {
+      athenaApiRepository.executeQueryAsync(
+        filters = emptyList(),
+        sortColumn = "column_a",
+        sortedAsc = true,
+        policyEngineResult = TRUE_WHERE_CLAUSE,
+        userToken = userToken,
+        query = "",
+        reportFilter = productDefinition.report.filter,
+        datasource = productDefinition.datasource,
+        reportSummaries = productDefinition.report.summary,
+        allDatasets = productDefinition.allDatasets,
+        productDefinitionId = productDefinition.id,
+        productDefinitionName = productDefinition.name,
+        reportOrDashboardId = productDefinition.report.id,
+        reportOrDashboardName = productDefinition.report.name,
+        multiphaseQueries = multiphaseQuery,
+      )
+    }
+    assertEquals(exception.message, "Invalid index. There is no table at index 5.")
   }
 
   private fun setupBasicMocks(

@@ -5,6 +5,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
 @Service
 class ConfiguredApiRepository(
@@ -22,6 +24,7 @@ class ConfiguredApiRepository(
     dynamicFilterFieldId: Set<String>? = null,
     dataSourceName: String,
     reportFilter: ReportFilter? = null,
+    prompts: List<Prompt>? = null,
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
     val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
@@ -29,13 +32,18 @@ class ConfiguredApiRepository(
     // This is coming from Java and if the returned type is not specified in Kotlin it will assume it is List<Map<String, Any>>
     // while in reality it is List<Map<String, Any?>>.
     val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
-      buildFinalQuery(
-        datasetQuery = buildDatasetQuery(query),
-        reportQuery = buildReportQuery(reportFilter),
-        policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
-        filtersQuery = buildFiltersQuery(filters),
-        selectFromFinalStageQuery = buildFinalStageQueryWithPagination(dynamicFilterFieldId, sortColumn, sortedAsc, pageSize, selectedPage),
-      ) + ";",
+      determineFinalQuery(
+        prompts = prompts,
+        query = query,
+        policyEngineResult = policyEngineResult,
+        filters = filters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        dynamicFilterFieldId = dynamicFilterFieldId,
+        reportFilter = reportFilter,
+      ),
       buildPreparedStatementNamedParams(filters),
     )
       .map {
@@ -44,6 +52,63 @@ class ConfiguredApiRepository(
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
+  }
+
+  private fun determineFinalQuery(
+    prompts: List<Prompt>?,
+    query: String,
+    policyEngineResult: String,
+    filters: List<Filter>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    dynamicFilterFieldId: Set<String>?,
+    reportFilter: ReportFilter?,
+  ): String = prompts?.takeIf { it.isNotEmpty() }?.let {
+    buildFinalQuery(
+      prompts = "WITH " + buildPromptsQuery(it, SqlDialect.REDSHIFT4),
+      datasetQuery = buildDatasetQuery(query),
+      reportQuery = buildReportQuery(reportFilter),
+      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      filtersQuery = buildFiltersQuery(filters),
+      selectFromFinalStageQuery = buildFinalStageQueryWithPagination(
+        dynamicFilterFieldId,
+        sortColumn,
+        sortedAsc,
+        pageSize,
+        selectedPage,
+      ),
+    ) + ";"
+  } ?: (
+    buildFinalQuery(
+      datasetQuery = super.buildDatasetQuery(query),
+      reportQuery = buildReportQuery(reportFilter),
+      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      filtersQuery = buildFiltersQuery(filters),
+      selectFromFinalStageQuery = buildFinalStageQueryWithPagination(
+        dynamicFilterFieldId,
+        sortColumn,
+        sortedAsc,
+        pageSize,
+        selectedPage,
+      ),
+    ) + ";"
+    )
+
+  override fun buildDatasetQuery(query: String) = """$DATASET_ AS ($query)"""
+
+  private fun buildFinalQuery(
+    prompts: String,
+    datasetQuery: String,
+    reportQuery: String,
+    policiesQuery: String,
+    filtersQuery: String,
+    selectFromFinalStageQuery: String,
+  ): String {
+    val query = listOf(prompts, datasetQuery, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    log.debug("Database query: $query")
+    return query
   }
 
   private fun buildFinalStageQueryWithPagination(
@@ -68,7 +133,7 @@ class ConfiguredApiRepository(
     val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
     return jdbcTemplate.queryForList(
       buildFinalQuery(
-        datasetQuery = buildDatasetQuery(query),
+        datasetQuery = super.buildDatasetQuery(query),
         reportQuery = buildReportQuery(productDefinition.report.filter),
         policiesQuery = buildPolicyQuery(policyEngineResult),
         filtersQuery = buildFiltersQuery(filters),

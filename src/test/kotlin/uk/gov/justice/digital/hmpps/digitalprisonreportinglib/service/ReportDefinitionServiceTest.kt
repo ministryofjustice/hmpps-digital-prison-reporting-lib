@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
@@ -32,7 +32,7 @@ import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
 
-  private val minimalDefinition = ProductDefinition(
+  private val minimalDefinition = ProductDefinitionSummary(
     id = "1",
     name = "2",
     metadata = MetaData(
@@ -148,7 +148,7 @@ class ReportDefinitionServiceTest {
     whenever(repository.getSingleReportProductDefinition(any(), any(), anyOrNull())).thenReturn(minimalSingleDefinition)
 
     val mapper = mock<ReportDefinitionMapper> {
-      on { mapReport(any<SingleReportProductDefinition>(), any(), anyOrNull()) } doReturn expectedResult
+      on { mapReport(any<SingleReportProductDefinition>(), any(), anyOrNull(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {}, productDefinitionTokenPolicyChecker)
 

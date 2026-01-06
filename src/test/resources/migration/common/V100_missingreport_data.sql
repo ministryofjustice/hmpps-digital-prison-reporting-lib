@@ -1,1 +1,1 @@
-INSERT INTO missing_report_submission VALUES (nextval('missing_report_submission_id_seq'), 'asd', 'df', 'dfg', 'fcvbc');
+INSERT INTO missing_report_submission (id, userId, reportId, reportVariantId, reason) VALUES (nextval('missing_report_submission_id_seq'), 'asd', 'df', 'dfg', 'fcvbc');

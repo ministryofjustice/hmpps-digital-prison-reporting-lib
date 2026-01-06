@@ -22,16 +22,17 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
 
 abstract class DefinitionMapper(
   private val syncDataApiService: SyncDataApiService,
-  val identifiedHelper: IdentifiedHelper,
+  identifiedHelper: IdentifiedHelper,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
   val alertCategoryCacheService: AlertCategoryCacheService,
-) {
+) : CommonDataApiService(identifiedHelper) {
 
   companion object {
     const val DEFAULT_MAX_STATIC_OPTIONS: Long = 30
@@ -74,6 +75,7 @@ abstract class DefinitionMapper(
     interactive = filterDefinition.interactive ?: false,
     defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
     defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) },
+    index = filterDefinition.index,
   )
 
   protected fun populateStaticOptions(
@@ -85,6 +87,8 @@ abstract class DefinitionMapper(
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
       return userToken?.getCaseLoads()?.map { FilterOption(it.id, it.name) }
@@ -92,10 +96,12 @@ abstract class DefinitionMapper(
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
         return populateStaticOptionsForFilterWithDataset(
-          dynamicFilterOption,
-          allDatasets,
-          dynamicFilterDatasetId,
-          maxStaticOptions,
+          dynamicFilterOption = dynamicFilterOption,
+          allDatasets = allDatasets,
+          dynamicFilterDatasetId = dynamicFilterDatasetId,
+          maxStaticOptions = maxStaticOptions,
+          reportDataset = reportDataset,
+          filters = filters,
         )
       }
         ?: populateStandardStaticOptionsForReportDefinition(
@@ -128,15 +134,25 @@ abstract class DefinitionMapper(
     allDatasets: List<Dataset>,
     dynamicFilterDatasetId: String,
     maxStaticOptions: Long?,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): List<FilterOption> {
     val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
     val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
     val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
     val displaySchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
+    val prompts: List<Prompt>? = filters?.takeIf { it.isNotEmpty() }?.let {
+      buildPrompts(
+        multiphaseQuery = reportDataset.multiphaseQuery,
+        promptsMap = extractPromptOnly(it, reportDataset),
+        parameters = reportDataset.parameters,
+      )
+    }
     return syncDataApiService.validateAndFetchDataForFilterWithDataset(
       pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
       sortColumn = nameSchemaField.name,
       dataset = matchingFilterDataset,
+      prompts = prompts,
     )
       .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
   }
@@ -145,6 +161,14 @@ abstract class DefinitionMapper(
     name = definition.name,
     display = definition.display,
   )
+
+  private fun extractPromptOnly(
+    map: Map<String, String>,
+    reportDataset: Dataset,
+  ): List<Map.Entry<String, String>> = partitionToPromptsAndFilters(
+    map,
+    extractParameters(reportDataset, reportDataset.multiphaseQuery),
+  ).first
 
   private fun mapParameterToField(parameter: Parameter): FieldDefinition = FieldDefinition(
     name = parameter.name,
@@ -159,6 +183,7 @@ abstract class DefinitionMapper(
       mandatory = parameter.mandatory,
       interactive = false,
       staticOptions = populateStaticOptionsForParameter(parameter),
+      index = parameter.index,
     ),
   )
 
