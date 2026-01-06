@@ -9,8 +9,12 @@
   },
   "datasource": [
     {
-      "id": "datamart",
-      "name": "datamart"
+      "id": "nomis",
+      "name": "NOMIS",
+      "database": "DIGITAL_PRISON_REPORTING",
+      "catalog": "nomis",
+      "connection": "federated",
+      "dialect": "oracle/11g"
     }  ],
   "dataset": [
     {
@@ -108,6 +112,12 @@
                   {
                     "id": "total_prisoners",
                     "display": "Total prisoners"
+                  }
+                ],
+                "filter": [
+                  {
+                    "id": "establishment_id",
+                    "equals": null
                   }
                 ],
                 "expectNull": true

@@ -9,10 +9,12 @@
   },
   "datasource" : [
     {
-      "id": "datamart",
-      "name": "datamart",
-      "database": "datamart",
-      "catalog": "datamart"
+      "id": "nomis",
+      "name": "NOMIS",
+      "database": "nomis_db",
+      "catalog": "nomis",
+      "connection": "federated",
+      "dialect": "oracle/11g"
     }],
   "dataset" : [ {
     "id" : "external-movements",

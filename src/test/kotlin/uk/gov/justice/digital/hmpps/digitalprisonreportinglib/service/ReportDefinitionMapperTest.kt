@@ -11,6 +11,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
@@ -60,6 +62,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.Definition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -191,6 +194,7 @@ class ReportDefinitionMapperTest {
       ),
     ),
     child = listOf(ReportChild(childReport.id, listOf("13"))),
+    loadType = LoadType.SYNC,
   )
 
   private val singleReportProductDefinition: SingleReportProductDefinition = SingleReportProductDefinition(
@@ -286,6 +290,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.visible).isTrue()
     assertThat(field.mandatory).isFalse()
@@ -490,6 +495,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
@@ -565,7 +571,7 @@ class ReportDefinitionMapperTest {
     )
 
     whenever(
-      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any()),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
@@ -591,6 +597,98 @@ class ReportDefinitionMapperTest {
       pageSize = DEFAULT_MAX_STATIC_OPTIONS,
       sortColumn = estCodeSchemaFieldName,
       dataset = establishmentDataset,
+    )
+  }
+
+  @Test
+  fun `getting single report with dynamic options which have a dataset with parameters (prompts) maps full data correctly and generates the static options in the result when returnAsStaticOptions is true`() {
+    val estCodeSchemaFieldName = "establishment_code"
+    val establishmentCodeSchemaField = SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code", null)
+    val estNameSchemaFieldName = "establishment_name"
+    val establishmentNameSchemaField = SchemaField(estNameSchemaFieldName, ParameterType.String, "Establishment Name", null)
+    val estDatasetId = "establishment-dataset-id"
+    val establishmentDataset = Dataset(
+      id = estDatasetId,
+      name = "establishment-dataset-name",
+      datasource = "12A",
+      query = "select * from table",
+      schema = Schema(
+        listOf(
+          establishmentNameSchemaField,
+          establishmentCodeSchemaField,
+        ),
+      ),
+    )
+    val filters = mapOf("establishment_code" to "BFI")
+    val reportWithDynamicFilter = generateReport(DynamicFilterOption(returnAsStaticOptions = true, dataset = REF_PREFIX + estDatasetId, name = REF_PREFIX + estCodeSchemaFieldName, display = REF_PREFIX + estNameSchemaFieldName))
+
+    val dpdDataset = Dataset(
+      id = "10",
+      name = "11",
+      datasource = "12A",
+      query = "12",
+      schema = Schema(
+        field = listOf(
+          SchemaField(
+            name = "13",
+            type = ParameterType.Long,
+            display = "14",
+            filter = null,
+          ),
+        ),
+      ),
+      parameters = listOf(Parameter(index = 0, name = estCodeSchemaFieldName, filterType = FilterType.AutoComplete, display = "Establishment Code", mandatory = true, reportFieldType = ParameterType.String, referenceType = ReferenceType.ESTABLISHMENT)),
+    )
+
+    val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(
+      report = reportWithDynamicFilter,
+      allDatasets = listOf(establishmentDataset),
+      reportDataset = dpdDataset,
+    )
+
+    whenever(
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull()),
+    ).thenReturn(
+      listOf(
+        mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
+        mapOf(estCodeSchemaFieldName to "code2", estNameSchemaFieldName to "name2"),
+      ),
+    )
+
+    val result = mapper.mapReport(
+      definition = fullSingleProductDefinition,
+      userToken = authToken,
+      filters = filters,
+    )
+
+    assertResult(result, fullSingleProductDefinition, 2)
+    val field = result.variant.specification!!.fields.first()
+
+    assertThat(field.filter?.staticOptions).isNotEmpty
+    assertThat(field.filter?.staticOptions).hasSize(2)
+    assertThat(field.filter?.staticOptions).isEqualTo(
+      listOf(
+        FilterOption("code1", "name1"),
+        FilterOption("code2", "name2"),
+      ),
+    )
+
+    val fieldFromParameter = result.variant.specification.fields[1]
+    val sourceParameterField = fullSingleProductDefinition.reportDataset.parameters!!.first()
+
+    assertThat(fieldFromParameter.name).isEqualTo(sourceParameterField.name)
+    assertThat(fieldFromParameter.display).isEqualTo(sourceParameterField.display)
+    assertThat(fieldFromParameter.sortable).isEqualTo(false)
+    assertThat(fieldFromParameter.defaultsort).isEqualTo(false)
+    assertThat(fieldFromParameter.filter).isNotNull
+    assertThat(fieldFromParameter.filter?.type.toString()).isEqualTo(sourceParameterField.filterType.toString())
+    assertThat(fieldFromParameter.type.toString()).isEqualTo(sourceParameterField.reportFieldType.toString())
+
+    verify(configuredApiService).validateAndFetchDataForFilterWithDataset(
+      pageSize = DEFAULT_MAX_STATIC_OPTIONS,
+      sortColumn = estCodeSchemaFieldName,
+      dataset = establishmentDataset,
+      prompts = listOf(Prompt("establishment_code", "BFI", FilterType.AutoComplete)),
     )
   }
 
@@ -653,6 +751,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.type).isEqualTo(FieldType.HTML)
     assertThat(field.calculated).isEqualTo(true)
@@ -710,6 +809,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.type).isEqualTo(FieldType.Date)
     assertThat(field.calculated).isEqualTo(true)
@@ -787,6 +887,7 @@ class ReportDefinitionMapperTest {
       filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
         type = Text,
         mandatory = true,
+        index = 0,
       ),
       visible = false,
     )
@@ -950,6 +1051,106 @@ class ReportDefinitionMapperTest {
   }
 
   @Test
+  fun `getting single report with parameters as part of a multiphase query maps full data correctly and converts the parameters to filters`() {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Text,
+      display = parameterDisplay,
+      mandatory = true,
+    )
+    val multiphaseQuery = MultiphaseQuery(
+      index = 0,
+      datasource = mock(),
+      query = "SELECT * FROM a",
+      parameters = listOf(parameter),
+    )
+    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery))
+
+    val result = mapper.mapReport(productDefinition, authToken)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedReportField = FieldDefinition(
+      type = FieldType.String,
+      name = parameterName,
+      display = parameterDisplay,
+      mandatory = false,
+      defaultsort = false,
+      sortable = false,
+      calculated = false,
+      filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
+        type = Text,
+        mandatory = true,
+        index = parameter.index,
+      ),
+      visible = false,
+    )
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
+  fun `getting single report with parameters as part of a multiphase query with referenceType of establishment_code includes all the establishments as static options`() {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Text,
+      display = parameterDisplay,
+      mandatory = true,
+      referenceType = ReferenceType.ESTABLISHMENT,
+    )
+    val multiphaseQuery = MultiphaseQuery(
+      index = 0,
+      datasource = mock(),
+      query = "SELECT * FROM a",
+      parameters = listOf(parameter),
+    )
+    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery))
+    val bfiEstCode = "BFI"
+    val bfiDescription = "BEDFORD (HMP)"
+    val bsiEstCode = "BSI"
+    val bsiDescription = "BRINSFORD (HMP)"
+
+    whenever(
+      establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded(),
+    ).thenReturn(
+      mapOf(
+        bfiEstCode to listOf(
+          EstablishmentToWing(bfiEstCode, bfiDescription, "BFI-G"),
+          EstablishmentToWing(bfiEstCode, bfiDescription, "BFI-E"),
+        ),
+        bsiEstCode to listOf(
+          EstablishmentToWing(bsiEstCode, bsiDescription, "BSI-R"),
+          EstablishmentToWing(bsiDescription, bsiDescription, "BSI-I"),
+        ),
+      ),
+    )
+    val rdfMapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
+
+    val result = rdfMapper.mapReport(productDefinition, authToken)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedStaticOptions = listOf(
+      FilterOption(bfiEstCode, bfiDescription),
+      FilterOption(bsiEstCode, bsiDescription),
+    )
+
+    val expectedReportField = createReportFieldDefinition(parameter, expectedStaticOptions)
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
   fun `Interactive report metadata hint is mapped to the report correctly`() {
     val defaultValue = createProductDefinition("today(-2,DAYS)", interactive = true)
 
@@ -1073,6 +1274,7 @@ class ReportDefinitionMapperTest {
       type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.valueOf(parameter.filterType.toString()),
       mandatory = true,
       staticOptions = expectedStaticOptions,
+      index = parameter.index,
     ),
     visible = false,
   )
@@ -1109,7 +1311,7 @@ class ReportDefinitionMapperTest {
     classification = "someClassification",
   )
 
-  private fun assertResult(result: SingleVariantReportDefinition, fullSingleProductDefinition: SingleReportProductDefinition) {
+  private fun assertResult(result: SingleVariantReportDefinition, fullSingleProductDefinition: SingleReportProductDefinition, specificationFieldsSize: Int = 1) {
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
     assertThat(result.name).isEqualTo(fullSingleProductDefinition.name)
@@ -1124,7 +1326,7 @@ class ReportDefinitionMapperTest {
     assertThat(variant.specification).isNotNull
     assertThat(variant.specification?.template.toString()).isEqualTo(fullSingleProductDefinition.report.specification?.template.toString())
     assertThat(variant.specification?.fields).isNotEmpty
-    assertThat(variant.specification?.fields).hasSize(1)
+    assertThat(variant.specification?.fields).hasSize(specificationFieldsSize)
 
     val field = variant.specification!!.fields.first()
     val sourceSchemaField = fullSingleProductDefinition.reportDataset.schema.field.first()
@@ -1134,6 +1336,7 @@ class ReportDefinitionMapperTest {
     assertThat(field.display).isEqualTo(sourceReportField.display)
     assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
+    assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
     assertThat(field.filter).isNotNull
     assertThat(field.filter?.type.toString()).isEqualTo(sourceReportField.filter?.type.toString())
@@ -1201,6 +1404,7 @@ class ReportDefinitionMapperTest {
       formula = formula,
       visible = visible,
     ),
+    multiphaseQueries: List<MultiphaseQuery>? = null,
   ): SingleReportProductDefinition = SingleReportProductDefinition(
     id = "1",
     name = "2",
@@ -1227,6 +1431,7 @@ class ReportDefinitionMapperTest {
         ),
       ),
       parameters = parameters,
+      multiphaseQuery = multiphaseQueries,
     ),
     report =
     Report(

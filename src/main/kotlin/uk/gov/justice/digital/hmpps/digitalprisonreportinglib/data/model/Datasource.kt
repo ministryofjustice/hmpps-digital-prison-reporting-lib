@@ -5,4 +5,6 @@ data class Datasource(
   val name: String,
   val database: String? = null,
   val catalog: String? = null,
+  val connection: DatasourceConnection? = null,
+  val dialect: SqlDialect? = null,
 )

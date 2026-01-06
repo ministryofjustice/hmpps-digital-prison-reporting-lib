@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -15,9 +14,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
@@ -26,8 +24,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
-import java.util.*
+import java.util.Base64
 
 @Service
 @ConditionalOnBean(value = [RedshiftDataApiRepository::class, AthenaApiRepository::class])
@@ -55,8 +52,6 @@ class AsyncDataApiService(
   private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
     get() = mapOf(
       "datamart" to redshiftDataApiRepository,
-      "nomis" to athenaApiRepository,
-      "bodmis" to athenaApiRepository,
     )
 
   fun validateAndExecuteStatementAsync(
@@ -64,7 +59,7 @@ class AsyncDataApiService(
     reportVariantId: String,
     filters: Map<String, String>,
     sortColumn: String?,
-    sortedAsc: Boolean,
+    sortedAsc: Boolean?,
     userToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
@@ -78,16 +73,24 @@ class AsyncDataApiService(
     checkAuth(productDefinition, userToken)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, productDefinition.reportDataset.parameters)
+    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(
+      filters,
+      extractParameters(productDefinition.reportDataset, productDefinition.reportDataset.multiphaseQuery),
+    )
     val preGeneratedTableId = checkForScheduledDataset(productDefinition)
+    val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return getRepo(productDefinition.datasource.name)
       .executeQueryAsync(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false) + dynamicFilter,
-        sortColumn = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn),
-        sortedAsc = sortedAsc,
+        sortColumn,
+        computedSortedAsc,
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
-        prompts = buildPrompts(promptsMap, productDefinition.reportDataset.parameters),
+        prompts = buildPrompts(
+          productDefinition.reportDataset.multiphaseQuery,
+          promptsMap,
+          productDefinition.reportDataset.parameters,
+        ),
         userToken = userToken,
         query = productDefinition.reportDataset.query,
         reportFilter = productDefinition.report.filter,
@@ -99,7 +102,7 @@ class AsyncDataApiService(
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
         preGeneratedDatasetTableId = preGeneratedTableId,
-        multiphaseQuery = productDefinition.reportDataset.multiphaseQuery,
+        multiphaseQueries = productDefinition.reportDataset.multiphaseQuery,
       )
   }
 
@@ -117,7 +120,10 @@ class AsyncDataApiService(
     )
     checkAuth(productDefinition, userToken)
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
-    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(filters, extractParameters(productDefinition))
+    val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(
+      filters,
+      extractParameters(productDefinition.dashboardDataset, productDefinition.dashboardDataset.multiphaseQuery),
+    )
     log.debug("All filters from user are: {}", filters)
     log.debug("Prompts are: {}", promptsMap)
     log.debug("Filters only are: {}", filtersOnly)
@@ -126,8 +132,11 @@ class AsyncDataApiService(
         filters = validateAndMapFilters(productDefinition, toMap(filtersOnly), false),
         sortedAsc = true,
         policyEngineResult = policyEngine.execute(),
-        prompts = productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.flatMap { q -> buildPrompts(promptsMap, q.parameters) }?.distinct()
-          ?: buildPrompts(promptsMap, productDefinition.dashboardDataset.parameters),
+        prompts = buildPrompts(
+          productDefinition.dashboardDataset.multiphaseQuery,
+          promptsMap,
+          productDefinition.dashboardDataset.parameters,
+        ),
         userToken = userToken,
         query = productDefinition.dashboardDataset.query,
         reportFilter = productDefinition.dashboard.filter,
@@ -137,47 +146,30 @@ class AsyncDataApiService(
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.dashboard.id,
         reportOrDashboardName = productDefinition.dashboard.name,
-        multiphaseQuery = productDefinition.dashboardDataset.multiphaseQuery,
+        multiphaseQueries = productDefinition.dashboardDataset.multiphaseQuery,
       )
   }
-
-  private fun extractParameters(productDefinition: SingleDashboardProductDefinition) = productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.mapNotNull { q -> q.parameters }
-    ?.filterNot { p -> p.isEmpty() }?.flatten()?.distinct()
-    ?: productDefinition.dashboardDataset.parameters
 
   fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    val statementStatus = getRepo(productDefinition.datasource.name).getStatementStatus(statementId)
-    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
-      if (redshiftDataApiRepository.isTableMissing(tableId)) {
-        throw MissingTableException(tableId)
-      }
-    }
-    return statementStatus
+    return getStatementExecutionStatus(
+      productDefinition.reportDataset.multiphaseQuery,
+      productDefinition.datasource.name,
+      statementId,
+      tableId,
+    )
   }
 
   fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    return productDefinition.dashboardDataset.multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
-      getRepo(productDefinition.datasource.name).getStatementStatusForMultiphaseQuery(statementId)
-    }
-      ?: getStatusOrThrowIfTableIsMissing(productDefinition, statementId, tableId)
-  }
-
-  private fun getStatusOrThrowIfTableIsMissing(
-    productDefinition: SingleDashboardProductDefinition,
-    statementId: String,
-    tableId: String?,
-  ): StatementExecutionStatus {
-    val statementStatus = getRepo(productDefinition.datasource.name).getStatementStatus(statementId)
-    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
-      if (redshiftDataApiRepository.isTableMissing(tableId)) {
-        throw MissingTableException(tableId)
-      }
-    }
-    return statementStatus
+    return getStatementExecutionStatus(
+      productDefinition.dashboardDataset.multiphaseQuery,
+      productDefinition.datasource.name,
+      statementId,
+      tableId,
+    )
   }
 
   fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus {
@@ -198,20 +190,21 @@ class AsyncDataApiService(
     selectedPage: Long,
     pageSize: Long,
     filters: Map<String, String>,
-    sortedAsc: Boolean,
+    sortedAsc: Boolean?,
     sortColumn: String? = null,
     userToken: DprAuthAwareAuthenticationToken?,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+    val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return formatColumnsAndApplyFormulas(
       redshiftDataApiRepository.getPaginatedExternalTableResult(
         tableId,
         selectedPage,
         pageSize,
         validateAndMapFilters(productDefinition, filters, true),
-        sortedAsc = sortedAsc,
+        sortedAsc = computedSortedAsc,
         sortColumn = sortColumn,
       ),
       productDefinition.reportDataset.schema.field,
@@ -225,14 +218,14 @@ class AsyncDataApiService(
     dashboardId: String,
     dataProductDefinitionsPath: String? = null,
     selectedPage: Long,
-    pageSize: Long,
+    pageSize: Long? = null,
     filters: Map<String, String>,
     userToken: DprAuthAwareAuthenticationToken?,
   ): List<List<Map<String, Any?>>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return listOf(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(
+      redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
         tableId = tableId,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -247,8 +240,6 @@ class AsyncDataApiService(
         .map { row -> toMetricData(row) },
     )
   }
-
-  private fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> = row.entries.associate { e -> e.key to MetricData(e.value) }
 
   fun getSummaryResult(
     tableId: String,
@@ -298,8 +289,6 @@ class AsyncDataApiService(
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
-  fun cancelStatementExecution(statementId: String): StatementCancellationResponse = redshiftDataApiRepository.cancelStatementExecution(statementId)
-
   fun count(tableId: String): Count = Count(redshiftDataApiRepository.count(tableId))
 
   fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): Count {
@@ -317,7 +306,7 @@ class AsyncDataApiService(
   ): String? {
     val generatedTableId = generateScheduledDatasetId(productDefinition)
     // check if dataset configured for scheduling and table exists
-    return if (productDefinition.hasDatasetScheduled() && !getRepo(productDefinition.datasource.name).isTableMissing(generatedTableId.lowercase())) {
+    return if (productDefinition.hasDatasetScheduled() && !redshiftDataApiRepository.isTableMissing(generatedTableId.lowercase())) {
       // generate external table id
       generatedTableId
     } else {
@@ -337,6 +326,33 @@ class AsyncDataApiService(
     return "_$updatedId"
   }
 
+  private fun getStatementExecutionStatus(
+    multiphaseQuery: List<MultiphaseQuery>?,
+    datasourceName: String,
+    statementId: String,
+    tableId: String?,
+  ): StatementExecutionStatus = getStatusOrThrowIfTableIsMissing(tableId, calculateStatementStatus(multiphaseQuery, datasourceName, statementId))
+
+  private fun calculateStatementStatus(
+    multiphaseQuery: List<MultiphaseQuery>?,
+    datasourceName: String,
+    statementId: String,
+  ): StatementExecutionStatus = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
+    redshiftDataApiRepository.getStatementStatusForMultiphaseQuery(statementId)
+  } ?: getRepo(datasourceName).getStatementStatus(statementId)
+
+  private fun getStatusOrThrowIfTableIsMissing(
+    tableId: String?,
+    statementStatus: StatementExecutionStatus,
+  ): StatementExecutionStatus {
+    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
+      if (redshiftDataApiRepository.isTableMissing(tableId)) {
+        throw MissingTableException(tableId)
+      }
+    }
+    return statementStatus
+  }
+
   private fun checkAuth(
     productDefinition: WithPolicy,
     userToken: DprAuthAwareAuthenticationToken?,
@@ -347,32 +363,9 @@ class AsyncDataApiService(
     return true
   }
 
-  private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository = datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), redshiftDataApiRepository)
-
-  private fun buildPrompts(
-    prompts: List<Map.Entry<String, String>>,
-    parameters: List<Parameter>?,
-  ): List<Prompt> = prompts.mapNotNull { entry ->
-    mapToMatchingParameter(entry, parameters)
-      ?.let { Prompt(entry.key, entry.value, it.filterType) }
-  }
-
-  private fun mapToMatchingParameter(
-    entry: Map.Entry<String, String>,
-    parameters: List<Parameter>?,
-  ) = parameters?.firstOrNull { parameter -> parameter.name == entry.key }
+  private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository = datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), athenaApiRepository)
 
   private fun <K, V> toMap(entries: List<Map.Entry<K, V>>): Map<K, V> = entries.associate { it.toPair() }
-
-  private fun partitionToPromptsAndFilters(
-    filters: Map<String, String>,
-    parameters: List<Parameter>?,
-  ) = filters.asIterable().partition { e -> isPrompt(e, parameters) }
-
-  private fun isPrompt(
-    e: Map.Entry<String, String>,
-    parameters: List<Parameter>?,
-  ) = parameters?.any { it.name == e.key } ?: false
 
   private fun formatColumnsAndApplyFormulas(
     records: List<Map<String, Any?>>,

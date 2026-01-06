@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCa
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
@@ -21,16 +22,17 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.time.temporal.ChronoUnit
 
 abstract class DefinitionMapper(
   private val syncDataApiService: SyncDataApiService,
-  val identifiedHelper: IdentifiedHelper,
+  identifiedHelper: IdentifiedHelper,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
   val alertCategoryCacheService: AlertCategoryCacheService,
-) {
+) : CommonDataApiService(identifiedHelper) {
 
   companion object {
     const val DEFAULT_MAX_STATIC_OPTIONS: Long = 30
@@ -73,6 +75,7 @@ abstract class DefinitionMapper(
     interactive = filterDefinition.interactive ?: false,
     defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
     defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) },
+    index = filterDefinition.index,
   )
 
   protected fun populateStaticOptions(
@@ -84,6 +87,8 @@ abstract class DefinitionMapper(
     userToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
       return userToken?.getCaseLoads()?.map { FilterOption(it.id, it.name) }
@@ -91,10 +96,12 @@ abstract class DefinitionMapper(
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
         return populateStaticOptionsForFilterWithDataset(
-          dynamicFilterOption,
-          allDatasets,
-          dynamicFilterDatasetId,
-          maxStaticOptions,
+          dynamicFilterOption = dynamicFilterOption,
+          allDatasets = allDatasets,
+          dynamicFilterDatasetId = dynamicFilterDatasetId,
+          maxStaticOptions = maxStaticOptions,
+          reportDataset = reportDataset,
+          filters = filters,
         )
       }
         ?: populateStandardStaticOptionsForReportDefinition(
@@ -108,22 +115,44 @@ abstract class DefinitionMapper(
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 
-  protected fun maybeConvertToReportFields(parameters: List<Parameter>?) = parameters?.map { mapParameterToField(it) } ?: emptyList()
+  protected fun maybeConvertParametersToReportFields(multiphaseQueries: List<MultiphaseQuery>?, parameters: List<Parameter>?) = maybeConvertMultiphaseQueryParameters(multiphaseQueries)
+    ?: maybeConvertToReportFields(parameters)
+
+  private fun maybeConvertToReportFields(parameters: List<Parameter>?) = parameters?.map { mapParameterToField(it) } ?: emptyList()
+
+  private fun maybeConvertMultiphaseQueryParameters(multiphaseQuery: List<MultiphaseQuery>?) = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let { collectAllParametersAndMapToDistinctReportFields(it) }
+
+  private fun collectAllParametersAndMapToDistinctReportFields(queries: List<MultiphaseQuery>): List<FieldDefinition> {
+    val distinctParameters =
+      queries.map { maybeConvertToReportFields(it.parameters) }.filterNot { it.isEmpty() }.flatten().distinct()
+    log.debug("Distinct multiphase converted fields from parameters: {}", distinctParameters)
+    return distinctParameters
+  }
 
   protected fun populateStaticOptionsForFilterWithDataset(
     dynamicFilterOption: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DynamicFilterOption,
     allDatasets: List<Dataset>,
     dynamicFilterDatasetId: String,
     maxStaticOptions: Long?,
+    reportDataset: Dataset,
+    filters: Map<String, String>?,
   ): List<FilterOption> {
     val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
     val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
     val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
     val displaySchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
+    val prompts: List<Prompt>? = filters?.takeIf { it.isNotEmpty() }?.let {
+      buildPrompts(
+        multiphaseQuery = reportDataset.multiphaseQuery,
+        promptsMap = extractPromptOnly(it, reportDataset),
+        parameters = reportDataset.parameters,
+      )
+    }
     return syncDataApiService.validateAndFetchDataForFilterWithDataset(
       pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
       sortColumn = nameSchemaField.name,
       dataset = matchingFilterDataset,
+      prompts = prompts,
     )
       .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
   }
@@ -132,6 +161,14 @@ abstract class DefinitionMapper(
     name = definition.name,
     display = definition.display,
   )
+
+  private fun extractPromptOnly(
+    map: Map<String, String>,
+    reportDataset: Dataset,
+  ): List<Map.Entry<String, String>> = partitionToPromptsAndFilters(
+    map,
+    extractParameters(reportDataset, reportDataset.multiphaseQuery),
+  ).first
 
   private fun mapParameterToField(parameter: Parameter): FieldDefinition = FieldDefinition(
     name = parameter.name,
@@ -146,6 +183,7 @@ abstract class DefinitionMapper(
       mandatory = parameter.mandatory,
       interactive = false,
       staticOptions = populateStaticOptionsForParameter(parameter),
+      index = parameter.index,
     ),
   )
 

@@ -13,10 +13,14 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestWebClientConfiguration
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
@@ -31,7 +35,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("system-test")
-@Import(TestWebClientConfiguration::class)
+@Import(TestWebClientConfiguration::class, TestFlywayConfig::class)
 abstract class IntegrationSystemTestBase {
 
   @Value("\${dpr.lib.system.role}")
@@ -68,6 +72,17 @@ abstract class IntegrationSystemTestBase {
 
     @JvmField
     val manageUsersMockServer = ManageUsersMockServer()
+    val postgresContainer = PostgresContainer.instance
+
+    @JvmStatic
+    @DynamicPropertySource
+    fun setupClass(registry: DynamicPropertyRegistry) {
+      postgresContainer?.run {
+        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", postgresContainer::getUsername)
+        registry.add("spring.datasource.password", postgresContainer::getPassword)
+      }
+    }
 
     @BeforeAll
     @JvmStatic

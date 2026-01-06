@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasou
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.QueryExecution
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.MultiphaseQueryExecution
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -41,7 +41,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String? = null,
-    multiphaseQuery: List<MultiphaseQuery>? = null,
+    multiphaseQueries: List<MultiphaseQuery>? = null,
   ): StatementExecutionResponse
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus
@@ -80,6 +80,33 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     return result
   }
 
+  fun getDashboardPaginatedExternalTableResult(
+    tableId: String,
+    selectedPage: Long,
+    pageSize: Long? = null,
+    filters: List<ConfiguredApiRepository.Filter>,
+    sortedAsc: Boolean = false,
+    sortColumn: String? = null,
+    jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
+  ): List<Map<String, Any?>> {
+    val stopwatch = StopWatch.createStarted()
+    val whereClause = buildFiltersWhereClause(filters)
+    val paginationSql = pageSize?.let { "LIMIT $pageSize OFFSET ($selectedPage - 1) * $pageSize" } ?: if (selectedPage == 1L) "" else return emptyList()
+    val query = "SELECT * FROM reports.$tableId WHERE $whereClause ${buildOrderByClause(sortColumn, sortedAsc) } $paginationSql;"
+    log.debug("Query to get results: {}", query)
+    val result = jdbcTemplate
+      .queryForList(
+        query,
+        MapSqlParameterSource(),
+      )
+      .map {
+        transformTimestampToLocalDateTime(it)
+      }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return result
+  }
+
   fun isTableMissing(tableId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): Boolean {
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate
@@ -92,30 +119,32 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     return result.isNullOrEmpty()
   }
 
-  fun getStatementStatusForMultiphaseQuery(rootExecutionId: String): StatementExecutionStatus {
-    val executions = getExecutions(rootExecutionId)
+  fun getStatementStatusForMultiphaseQuery(rootExecutionId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): StatementExecutionStatus {
+    val executions = getExecutions(rootExecutionId, jdbcTemplate)
     log.debug("All mapped QueryExecutions: {}", executions)
     return executions.firstOrNull { it.currentState == QUERY_FAILED }?.let {
-      return StatementExecutionStatus(
+      StatementExecutionStatus(
         status = QUERY_FAILED,
         duration = 1,
         resultRows = 0,
+        resultSize = 0,
         error = it.error,
         stateChangeReason = it.error,
       )
     }
-      ?: executions.firstOrNull { it.currentState == QUERY_CANCELLED }?.let {
-        return StatementExecutionStatus(
+      ?: executions.firstOrNull { isCancelled(it.currentState) }?.let {
+        StatementExecutionStatus(
           status = QUERY_ABORTED,
           duration = 1,
           resultRows = 0,
           resultSize = 0,
         )
       }
-      ?: return StatementExecutionStatus(
-        status = executions.maxByOrNull { it.index }!!.currentState?.let { mapAthenaStateToRedshiftState(it) } ?: QUERY_SUBMITTED,
+      ?: StatementExecutionStatus(
+        status = executions.maxByOrNull { it.index }?.currentState?.let { mapAthenaStateToRedshiftState(it) } ?: QUERY_SUBMITTED,
         duration = 1,
         resultRows = 0,
+        resultSize = 0,
       )
   }
 
@@ -125,19 +154,21 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
       QUERY_RUNNING to QUERY_STARTED,
       QUERY_SUCCEEDED to QUERY_FINISHED,
       QUERY_CANCELLED to QUERY_ABORTED,
+      QUERY_CANCELED to QUERY_ABORTED,
     )
     return athenaToRedshiftStateMappings.getOrDefault(queryState, queryState)
   }
 
-  private fun getExecutions(rootExecutionId: String): List<QueryExecution> {
-    val jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()
+  private fun isCancelled(state: String?) = state == QUERY_CANCELLED || state == QUERY_CANCELED
+
+  private fun getExecutions(rootExecutionId: String, jdbcTemplate: NamedParameterJdbcTemplate): List<MultiphaseQueryExecution> {
     val stopwatch = StopWatch.createStarted()
     val mapSqlParameterSource = MapSqlParameterSource()
-    log.debug("Retrieving query executions...")
+    log.debug("Retrieving query executions for rootExecutionId $rootExecutionId ...")
     mapSqlParameterSource.addValue("rootExecutionId", rootExecutionId)
     val result = jdbcTemplate
       .queryForList(
-        "SELECT * FROM admin.execution_manager WHERE root_execution_id = :rootExecutionId;",
+        "SELECT $INDEX_COL, $CURRENT_STATE_COL, $ERROR_COL FROM admin.multiphase_query_state WHERE $ROOT_EXECUTION_ID_COL = :rootExecutionId;",
         mapSqlParameterSource,
       )
       .map {
@@ -147,16 +178,10 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     log.debug("Query to get executions for root execution {} completed in {}ms", rootExecutionId, stopwatch.time)
     log.debug("All execution rows from the admin table: {}", result)
     return result.map {
-      QueryExecution(
-        rootExecutionId = it["root_execution_id"] as String,
-        currentExecutionId = it["current_execution_id"] as String?,
-        datasource = it["datasource"] as String,
-        catalog = it["catalog"] as String?,
-        database = it["database"] as String?,
-        index = it["index"] as Int,
-        query = it["query"] as String,
-        currentState = it["current_state"] as String?,
-        error = base64Decode(it["error"] as String?),
+      MultiphaseQueryExecution(
+        index = it[INDEX_COL] as Int,
+        currentState = it[CURRENT_STATE_COL] as String?,
+        error = base64Decode(it[ERROR_COL] as String?),
       )
     }
   }

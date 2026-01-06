@@ -9,12 +9,10 @@ import org.junit.jupiter.api.TestFactory
 import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.PRISON_NUMBER
@@ -24,7 +22,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner5
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionIn
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.allExternalMovements
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement1
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement2
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement3
@@ -33,30 +30,25 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionOut
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9846
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9847
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_START
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DYNAMIC
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.MULTISELECT
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.STANDARD
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase
 import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-class ConfiguredApiRepositoryTest {
-
+class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   companion object {
-
     const val REPOSITORY_TEST_QUERY = "SELECT " +
       "prisoners.number AS prisonNumber," +
       "CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name," +
@@ -85,27 +77,10 @@ class ConfiguredApiRepositoryTest {
 
   val productDefinition = mock<SingleReportProductDefinition>()
 
-  @Autowired
-  lateinit var externalMovementRepository: ExternalMovementRepository
-
-  @Autowired
-  lateinit var prisonerRepository: PrisonerRepository
-
-  @Autowired
-  lateinit var configuredApiRepository: ConfiguredApiRepository
-
-  @MockitoBean
-  lateinit var asyncDataApiService: AsyncDataApiService
-
   @BeforeEach
-  fun setup() {
+  override fun setup() {
+    super.setup()
     whenever(productDefinition.report).thenReturn(mock<Report>())
-    allExternalMovements.forEach {
-      externalMovementRepository.save(it)
-    }
-    allPrisoners.forEach {
-      prisonerRepository.save(it)
-    }
   }
 
   @Test
@@ -361,7 +336,7 @@ class ConfiguredApiRepositoryTest {
   fun `should return all the rows on or after the provided start date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2023-04-30", FilterType.DATE_RANGE_START)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -377,7 +352,7 @@ class ConfiguredApiRepositoryTest {
   fun `should return all the rows on or before the provided end date`() {
     val actual = configuredApiRepository.executeQuery(
       REPOSITORY_TEST_QUERY,
-      listOf(Filter("date", "2023-04-25", DATE_RANGE_END)),
+      listOf(Filter("date", "2023-04-25", FilterType.DATE_RANGE_END)),
       1,
       10,
       "date",
@@ -393,7 +368,14 @@ class ConfiguredApiRepositoryTest {
   fun `should return all the rows between the provided start and end dates`() {
     val actual = configuredApiRepository.executeQuery(
       REPOSITORY_TEST_QUERY,
-      listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END)),
+      listOf(
+        Filter("date", "2023-04-25", FilterType.DATE_RANGE_START),
+        Filter(
+          "date",
+          "2023-05-20",
+          FilterType.DATE_RANGE_END,
+        ),
+      ),
       1,
       10,
       "date",
@@ -409,7 +391,7 @@ class ConfiguredApiRepositoryTest {
   fun `should return all the rows between the provided start and end dates matching the direction filter`() {
     val actual = configuredApiRepository.executeQuery(
       REPOSITORY_TEST_QUERY,
-      listOf(Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-05-20", DATE_RANGE_END), Filter("direction", "in")),
+      listOf(Filter("date", "2023-04-25", FilterType.DATE_RANGE_START), Filter("date", "2023-05-20", FilterType.DATE_RANGE_END), Filter("direction", "in")),
       1,
       10,
       "date",
@@ -426,10 +408,10 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("date", "2023-04-25", DATE_RANGE_START),
-        Filter("date", "2023-05-20", DATE_RANGE_END),
+        Filter("date", "2023-04-25", FilterType.DATE_RANGE_START),
+        Filter("date", "2023-05-20", FilterType.DATE_RANGE_END),
         Filter("direction", "in"),
-        Filter("name", "La", DYNAMIC),
+        Filter("name", "La", FilterType.DYNAMIC),
       ),
       selectedPage = 1,
       pageSize = 10,
@@ -487,10 +469,10 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("date", "2023-04-25", DATE_RANGE_START),
-        Filter("date", "2023-05-20", DATE_RANGE_END),
+        Filter("date", "2023-04-25", FilterType.DATE_RANGE_START),
+        Filter("date", "2023-05-20", FilterType.DATE_RANGE_END),
         Filter("direction", "in"),
-        Filter("name", "Ab", DYNAMIC),
+        Filter("name", "Ab", FilterType.DYNAMIC),
       ),
       selectedPage = 1,
       pageSize = 10,
@@ -507,7 +489,7 @@ class ConfiguredApiRepositoryTest {
   fun `should return no rows if the start date is after the latest table date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2025-01-01", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2025-01-01", FilterType.DATE_RANGE_START)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -523,7 +505,7 @@ class ConfiguredApiRepositoryTest {
   fun `should return no rows if the end date is before the earliest table date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2015-01-01", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2015-01-01", FilterType.DATE_RANGE_END)),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -539,7 +521,14 @@ class ConfiguredApiRepositoryTest {
   fun `should return no rows if the start date is after the end date`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("date", "2023-05-01", DATE_RANGE_START), Filter("date", "2023-04-25", DATE_RANGE_END)),
+      filters = listOf(
+        Filter("date", "2023-05-01", FilterType.DATE_RANGE_START),
+        Filter(
+          "date",
+          "2023-04-25",
+          FilterType.DATE_RANGE_END,
+        ),
+      ),
       selectedPage = 1,
       pageSize = 10,
       sortColumn = "date",
@@ -587,7 +576,7 @@ class ConfiguredApiRepositoryTest {
       prisonerRepository.save(prisoner9846)
       val actual = configuredApiRepository.executeQuery(
         query = REPOSITORY_TEST_QUERY,
-        filters = listOf(Filter("date", "2050-06-01", DATE_RANGE_START), Filter("date", "2050-06-01", DATE_RANGE_END)),
+        filters = listOf(Filter("date", "2050-06-01", FilterType.DATE_RANGE_START), Filter("date", "2050-06-01", FilterType.DATE_RANGE_END)),
         selectedPage = 1,
         pageSize = 1,
         sortColumn = "date",
@@ -617,7 +606,7 @@ class ConfiguredApiRepositoryTest {
       prisonerRepository.save(prisoner9848)
       val actual = configuredApiRepository.executeQuery(
         query = REPOSITORY_TEST_QUERY,
-        filters = listOf(Filter("date", "2022-06-01", DATE_RANGE_START), Filter("date", "2024-06-01", DATE_RANGE_END)),
+        filters = listOf(Filter("date", "2022-06-01", FilterType.DATE_RANGE_START), Filter("date", "2024-06-01", FilterType.DATE_RANGE_END)),
         selectedPage = 1,
         pageSize = 10,
         sortColumn = "date",
@@ -692,7 +681,7 @@ class ConfiguredApiRepositoryTest {
   fun `should return only the rows which match the multiselect filter`() {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
-      filters = listOf(Filter("destination_code", "HEI,NSI,LCI", MULTISELECT)),
+      filters = listOf(Filter("destination_code", "HEI,NSI,LCI", FilterType.MULTISELECT)),
       selectedPage = 1,
       pageSize = 20,
       sortColumn = "date",
@@ -709,8 +698,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("destination_code", "WWI,NSI,LCI", MULTISELECT),
-        Filter("direction", "out", STANDARD),
+        Filter("destination_code", "WWI,NSI,LCI", FilterType.MULTISELECT),
+        Filter("direction", "out", FilterType.STANDARD),
       ),
       selectedPage = 1,
       pageSize = 20,
@@ -728,8 +717,8 @@ class ConfiguredApiRepositoryTest {
     val actual = configuredApiRepository.executeQuery(
       query = REPOSITORY_TEST_QUERY,
       filters = listOf(
-        Filter("destination_code", "WWI,NSI,LCI", MULTISELECT),
-        Filter("direction", "Out", MULTISELECT),
+        Filter("destination_code", "WWI,NSI,LCI", FilterType.MULTISELECT),
+        Filter("direction", "Out", FilterType.MULTISELECT),
       ),
       selectedPage = 1,
       pageSize = 20,
@@ -784,7 +773,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a count of rows with a startDate filter`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-05-01", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2023-05-01", FilterType.DATE_RANGE_START)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -797,7 +786,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a count of rows with an endDate filter`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-01-31", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2023-01-31", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -810,7 +799,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a count of movements with a startDate and an endDate filter`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2023-05-01", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2023-04-30", FilterType.DATE_RANGE_START), Filter("date", "2023-05-01", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -823,7 +812,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a count of zero with a date start greater than the latest movement date`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2025-04-30", DATE_RANGE_START)),
+      filters = listOf(Filter("date", "2025-04-30", FilterType.DATE_RANGE_START)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -836,7 +825,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a count of zero with a date end less than the earliest movement date`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2019-04-30", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2019-04-30", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -849,7 +838,7 @@ class ConfiguredApiRepositoryTest {
   @Test
   fun `should return a count of zero if the start date is after the end date`() {
     val actual = configuredApiRepository.count(
-      filters = listOf(Filter("date", "2023-04-30", DATE_RANGE_START), Filter("date", "2019-05-01", DATE_RANGE_END)),
+      filters = listOf(Filter("date", "2023-04-30", FilterType.DATE_RANGE_START), Filter("date", "2019-05-01", FilterType.DATE_RANGE_END)),
       query = REPOSITORY_TEST_QUERY,
       reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
@@ -1013,16 +1002,16 @@ class ConfiguredApiRepositoryTest {
   }
 
   object AllMovementPrisoners {
-    const val PRISON_NUMBER = "PRISONNUMBER"
-    const val NAME = "NAME"
-    const val DATE = "DATE"
-    const val DIRECTION = "DIRECTION"
-    const val TYPE = "TYPE"
-    const val ORIGIN = "ORIGIN"
-    const val ORIGIN_CODE = "ORIGIN_CODE"
-    const val DESTINATION = "DESTINATION"
-    const val DESTINATION_CODE = "DESTINATION_CODE"
-    const val REASON = "REASON"
+    const val PRISON_NUMBER = "prisonnumber"
+    const val NAME = "name"
+    const val DATE = "date"
+    const val DIRECTION = "direction"
+    const val TYPE = "type"
+    const val ORIGIN = "origin"
+    const val ORIGIN_CODE = "origin_code"
+    const val DESTINATION = "destination"
+    const val DESTINATION_CODE = "destination_code"
+    const val REASON = "reason"
 
     val movementPrisoner1 = mapOf(
       PRISON_NUMBER to "G2504UV",

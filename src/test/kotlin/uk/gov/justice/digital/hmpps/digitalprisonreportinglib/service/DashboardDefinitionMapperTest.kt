@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
@@ -28,8 +30,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
@@ -55,7 +59,7 @@ class DashboardDefinitionMapperTest {
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
-    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any())).then {
+    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull())).then {
       listOf(
         mapOf("establishment_id" to "AAA", "establishment_name" to "Aardvark"),
         mapOf("establishment_id" to "BBB", "establishment_name" to "Bumblebee"),
@@ -91,6 +95,9 @@ class DashboardDefinitionMapperTest {
                     DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
+                  ),
+                  filters = listOf(
+                    ValueVisualisationColumnDefinition(id = "establishment_id", equals = null),
                   ),
                   expectNulls = true,
                 ),
@@ -129,6 +136,7 @@ class DashboardDefinitionMapperTest {
       pageSize = eq(123L),
       sortColumn = eq("establishment_id"),
       dataset = any(),
+      prompts = anyOrNull(),
     )
   }
 
@@ -190,6 +198,84 @@ class DashboardDefinitionMapperTest {
             type = FilterType.AutoComplete,
             mandatory = parameter.mandatory,
             interactive = false,
+            index = parameter.index,
+            staticOptions = listOf(
+              FilterOption(
+                "KMI",
+                "KIRKHAM",
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+    assertEquals(expected, actual)
+    verify(establishmentCodesToWingsCacheService, times(1)).getEstablishmentsAndPopulateCacheIfNeeded()
+  }
+
+  @Test
+  fun `getDashboardDefinition converts multiphase query dataset parameters to filters and returns the dashboard definition`() {
+    whenever(establishmentCodesToWingsCacheService.getEstablishmentsAndPopulateCacheIfNeeded()).then {
+      mapOf("KMI" to listOf(EstablishmentToWing("KMI", "KIRKHAM", "A")))
+    }
+
+    val datasetId = "dataset-id"
+    val id = "age-breakdown-dashboard-1"
+    val name = "test-dashboard-name"
+    val description = "description"
+    val dashboard = Dashboard(
+      id,
+      name,
+      description,
+      datasetId,
+      listOf(),
+    )
+    val parameter = Parameter(
+      0,
+      "paramName",
+      ParameterType.String,
+      AutoComplete,
+      "display",
+      true,
+      ReferenceType.ESTABLISHMENT,
+    )
+    val multiphaseQuery = MultiphaseQuery(
+      index = 0,
+      datasource = mock<Datasource>(),
+      query = "SELECT * FROM a",
+      parameters = listOf(parameter),
+    )
+    val dashboardDataset = Dataset(
+      id = datasetId,
+      name = "name",
+      datasource = "datasource",
+      query = "",
+      schema = Schema(listOf(SchemaField("n", ParameterType.String, "d"))),
+      multiphaseQuery = listOf(multiphaseQuery),
+    )
+    val actual = dashboardDefinitionMapper.toDashboardDefinition(
+      dashboard = dashboard,
+      allDatasets = listOf(dashboardDataset),
+    )
+    val expected = DashboardDefinition(
+      id,
+      name,
+      description,
+      listOf(),
+      listOf(
+        FieldDefinition(
+          name = parameter.name,
+          display = parameter.display,
+          sortable = false,
+          defaultsort = false,
+          type = FieldType.String,
+          mandatory = false,
+          visible = false,
+          filter = FilterDefinition(
+            type = FilterType.AutoComplete,
+            mandatory = parameter.mandatory,
+            interactive = false,
+            index = parameter.index,
             staticOptions = listOf(
               FilterOption(
                 "KMI",

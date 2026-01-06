@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper
@@ -9,12 +11,15 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
@@ -34,13 +39,31 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
         ?.let { listOf(validateAndMapFieldIdDynamicFilter(findFilterDefinition(productDefinition, reportFieldId), reportFieldId, prefix)) }
     } ?: emptyList()
 
-  protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): String? = definition.report.specification
-    ?.field
-    ?.firstOrNull { it.defaultSort }
-    ?.name
-    ?.removePrefix(REF_PREFIX)
+  protected fun calculateDefaultSortColumn(definition: SingleReportProductDefinition): Pair<String?, Boolean> {
+    val defaultSortField = definition.report.specification
+      ?.field
+      ?.firstOrNull { it.defaultSort }
 
-  protected fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?): String? = findSortColumn(sortColumn, productDefinition.reportDataset) ?: calculateDefaultSortColumn(productDefinition)
+    if (defaultSortField == null) {
+      return Pair(null, false)
+    }
+
+    return Pair(defaultSortField.name.removePrefix(REF_PREFIX), defaultSortField.sortDirection == SortDirection.ASC)
+  }
+
+  protected fun sortColumnFromQueryOrGetDefault(productDefinition: SingleReportProductDefinition, sortColumn: String?, sortedAsc: Boolean?): Pair<String?, Boolean> {
+    val sortColumn = findSortColumn(sortColumn, productDefinition.reportDataset)
+    if (sortColumn == null) {
+      val (sortColumn, sortDirection) = calculateDefaultSortColumn(productDefinition)
+      val computedSortedAsc = if (sortedAsc != null && sortColumn != null) sortedAsc else sortDirection
+      return Pair(sortColumn, computedSortedAsc)
+    }
+    return Pair(
+      sortColumn,
+      sortedAsc
+        ?: (productDefinition.report.specification?.field?.firstOrNull { it.name.removePrefix(REF_PREFIX) == sortColumn }?.sortDirection == SortDirection.ASC),
+    )
+  }
 
   protected fun findSortColumn(
     sortColumn: String?,
@@ -160,6 +183,44 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
       )
     }
   }
+
+  protected fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> = row.entries.associate { e -> e.key to MetricData(e.value) }
+
+  protected fun partitionToPromptsAndFilters(
+    filters: Map<String, String>,
+    parameters: List<Parameter>?,
+  ) = filters.asIterable().partition { e -> isPrompt(e, parameters) }
+
+  private fun isPrompt(
+    e: Map.Entry<String, String>,
+    parameters: List<Parameter>?,
+  ) = parameters?.any { it.name == e.key } ?: false
+
+  protected fun extractParameters(dataset: Dataset, multiphaseQuery: List<MultiphaseQuery>? = null) = multiphaseQuery?.takeIf { it.isNotEmpty() }?.mapNotNull { q -> q.parameters }
+    ?.filterNot { p -> p.isEmpty() }?.flatten()?.distinct()
+    ?: dataset.parameters
+
+  protected fun buildPrompts(
+    multiphaseQuery: List<MultiphaseQuery>?,
+    promptsMap: List<Map.Entry<String, String>>,
+    parameters: List<Parameter>?,
+  ) = (
+    multiphaseQuery?.takeIf { it.isNotEmpty() }?.flatMap { q -> buildPrompts(promptsMap, q.parameters) }?.distinct()
+      ?: buildPrompts(promptsMap, parameters)
+    )
+
+  private fun buildPrompts(
+    prompts: List<Map.Entry<String, String>>,
+    parameters: List<Parameter>?,
+  ): List<Prompt> = prompts.mapNotNull { entry ->
+    mapToMatchingParameter(entry, parameters)
+      ?.let { Prompt(entry.key, entry.value, it.filterType) }
+  }
+
+  private fun mapToMatchingParameter(
+    entry: Map.Entry<String, String>,
+    parameters: List<Parameter>?,
+  ) = parameters?.firstOrNull { parameter -> parameter.name == entry.key }
 
   private fun validateAndMapFieldIdDynamicFilter(filterDefinition: FilterDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
     if (filterDefinition.dynamicOptions == null) {

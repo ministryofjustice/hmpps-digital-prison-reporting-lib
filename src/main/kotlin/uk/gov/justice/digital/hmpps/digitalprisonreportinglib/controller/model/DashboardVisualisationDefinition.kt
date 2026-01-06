@@ -6,4 +6,5 @@ data class DashboardVisualisationDefinition(
   val display: String? = null,
   val description: String? = null,
   val columns: DashboardVisualisationColumnsDefinition,
+  val options: DashboardOptionDefinition? = null,
 )

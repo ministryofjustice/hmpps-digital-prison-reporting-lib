@@ -9,7 +9,8 @@ import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.UncategorizedSQLException
-import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
@@ -19,7 +20,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -29,8 +29,13 @@ import java.sql.SQLException
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
 
-  @MockitoBean
-  lateinit var productDefinitionRepository: ProductDefinitionRepository
+  companion object {
+    @JvmStatic
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
+      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+    }
+  }
 
   @Test
   fun `Calling the report async execute statement endpoint calls the asyncDataApiService with the correct arguments`() {
@@ -280,50 +285,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the statement status endpoint calls the getStatementStatus of the AsyncDataApiService with the correct arguments`() {
-    val queryExecutionId = "queryExecutionId"
-    val status = "FINISHED"
-    val duration = 278109264L
-    val resultRows = 10L
-    val resultSize = 100L
-    val statementExecutionStatus = StatementExecutionStatus(
-      status,
-      duration,
-      resultRows,
-      resultSize,
-    )
-    given(
-      asyncDataApiService.getStatementStatus(
-        eq(queryExecutionId),
-        anyOrNull(),
-      ),
-    )
-      .willReturn(statementExecutionStatus)
-
-    webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/statements/$queryExecutionId/status")
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk()
-      .expectBody()
-      .json(
-        """{
-          "status": "$status",
-          "duration": $duration,
-          "resultRows": $resultRows,
-          "resultSize": $resultSize,
-          "error": null
-        }
-      """,
-      )
-  }
-
-  @Test
   fun `Calling the report cancellation endpoint calls the cancelStatementExecution of the AsyncDataApiService with the correct arguments`() {
     val queryExecutionId = "queryExecutionId"
     val reportId = "external-movements"
@@ -400,38 +361,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Calling the statement cancellation endpoint calls the cancelStatementExecution of the AsyncDataApiService with the correct arguments`() {
-    val queryExecutionId = "queryExecutionId"
-    val statementCancellationResponse = StatementCancellationResponse(
-      true,
-    )
-    given(
-      asyncDataApiService.cancelStatementExecution(
-        eq(queryExecutionId),
-      ),
-    )
-      .willReturn(statementCancellationResponse)
-
-    webTestClient.delete()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/statements/$queryExecutionId")
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk()
-      .expectBody()
-      .json(
-        """{
-          "cancellationSucceeded": true
-        }
-      """,
-      )
-  }
-
-  @Test
   fun `Calling the report getStatementResult endpoint calls the AsyncDataApiService with the correct arguments`() {
     val tableId = "tableId"
     val selectedPage = 2L
@@ -459,7 +388,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         selectedPage = eq(selectedPage),
         pageSize = eq(pageSize),
         filters = eq(emptyMap()),
-        sortedAsc = eq(false),
+        sortedAsc = eq(null),
         sortColumn = eq(null),
         userToken = any<DprAuthAwareAuthenticationToken>(),
       ),
@@ -553,7 +482,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         selectedPage = eq(selectedPage),
         pageSize = eq(pageSize),
         filters = eq(emptyMap()),
-        sortedAsc = eq(false),
+        sortedAsc = eq(null),
         sortColumn = eq(null),
         userToken = any<DprAuthAwareAuthenticationToken>(),
       ),

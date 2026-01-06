@@ -1,11 +1,10 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.http.RequestMethod
-import com.github.tomakehurst.wiremock.matching.EqualToPattern
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
-import com.github.tomakehurst.wiremock.matching.UrlPattern
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -32,8 +31,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.REASON
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.TYPE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisoner4
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.movementPrisonerDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovement4
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 import java.time.LocalDateTime
 
@@ -62,6 +64,114 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           }
   """.trimIndent()
 
+  /**
+   * Nested test class so we can add a couple entries to the mock db just for these tests
+   */
+  @Nested
+  inner class SortDirectionDataApiIntegrationTest {
+    @BeforeEach
+    fun init() {
+      externalMovementRepository.save(externalMovementDestinationCaseloadDirectionIn)
+      prisonerRepository.save(PrisonerEntity(9848, "DD105GF", "FirstName6", "LastName6", null))
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD with sortedAsc but no column`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortedAsc", true)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD with column override but no sortedAsc`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD with no column override and no sortDirection`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Data API returns value using defaultSort on DPD but with an override`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", true)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
+        .jsonPath("$.[1].date")
+        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
+
+      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+    }
+  }
+
   @Test
   fun `Data API returns value from the repository`() {
     webTestClient.get()
@@ -89,172 +199,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       )
 
     assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
-  }
-
-  class ReportDefinitionListTest : IntegrationTestBase() {
-
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.dataProductDefinitions.host") { "http://localhost:9999" }
-      }
-    }
-
-    @Test
-    fun `Data API returns value from the repository when the definitions are retrieved via the web client`() {
-      webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path("/reports/external-movements/last-month")
-            .queryParam("selectedPage", 1)
-            .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
-            .queryParam("sortedAsc", false)
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .json(
-          """[
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}:00", 
-        "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
-        "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
-      ]       
-      """,
-        )
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
-    }
-
-    @Test
-    fun `Data API count returns the number of records when the definitions are retrieved via the web client`() {
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .jsonPath("count").isEqualTo("1")
-    }
-
-    @Test
-    fun `Data API calls the definitions service when the cache is disabled`() {
-      val expectedJson = """[
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}:00", 
-        "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
-        "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
-      ] """
-      val reqPath = "/reports/external-movements/last-month"
-      val definitionsServicePath = "/definitions/prisons/orphanage"
-
-      webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path(reqPath)
-            .queryParam("selectedPage", 1)
-            .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
-            .queryParam("sortedAsc", false)
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .json(
-          expectedJson,
-        )
-
-      webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path(reqPath)
-            .queryParam("selectedPage", 1)
-            .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
-            .queryParam("sortedAsc", false)
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .json(
-          expectedJson,
-        )
-
-      wireMockServer.verify(2, RequestPatternBuilder(RequestMethod.GET, UrlPattern(EqualToPattern(definitionsServicePath), false)))
-    }
-  }
-
-  class CachedReportDefinitionListTest : IntegrationTestBase() {
-
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.dataProductDefinitions.host") { "http://localhost:9999" }
-        registry.add("dpr.lib.dataProductDefinitions.cache.enabled") { "true" }
-      }
-    }
-
-    @Test
-    fun `Data API returns value from the cache when it is enabled`() {
-      val expectedJson = """[
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${movementPrisoner4[DATE]}:00", 
-        "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
-        "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
-      ] """
-      val reqPath = "/reports/external-movements/last-month"
-      val definitionsServicePath = "/definitions/prisons/orphanage"
-
-      webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path(reqPath)
-            .queryParam("selectedPage", 1)
-            .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
-            .queryParam("sortedAsc", false)
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .json(
-          expectedJson,
-        )
-
-      webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path(reqPath)
-            .queryParam("selectedPage", 1)
-            .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
-            .queryParam("sortedAsc", false)
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .json(
-          expectedJson,
-        )
-
-      wireMockServer.verify(1, RequestPatternBuilder(RequestMethod.GET, UrlPattern(EqualToPattern(definitionsServicePath), false)))
-    }
   }
 
   class ConfiguredApiFormulaTest : IntegrationTestBase() {

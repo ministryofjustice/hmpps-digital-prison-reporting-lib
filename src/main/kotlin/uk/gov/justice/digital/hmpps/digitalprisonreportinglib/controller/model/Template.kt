@@ -10,4 +10,6 @@ enum class Template(@JsonValue val template: String) {
   SectionedSummary("summary-section"),
   ParentChild("parent-child"),
   ParentChildSection("parent-child-section"),
+  RowSection("row-section"),
+  RowSectionChild("row-section-child"),
 }
