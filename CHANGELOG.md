@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.0
+- Updated core kotlin dependencies "jvm", "plugin.spring" and "plugin.jpa" to 2.3.0
+
 # 9.10.0
 - Updated uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter, which precipitated also updating uk.gov.justice.hmpps.gradle-spring-boot to keep spring-boot versions in line
 
