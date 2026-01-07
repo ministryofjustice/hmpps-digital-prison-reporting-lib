@@ -1,7 +1,7 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "7.1.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
   kotlin("jvm") version "2.1.21"
   kotlin("plugin.spring") version "2.1.21"
   kotlin("plugin.jpa") version "2.1.21"
@@ -20,7 +20,7 @@ val awsSdkVersion = "2.31.48"
 val testContainersVersion = "1.21.0"
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -42,7 +42,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.5.0")
 
   // Testing
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.12.6")
