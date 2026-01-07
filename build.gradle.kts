@@ -2,9 +2,9 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
-  kotlin("jvm") version "2.1.21"
+  kotlin("jvm") version "2.3.0"
   kotlin("plugin.spring") version "2.3.0"
-  kotlin("plugin.jpa") version "2.1.21"
+  kotlin("plugin.jpa") version "2.3.0"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "3.1.0"
   id("maven-publish")
