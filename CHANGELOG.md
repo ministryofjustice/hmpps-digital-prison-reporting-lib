@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.10.0
+- Updated uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter, which precipitated also updating uk.gov.justice.hmpps.gradle-spring-boot to keep spring-boot versions in line
+
 # 9.9.0
 - Updated various libraries for security purposes:
   - com.google.code.gson:gson
