@@ -39,7 +39,7 @@ dependencies {
   // Postgres dependencies
   implementation("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  implementation("org.postgresql:postgresql:42.5.0")
+  implementation("org.postgresql:postgresql:42.7.8")
 
   // Testing
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
@@ -47,7 +47,7 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.12.6")
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
-  testImplementation("org.postgresql:postgresql:42.7.5")
+  testImplementation("org.postgresql:postgresql:42.7.8")
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
 
