@@ -2,9 +2,12 @@ Below you can find the changes included in each release.
 
 # 9.11.2
 - Improve checks when trying to create summary table
+- bump io.jsonwebtoken:jjwt
 
 # 9.11.1
 - Include ValueVisualisationColumnDefinition "equals" field in the dashboard JSON definition response even if it has null value. 
+- Bump guava
+- Bump testcontainers
 
 # 9.11.0
 - Updated core kotlin dependencies "jvm", "plugin.spring" and "plugin.jpa" to 2.3.0
