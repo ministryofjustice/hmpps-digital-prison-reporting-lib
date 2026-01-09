@@ -17,7 +17,7 @@ configurations {
 }
 
 val awsSdkVersion = "2.41.4"
-val testContainersVersion = "1.21.0"
+val testContainersVersion = "1.21.4"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
