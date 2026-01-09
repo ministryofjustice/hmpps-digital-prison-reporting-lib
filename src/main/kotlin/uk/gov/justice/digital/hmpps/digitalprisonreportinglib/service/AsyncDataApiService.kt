@@ -36,6 +36,7 @@ class AsyncDataApiService(
   val tableIdGenerator: TableIdGenerator,
   identifiedHelper: IdentifiedHelper,
   val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
+  val s3ApiService: S3ApiService,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) : CommonDataApiService(identifiedHelper) {
 
@@ -249,7 +250,7 @@ class AsyncDataApiService(
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
     userToken: DprAuthAwareAuthenticationToken?,
-  ): List<Map<String, Any?>> {
+  ): List<Map<String, Any?>>? {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     val summary = productDefinition.report.summary?.find { it.id == summaryId }
@@ -258,23 +259,33 @@ class AsyncDataApiService(
     val dataset = identifiedHelper.findOrFail(productDefinition.allDatasets, summary.dataset)
     val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
-    // Request data from the summary table.
-    // If it doesn't exist, create it (waiting for creation to complete).
-    // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-    val results = try {
-      redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
-    } catch (e: UncategorizedSQLException) {
-      if (e.message?.contains("Entity Not Found") == true) {
-        configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query, productDefinition.datasource.name)
-        redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
-      } else {
-        throw e
-      }
+    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition)
+    if (results == null) {
+      return null
     }
 
     return results.map {
       formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
     }
+  }
+
+  // Request data from the summary table.
+  // If it doesn't exist, create it (waiting for creation to complete).
+  // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition): List<Map<String, Any?>>? {
+    val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
+    val s3DataExists = s3ApiService.doesObjectExist(tableSummaryId)
+
+    if (tableExists && s3DataExists) {
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+    }
+    if (!tableExists && !s3DataExists) {
+      configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query, productDefinition.datasource.name)
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+    }
+    // This is an error state really, and we only get here because the summary table creation is happening as part of this GET and because the cleanup for the tables and S3 happen independently
+    // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
+    return null
   }
 
   fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
