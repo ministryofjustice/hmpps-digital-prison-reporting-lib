@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.1
+- Include ValueVisualisationColumnDefinition "equals" field in the dashboard JSON definition response even if it has null value. 
+
 # 9.11.0
 - Updated core kotlin dependencies "jvm", "plugin.spring" and "plugin.jpa" to 2.3.0
 
