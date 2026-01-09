@@ -534,7 +534,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       userToken = authentication as? DprAuthAwareAuthenticationToken,
     )
     return ResponseEntity
-      .status(if (summaryResult == null)  HttpStatus.BAD_REQUEST else HttpStatus.OK)
+      .status(if (summaryResult == null) HttpStatus.BAD_REQUEST else HttpStatus.OK)
       .body(summaryResult)
   }
 }
