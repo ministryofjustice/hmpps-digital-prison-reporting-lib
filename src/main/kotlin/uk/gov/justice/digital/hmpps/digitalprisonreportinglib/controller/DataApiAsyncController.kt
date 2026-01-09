@@ -523,17 +523,18 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     @RequestParam
     filters: Map<String, String>,
     authentication: Authentication,
-  ): ResponseEntity<List<Map<String, Any?>>> = ResponseEntity
-    .status(HttpStatus.OK)
-    .body(
-      asyncDataApiService.getSummaryResult(
-        tableId = tableId,
-        summaryId = summaryId,
-        reportId = reportId,
-        reportVariantId = reportVariantId,
-        dataProductDefinitionsPath = dataProductDefinitionsPath,
-        filters = filterHelper.filtersOnly(filters),
-        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-      ),
+  ): ResponseEntity<List<Map<String, Any?>>> {
+    val summaryResult = asyncDataApiService.getSummaryResult(
+      tableId = tableId,
+      summaryId = summaryId,
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filters = filterHelper.filtersOnly(filters),
+      userToken = authentication as? DprAuthAwareAuthenticationToken,
     )
+    return ResponseEntity
+      .status(if (summaryResult == null) HttpStatus.BAD_REQUEST else HttpStatus.OK)
+      .body(summaryResult)
+  }
 }

@@ -29,6 +29,7 @@ dependencies {
 
   // AWS
   implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")
+  implementation("software.amazon.awssdk:s3:$awsSdkVersion")
   implementation("software.amazon.awssdk:athena:$awsSdkVersion")
   implementation("software.amazon.awssdk:sts:$awsSdkVersion")
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
