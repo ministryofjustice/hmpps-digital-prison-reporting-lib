@@ -17,7 +17,7 @@ class FlywayConfig(private val missingReportDataSource: DataSource) {
       .schemas("missingreportsubmission")
       .baselineOnMigrate(true)
       .target(MigrationVersion.LATEST)
-      .locations("classpath:migration/common")
+      .locations("classpath:migration/dpr/missing-report")
       .load().migrate()
   }
 }

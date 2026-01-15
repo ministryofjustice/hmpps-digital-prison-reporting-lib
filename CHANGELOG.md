@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.3 
+- Change flyway migration path so that the library migration scripts do not automatically apply during migrations of hosting services.  
+
 # 9.11.2
 - Improve checks when trying to create summary table
 - bump io.jsonwebtoken:jjwt
