@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.3
+- Added missing S3ApiService to the AutoConfiguration.imports which causes hosting apps which use the service to fail at startup.
+
 # 9.11.2
 - Change flyway migration path so that the library migration scripts do not automatically apply during migrations of hosting services.
 - Improve checks when trying to create summary table

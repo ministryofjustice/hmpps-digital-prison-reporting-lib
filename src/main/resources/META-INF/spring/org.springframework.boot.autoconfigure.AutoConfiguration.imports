@@ -42,3 +42,4 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.FlywayConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionRepository
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.S3ApiService
