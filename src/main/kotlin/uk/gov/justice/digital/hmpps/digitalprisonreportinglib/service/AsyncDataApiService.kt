@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import java.io.Writer
+import java.sql.ResultSet
 import java.util.Base64
 
 @Service
@@ -181,6 +183,87 @@ class AsyncDataApiService(
       }
     }
     return statementStatus
+  }
+
+  fun downloadCsv(
+    writer: Writer,
+    tableId: String,
+    reportId: String,
+    reportVariantId: String,
+    dataProductDefinitionsPath: String? = null,
+    filters: Map<String, String>,
+    sortedAsc: Boolean?,
+    sortColumn: String? = null,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ) {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+    val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
+    var columnNames: List<String>? = null
+    redshiftDataApiRepository.streamExternalTableResult(
+      tableId = tableId,
+      filters = validateAndMapFilters(productDefinition, filters, true),
+      sortedAsc = computedSortedAsc,
+      sortColumn = computedSortColumn,
+      rowConsumer = { rs ->
+        if (columnNames == null) {
+          columnNames = extractColumnNames(rs)
+          writeCsvHeader(writer, columnNames, productDefinition.reportDataset.schema.field.map(SchemaField::name))
+        }
+        writeRowWithFormulaAsCsv(rs, writer, formulaEngine, columnNames)
+      },
+    )
+    writer.flush()
+  }
+
+  private fun writeCsvHeader(
+    writer: Writer,
+    columnNames: List<String>,
+    schemaFields: List<String>,
+  ) {
+    writer.write(
+      formatColumnNamesToSourceFieldNamesCasing(columnNames, schemaFields).joinToString(",") { escapeCsv(it) },
+    )
+    writer.write("\n")
+  }
+
+  private fun extractColumnNames(rs: ResultSet): List<String> {
+    val meta = rs.metaData
+    return (1..meta.columnCount).map { meta.getColumnLabel(it) }
+  }
+
+  private fun writeRowWithFormulaAsCsv(
+    rs: ResultSet,
+    writer: Writer,
+    formulaEngine: FormulaEngine,
+    columnNames: List<String>,
+  ) {
+    val row = mutableMapOf<String, Any?>()
+
+    columnNames.forEachIndexed { index, name ->
+      row[name] = rs.getObject(index + 1)
+    }
+    val rowWithFormulasApplied = formulaEngine.applyFormulas(row)
+
+    columnNames.forEachIndexed { index, col ->
+      if (index > 0) writer.write(",")
+      writer.write(escapeCsv(rowWithFormulasApplied[col]))
+    }
+    writer.write("\n")
+  }
+
+  private fun escapeCsv(value: Any?): String {
+    if (value == null) return ""
+
+    val str = value.toString()
+    val needsEscaping = str.contains(",") || str.contains("\"") || str.contains("\n")
+
+    return if (needsEscaping) {
+      "\"${str.replace("\"", "\"\"")}\""
+    } else {
+      str
+    }
   }
 
   fun getStatementResult(

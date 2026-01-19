@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.headers.Header
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpHeaders
@@ -28,7 +30,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import java.io.OutputStreamWriter
 import java.util.Collections.singletonList
+import java.util.zip.GZIPOutputStream
 
 @Validated
 @RestController
@@ -536,5 +540,67 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     return ResponseEntity
       .status(if (summaryResult == null) HttpStatus.BAD_REQUEST else HttpStatus.OK)
       .body(summaryResult)
+  }
+
+  @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/download", produces = ["text/csv"])
+  @Operation(
+    description = "Streams the entire result set of the async query execution as a csv file.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun downloadCsv(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    dataProductDefinitionsPath: String? = null,
+    @PathVariable("tableId") tableId: String,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @RequestParam sortColumn: String?,
+    @RequestParam sortedAsc: Boolean?,
+    authentication: Authentication,
+    request: HttpServletRequest,
+    response: HttpServletResponse,
+  ) {
+    response.contentType = "text/csv"
+
+    val acceptsGzip =
+      request.getHeader("Accept-Encoding")?.contains("gzip") == true
+
+    val outputStream =
+      if (acceptsGzip) {
+        response.setHeader("Content-Encoding", "gzip")
+        GZIPOutputStream(response.outputStream)
+      } else {
+        response.outputStream
+      }
+
+    val gzipSuffix = if (acceptsGzip) ".gz" else ""
+    response.setHeader(
+      "Content-Disposition",
+      "attachment; filename=$reportId-$reportVariantId.csv$gzipSuffix",
+    )
+
+    outputStream.use { out ->
+      OutputStreamWriter(out, Charsets.UTF_8).use { writer ->
+        asyncDataApiService.downloadCsv(
+          writer = writer,
+          tableId = tableId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          dataProductDefinitionsPath = dataProductDefinitionsPath,
+          filters = filterHelper.filtersOnly(filters),
+          sortedAsc = sortedAsc,
+          sortColumn = sortColumn,
+          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        )
+      }
+    }
   }
 }
