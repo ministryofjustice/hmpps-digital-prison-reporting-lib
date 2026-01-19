@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.4
+- Added new download endpoint to stream the CSV response.
+
 # 9.11.3
 - Added missing S3ApiService to the AutoConfiguration.imports which causes hosting apps which use the service to fail at startup.
 

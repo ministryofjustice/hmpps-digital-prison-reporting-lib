@@ -29,6 +29,11 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     fieldNames: List<String>,
   ) = row.entries.associate { e -> transformKey(e.key, fieldNames) to e.value }
 
+  protected fun formatColumnNamesToSourceFieldNamesCasing(
+    columnHeaders: List<String>,
+    fieldNames: List<String>,
+  ) = columnHeaders.map { transformKey(it, fieldNames) }
+
   protected fun buildAndValidateDynamicFilter(
     reportFieldId: String?,
     prefix: String?,

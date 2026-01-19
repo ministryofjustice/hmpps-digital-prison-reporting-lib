@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.sql.ResultSet
 import java.util.Base64
 
 abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
@@ -146,6 +147,47 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         resultRows = 0,
         resultSize = 0,
       )
+  }
+
+  fun streamExternalTableResult(
+    tableId: String,
+    filters: List<ConfiguredApiRepository.Filter>,
+    sortedAsc: Boolean = false,
+    sortColumn: String? = null,
+    rowConsumer: (ResultSet) -> Unit,
+    namedParamJdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
+  ) {
+    val stopwatch = StopWatch.createStarted()
+
+    val whereClause = buildFiltersWhereClause(filters)
+    val orderByClause = buildOrderByClause(sortColumn, sortedAsc)
+
+    val query = """
+    SELECT *
+    FROM reports.$tableId
+    WHERE $whereClause
+    $orderByClause
+    """.trimIndent()
+
+    log.debug("Download query: {}", query)
+
+    namedParamJdbcTemplate.jdbcTemplate.query(
+      { connection ->
+        val ps = connection.prepareStatement(
+          query,
+          ResultSet.TYPE_FORWARD_ONLY,
+          ResultSet.CONCUR_READ_ONLY,
+        )
+        ps.fetchSize = 1_000
+        ps
+      },
+      { rs ->
+        rowConsumer(rs)
+      },
+    )
+
+    stopwatch.stop()
+    log.debug("Download execution time in ms: {}", stopwatch.time)
   }
 
   protected fun mapAthenaStateToRedshiftState(queryState: String): String {
