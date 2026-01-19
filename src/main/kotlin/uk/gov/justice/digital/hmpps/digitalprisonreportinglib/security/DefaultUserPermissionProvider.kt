@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Case
 
 class DefaultUserPermissionProvider(private val manageUsersWebClient: WebClient) : UserPermissionProvider {
 
-  override fun getActiveCaseloadId(username: String): String {
+  override fun getActiveCaseloadId(username: String): String? {
     val caseloadResponse = getPrisonUsersCaseload(username)
 
     if (caseloadResponse.accountType != "GENERAL") {
@@ -38,13 +38,14 @@ class DefaultUserPermissionProvider(private val manageUsersWebClient: WebClient)
     .bodyToMono(ROLES)
     .block()!!.map { it.roleCode }
 
-  override fun getPrisonUsersCaseload(username: String): CaseloadResponse = manageUsersWebClient.get()
+  private fun getPrisonUsersCaseload(username: String): CaseloadResponse = manageUsersWebClient.get()
     .uri("/prisonusers/$username/caseloads")
     .header("Content-Type", "application/json")
     .retrieve()
     .bodyToMono(CaseloadResponse::class.java)
     .block()!!
 }
+
 data class RolesResponse(val roleCode: String)
 
 private val ROLES: ParameterizedTypeReference<List<RolesResponse>> =
