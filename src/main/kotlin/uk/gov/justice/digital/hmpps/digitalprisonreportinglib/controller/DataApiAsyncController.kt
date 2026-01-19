@@ -587,8 +587,8 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       "attachment; filename=$reportId-$reportVariantId.csv$gzipSuffix",
     )
 
-    outputStream.use { gzipStream ->
-      OutputStreamWriter(gzipStream, Charsets.UTF_8).use { writer ->
+    outputStream.use { out ->
+      OutputStreamWriter(out, Charsets.UTF_8).use { writer ->
         asyncDataApiService.downloadCsv(
           writer = writer,
           tableId = tableId,
