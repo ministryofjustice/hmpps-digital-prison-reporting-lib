@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.5
+- Removed .gz suffix from Downloaded CSV file as browser automatically decompresses it. 
+
 # 9.11.4
 - Added new download endpoint to stream the CSV response.
 
