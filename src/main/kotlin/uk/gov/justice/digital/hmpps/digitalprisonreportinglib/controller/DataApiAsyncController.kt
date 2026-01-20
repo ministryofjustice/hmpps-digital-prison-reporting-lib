@@ -581,10 +581,9 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
         response.outputStream
       }
 
-    val gzipSuffix = if (acceptsGzip) ".gz" else ""
     response.setHeader(
       "Content-Disposition",
-      "attachment; filename=$reportId-$reportVariantId.csv$gzipSuffix",
+      "attachment; filename=$reportId-$reportVariantId.csv",
     )
 
     outputStream.use { out ->
