@@ -38,6 +38,7 @@ class AsyncDataApiService(
   val tableIdGenerator: TableIdGenerator,
   identifiedHelper: IdentifiedHelper,
   val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
+  val s3ApiService: S3ApiService,
   @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
 ) : CommonDataApiService(identifiedHelper) {
 
@@ -356,10 +357,12 @@ class AsyncDataApiService(
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
   fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition): List<Map<String, Any?>>? {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
+    val s3DataExists = s3ApiService.doesObjectExist(tableSummaryId)
 
-    if (tableExists) {
+    if (tableExists && s3DataExists) {
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
-    } else {
+    }
+    if (!tableExists && !s3DataExists) {
       configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query, productDefinition.datasource.name)
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     }
