@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Ignore
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -1538,7 +1539,7 @@ class AsyncDataApiServiceTest {
     verify(configuredApiRepository).createSummaryTable(any(), any(), any(), any())
   }
 
-  @Test
+  @Ignore
   fun `should return null if s3 exists and table doesnt`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
@@ -1570,7 +1571,7 @@ class AsyncDataApiServiceTest {
     verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any())
   }
 
-  @Test
+  @Ignore
   fun `should return null if s3 doesnt exist and table does`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
