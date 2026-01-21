@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.6
+- Reverted changes which introduced S3 checks when trying to create summary table. 
+
 # 9.11.5
 - Removed .gz suffix from Downloaded CSV file as browser automatically decompresses it. 
 
