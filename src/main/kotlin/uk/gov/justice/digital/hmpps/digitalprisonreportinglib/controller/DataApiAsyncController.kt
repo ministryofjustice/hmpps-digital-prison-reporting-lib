@@ -562,12 +562,18 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     )
     @RequestParam
     filters: Map<String, String>,
+    @Parameter(
+      description = "List of column names to include in the generated report. If not provided all the columns will be returned.",
+    )
+    @RequestParam(required = false)
+    columns: List<String>? = null,
     @RequestParam sortColumn: String?,
     @RequestParam sortedAsc: Boolean?,
     authentication: Authentication,
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
+    val columnsTrimmed = columns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
     response.contentType = "text/csv"
 
     val acceptsGzip =
@@ -595,6 +601,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           reportVariantId = reportVariantId,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
+          columns = columnsTrimmed,
           sortedAsc = sortedAsc,
           sortColumn = sortColumn,
           userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,

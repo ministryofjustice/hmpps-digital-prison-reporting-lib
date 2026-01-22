@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
@@ -192,6 +193,7 @@ class AsyncDataApiService(
     reportVariantId: String,
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
+    columns: Set<String>? = null,
     sortedAsc: Boolean?,
     sortColumn: String? = null,
     userToken: DprAuthAwareAuthenticationToken?,
@@ -200,10 +202,13 @@ class AsyncDataApiService(
     checkAuth(productDefinition, userToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
+    validateColumns(productDefinition, columns)
+    validateSortColumn(computedSortColumn, columns)
     var columnNames: List<String>? = null
     redshiftDataApiRepository.streamExternalTableResult(
       tableId = tableId,
       filters = validateAndMapFilters(productDefinition, filters, true),
+      columns = columns,
       sortedAsc = computedSortedAsc,
       sortColumn = computedSortColumn,
       rowConsumer = { rs ->
@@ -215,6 +220,41 @@ class AsyncDataApiService(
       },
     )
     writer.flush()
+  }
+
+  private fun validateSortColumn(computedSortColumn: String?, columns: Set<String>?) {
+    computedSortColumn?.trim()?.let { sortC ->
+      // If no columns provided we select * in the query so validate only if columns exist
+      columns?.let { allCols ->
+        if (!allCols.contains(sortC)) {
+          throw IllegalArgumentException("Sort column '$sortC' is not in the list of columns provided.")
+        }
+      }
+    }
+  }
+
+  private fun validateColumns(
+    productDefinition: SingleReportProductDefinition,
+    columns: Set<String>? = null,
+  ) {
+    val specFieldNames =
+      productDefinition.report.specification
+        ?.field
+        ?.map { it.name }
+        ?.map { it.removePrefix(REF_PREFIX) }
+        ?.toSet()
+        ?: emptySet()
+    val schemaFieldNames = productDefinition.reportDataset.schema.field.map { it.name }.toSet()
+    columns?.takeIf { it.isNotEmpty() }?.let { cols ->
+      val invalidSchemaColumns = cols.filterNot { it in schemaFieldNames }
+      if (invalidSchemaColumns.isNotEmpty()) {
+        throw IllegalArgumentException("Invalid columns, not in schema: $invalidSchemaColumns")
+      }
+      val invalidSpecColumns = cols.filterNot { it in specFieldNames }
+      if (invalidSpecColumns.isNotEmpty()) {
+        throw IllegalArgumentException("Invalid columns, not in report specification: $invalidSpecColumns")
+      }
+    }
   }
 
   private fun writeCsvHeader(
