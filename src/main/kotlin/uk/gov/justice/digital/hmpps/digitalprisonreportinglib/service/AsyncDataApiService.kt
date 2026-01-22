@@ -224,7 +224,7 @@ class AsyncDataApiService(
 
   private fun validateSortColumn(computedSortColumn: String?, columns: Set<String>?) {
     computedSortColumn?.trim()?.let { sortC ->
-      //If no columns provided we select * in the query so validate only if columns exist
+      // If no columns provided we select * in the query so validate only if columns exist
       columns?.let { allCols ->
         if (!allCols.contains(sortC)) {
           throw IllegalArgumentException("Sort column '$sortC' is not in the list of columns provided.")
