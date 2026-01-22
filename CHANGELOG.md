@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.8
+- Added columns query param to the CSV download endpoint to enable column selection and validation.
+
 # 9.11.7
 - Re-introduce changes which introduced S3 checks when trying to create summary table.
 - 
