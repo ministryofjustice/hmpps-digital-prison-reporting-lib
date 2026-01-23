@@ -604,6 +604,8 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
 
     outputStream.use { out ->
       OutputStreamWriter(out, Charsets.UTF_8).use { writer ->
+        // Write 0xEF 0xBB 0xBF to the start of the file so that it's recognised as utf8 with BOM so that excel opens it properly
+        writer.write("\ufeff")
         asyncDataApiService.downloadCsv(
           writer = writer,
           tableId = tableId,

@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.10
+- Added 3 leading bytes at the front of the CSV file to be Excel friendly and mimic UTF-8-sig.
+
 # 9.11.9
 - Fixed issue with formulas not applying correctly when columns which were referenced by formulas were not part of the columns query param. 
 - Separate validation before starting to stream so that the 400 responses are not swallowed.
