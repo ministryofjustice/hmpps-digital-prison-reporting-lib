@@ -49,12 +49,6 @@ class ReportDefinitionService(
     )
   }
 
-  fun getDefinition(
-    reportId: String,
-    variantId: String,
-    dataProductDefinitionsPath: String? = null,
-  ): SingleReportProductDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
-
   private fun checkAuth(
     productDefinition: WithPolicy,
     userToken: DprAuthAwareAuthenticationToken?,
