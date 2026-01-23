@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.DownloadContext
 import java.io.Writer
 import java.sql.ResultSet
 import java.util.Base64
@@ -186,41 +187,72 @@ class AsyncDataApiService(
     return statementStatus
   }
 
+  fun prepareDownloadContext(
+    reportId: String,
+    reportVariantId: String,
+    dataProductDefinitionsPath: String?,
+    filters: Map<String, String>,
+    selectedColumns: List<String>?,
+    sortColumn: String?,
+    sortedAsc: Boolean?,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ): DownloadContext {
+      val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+      checkAuth(productDefinition, userToken)
+      val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+      val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
+      val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
+      validateColumns(productDefinition, columnsTrimmed)
+      validateSortColumn(computedSortColumn, columnsTrimmed)
+    return DownloadContext(
+      singleReportProductDefinition = productDefinition,
+      validatedFilters = validateAndMapFilters(productDefinition, filters, true),
+      formulaEngine = formulaEngine,
+      sortedAsc = computedSortedAsc,
+      sortColumn = computedSortColumn,
+      selectedAndValidatedColumns = columnsTrimmed
+    )
+  }
+
   fun downloadCsv(
     writer: Writer,
     tableId: String,
-    reportId: String,
-    reportVariantId: String,
-    dataProductDefinitionsPath: String? = null,
-    filters: Map<String, String>,
-    columns: Set<String>? = null,
-    sortedAsc: Boolean?,
-    sortColumn: String? = null,
-    userToken: DprAuthAwareAuthenticationToken?,
+    downloadContext: DownloadContext,
   ) {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, userToken)
-    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
-    val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
-    validateColumns(productDefinition, columns)
-    validateSortColumn(computedSortColumn, columns)
-    var columnNames: List<String>? = null
+    var allColumnsFormattedAndValidated: List<String>? = null
+    lateinit var csvOutputColumns : List<String>
     redshiftDataApiRepository.streamExternalTableResult(
       tableId = tableId,
-      filters = validateAndMapFilters(productDefinition, filters, true),
-      columns = columns,
-      sortedAsc = computedSortedAsc,
-      sortColumn = computedSortColumn,
+      filters = downloadContext.validatedFilters,
+      sortedAsc = downloadContext.sortedAsc,
+      sortColumn = downloadContext.sortColumn,
       rowConsumer = { rs ->
-        if (columnNames == null) {
-          columnNames = extractColumnNames(rs)
-          writeCsvHeader(writer, columnNames, productDefinition.reportDataset.schema.field.map(SchemaField::name))
+        if (allColumnsFormattedAndValidated == null) {
+          allColumnsFormattedAndValidated = formatColumnNamesToSourceFieldNamesCasing(extractColumnNames(rs), downloadContext.singleReportProductDefinition.reportDataset.schema.field.map(SchemaField::name))
+          csvOutputColumns = filterColumns(downloadContext.selectedAndValidatedColumns, allColumnsFormattedAndValidated)
+          writeCsvHeader(
+            writer = writer,
+            columns = csvOutputColumns
+          )
         }
-        writeRowWithFormulaAsCsv(rs, writer, formulaEngine, columnNames)
+        writeRowWithFormulaAsCsv(
+          rs = rs,
+          writer = writer,
+          formulaEngine = downloadContext.formulaEngine,
+          allColumns = allColumnsFormattedAndValidated,
+          csvOutputColumns = csvOutputColumns
+        )
       },
     )
     writer.flush()
   }
+
+  private fun filterColumns(
+    selectedAndValidatedColumns: Set<String>? = null,
+    allColumnsFormattedAndValidated: List<String>,
+  ): List<String> = selectedAndValidatedColumns?.takeIf { it.isNotEmpty() }?.let { selected ->
+    allColumnsFormattedAndValidated.filter { it in selected }
+  } ?: allColumnsFormattedAndValidated
 
   private fun validateSortColumn(computedSortColumn: String?, columns: Set<String>?) {
     computedSortColumn?.trim()?.let { sortC ->
@@ -259,11 +291,10 @@ class AsyncDataApiService(
 
   private fun writeCsvHeader(
     writer: Writer,
-    columnNames: List<String>,
-    schemaFields: List<String>,
+    columns: List<String>,
   ) {
     writer.write(
-      formatColumnNamesToSourceFieldNamesCasing(columnNames, schemaFields).joinToString(",") { escapeCsv(it) },
+      columns.joinToString(",") { escapeCsv(it) },
     )
     writer.write("\n")
   }
@@ -277,18 +308,13 @@ class AsyncDataApiService(
     rs: ResultSet,
     writer: Writer,
     formulaEngine: FormulaEngine,
-    columnNames: List<String>,
+    allColumns: List<String>,
+    csvOutputColumns: List<String>,
   ) {
-    val row = mutableMapOf<String, Any?>()
-
-    columnNames.forEachIndexed { index, name ->
-      row[name] = rs.getObject(index + 1)
-    }
-    val rowWithFormulasApplied = formulaEngine.applyFormulas(row)
-
-    columnNames.forEachIndexed { index, col ->
+    val fullRowWithFormulasApplied = formulaEngine.applyFormulas(buildRowWithAllColumns(allColumns, rs))
+    csvOutputColumns.forEachIndexed { index, col ->
       if (index > 0) writer.write(",")
-      writer.write(escapeCsv(rowWithFormulasApplied[col]))
+      writer.write(escapeCsv(fullRowWithFormulasApplied[col]))
     }
     writer.write("\n")
   }
@@ -304,6 +330,15 @@ class AsyncDataApiService(
     } else {
       str
     }
+  }
+
+  private fun buildRowWithAllColumns(columnNames: List<String>, rs: ResultSet): MutableMap<String, Any?> {
+    val row = mutableMapOf<String, Any?>()
+
+    columnNames.forEachIndexed { index, name ->
+      row[name] = rs.getObject(index + 1)
+    }
+    return row
   }
 
   fun getStatementResult(

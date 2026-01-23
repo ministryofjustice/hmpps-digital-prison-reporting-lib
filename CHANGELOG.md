@@ -1,11 +1,15 @@
 Below you can find the changes included in each release.
 
+# 9.11.9
+- Fixed issue with formulas not applying correctly when columns which formulas referenced were not part of the columns query param. 
+- Separate validation before starting to stream so that the 400 responses are not swallowed.
+
 # 9.11.8
 - Added columns query param to the CSV download endpoint to enable column selection and validation.
 
 # 9.11.7
 - Re-introduce changes which introduced S3 checks when trying to create summary table.
-- 
+
 # 9.11.6
 - Reverted changes which introduced S3 checks when trying to create summary table. 
 
