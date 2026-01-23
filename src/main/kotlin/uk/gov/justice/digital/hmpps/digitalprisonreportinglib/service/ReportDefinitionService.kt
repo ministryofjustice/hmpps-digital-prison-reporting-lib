@@ -53,9 +53,7 @@ class ReportDefinitionService(
     reportId: String,
     variantId: String,
     dataProductDefinitionsPath: String? = null,
-  ): SingleReportProductDefinition {
-    return productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
-  }
+  ): SingleReportProductDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
 
   private fun checkAuth(
     productDefinition: WithPolicy,

@@ -10,6 +10,5 @@ data class DownloadContext(
   val formulaEngine: FormulaEngine,
   val sortedAsc: Boolean,
   val sortColumn: String? = null,
-  val selectedAndValidatedColumns: Set<String>?= null,
-) {
-}
+  val selectedAndValidatedColumns: Set<String>? = null,
+)

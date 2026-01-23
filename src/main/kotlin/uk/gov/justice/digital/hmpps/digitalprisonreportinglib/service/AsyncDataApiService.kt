@@ -197,20 +197,20 @@ class AsyncDataApiService(
     sortedAsc: Boolean?,
     userToken: DprAuthAwareAuthenticationToken?,
   ): DownloadContext {
-      val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-      checkAuth(productDefinition, userToken)
-      val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
-      val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
-      val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
-      validateColumns(productDefinition, columnsTrimmed)
-      validateSortColumn(computedSortColumn, columnsTrimmed)
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
+    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+    val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
+    val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
+    validateColumns(productDefinition, columnsTrimmed)
+    validateSortColumn(computedSortColumn, columnsTrimmed)
     return DownloadContext(
       singleReportProductDefinition = productDefinition,
       validatedFilters = validateAndMapFilters(productDefinition, filters, true),
       formulaEngine = formulaEngine,
       sortedAsc = computedSortedAsc,
       sortColumn = computedSortColumn,
-      selectedAndValidatedColumns = columnsTrimmed
+      selectedAndValidatedColumns = columnsTrimmed,
     )
   }
 
@@ -220,7 +220,7 @@ class AsyncDataApiService(
     downloadContext: DownloadContext,
   ) {
     var allColumnsFormattedAndValidated: List<String>? = null
-    lateinit var csvOutputColumns : List<String>
+    lateinit var csvOutputColumns: List<String>
     redshiftDataApiRepository.streamExternalTableResult(
       tableId = tableId,
       filters = downloadContext.validatedFilters,
@@ -232,7 +232,7 @@ class AsyncDataApiService(
           csvOutputColumns = filterColumns(downloadContext.selectedAndValidatedColumns, allColumnsFormattedAndValidated)
           writeCsvHeader(
             writer = writer,
-            columns = csvOutputColumns
+            columns = csvOutputColumns,
           )
         }
         writeRowWithFormulaAsCsv(
@@ -240,7 +240,7 @@ class AsyncDataApiService(
           writer = writer,
           formulaEngine = downloadContext.formulaEngine,
           allColumns = allColumnsFormattedAndValidated,
-          csvOutputColumns = csvOutputColumns
+          csvOutputColumns = csvOutputColumns,
         )
       },
     )
