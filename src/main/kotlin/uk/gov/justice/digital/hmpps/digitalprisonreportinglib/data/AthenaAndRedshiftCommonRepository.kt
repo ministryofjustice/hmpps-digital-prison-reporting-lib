@@ -152,7 +152,6 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
   fun streamExternalTableResult(
     tableId: String,
     filters: List<ConfiguredApiRepository.Filter>,
-    columns: Set<String>? = null,
     sortedAsc: Boolean = false,
     sortColumn: String? = null,
     rowConsumer: (ResultSet) -> Unit,
@@ -160,12 +159,11 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
   ) {
     val stopwatch = StopWatch.createStarted()
 
-    val selectStatement = columns?.joinToString(", ") ?: "*"
     val whereClause = buildFiltersWhereClause(filters)
     val orderByClause = buildOrderByClause(sortColumn, sortedAsc)
 
     val query = """
-    SELECT $selectStatement
+    SELECT *
     FROM reports.$tableId
     WHERE $whereClause
     $orderByClause

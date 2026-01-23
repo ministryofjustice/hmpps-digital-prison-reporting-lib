@@ -573,7 +573,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
-    val columnsTrimmed = columns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
+    val downloadContext = asyncDataApiService.prepareDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filters = filterHelper.filtersOnly(filters),
+      selectedColumns = columns,
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+      userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    )
+
     response.contentType = "text/csv"
 
     val acceptsGzip =
@@ -597,14 +607,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
         asyncDataApiService.downloadCsv(
           writer = writer,
           tableId = tableId,
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-          filters = filterHelper.filtersOnly(filters),
-          columns = columnsTrimmed,
-          sortedAsc = sortedAsc,
-          sortColumn = sortColumn,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          downloadContext = downloadContext,
         )
       }
     }
