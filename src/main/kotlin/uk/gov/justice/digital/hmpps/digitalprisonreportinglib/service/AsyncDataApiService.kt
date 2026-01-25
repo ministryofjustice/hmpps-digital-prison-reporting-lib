@@ -203,7 +203,6 @@ class AsyncDataApiService(
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
     validateColumns(productDefinition, columnsTrimmed)
-    validateSortColumn(computedSortColumn, columnsTrimmed)
     return DownloadContext(
       singleReportProductDefinition = productDefinition,
       validatedFilters = validateAndMapFilters(productDefinition, filters, true),
@@ -253,17 +252,6 @@ class AsyncDataApiService(
   ): List<String> = selectedAndValidatedColumns?.takeIf { it.isNotEmpty() }?.let { selected ->
     allColumnsFormattedAndValidated.filter { it in selected }
   } ?: allColumnsFormattedAndValidated
-
-  private fun validateSortColumn(computedSortColumn: String?, columns: Set<String>?) {
-    computedSortColumn?.trim()?.let { sortC ->
-      // If no columns provided we select * in the query so validate only if columns exist
-      columns?.let { allCols ->
-        if (!allCols.contains(sortC)) {
-          throw IllegalArgumentException("Sort column '$sortC' is not in the list of columns provided.")
-        }
-      }
-    }
-  }
 
   private fun validateColumns(
     productDefinition: SingleReportProductDefinition,
