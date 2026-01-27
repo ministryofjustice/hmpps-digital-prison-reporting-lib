@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.15
+- Create S3ApiService conditionally only if S3Client Bean exists. 
+
 # 9.11.14
 - Fix loadType not being populated
 
