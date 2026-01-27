@@ -1,7 +1,11 @@
 Below you can find the changes included in each release.
 
-# 9.11.12
+# 9.11.13
 - Fix S3 client permission issue. 
+
+# 9.11.12
+- Updated various minor dependencies
+- Updated uk.gov.justice.hmpps.gradle-spring-boot to 9.3.0
 
 # 9.11.11
 - Removed validation of sort column against selected columns in the download endpoint. Sort column is already validated against schema fields and this is redundant as we select all columns in the SQL query.  

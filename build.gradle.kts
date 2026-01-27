@@ -1,7 +1,7 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.3.0"
   kotlin("jvm") version "2.3.0"
   kotlin("plugin.spring") version "2.3.0"
   kotlin("plugin.jpa") version "2.3.0"
@@ -16,7 +16,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.41.13"
+val awsSdkVersion = "2.41.15"
 val testContainersVersion = "1.21.4"
 
 dependencies {
@@ -53,8 +53,8 @@ dependencies {
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
 
   // Fix for security issue in transient dependency
-  implementation("ch.qos.logback:logback-classic:1.5.25")
-  implementation("ch.qos.logback:logback-core:1.5.25")
+  implementation("ch.qos.logback:logback-classic:1.5.26")
+  implementation("ch.qos.logback:logback-core:1.5.26")
 }
 
 java {
