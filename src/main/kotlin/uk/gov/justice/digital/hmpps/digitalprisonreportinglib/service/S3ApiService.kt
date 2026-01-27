@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 
 @Service
+@ConditionalOnBean(S3Client::class)
 class S3ApiService(
   @Value("\${dpr.lib.redshiftdataapi.s3location:#{'dpr-working-development/reports'}}")
   private val s3location: String,
