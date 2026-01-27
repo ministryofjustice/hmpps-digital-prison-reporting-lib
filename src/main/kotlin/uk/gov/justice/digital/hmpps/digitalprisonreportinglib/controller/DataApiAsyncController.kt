@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -39,6 +40,10 @@ import java.util.zip.GZIPOutputStream
 @Tag(name = "Data API - Asynchronous")
 @ConditionalOnProperty("dpr.lib.aws.sts.enabled", havingValue = "true")
 class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val filterHelper: FilterHelper) {
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
 
   @GetMapping("/async/reports/{reportId}/{reportVariantId}")
   @Operation(
@@ -591,9 +596,11 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
 
     val outputStream =
       if (acceptsGzip) {
+        log.debug("Streaming gzip content...")
         response.setHeader("Content-Encoding", "gzip")
         GZIPOutputStream(response.outputStream)
       } else {
+        log.debug("Streaming csv content...")
         response.outputStream
       }
 
@@ -611,6 +618,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           tableId = tableId,
           downloadContext = downloadContext,
         )
+        log.debug("Successfully wrote the entire ${if (acceptsGzip) "gzip" else "csv"} data.")
       }
     }
   }

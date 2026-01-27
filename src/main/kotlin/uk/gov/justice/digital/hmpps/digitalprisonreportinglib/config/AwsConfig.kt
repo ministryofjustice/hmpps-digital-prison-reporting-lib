@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.redshiftdata.RedshiftDataClient
+import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.sts.StsClient
 import software.amazon.awssdk.services.sts.auth.StsAssumeRoleCredentialsProvider
 import software.amazon.awssdk.services.sts.model.AssumeRoleRequest
@@ -70,6 +71,17 @@ class AwsConfig {
     stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider,
     properties: AwsProperties,
   ): RedshiftDataClient = RedshiftDataClient.builder()
+    .region(properties.getRegion())
+    .credentialsProvider(stsAssumeRoleCredentialsProvider)
+    .build()
+
+  @Bean
+  @ConditionalOnMissingBean(S3Client::class)
+  @ConditionalOnBean(StsAssumeRoleCredentialsProvider::class)
+  fun S3Client(
+    stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider,
+    properties: AwsProperties,
+  ): S3Client = S3Client.builder()
     .region(properties.getRegion())
     .credentialsProvider(stsAssumeRoleCredentialsProvider)
     .build()
