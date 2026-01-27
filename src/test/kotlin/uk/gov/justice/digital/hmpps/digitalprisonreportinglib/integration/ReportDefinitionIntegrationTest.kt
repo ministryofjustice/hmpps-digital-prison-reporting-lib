@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -689,6 +690,23 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
       prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
     }
+  }
+
+  @Test
+  fun `loadtype is populated properly`() {
+    prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+    externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+
+    val result = webTestClient.get()
+      .uri("/definitions")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBodyList<ReportDefinitionSummary>()
+      .returnResult()
+
+    assertThat(result.responseBody!!.first().variants[2].loadType).isEqualTo(LoadType.ASYNC)
   }
 
   @Test

@@ -362,6 +362,7 @@
     "destination" : [ ]
   }, {
     "id" : "last-year",
+    "loadType": "async",
     "name" : "Last year",
     "description" : "All movements in the past year",
     "created" : "2023-09-20T14:41:00.000Z",
