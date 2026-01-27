@@ -618,7 +618,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
           tableId = tableId,
           downloadContext = downloadContext,
         )
-        log.debug("Successfully wrote the entire ${if(acceptsGzip) "gzip" else "csv"} data.")
+        log.debug("Successfully wrote the entire ${if (acceptsGzip) "gzip" else "csv"} data.")
       }
     }
   }
