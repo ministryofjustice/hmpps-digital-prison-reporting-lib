@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.14
+- Fix loadType not being populated
+
 # 9.11.13
 - Fix S3 client permission issue. 
 
