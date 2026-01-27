@@ -76,7 +76,7 @@ class AwsConfig {
     .build()
 
   @Bean
-  @ConditionalOnMissingBean(RedshiftDataClient::class)
+  @ConditionalOnMissingBean(S3Client::class)
   @ConditionalOnBean(StsAssumeRoleCredentialsProvider::class)
   fun S3Client(
     stsAssumeRoleCredentialsProvider: StsAssumeRoleCredentialsProvider,
