@@ -19,7 +19,7 @@ data class ReportLite(
   override val description: String? = null,
   override val dataset: String,
   override val render: RenderMethod,
-  override val loadType: LoadType,
+  override val loadType: LoadType? = null,
 ) : AnyReport
 
 data class Report(
