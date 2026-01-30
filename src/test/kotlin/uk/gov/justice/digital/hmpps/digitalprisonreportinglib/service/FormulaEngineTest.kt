@@ -341,6 +341,40 @@ class FormulaEngineTest {
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
 
+  @ParameterizedTest
+  @CsvSource(
+    value = ["dev, dev.",
+    "test, test.",
+    "null,''",],
+    nullValues = ["null"]
+  )
+  fun `Formula engine outputs correct html for make_url formula when the env is at the start of the host url`(environment: String?, result:String?) {
+    val makeUrlFormula = "make_url('https://\${env}.moic.service.justice.gov.uk/prisons/\${prison_caseload}/prisoners/\${nomis_offender_id}/allocation/history',\${nomis_offender_id},TRUE)"
+//    val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},FALSE)"
+    val prison_caseload = "DEF"
+    val nomis_offender_id = "ABC123"
+    val prisonCaseloadName = "prison_caseload"
+    val nomisOffenderIdName = "nomis_offender_id"
+    val row: Map<String, Any> = mapOf(
+      prisonCaseloadName to prison_caseload,
+      nomisOffenderIdName to nomis_offender_id,
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:nomis_offender_id",
+        display = "NOMS ID",
+        visible = Visible.TRUE,
+        formula = makeUrlFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      prisonCaseloadName to prison_caseload,
+      nomisOffenderIdName to "<a href=\'https://${result}moic.service.justice.gov.uk/prisons/${prison_caseload}/prisoners/${nomis_offender_id}/allocation/history' target=\"_blank\">$nomis_offender_id</a>"
+    )
+    val formulaEngine = FormulaEngine(reportFields, environment)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
   @Test
   fun `Formula engine outputs the html for make_url formula with empty strings in place of null row values`() {
     val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},FALSE)"

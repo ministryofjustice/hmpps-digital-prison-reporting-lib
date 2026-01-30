@@ -97,8 +97,9 @@ class FormulaEngine(
   private fun interpolatePlusSignConcat(s: String): String = s.split('+').joinToString("") { it.trim().trim('\'') }
 
   private fun interpolateUrlFormula(formula: String, row: Map<String, Any?>): String {
+    val envRegexForProd = Regex("""-\$\{env\}|\$\{env\}\.""")
     val interpolatedEnv =
-      env?.let { formula.replace("\${env}", env) } ?: formula.replace("-\${env}", "")
+      env?.let { formula.replace("\${env}", env) } ?: formula.replace(envRegexForProd, "")
     val (hrefPlaceholder, linkTextPlaceholder, newTab) = interpolatedEnv.substring(MAKE_URL_FORMULA_PREFIX.length, interpolatedEnv.indexOf(")"))
       .split(",")
     val href = interpolateStandardFormula(hrefPlaceholder, row)
