@@ -370,7 +370,7 @@ class FormulaEngineTest {
     )
     val expectedRow: Map<String, Any> = mapOf(
       prisonCaseloadName to prisonCaseload,
-      nomisOffenderIdName to "<a href=\'https://${result}moic.service.justice.gov.uk/prisons/${prisonCaseload}/prisoners/${nomisOffenderId}/allocation/history' target=\"_blank\">$nomisOffenderId</a>",
+      nomisOffenderIdName to "<a href=\'https://${result}moic.service.justice.gov.uk/prisons/$prisonCaseload/prisoners/$nomisOffenderId/allocation/history' target=\"_blank\">$nomisOffenderId</a>",
     )
     val formulaEngine = FormulaEngine(reportFields, environment)
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
