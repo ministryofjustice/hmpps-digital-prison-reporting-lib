@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.17
+- Support env placeholder replacement for prod in make_url formula also when env is at the start of the host. e.g. https://${env}.abc.com
+
 # 9.11.16
 - Change LoadType on ReportLite to optional to represent the actual state of our stored DPDs.
 

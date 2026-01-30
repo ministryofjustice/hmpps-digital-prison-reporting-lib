@@ -39,7 +39,7 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
-    val overallStopwatch = StopWatch.createStarted()
+    val stopwatch = StopWatch.createStarted()
     val path = if (dataProductDefinitionsPath.isNullOrBlank()) DataDefinitionPath.ORPHANAGE.value else dataProductDefinitionsPath
     val keyMap = hashMapOf<String, AttributeValue>(
       "data-product-id" to AttributeValue.builder().s(definitionId).build(),
@@ -49,22 +49,16 @@ class DynamoDbProductDefinitionRepository(
       .tableName(properties.getDynamoDbTableArn())
       .key(keyMap)
       .build()
-    val ddbCallStopWatch = StopWatch.createStarted()
     val response = dynamoDbClient.getItem(getItemRequest)
-    ddbCallStopWatch.stop()
-    log.debug("DynamoDB call for product definition {} {} took: {}", definitionId, path, ddbCallStopWatch.time)
     if (!response.hasItem()) {
       throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
     val item = response.item()
-    val deserialisationStopwatch = StopWatch.createStarted()
     val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
-    deserialisationStopwatch.stop()
-    log.debug("Deserialisation of product definition {} {} took: {}", definitionId, path, deserialisationStopwatch.time)
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
     definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
-    overallStopwatch.stop()
-    log.debug("Getting product definition for {} {} took overall: {}", definitionId, path, overallStopwatch.time)
+    stopwatch.stop()
+    log.debug("Getting product definition for {} {} took overall: {}", definitionId, path, stopwatch.time)
     return definition
   }
 
