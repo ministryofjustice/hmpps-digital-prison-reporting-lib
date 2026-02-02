@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 9.11.18
+- Update logback-core, logback-classic to 1.5.27
+- Update awsSdkVersion to 2.41.19
+
 # 9.11.17
 - Support env placeholder replacement for prod in make_url formula also when env is at the start of the host. e.g. https://${env}.abc.com
 
