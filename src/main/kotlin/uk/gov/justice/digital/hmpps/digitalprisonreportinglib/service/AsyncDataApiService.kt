@@ -271,7 +271,7 @@ class AsyncDataApiService(
   private fun matchingReportField(
     reportFields: List<ReportField>?,
     schemaField: SchemaField,
-  ): ReportField? = reportFields?.first { it.name.removePrefix(REF_PREFIX) == (schemaField.name) }
+  ): ReportField? = reportFields?.firstOrNull { it.name.removePrefix(REF_PREFIX) == (schemaField.name) }
 
   private fun filterAndSortColumns(
     selectedAndValidatedColumns: Set<String>? = null,
