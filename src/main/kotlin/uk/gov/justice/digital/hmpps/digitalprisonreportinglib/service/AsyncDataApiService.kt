@@ -260,8 +260,14 @@ class AsyncDataApiService(
     reportFields: List<ReportField>?,
     schemaFields: List<SchemaField>,
   ): Map<String, String> = schemaFields.associate { schemaField ->
-    schemaField.name to (matchingReportField(reportFields, schemaField)?.display?.ifBlank { schemaField.display } ?: schemaField.display)
+    schemaField.name to calculateDisplayField(reportFields, schemaField)
   }
+
+  private fun calculateDisplayField(
+    reportFields: List<ReportField>?,
+    schemaField: SchemaField,
+  ): String =
+    matchingReportField(reportFields, schemaField)?.display?.ifBlank { schemaField.display } ?: schemaField.display
 
   private fun matchingReportField(
     reportFields: List<ReportField>?,
