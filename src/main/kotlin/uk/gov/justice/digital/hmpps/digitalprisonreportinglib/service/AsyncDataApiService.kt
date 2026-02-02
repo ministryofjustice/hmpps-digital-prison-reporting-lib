@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataA
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
@@ -204,7 +205,8 @@ class AsyncDataApiService(
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
     validateColumns(productDefinition, columnsTrimmed)
     return DownloadContext(
-      singleReportProductDefinition = productDefinition,
+      schemaFields = productDefinition.reportDataset.schema.field,
+      reportFields = productDefinition.report.specification?.field,
       validatedFilters = validateAndMapFilters(productDefinition, filters, true),
       formulaEngine = formulaEngine,
       sortedAsc = computedSortedAsc,
@@ -227,11 +229,14 @@ class AsyncDataApiService(
       sortColumn = downloadContext.sortColumn,
       rowConsumer = { rs ->
         if (allColumnsFormattedAndValidated == null) {
-          allColumnsFormattedAndValidated = formatColumnNamesToSourceFieldNamesCasing(extractColumnNames(rs), downloadContext.singleReportProductDefinition.reportDataset.schema.field.map(SchemaField::name))
-          csvOutputColumns = filterColumns(downloadContext.selectedAndValidatedColumns, allColumnsFormattedAndValidated)
+          allColumnsFormattedAndValidated = formatColumnNamesToSourceFieldNamesCasing(
+            columnHeaders = extractColumnNames(rs),
+            fieldNames = downloadContext.schemaFields.map(SchemaField::name),
+          )
+          csvOutputColumns = filterAndSortColumns(downloadContext.selectedAndValidatedColumns, allColumnsFormattedAndValidated)
           writeCsvHeader(
             writer = writer,
-            columns = csvOutputColumns,
+            columns = formatColumnsToDisplayNames(csvOutputColumns, downloadContext.reportFields, downloadContext.schemaFields),
           )
         }
         writeRowWithFormulaAsCsv(
@@ -246,11 +251,24 @@ class AsyncDataApiService(
     writer.flush()
   }
 
-  private fun filterColumns(
+  fun formatColumnsToDisplayNames(columnNames: List<String>, reportFields: List<ReportField>?, schemaFields: List<SchemaField>): List<String> {
+    val mapColToDisplay = mapAllColumnNamesToDisplayFields(reportFields, schemaFields)
+    return columnNames.map { columnName -> mapColToDisplay[columnName] ?: columnName }
+  }
+
+  private fun mapAllColumnNamesToDisplayFields(
+    reportFields: List<ReportField>?,
+    schemaFields: List<SchemaField>,
+  ): Map<String, String> = schemaFields.associate { schemaField ->
+    val reportField: ReportField? = reportFields?.first { it.name.removePrefix(REF_PREFIX) == (schemaField.name) }
+    (reportField?.name ?: schemaField.name) to (reportField?.display?.ifBlank { schemaField.display } ?: schemaField.display)
+  }
+
+  private fun filterAndSortColumns(
     selectedAndValidatedColumns: Set<String>? = null,
     allColumnsFormattedAndValidated: List<String>,
   ): List<String> = selectedAndValidatedColumns?.takeIf { it.isNotEmpty() }?.let { selected ->
-    allColumnsFormattedAndValidated.filter { it in selected }
+    selected.filter { it in allColumnsFormattedAndValidated }
   } ?: allColumnsFormattedAndValidated
 
   private fun validateColumns(

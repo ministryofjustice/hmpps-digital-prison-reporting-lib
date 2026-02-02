@@ -244,7 +244,7 @@
         "template": "list",
         "field": [
           {
-            "name": "$ref:name",
+            "name": "$ref:non-matching-field",
             "display": "Full Name",
             "formula": "",
             "visible": "true",

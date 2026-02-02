@@ -74,7 +74,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(definition.name).isEqualTo("External Movements")
       assertThat(courtAndHospitalMovementsReport.name).isEqualTo("Court And Hospital Movement DPD")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-      assertThat(definition.variants).hasSize(3)
+      assertThat(definition.variants).hasSize(4)
       assertThat(definition.variants[0]).isNotNull
       assertThat(definition.variants[1]).isNotNull
       assertThat(definition.variants[2]).isNotNull
@@ -188,7 +188,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
       assertThat(definition.name).isEqualTo("External Movements")
       assertThat(definition.description).isEqualTo("Reports about prisoner external movements")
-      assertThat(definition.variants).hasSize(3)
+      assertThat(definition.variants).hasSize(4)
       assertThat(definition.variants[0]).isNotNull
       assertThat(definition.variants[1]).isNotNull
       assertThat(definition.variants[2]).isNotNull
@@ -246,7 +246,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
     val definition = result.responseBody!!.first()
 
-    assertThat(definition.variants).hasSize(3)
+    assertThat(definition.variants).hasSize(4)
   }
 
   @Test
@@ -680,6 +680,11 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                   "description": "All movements in the past year",
                   "id": "last-year",
                   "name": "Last year"
+              },
+              {
+                  "description": "A test report with only prison number and name",
+                  "id": "fewer-spec-fields-than-dataset-schema-fields",
+                  "name": "Fewer Report Spec Fields Than Dataset Schema Fields"
               }
           ]
       }
