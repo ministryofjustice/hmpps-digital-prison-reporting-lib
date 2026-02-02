@@ -49,4 +49,20 @@ class JsonFileProductDefinitionRepositoryTest {
     }
     assertThat(exception).message().isEqualTo("Invalid Dataset ID: non-matching-dataset")
   }
+
+  @Test
+  fun `getSingleReportProductDefinition fails when report fields do not match any dataset fields`() {
+    val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("nonMatchingDatasetProductDefinition.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
+    val exception = assertThrows(IllegalArgumentException::class.java) {
+      jsonFileProductDefinitionRepository.getSingleReportProductDefinition(
+        "dpd001-court-hospital-movements",
+        "report002-hospital-movement",
+      )
+    }
+    assertThat(exception).message().isEqualTo("Invalid SchemaField ID: non-matching-field")
+  }
 }

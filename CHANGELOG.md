@@ -1,5 +1,10 @@
 Below you can find the changes included in each release.
 
+# 9.11.19
+- CSV headers changed to be the same as the calculated report field/schema field display values from the schema field name values they were previously.
+- Order of the CSV columns changed to be based on the selected columns order if there are selected columns instead the original database table column order.
+- Added validation to the report definition endpoint so that if any report specification fields are not included in the dataset schema fields a 400 response is returned. 
+
 # 9.11.18
 - Update logback-core, logback-classic to 1.5.27
 - Update awsSdkVersion to 2.41.19

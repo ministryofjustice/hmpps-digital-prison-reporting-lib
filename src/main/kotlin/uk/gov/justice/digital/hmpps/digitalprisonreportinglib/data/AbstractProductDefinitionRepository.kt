@@ -18,6 +18,7 @@ abstract class AbstractProductDefinitionRepository(
     val productDefinition: ProductDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
     val reportDefinition = identifiedHelper.findOrFail(productDefinition.report, reportId)
     val dataSet = identifiedHelper.findOrFail(productDefinition.dataset, reportDefinition.dataset)
+    reportDefinition.specification?.field?.forEach { specField -> identifiedHelper.findOrFail(dataSet.schema.field, specField.name) }
 
     return SingleReportProductDefinition(
       id = definitionId,

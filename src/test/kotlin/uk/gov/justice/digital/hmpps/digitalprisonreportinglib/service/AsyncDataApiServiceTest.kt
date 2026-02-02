@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mockito
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -49,13 +50,16 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Multiph
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -66,6 +70,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.io.StringWriter
+import java.sql.ResultSet
+import java.sql.ResultSetMetaData
 import java.util.UUID
 
 class AsyncDataApiServiceTest {
@@ -115,7 +122,7 @@ class AsyncDataApiServiceTest {
   private val tableIdGenerator: TableIdGenerator = TableIdGenerator()
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
-  private val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
+  private val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
 
   @BeforeEach
   fun setup() {
@@ -391,7 +398,7 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val e = assertThrows<ValidationException> {
-      configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
+      asyncDataApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
     }
     assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
@@ -413,7 +420,7 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val e = assertThrows<ValidationException> {
-      configuredApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, sortColumn, sortedAsc, authToken)
+      asyncDataApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, sortColumn, sortedAsc, authToken)
     }
     assertEquals(SyncDataApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
   }
@@ -1325,7 +1332,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val actual = configuredApiService.getStatementResult(
+    val actual = asyncDataApiService.getStatementResult(
       tableId,
       reportId,
       reportVariantId,
@@ -1501,7 +1508,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val actual = configuredApiService.getSummaryResult(
+    val actual = asyncDataApiService.getSummaryResult(
       tableId,
       summaryId,
       reportId,
@@ -1531,7 +1538,7 @@ class AsyncDataApiServiceTest {
       s3ApiService.doesObjectExist(any()),
     ).thenReturn(false)
 
-    val actual = configuredApiService.getSummaryResult(
+    val actual = asyncDataApiService.getSummaryResult(
       tableId,
       summaryId,
       reportId,
@@ -1566,7 +1573,7 @@ class AsyncDataApiServiceTest {
       s3ApiService.doesObjectExist(any()),
     ).thenReturn(true)
 
-    val actual = configuredApiService.getSummaryResult(
+    val actual = asyncDataApiService.getSummaryResult(
       tableId,
       summaryId,
       reportId,
@@ -1601,7 +1608,7 @@ class AsyncDataApiServiceTest {
       s3ApiService.doesObjectExist(any()),
     ).thenReturn(false)
 
-    val actual = configuredApiService.getSummaryResult(
+    val actual = asyncDataApiService.getSummaryResult(
       tableId,
       summaryId,
       reportId,
@@ -1623,7 +1630,7 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.count(tableId),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.count(tableId)
+    val actual = asyncDataApiService.count(tableId)
 
     assertEquals(Count(expectedRepositoryResult), actual)
   }
@@ -1644,7 +1651,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val actual = configuredApiService.count(tableId, "external-movements", "last-month", filters, authToken)
+    val actual = asyncDataApiService.count(tableId, "external-movements", "last-month", filters, authToken)
 
     assertEquals(Count(expectedRepositoryResult), actual)
   }
@@ -1656,7 +1663,7 @@ class AsyncDataApiServiceTest {
       dataset = dataset(),
     )
 
-    val actual = configuredApiService.generateScheduledDatasetId(definition)
+    val actual = asyncDataApiService.generateScheduledDatasetId(definition)
     assertEquals("_MToxMA__", actual)
   }
 
@@ -1667,7 +1674,7 @@ class AsyncDataApiServiceTest {
       dataset = dataset(),
     )
 
-    val actual = configuredApiService.checkForScheduledDataset(definitionWithNoSchedule)
+    val actual = asyncDataApiService.checkForScheduledDataset(definitionWithNoSchedule)
     assertTrue(actual == null)
   }
 
@@ -1684,25 +1691,299 @@ class AsyncDataApiServiceTest {
       dataset = dataset("0 15 10 ? * MON-FRI"),
     )
     val tableId = "_MToxMA__"
-    val actual = configuredApiService.checkForScheduledDataset(definitionWithSchedule)
+    val actual = asyncDataApiService.checkForScheduledDataset(definitionWithSchedule)
 
     assertEquals(tableId, actual)
   }
 
-  private fun dataset(schedule: String? = null): Dataset = Dataset(
+  @Test
+  fun `prepareDownloadContext should return DownloadContext with validated inputs`() {
+    val selectedColumns = listOf("name ", "date")
+    val sortColumn = "name"
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.prepareDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = null,
+      filters = emptyMap(),
+      selectedColumns = selectedColumns,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      userToken = authToken,
+    )
+
+    assertEquals(
+      productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId).reportDataset.schema.field,
+      actual.schemaFields,
+    )
+    assertTrue(actual.sortedAsc)
+    assertEquals(sortColumn, actual.sortColumn)
+    assertThat(actual.selectedAndValidatedColumns).containsExactlyInAnyOrder("name", "date")
+    assertThat(actual.validatedFilters).isEmpty()
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "last-month, columnNotInSchema, schema",
+    "fewer-spec-fields-than-dataset-schema-fields, date, report specification",
+  )
+  fun `prepareDownloadContext should throw IllegalArgumentException when selected column is not in dataset schema or report spec`(variantId: String, column: String, errorMessage: String) {
+    val selectedColumns = listOf(column)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val e = assertThrows<IllegalArgumentException> {
+      asyncDataApiService.prepareDownloadContext(
+        reportId = reportId,
+        reportVariantId = variantId,
+        dataProductDefinitionsPath = null,
+        filters = emptyMap(),
+        selectedColumns = selectedColumns,
+        sortColumn = "name",
+        sortedAsc = true,
+        userToken = authToken,
+      )
+    }
+    assertEquals("Invalid columns, not in $errorMessage: [$column]", e.message)
+  }
+
+  @Test
+  fun `downloadCsv should write header and rows for all columns when no selected columns provided`() {
+    val sortColumn = "col1"
+    val writer = StringWriter()
+    val tableId = "table1"
+    val rs = mock<ResultSet>()
+    val meta = mock<ResultSetMetaData>()
+    val singleReportProductDefinition =
+      SingleReportProductDefinition(
+        id = "dpdId",
+        name = "name",
+        metadata = MetaData("auth", "v1", "owner"),
+        datasource = Datasource("dataId", "dataName"),
+        report =
+        report(
+          listOf(
+            ReportField(name = "col1", display = null),
+            ReportField(name = "col2", display = null),
+          ),
+        ),
+        reportDataset = dataset(
+          fields = listOf(
+            SchemaField(
+              name = "col1",
+              type = ParameterType.Long,
+              display = "column 1",
+              filter = null,
+            ),
+            SchemaField(
+              name = "col2",
+              type = ParameterType.String,
+              display = "column 2",
+              filter = null,
+            ),
+          ),
+        ),
+        policy = emptyList(),
+        allDatasets = emptyList(),
+        allReports = emptyList(),
+      )
+    val productDefinitionRepository = mock<ProductDefinitionRepository>()
+    whenever(productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)).thenReturn(singleReportProductDefinition)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+    val downloadContext = asyncDataApiService.prepareDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = null,
+      filters = emptyMap(),
+      selectedColumns = null,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      userToken = authToken,
+    )
+
+    whenever(rs.metaData).thenReturn(meta)
+    whenever(meta.columnCount).thenReturn(2)
+    whenever(meta.getColumnLabel(1)).thenReturn("col1")
+    whenever(meta.getColumnLabel(2)).thenReturn("col2")
+
+    whenever(rs.getObject(1)).thenReturn("value1")
+    whenever(rs.getObject(2)).thenReturn("value2")
+
+    asyncDataApiService.downloadCsv(
+      writer = writer,
+      tableId = tableId,
+      downloadContext = downloadContext,
+    )
+
+    val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
+    verify(redshiftDataApiRepository).streamExternalTableResult(
+      eq(tableId),
+      eq(emptyList()),
+      eq(true),
+      eq("col1"),
+      consumerCaptor.capture(),
+      anyOrNull(),
+    )
+    consumerCaptor.firstValue(rs)
+    assertThat(consumerCaptor.allValues).hasSize(1)
+    val output = writer.toString()
+    val lines = output.lines()
+
+    assertThat(lines[0]).isEqualTo("column 1,column 2")
+    assertThat(lines[1]).isEqualTo("value1,value2")
+  }
+
+  @Test
+  fun `downloadCsv should write header and rows for the selected columns with the selected column order`() {
+    val selectedColumns = listOf("col2", "col1")
+    val sortColumn = "col1"
+    val writer = StringWriter()
+    val tableId = "table1"
+    val rs = mock<ResultSet>()
+    val meta = mock<ResultSetMetaData>()
+    val singleReportProductDefinition =
+      SingleReportProductDefinition(
+        id = "dpdId",
+        name = "name",
+        metadata = MetaData("auth", "v1", "owner"),
+        datasource = Datasource("dataId", "dataName"),
+        report =
+        report(
+          listOf(
+            ReportField(name = "\$ref:col1", display = null),
+            ReportField(name = "col2", display = "Report Display Column 1"),
+            ReportField(name = "col3", display = null),
+          ),
+        ),
+        reportDataset = dataset(
+          fields = listOf(
+            SchemaField(
+              name = "col1",
+              type = ParameterType.Long,
+              display = "column 1",
+              filter = null,
+            ),
+            SchemaField(
+              name = "col2",
+              type = ParameterType.String,
+              display = "column 2",
+              filter = null,
+            ),
+            SchemaField(
+              name = "col3",
+              type = ParameterType.String,
+              display = "column 3",
+              filter = null,
+            ),
+          ),
+        ),
+        policy = emptyList(),
+        allDatasets = emptyList(),
+        allReports = emptyList(),
+      )
+    val productDefinitionRepository = mock<ProductDefinitionRepository>()
+    whenever(productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)).thenReturn(singleReportProductDefinition)
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+    val downloadContext = asyncDataApiService.prepareDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = null,
+      filters = emptyMap(),
+      selectedColumns = selectedColumns,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      userToken = authToken,
+    )
+
+    whenever(rs.metaData).thenReturn(meta)
+    whenever(meta.columnCount).thenReturn(2)
+    whenever(meta.getColumnLabel(1)).thenReturn("col1")
+    whenever(meta.getColumnLabel(2)).thenReturn("col2")
+    whenever(meta.getColumnLabel(3)).thenReturn("col3")
+
+    whenever(rs.getObject(1)).thenReturn("value1")
+    whenever(rs.getObject(2)).thenReturn("value2")
+    whenever(rs.getObject(3)).thenReturn("value3")
+
+    asyncDataApiService.downloadCsv(
+      writer = writer,
+      tableId = tableId,
+      downloadContext = downloadContext,
+    )
+
+    val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
+    verify(redshiftDataApiRepository).streamExternalTableResult(
+      eq(tableId),
+      eq(emptyList()),
+      eq(true),
+      eq("col1"),
+      consumerCaptor.capture(),
+      anyOrNull(),
+    )
+    consumerCaptor.firstValue(rs)
+    assertThat(consumerCaptor.allValues).hasSize(1)
+    val output = writer.toString()
+    val lines = output.lines()
+
+    assertThat(lines[0]).isEqualTo("Report Display Column 1,column 1")
+  }
+
+  private fun report(fields: List<ReportField>? = null): Report = Report(
+    id = "reportId",
+    name = "reportName",
+    version = "1",
+    render = RenderMethod.HTML,
+    dataset = "10",
+    specification =
+    Specification(
+      template = Template.List,
+      field = fields ?: listOf(
+        ReportField(name = "13", display = null),
+      ),
+      section = null,
+    ),
+    created = null,
+  )
+
+  private fun dataset(schedule: String? = null, fields: List<SchemaField>? = null): Dataset = Dataset(
     id = "10",
     name = "11",
     datasource = "12A",
     query = "12",
     schema = Schema(
-      field = listOf(
-        SchemaField(
-          name = "13",
-          type = ParameterType.Long,
-          display = "14",
-          filter = null,
+      field = fields
+        ?: listOf(
+          SchemaField(
+            name = "13",
+            type = ParameterType.Long,
+            display = "14",
+            filter = null,
+          ),
         ),
-      ),
     ),
     schedule = schedule,
   )
