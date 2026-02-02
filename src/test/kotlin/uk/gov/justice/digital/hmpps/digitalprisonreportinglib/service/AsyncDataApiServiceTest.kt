@@ -1893,6 +1893,12 @@ class AsyncDataApiServiceTest {
               display = "column 3",
               filter = null,
             ),
+            SchemaField(
+              name = "col4",
+              type = ParameterType.String,
+              display = "column 4",
+              filter = null,
+            ),
           ),
         ),
         policy = emptyList(),
@@ -1924,10 +1930,12 @@ class AsyncDataApiServiceTest {
     whenever(meta.getColumnLabel(1)).thenReturn("col1")
     whenever(meta.getColumnLabel(2)).thenReturn("col2")
     whenever(meta.getColumnLabel(3)).thenReturn("col3")
+    whenever(meta.getColumnLabel(3)).thenReturn("col4")
 
     whenever(rs.getObject(1)).thenReturn("value1")
     whenever(rs.getObject(2)).thenReturn("value2")
     whenever(rs.getObject(3)).thenReturn("value3")
+    whenever(rs.getObject(3)).thenReturn("value4")
 
     asyncDataApiService.downloadCsv(
       writer = writer,

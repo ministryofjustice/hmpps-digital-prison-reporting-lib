@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.20
+- Do not throw an error if a schema field does not have a matching report field during CSV download. 
+
 # 9.11.19
 - CSV headers changed to be the same as the calculated report field/schema field display values from the schema field name values they were previously.
 - Order of the CSV columns changed to be based on the selected columns order if there are selected columns instead the original database table column order.
