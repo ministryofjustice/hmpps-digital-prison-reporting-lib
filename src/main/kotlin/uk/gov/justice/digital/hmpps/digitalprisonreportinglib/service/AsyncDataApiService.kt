@@ -251,12 +251,10 @@ class AsyncDataApiService(
     writer.flush()
   }
 
-  fun formatColumnsToDisplayNames(columnNames: List<String>, reportFields: List<ReportField>?, schemaFields: List<SchemaField>): List<String> {
-    return mapAllColumnNamesToDisplayFields(reportFields, schemaFields)
-      .let {
-        columnNameToDisplayMap -> columnNames.map { columnName -> columnNameToDisplayMap[columnName] ?: columnName }
-      }
-  }
+  fun formatColumnsToDisplayNames(columnNames: List<String>, reportFields: List<ReportField>?, schemaFields: List<SchemaField>): List<String> = mapAllColumnNamesToDisplayFields(reportFields, schemaFields)
+    .let { columnNameToDisplayMap ->
+      columnNames.map { columnName -> columnNameToDisplayMap[columnName] ?: columnName }
+    }
 
   private fun mapAllColumnNamesToDisplayFields(
     reportFields: List<ReportField>?,
