@@ -252,8 +252,10 @@ class AsyncDataApiService(
   }
 
   fun formatColumnsToDisplayNames(columnNames: List<String>, reportFields: List<ReportField>?, schemaFields: List<SchemaField>): List<String> {
-    val mapColToDisplay = mapAllColumnNamesToDisplayFields(reportFields, schemaFields)
-    return columnNames.map { columnName -> mapColToDisplay[columnName] ?: columnName }
+    return mapAllColumnNamesToDisplayFields(reportFields, schemaFields)
+      .let {
+        columnNameToDisplayMap -> columnNames.map { columnName -> columnNameToDisplayMap[columnName] ?: columnName }
+      }
   }
 
   private fun mapAllColumnNamesToDisplayFields(
