@@ -260,9 +260,13 @@ class AsyncDataApiService(
     reportFields: List<ReportField>?,
     schemaFields: List<SchemaField>,
   ): Map<String, String> = schemaFields.associate { schemaField ->
-    val reportField: ReportField? = reportFields?.first { it.name.removePrefix(REF_PREFIX) == (schemaField.name) }
-    (reportField?.name ?: schemaField.name) to (reportField?.display?.ifBlank { schemaField.display } ?: schemaField.display)
+    schemaField.name to (matchingReportField(reportFields, schemaField)?.display?.ifBlank { schemaField.display } ?: schemaField.display)
   }
+
+  private fun matchingReportField(
+    reportFields: List<ReportField>?,
+    schemaField: SchemaField,
+  ): ReportField? = reportFields?.first { it.name.removePrefix(REF_PREFIX) == (schemaField.name) }
 
   private fun filterAndSortColumns(
     selectedAndValidatedColumns: Set<String>? = null,
@@ -449,6 +453,7 @@ class AsyncDataApiService(
     }
     // This is an error state really, and we only get here because the summary table creation is happening as part of this GET and because the cleanup for the tables and S3 happen independently
     // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
+    log.warn("Summary table in an inconsistent state.")
     return null
   }
 

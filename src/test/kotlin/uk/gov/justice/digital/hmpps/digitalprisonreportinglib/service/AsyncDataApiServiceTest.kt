@@ -1868,7 +1868,7 @@ class AsyncDataApiServiceTest {
         report =
         report(
           listOf(
-            ReportField(name = "col1", display = null),
+            ReportField(name = "\$ref:col1", display = null),
             ReportField(name = "col2", display = "Report Display Column 1"),
             ReportField(name = "col3", display = null),
           ),
