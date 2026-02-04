@@ -461,7 +461,7 @@ class AsyncDataApiService(
         // The only way to ensure this is by trying to retrieve the table and catch the corresponding exceptions.
         // We  get here because the summary table creation is happening as part of this GET and because the cleanup for the tables and S3 happen independently
         // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
-        log.warn("Summary table in an inconsistent state.")
+        log.warn("Summary table is in an expired state.")
         // Cause a failure to log the exact reason of the failure.
         return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
       } catch (e: Exception) {
