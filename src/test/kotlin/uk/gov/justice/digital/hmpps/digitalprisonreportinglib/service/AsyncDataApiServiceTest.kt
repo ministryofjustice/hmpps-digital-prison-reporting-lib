@@ -68,6 +68,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.io.StringWriter
@@ -132,7 +133,7 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
     whenever(
-      s3ApiService.doesObjectExist(any()),
+      s3ApiService.doesPrefixExist(any()),
     ).thenReturn(false)
   }
 
@@ -1535,7 +1536,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
     whenever(
-      s3ApiService.doesObjectExist(any()),
+      s3ApiService.doesPrefixExist(any()),
     ).thenReturn(false)
 
     val actual = asyncDataApiService.getSummaryResult(
@@ -1553,7 +1554,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should return null if s3 exists and table doesnt`() {
+  fun `should throw TableExpiredException if s3 exists and table doesnt`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
@@ -1570,25 +1571,28 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
     whenever(
-      s3ApiService.doesObjectExist(any()),
+      s3ApiService.doesPrefixExist(any()),
     ).thenReturn(true)
+    whenever(
+      redshiftDataApiRepository.getFullExternalTableResult(any(), anyOrNull()),
+    ).thenThrow(TableExpiredException("${tableId}_summaryId"))
 
-    val actual = asyncDataApiService.getSummaryResult(
-      tableId,
-      summaryId,
-      reportId,
-      reportVariantId,
-      filters = emptyMap(),
-      userToken = authToken,
-    )
-
-    assertEquals(null, actual)
-    verify(redshiftDataApiRepository, times(0)).getFullExternalTableResult(any(), anyOrNull())
+    Assertions.assertThrows(TableExpiredException::class.java) {
+      val actual = asyncDataApiService.getSummaryResult(
+        tableId,
+        summaryId,
+        reportId,
+        reportVariantId,
+        filters = emptyMap(),
+        userToken = authToken,
+      )
+    }
+    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
     verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any())
   }
 
   @Test
-  fun `should return null if s3 doesnt exist and table does`() {
+  fun `should throw TableExpiredException if s3 doesnt exist and table does`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
@@ -1605,20 +1609,22 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(false)
     whenever(
-      s3ApiService.doesObjectExist(any()),
+      s3ApiService.doesPrefixExist(any()),
     ).thenReturn(false)
-
-    val actual = asyncDataApiService.getSummaryResult(
-      tableId,
-      summaryId,
-      reportId,
-      reportVariantId,
-      filters = emptyMap(),
-      userToken = authToken,
-    )
-
-    assertEquals(null, actual)
-    verify(redshiftDataApiRepository, times(0)).getFullExternalTableResult(any(), anyOrNull())
+    whenever(
+      redshiftDataApiRepository.getFullExternalTableResult(any(), anyOrNull()),
+    ).thenThrow(TableExpiredException("${tableId}_summaryId"))
+    Assertions.assertThrows(TableExpiredException::class.java) {
+      asyncDataApiService.getSummaryResult(
+        tableId,
+        summaryId,
+        reportId,
+        reportVariantId,
+        filters = emptyMap(),
+        userToken = authToken,
+      )
+    }
+    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
     verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any())
   }
 
@@ -1684,7 +1690,7 @@ class AsyncDataApiServiceTest {
       redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(false)
     whenever(
-      s3ApiService.doesObjectExist(any()),
+      s3ApiService.doesPrefixExist(any()),
     ).thenReturn(true)
     val definitionWithSchedule = definition(
       scheduled = true,

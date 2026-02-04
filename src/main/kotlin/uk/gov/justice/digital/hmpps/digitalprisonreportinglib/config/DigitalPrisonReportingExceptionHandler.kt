@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.FORBIDDEN
+import org.springframework.http.HttpStatus.GONE
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
@@ -17,6 +18,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 
 @RestControllerAdvice
@@ -104,6 +106,10 @@ class DigitalPrisonReportingExceptionHandler {
   @ResponseStatus(FORBIDDEN)
   fun handleUserAuthorisationException(e: Exception): ResponseEntity<ErrorResponse> = respondWithForbiddenRequest(e)
 
+  @ExceptionHandler(TableExpiredException::class)
+  @ResponseStatus(GONE)
+  fun handleTableExpiredException(e: Exception): ResponseEntity<ErrorResponse> = respondWithResourceGone(e)
+
   private fun respondWithBadRequest(e: Exception): ResponseEntity<ErrorResponse> {
     log.info("Validation exception: {}", e.message)
     return ResponseEntity
@@ -138,6 +144,19 @@ class DigitalPrisonReportingExceptionHandler {
         ErrorResponse(
           status = FORBIDDEN,
           userMessage = "User Authorisation exception: ${e.message}",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  private fun respondWithResourceGone(e: Exception): ResponseEntity<ErrorResponse> {
+    log.info("Resource gone exception: {}", e.message)
+    return ResponseEntity
+      .status(GONE)
+      .body(
+        ErrorResponse(
+          status = GONE,
+          userMessage = "Resource gone exception: ${e.message}",
           developerMessage = e.message,
         ),
       )

@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.11.21
+- Fix issue with checking if an S3 file is missing as part of the summary endpoint.
+
 # 9.11.20
 - Do not throw an error if a schema field does not have a matching report field during CSV download. 
 

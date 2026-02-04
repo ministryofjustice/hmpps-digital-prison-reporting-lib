@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.DownloadContext
@@ -423,7 +424,7 @@ class AsyncDataApiService(
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
     userToken: DprAuthAwareAuthenticationToken?,
-  ): List<Map<String, Any?>>? {
+  ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     val summary = productDefinition.report.summary?.find { it.id == summaryId }
@@ -433,9 +434,6 @@ class AsyncDataApiService(
     val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
     val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition)
-    if (results == null) {
-      return null
-    }
 
     return results.map {
       formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
@@ -445,21 +443,33 @@ class AsyncDataApiService(
   // Request data from the summary table.
   // If it doesn't exist, create it (waiting for creation to complete).
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition): List<Map<String, Any?>>? {
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition): List<Map<String, Any?>> {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
-    val s3DataExists = s3ApiService.doesObjectExist(tableSummaryId)
-
+    val s3DataExists = s3ApiService.doesPrefixExist(tableSummaryId)
+    log.debug("Redshift table exists: $tableExists")
+    log.debug("S3 data exists: $s3DataExists")
     if (tableExists && s3DataExists) {
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
-    }
-    if (!tableExists && !s3DataExists) {
+    } else if (!tableExists && !s3DataExists) {
       configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query, productDefinition.datasource.name)
+      // Might need a small delay here as reading straight after creation might fail
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+    } else {
+      try {
+        // We cannot ensure total alignment of both the Redshift table and S3 data having completed their deletion before we check if one or the other is missing.
+        // If either of them is missing, it should be treated as a normal state of the table missing.
+        // The only way to ensure this is by trying to retrieve the table and catch the corresponding exceptions.
+        // We  get here because the summary table creation is happening as part of this GET and because the cleanup for the tables and S3 happen independently
+        // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
+        log.warn("Summary table is in an expired state.")
+        // Cause a failure to log the exact reason of the failure.
+        return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+      } catch (e: Exception) {
+        // Log what the actual error is when trying to retrieve the result in each case i.e. redshift table missing or S3 data missing
+        log.warn("Summary table {} has expired and cannot be retrieved", tableSummaryId, e)
+        throw TableExpiredException(tableSummaryId)
+      }
     }
-    // This is an error state really, and we only get here because the summary table creation is happening as part of this GET and because the cleanup for the tables and S3 happen independently
-    // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
-    log.warn("Summary table in an inconsistent state.")
-    return null
   }
 
   fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, userToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
