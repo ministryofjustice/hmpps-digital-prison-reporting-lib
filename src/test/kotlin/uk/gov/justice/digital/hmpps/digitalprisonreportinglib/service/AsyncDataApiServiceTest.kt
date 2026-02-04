@@ -1554,7 +1554,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should throw TableDeletedException if s3 exists and table doesnt`() {
+  fun `should throw TableExpiredException if s3 exists and table doesnt`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
@@ -1592,7 +1592,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `should throw TableDeletedException if s3 doesnt exist and table does`() {
+  fun `should throw TableExpiredException if s3 doesnt exist and table does`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     whenever(
