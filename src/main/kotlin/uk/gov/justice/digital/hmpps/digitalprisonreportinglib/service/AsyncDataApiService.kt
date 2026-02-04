@@ -466,7 +466,7 @@ class AsyncDataApiService(
         return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
       } catch (e: Exception) {
         // Log what the actual error is when trying to retrieve the result in each case i.e. redshift table missing or S3 data missing
-        log.warn("Failed to create summary table: ${e.message}")
+        log.warn("Summary table {} has expired and cannot be retrieved", tableSummaryId, e)
         throw TableExpiredException(tableSummaryId)
       }
     }
