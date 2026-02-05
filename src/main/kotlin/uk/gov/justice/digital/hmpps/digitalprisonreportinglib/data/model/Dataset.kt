@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import com.google.gson.annotations.JsonAdapter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer
+
 data class Dataset(
   val id: String,
   val name: String,
   val datasource: String,
-  val query: String,
+  @JsonAdapter(QueryDeserializer::class)
+  val query: List<MultiphaseQuery>,
   val schema: Schema,
   val parameters: List<Parameter>? = null,
   val schedule: String? = null,
