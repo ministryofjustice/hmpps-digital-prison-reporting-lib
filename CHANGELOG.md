@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.12.00
+- Formula engine does not produce HTML and returns the value as it is when the execution mode is CSV.
+
 # 9.11.21
 - Fix issue with checking if an S3 file is missing as part of the summary endpoint.
 

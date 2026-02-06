@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.FormulaExecutionMode
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.DownloadContext
 import java.io.Writer
 import java.sql.ResultSet
@@ -201,7 +202,6 @@ class AsyncDataApiService(
   ): DownloadContext {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
-    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
     validateColumns(productDefinition, columnsTrimmed)
@@ -209,7 +209,12 @@ class AsyncDataApiService(
       schemaFields = productDefinition.reportDataset.schema.field,
       reportFields = productDefinition.report.specification?.field,
       validatedFilters = validateAndMapFilters(productDefinition, filters, true),
-      formulaEngine = formulaEngine,
+      formulaEngine = FormulaEngine(
+        reportFields = productDefinition.report.specification?.field ?: emptyList(),
+        env = env,
+        identifiedHelper = identifiedHelper,
+        executionMode = FormulaExecutionMode.CSV_EXPORT,
+      ),
       sortedAsc = computedSortedAsc,
       sortColumn = computedSortColumn,
       selectedAndValidatedColumns = columnsTrimmed,
