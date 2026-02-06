@@ -1781,7 +1781,7 @@ class AsyncDataApiServiceTest {
         report =
         report(
           listOf(
-            ReportField(name = "col1", display = null),
+            ReportField(name = "col1", display = null, formula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/abc', my-url-text,TRUE)"),
             ReportField(name = "col2", display = null),
           ),
         ),
@@ -1875,7 +1875,7 @@ class AsyncDataApiServiceTest {
         report(
           listOf(
             ReportField(name = "\$ref:col1", display = null),
-            ReportField(name = "col2", display = "Report Display Column 1"),
+            ReportField(name = "col2", display = "Report Display Column 2"),
             ReportField(name = "col3", display = null),
           ),
         ),
@@ -1963,7 +1963,8 @@ class AsyncDataApiServiceTest {
     val output = writer.toString()
     val lines = output.lines()
 
-    assertThat(lines[0]).isEqualTo("Report Display Column 1,column 1")
+    assertThat(lines[0]).isEqualTo("Report Display Column 2,column 1")
+    assertThat(lines[1]).isEqualTo("value2,value1")
   }
 
   private fun report(fields: List<ReportField>? = null): Report = Report(
