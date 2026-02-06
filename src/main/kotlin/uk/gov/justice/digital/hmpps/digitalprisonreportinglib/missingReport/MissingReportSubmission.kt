@@ -6,9 +6,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 
-@ConditionalOnBean(MissingReportSubmissionsRepository::class)
 @Entity
 @Table(schema = "missingreportsubmission", name = "missing_report_submission")
 class MissingReportSubmission(
