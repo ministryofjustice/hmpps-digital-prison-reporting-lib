@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.12.01
+- Fixed issue with missing report submissions erroring. 
+
 # 9.12.00
 - Formula engine does not produce HTML and returns the value as it is when the execution mode is CSV.
 
