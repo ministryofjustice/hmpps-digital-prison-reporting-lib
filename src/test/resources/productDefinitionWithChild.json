@@ -122,7 +122,6 @@
     "classification": "report classification",
     "version" : "1.2.3",
     "dataset" : "$ref:external-movements",
-    "policy" : [ ],
     "render" : "HTML-child",
     "feature": [ {
       "type": "print"
@@ -212,7 +211,6 @@
       "classification": "report classification",
       "version" : "1.2.3",
       "dataset" : "$ref:prisoner-dataset",
-      "policy" : [ ],
       "render" : "HTML",
       "specification" : {
         "template" : "parent-child",
