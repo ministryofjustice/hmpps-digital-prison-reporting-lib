@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.12.2
+- Made MissingReportSubmissionsRepository conditional on MissingReportService bean.
+
 # 9.12.1
 - Fixed issue with missing report submissions erroring. 
 
