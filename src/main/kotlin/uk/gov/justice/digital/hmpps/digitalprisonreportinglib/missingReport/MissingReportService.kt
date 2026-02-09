@@ -18,4 +18,14 @@ class MissingReportService(
     val submission = MissingReportSubmission(userId, reportId, reportVariantId, reason)
     return missingReportSubmissionsRepository.save(submission)
   }
+
+  fun findMissingReportSubmissionBySubmissionId(
+    submissionId: Int,
+  ): MissingReportSubmission? = missingReportSubmissionsRepository.findById(submissionId)
+
+  fun findMissingReportSubmission(
+    reportId: String,
+    variantId: String,
+    userId: String,
+  ): MissingReportSubmission? = missingReportSubmissionsRepository.findMissingReportSubmission(reportId, variantId, userId)
 }
