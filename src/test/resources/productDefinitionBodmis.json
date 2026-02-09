@@ -91,7 +91,6 @@
     "classification": "report classification",
     "version" : "1.2.3",
     "dataset" : "$ref:external-movements",
-    "policy" : [ ],
     "render" : "HTML",
     "feature": [ {
       "type": "print"
@@ -202,7 +201,6 @@
     "classification": "report classification",
     "version" : "1.2.3",
     "dataset" : "$ref:external-movements",
-    "policy" : [ ],
     "render" : "HTML",
     "specification" : {
       "template" : "list",
