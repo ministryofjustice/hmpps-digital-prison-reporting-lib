@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
@@ -253,8 +254,17 @@ class ReportDefinitionMapperTest {
   private val identifiedHelper = IdentifiedHelper()
   private val establishmentCodesToWingsCacheService = mock<EstablishmentCodesToWingsCacheService>()
   private val alertCategoryCacheService: AlertCategoryCacheService = mock()
+  private val productDefinitionRepository: ProductDefinitionRepository = mock()
+  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
 
-  val mapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
+  val mapper = ReportDefinitionMapper(
+    syncDataApiService = configuredApiService,
+    identifiedHelper = identifiedHelper,
+    establishmentCodesToWingsCacheService = establishmentCodesToWingsCacheService,
+    alertCategoryCacheService = alertCategoryCacheService,
+    productDefinitionRepository = productDefinitionRepository,
+    productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+  )
 
   @Test
   fun `Getting report for user maps full data correctly`() {
@@ -929,9 +939,8 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-    val rdfMapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
 
-    val result = rdfMapper.mapReport(productDefinition, authToken)
+    val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -1032,9 +1041,8 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-    val rdfMapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
 
-    val result = rdfMapper.mapReport(productDefinition, authToken)
+    val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -1133,9 +1141,8 @@ class ReportDefinitionMapperTest {
         ),
       ),
     )
-    val rdfMapper = ReportDefinitionMapper(configuredApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService)
 
-    val result = rdfMapper.mapReport(productDefinition, authToken)
+    val result = mapper.mapReport(productDefinition, authToken)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 

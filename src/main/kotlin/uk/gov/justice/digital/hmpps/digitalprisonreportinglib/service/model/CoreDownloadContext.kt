@@ -5,12 +5,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine
 
-interface DownloadContext {
-  val schemaFields: List<SchemaField>
-  val reportFields: List<ReportField>?
-  val validatedFilters: List<ConfiguredApiRepository.Filter>
-  val formulaEngine: FormulaEngine
-  val sortedAsc: Boolean
-  val sortColumn: String?
-  val selectedAndValidatedColumns: Set<String>?
-}
+data class CoreDownloadContext(
+  override val schemaFields: List<SchemaField>,
+  override val reportFields: List<ReportField>? = null,
+  override val validatedFilters: List<ConfiguredApiRepository.Filter>,
+  override val formulaEngine: FormulaEngine,
+  override val sortedAsc: Boolean,
+  override val sortColumn: String? = null,
+  override val selectedAndValidatedColumns: Set<String>? = null,
+) : DownloadContext

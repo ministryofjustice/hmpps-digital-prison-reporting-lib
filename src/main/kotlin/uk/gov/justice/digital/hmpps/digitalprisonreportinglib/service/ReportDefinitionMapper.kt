@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.T
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.WordWrap
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
@@ -36,7 +37,16 @@ class ReportDefinitionMapper(
   identifiedHelper: IdentifiedHelper,
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
   alertCategoryCacheService: AlertCategoryCacheService,
-) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService) {
+  productDefinitionRepository: ProductDefinitionRepository,
+  productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
+) : DefinitionMapper(
+  syncDataApiService = syncDataApiService,
+  identifiedHelper = identifiedHelper,
+  establishmentCodesToWingsCacheService = establishmentCodesToWingsCacheService,
+  alertCategoryCacheService = alertCategoryCacheService,
+  productDefinitionRepository = productDefinitionRepository,
+  productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+) {
 
   fun mapReport(
     definition: SingleReportProductDefinition,

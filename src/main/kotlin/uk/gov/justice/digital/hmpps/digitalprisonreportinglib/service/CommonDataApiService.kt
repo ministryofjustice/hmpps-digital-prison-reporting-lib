@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
@@ -19,11 +20,29 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.FormulaExecutionMode
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.CoreDownloadContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.DownloadContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.io.Writer
+import java.sql.ResultSet
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
-abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
+abstract class CommonDataApiService(
+  val identifiedHelper: IdentifiedHelper,
+  val productDefinitionRepository: ProductDefinitionRepository,
+  val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
+  val env: String? = null,
+) {
+
+  companion object {
+    const val URL_ENV_SUFFIX_ENV_VAR = "\${URL_ENV_SUFFIX:#{null}}"
+  }
+
   protected fun formatColumnNamesToSourceFieldNamesCasing(
     row: Map<String, Any?>,
     fieldNames: List<String>,
@@ -191,6 +210,16 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
 
   protected fun toMetricData(row: Map<String, Any?>): Map<String, MetricData> = row.entries.associate { e -> e.key to MetricData(e.value) }
 
+  protected fun checkAuth(
+    productDefinition: WithPolicy,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ): Boolean {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
+      throw UserAuthorisationException("User does not have correct authorisation")
+    }
+    return true
+  }
+
   protected fun partitionToPromptsAndFilters(
     filters: Map<String, String>,
     parameters: List<Parameter>?,
@@ -226,6 +255,175 @@ abstract class CommonDataApiService(val identifiedHelper: IdentifiedHelper) {
     entry: Map.Entry<String, String>,
     parameters: List<Parameter>?,
   ) = parameters?.firstOrNull { parameter -> parameter.name == entry.key }
+
+  protected fun buildCoreDownloadContext(
+    reportId: String,
+    reportVariantId: String,
+    dataProductDefinitionsPath: String?,
+    filters: Map<String, String>,
+    selectedColumns: List<String>?,
+    sortColumn: String?,
+    sortedAsc: Boolean?,
+    userToken: DprAuthAwareAuthenticationToken?,
+  ): Pair<CoreDownloadContext, SingleReportProductDefinition> {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    checkAuth(productDefinition, userToken)
+    val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
+    val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toSet()?.takeIf { it.isNotEmpty() }
+    validateColumns(productDefinition, columnsTrimmed)
+    return CoreDownloadContext(
+      schemaFields = productDefinition.reportDataset.schema.field,
+      reportFields = productDefinition.report.specification?.field,
+      validatedFilters = validateAndMapFilters(productDefinition, filters, true),
+      formulaEngine = FormulaEngine(
+        reportFields = productDefinition.report.specification?.field ?: emptyList(),
+        env = env,
+        identifiedHelper = identifiedHelper,
+        executionMode = FormulaExecutionMode.CSV_EXPORT,
+      ),
+      sortedAsc = computedSortedAsc,
+      sortColumn = computedSortColumn,
+      selectedAndValidatedColumns = columnsTrimmed,
+    ) to productDefinition
+  }
+
+  protected fun populateRowConsumer(
+    downloadContext: DownloadContext,
+    writer: Writer,
+  ): (ResultSet) -> Unit {
+    var allColumnsFormattedAndValidated: List<String>? = null
+    lateinit var csvOutputColumns: List<String>
+    return { rs ->
+      if (allColumnsFormattedAndValidated == null) {
+        allColumnsFormattedAndValidated = formatColumnNamesToSourceFieldNamesCasing(
+          columnHeaders = extractColumnNames(rs),
+          fieldNames = downloadContext.schemaFields.map(SchemaField::name),
+        )
+        csvOutputColumns =
+          filterAndSortColumns(downloadContext.selectedAndValidatedColumns, allColumnsFormattedAndValidated)
+        writeCsvHeader(
+          writer = writer,
+          columns = formatColumnsToDisplayNames(
+            csvOutputColumns,
+            downloadContext.reportFields,
+            downloadContext.schemaFields,
+          ),
+        )
+      }
+      writeRowWithFormulaAsCsv(
+        rs = rs,
+        writer = writer,
+        formulaEngine = downloadContext.formulaEngine,
+        allColumns = allColumnsFormattedAndValidated,
+        csvOutputColumns = csvOutputColumns,
+      )
+    }
+  }
+
+  fun formatColumnsToDisplayNames(columnNames: List<String>, reportFields: List<ReportField>?, schemaFields: List<SchemaField>): List<String> = mapAllColumnNamesToDisplayFields(reportFields, schemaFields)
+    .let { columnNameToDisplayMap ->
+      columnNames.map { columnName -> columnNameToDisplayMap[columnName] ?: columnName }
+    }
+
+  private fun mapAllColumnNamesToDisplayFields(
+    reportFields: List<ReportField>?,
+    schemaFields: List<SchemaField>,
+  ): Map<String, String> = schemaFields.associate { schemaField ->
+    schemaField.name to calculateDisplayField(reportFields, schemaField)
+  }
+
+  private fun calculateDisplayField(
+    reportFields: List<ReportField>?,
+    schemaField: SchemaField,
+  ): String = matchingReportField(reportFields, schemaField)?.display?.ifBlank { schemaField.display } ?: schemaField.display
+
+  private fun matchingReportField(
+    reportFields: List<ReportField>?,
+    schemaField: SchemaField,
+  ): ReportField? = reportFields?.firstOrNull { it.name.removePrefix(REF_PREFIX) == (schemaField.name) }
+
+  private fun filterAndSortColumns(
+    selectedAndValidatedColumns: Set<String>? = null,
+    allColumnsFormattedAndValidated: List<String>,
+  ): List<String> = selectedAndValidatedColumns?.takeIf { it.isNotEmpty() }?.let { selected ->
+    selected.filter { it in allColumnsFormattedAndValidated }
+  } ?: allColumnsFormattedAndValidated
+
+  private fun validateColumns(
+    productDefinition: SingleReportProductDefinition,
+    columns: Set<String>? = null,
+  ) {
+    val specFieldNames =
+      productDefinition.report.specification
+        ?.field
+        ?.map { it.name }
+        ?.map { it.removePrefix(REF_PREFIX) }
+        ?.toSet()
+        ?: emptySet()
+    val schemaFieldNames = productDefinition.reportDataset.schema.field.map { it.name }.toSet()
+    columns?.takeIf { it.isNotEmpty() }?.let { cols ->
+      val invalidSchemaColumns = cols.filterNot { it in schemaFieldNames }
+      if (invalidSchemaColumns.isNotEmpty()) {
+        throw IllegalArgumentException("Invalid columns, not in schema: $invalidSchemaColumns")
+      }
+      val invalidSpecColumns = cols.filterNot { it in specFieldNames }
+      if (invalidSpecColumns.isNotEmpty()) {
+        throw IllegalArgumentException("Invalid columns, not in report specification: $invalidSpecColumns")
+      }
+    }
+  }
+
+  private fun writeCsvHeader(
+    writer: Writer,
+    columns: List<String>,
+  ) {
+    writer.write(
+      columns.joinToString(",") { escapeCsv(it) },
+    )
+    writer.write("\n")
+  }
+
+  private fun extractColumnNames(rs: ResultSet): List<String> {
+    val meta = rs.metaData
+    return (1..meta.columnCount).map { meta.getColumnLabel(it) }
+  }
+
+  private fun writeRowWithFormulaAsCsv(
+    rs: ResultSet,
+    writer: Writer,
+    formulaEngine: FormulaEngine,
+    allColumns: List<String>,
+    csvOutputColumns: List<String>,
+  ) {
+    val fullRowWithFormulasApplied = formulaEngine.applyFormulas(buildRowWithAllColumns(allColumns, rs))
+    csvOutputColumns.forEachIndexed { index, col ->
+      if (index > 0) writer.write(",")
+      writer.write(escapeCsv(fullRowWithFormulasApplied[col]))
+    }
+    writer.write("\n")
+  }
+
+  private fun escapeCsv(value: Any?): String {
+    if (value == null) return ""
+
+    val str = value.toString()
+    val needsEscaping = str.contains(",") || str.contains("\"") || str.contains("\n")
+
+    return if (needsEscaping) {
+      "\"${str.replace("\"", "\"\"")}\""
+    } else {
+      str
+    }
+  }
+
+  private fun buildRowWithAllColumns(columnNames: List<String>, rs: ResultSet): MutableMap<String, Any?> {
+    val row = mutableMapOf<String, Any?>()
+
+    columnNames.forEachIndexed { index, name ->
+      row[name] = rs.getObject(index + 1)
+    }
+    return row
+  }
 
   private fun validateAndMapFieldIdDynamicFilter(filterDefinition: FilterDefinition, fieldId: String, prefix: String): ConfiguredApiRepository.Filter {
     if (filterDefinition.dynamicOptions == null) {

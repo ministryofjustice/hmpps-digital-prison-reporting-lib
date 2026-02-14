@@ -55,7 +55,15 @@ class DashboardDefinitionMapperTest {
   private val syncDataApiService: SyncDataApiService = mock()
   private val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService = mock()
   private val alertCategoryCacheService: AlertCategoryCacheService = mock()
-  private val dashboardDefinitionMapper = DashboardDefinitionMapper(syncDataApiService, IdentifiedHelper(), establishmentCodesToWingsCacheService, alertCategoryCacheService)
+  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
+  private val dashboardDefinitionMapper = DashboardDefinitionMapper(
+    syncDataApiService = syncDataApiService,
+    identifiedHelper = IdentifiedHelper(),
+    establishmentCodesToWingsCacheService = establishmentCodesToWingsCacheService,
+    alertCategoryCacheService = alertCategoryCacheService,
+    productDefinitionRepository = productDefinitionRepository,
+    productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+  )
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {

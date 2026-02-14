@@ -1714,7 +1714,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.prepareDownloadContext(
+    val actual = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1751,7 +1751,7 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val e = assertThrows<IllegalArgumentException> {
-      asyncDataApiService.prepareDownloadContext(
+      asyncDataApiService.prepareAsyncDownloadContext(
         reportId = reportId,
         reportVariantId = variantId,
         dataProductDefinitionsPath = null,
@@ -1814,7 +1814,7 @@ class AsyncDataApiServiceTest {
         userToken = any(),
       ),
     ).thenReturn(true)
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1836,7 +1836,7 @@ class AsyncDataApiServiceTest {
     asyncDataApiService.downloadCsv(
       writer = writer,
       tableId = tableId,
-      downloadContext = downloadContext,
+      asyncDownloadContext = downloadContext,
     )
 
     val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
@@ -1920,7 +1920,7 @@ class AsyncDataApiServiceTest {
         userToken = any(),
       ),
     ).thenReturn(true)
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1946,7 +1946,7 @@ class AsyncDataApiServiceTest {
     asyncDataApiService.downloadCsv(
       writer = writer,
       tableId = tableId,
-      downloadContext = downloadContext,
+      asyncDownloadContext = downloadContext,
     )
 
     val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()

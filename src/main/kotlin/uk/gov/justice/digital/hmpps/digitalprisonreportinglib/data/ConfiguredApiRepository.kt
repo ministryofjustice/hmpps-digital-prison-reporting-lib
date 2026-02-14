@@ -1,12 +1,16 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import org.apache.commons.lang3.time.StopWatch
+import org.springframework.jdbc.core.ArgumentPreparedStatementSetter
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.namedparam.NamedParameterUtils
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.sql.ResultSet
 
 @Service
 class ConfiguredApiRepository(
@@ -52,6 +56,54 @@ class ConfiguredApiRepository(
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
     return result
+  }
+
+  fun streamExternalTableResult(
+    query: String,
+    policyEngineResult: String,
+    filters: List<ConfiguredApiRepository.Filter>,
+    sortedAsc: Boolean = false,
+    sortColumn: String? = null,
+    reportFilter: ReportFilter? = null,
+    rowConsumer: (ResultSet) -> Unit,
+    namedParamJdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
+  ) {
+    val stopwatch = StopWatch.createStarted()
+
+    log.debug("Download query: {}", query)
+
+    val finalQuery = buildFinalQuery(
+      datasetQuery = super.buildDatasetQuery(query),
+      reportQuery = buildReportQuery(reportFilter),
+      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      filtersQuery = buildFiltersQuery(filters),
+      selectFromFinalStageQuery = buildFinalStageQuery(
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+      ),
+    ) + ";"
+
+    val params = buildPreparedStatementNamedParams(filters) // params filterKey -> value
+    val parsedSqlWithParamStructure = NamedParameterUtils.parseSqlStatement(finalQuery) // :filterKey
+    val sqlWithQuestionmarkPlaceholders = NamedParameterUtils.substituteNamedParameters(parsedSqlWithParamStructure, params)
+    val paramValues = NamedParameterUtils.buildValueArray(parsedSqlWithParamStructure, params, null)
+
+    namedParamJdbcTemplate.jdbcTemplate.query(
+      { connection ->
+        val ps = connection.prepareStatement(
+          sqlWithQuestionmarkPlaceholders,
+          ResultSet.TYPE_FORWARD_ONLY,
+          ResultSet.CONCUR_READ_ONLY,
+        )
+        ps.fetchSize = 1_000
+        ArgumentPreparedStatementSetter(paramValues).setValues(ps)
+        ps
+      },
+      rowConsumer,
+    )
+
+    stopwatch.stop()
+    log.debug("Download execution time in ms: {}", stopwatch.time)
   }
 
   private fun determineFinalQuery(

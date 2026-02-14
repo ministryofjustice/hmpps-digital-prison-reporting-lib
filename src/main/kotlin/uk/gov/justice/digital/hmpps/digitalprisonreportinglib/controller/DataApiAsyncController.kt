@@ -578,7 +578,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
@@ -616,7 +616,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
         asyncDataApiService.downloadCsv(
           writer = writer,
           tableId = tableId,
-          downloadContext = downloadContext,
+          asyncDownloadContext = downloadContext,
         )
         log.debug("Successfully wrote the entire ${if (acceptsGzip) "gzip" else "csv"} data.")
       }
