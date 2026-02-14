@@ -1703,7 +1703,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `prepareDownloadContext should return DownloadContext with validated inputs`() {
+  fun `prepareAsyncDownloadContext should return DownloadContext with validated inputs`() {
     val selectedColumns = listOf("name ", "date")
     val sortColumn = "name"
 
@@ -1740,7 +1740,7 @@ class AsyncDataApiServiceTest {
     "last-month, columnNotInSchema, schema",
     "fewer-spec-fields-than-dataset-schema-fields, date, report specification",
   )
-  fun `prepareDownloadContext should throw IllegalArgumentException when selected column is not in dataset schema or report spec`(variantId: String, column: String, errorMessage: String) {
+  fun `prepareAsyncDownloadContext should throw IllegalArgumentException when selected column is not in dataset schema or report spec`(variantId: String, column: String, errorMessage: String) {
     val selectedColumns = listOf(column)
 
     whenever(
