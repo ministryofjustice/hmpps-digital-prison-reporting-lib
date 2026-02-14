@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Multiph
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
@@ -59,7 +58,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -76,7 +74,7 @@ import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 import java.util.UUID
 
-class AsyncDataApiServiceTest {
+class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -1966,42 +1964,6 @@ class AsyncDataApiServiceTest {
     assertThat(lines[0]).isEqualTo("Report Display Column 2,column 1")
     assertThat(lines[1]).isEqualTo("value2,value1")
   }
-
-  private fun report(fields: List<ReportField>? = null): Report = Report(
-    id = "reportId",
-    name = "reportName",
-    version = "1",
-    render = RenderMethod.HTML,
-    dataset = "10",
-    specification =
-    Specification(
-      template = Template.List,
-      field = fields ?: listOf(
-        ReportField(name = "13", display = null),
-      ),
-      section = null,
-    ),
-    created = null,
-  )
-
-  private fun dataset(schedule: String? = null, fields: List<SchemaField>? = null): Dataset = Dataset(
-    id = "10",
-    name = "11",
-    datasource = "12A",
-    query = "12",
-    schema = Schema(
-      field = fields
-        ?: listOf(
-          SchemaField(
-            name = "13",
-            type = ParameterType.Long,
-            display = "14",
-            filter = null,
-          ),
-        ),
-    ),
-    schedule = schedule,
-  )
 
   private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {
     val fullDatasource = Datasource(

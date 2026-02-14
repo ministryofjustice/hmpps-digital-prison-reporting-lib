@@ -58,7 +58,7 @@ class ConfiguredApiRepository(
     return result
   }
 
-  fun streamExternalTableResult(
+  fun streamTableResult(
     query: String,
     policyEngineResult: String,
     filters: List<ConfiguredApiRepository.Filter>,

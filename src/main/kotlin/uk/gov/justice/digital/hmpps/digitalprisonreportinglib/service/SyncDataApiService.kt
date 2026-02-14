@@ -210,7 +210,7 @@ class SyncDataApiService(
     writer: Writer,
     downloadContext: SyncDownloadContext,
   ) {
-    configuredApiRepository.streamExternalTableResult(
+    configuredApiRepository.streamTableResult(
       query = downloadContext.query,
       filters = downloadContext.validatedFilters,
       policyEngineResult = downloadContext.policyEngineResult,
