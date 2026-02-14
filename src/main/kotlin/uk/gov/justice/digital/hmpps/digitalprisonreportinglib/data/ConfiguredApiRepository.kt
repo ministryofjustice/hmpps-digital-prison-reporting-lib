@@ -83,8 +83,8 @@ class ConfiguredApiRepository(
       ),
     ) + ";"
 
-    val params = buildPreparedStatementNamedParams(filters) // params filterKey -> value
-    val parsedSqlWithParamStructure = NamedParameterUtils.parseSqlStatement(finalQuery) // :filterKey
+    val params = buildPreparedStatementNamedParams(filters)
+    val parsedSqlWithParamStructure = NamedParameterUtils.parseSqlStatement(finalQuery)
     val sqlWithQuestionmarkPlaceholders = NamedParameterUtils.substituteNamedParameters(parsedSqlWithParamStructure, params)
     val paramValues = NamedParameterUtils.buildValueArray(parsedSqlWithParamStructure, params, null)
 
