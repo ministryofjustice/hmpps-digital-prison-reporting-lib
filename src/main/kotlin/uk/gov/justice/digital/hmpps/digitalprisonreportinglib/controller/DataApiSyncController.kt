@@ -27,15 +27,18 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.C
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
-import java.io.OutputStreamWriter
 import java.util.Collections.singletonList
-import java.util.zip.GZIPOutputStream
 
 @Validated
 @RestController
 @Tag(name = "Data API - Synchronous")
-class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filterHelper: FilterHelper) {
+class DataApiSyncController(
+  val dataApiSyncService: SyncDataApiService,
+  val filterHelper: FilterHelper,
+  val csvStreamingSupport: CsvStreamingSupport,
+) {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -362,36 +365,16 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
       userToken = authentication as? DprAuthAwareAuthenticationToken,
     )
 
-    response.contentType = "text/csv"
-
-    val acceptsGzip =
-      request.getHeader("Accept-Encoding")?.contains("gzip") == true
-
-    val outputStream =
-      if (acceptsGzip) {
-        log.debug("Streaming gzip content...")
-        response.setHeader("Content-Encoding", "gzip")
-        GZIPOutputStream(response.outputStream)
-      } else {
-        log.debug("Streaming csv content...")
-        response.outputStream
-      }
-
-    response.setHeader(
-      "Content-Disposition",
-      "attachment; filename=$reportId-$reportVariantId.csv",
-    )
-
-    outputStream.use { out ->
-      OutputStreamWriter(out, Charsets.UTF_8).use { writer ->
-        // Write 0xEF 0xBB 0xBF to the start of the file so that it's recognised as utf8 with BOM so that excel opens it properly
-        writer.write("\ufeff")
-        dataApiSyncService.downloadCsv(
-          writer = writer,
-          downloadContext = downloadContext,
-        )
-        log.debug("Successfully wrote the entire ${if (acceptsGzip) "gzip" else "csv"} data.")
-      }
+    csvStreamingSupport.streamCsv(
+      reportId,
+      reportVariantId,
+      request,
+      response,
+    ) { writer ->
+      dataApiSyncService.downloadCsv(
+        writer = writer,
+        downloadContext = downloadContext,
+      )
     }
   }
 }
