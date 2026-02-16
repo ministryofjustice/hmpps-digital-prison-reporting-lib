@@ -1794,7 +1794,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
             SchemaField(
               name = "col2",
               type = ParameterType.String,
-              display = "column 2",
+              display = "column, 2",
               filter = null,
             ),
           ),
@@ -1851,7 +1851,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val output = writer.toString()
     val lines = output.lines()
 
-    assertThat(lines[0]).isEqualTo("column 1,column 2")
+    assertThat(lines[0]).isEqualTo("column 1,\"column, 2\"")
     assertThat(lines[1]).isEqualTo("value1,value2")
   }
 
