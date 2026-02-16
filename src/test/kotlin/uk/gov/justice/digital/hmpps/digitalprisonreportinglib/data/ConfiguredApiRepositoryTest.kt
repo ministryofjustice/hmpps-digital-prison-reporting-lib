@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
-
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
@@ -781,6 +780,25 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
     )
     assertThat(collectedRows).hasSize(2)
     assertThat(collectedRows).allMatch { it == "LastName1" }
+  }
+
+  @Test
+  fun `streamTableResult should call the rowConsumer with the filtered query result set when there is more than one matching filter`() {
+    val collectedRows = mutableListOf<Pair<String, String>>()
+
+    configuredApiRepository.streamTableResult(
+      query = "SELECT lastname, firstname FROM datamart.domain.prisoner_prisoner",
+      filters = listOf(
+        Filter("lastname", "LastName1", FilterType.STANDARD),
+        Filter("firstname", "FirstName1", FilterType.STANDARD),
+      ),
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      rowConsumer = { rs ->
+        collectedRows.add(Pair(rs.getString("lastname"), rs.getString("firstname")))
+      },
+    )
+    assertThat(collectedRows).containsExactly("LastName1" to "FirstName1")
   }
 
   @Test
