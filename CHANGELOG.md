@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-# 9.12.4
+# 10.0.0
 - Make DashboardSection and DashboardVisualisation display fields mandatory.
 
 # 9.12.3
