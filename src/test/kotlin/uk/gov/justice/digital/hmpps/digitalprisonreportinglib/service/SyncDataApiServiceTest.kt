@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -51,11 +54,15 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ACCESS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import java.io.StringWriter
+import java.sql.ResultSet
+import java.sql.ResultSetMetaData
 import java.time.LocalDateTime
 
-class SyncDataApiServiceTest {
+class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
   private val expectedRepositoryResult = listOf(
     mapOf(
@@ -1462,5 +1469,108 @@ class SyncDataApiServiceTest {
       reportFilter = null,
     )
     assertEquals(expectedDashboardServiceResult, actual)
+  }
+
+  @Test
+  fun `downloadCsv should write header and rows for all columns`() {
+    val sortColumn = "col1"
+    val writer = StringWriter()
+    val rs = mock<ResultSet>()
+    val meta = mock<ResultSetMetaData>()
+    val singleReportProductDefinition =
+      SingleReportProductDefinition(
+        id = "dpdId",
+        name = "name",
+        metadata = MetaData("auth", "v1", "owner"),
+        datasource = Datasource("dataId", "dataName"),
+        report =
+        report(
+          listOf(
+            ReportField(name = "col1", display = null, formula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/abc', my-url-text,TRUE)"),
+            ReportField(name = "col2", display = null),
+          ),
+        ),
+        reportDataset = dataset(
+          fields = listOf(
+            SchemaField(
+              name = "col1",
+              type = ParameterType.Long,
+              display = "column 1",
+              filter = null,
+            ),
+            SchemaField(
+              name = "col2",
+              type = ParameterType.String,
+              display = "column 2",
+              filter = null,
+            ),
+          ),
+        ),
+        policy = listOf(
+          Policy(
+            id = "caseload",
+            type = ACCESS,
+            rule = listOf(Rule(Effect.PERMIT, emptyList())),
+          ),
+        ),
+        allDatasets = emptyList(),
+        allReports = emptyList(),
+      )
+    val productDefinitionRepository = mock<ProductDefinitionRepository>()
+    whenever(productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)).thenReturn(singleReportProductDefinition)
+    val syncDataApiService = SyncDataApiService(
+      productDefinitionRepository = productDefinitionRepository,
+      configuredApiRepository = configuredApiRepository,
+      productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+      identifiedHelper = identifiedHelper,
+    )
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+    val downloadContext = syncDataApiService.prepareSyncDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = null,
+      filters = emptyMap(),
+      selectedColumns = null,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      userToken = authToken,
+    )
+
+    whenever(rs.metaData).thenReturn(meta)
+    whenever(meta.columnCount).thenReturn(2)
+    whenever(meta.getColumnLabel(1)).thenReturn("col1")
+    whenever(meta.getColumnLabel(2)).thenReturn("col2")
+
+    whenever(rs.getObject(1)).thenReturn("value1")
+    whenever(rs.getObject(2)).thenReturn("value2")
+
+    syncDataApiService.downloadCsv(
+      writer = writer,
+      downloadContext = downloadContext,
+    )
+
+    val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
+    verify(configuredApiRepository).streamTableResult(
+      query = eq("12"),
+      policyEngineResult = eq(POLICY_PERMIT),
+      filters = eq(emptyList()),
+      sortedAsc = eq(true),
+      sortColumn = eq("col1"),
+      reportFilter = anyOrNull(),
+      rowConsumer = consumerCaptor.capture(),
+      namedParamJdbcTemplate = anyOrNull(),
+    )
+    consumerCaptor.firstValue(rs)
+    assertThat(consumerCaptor.allValues).hasSize(1)
+    val output = writer.toString()
+    val lines = output.lines()
+
+    assertThat(lines[0]).isEqualTo("column 1,column 2")
+    assertThat(lines[1]).isEqualTo("value1,value2")
   }
 }

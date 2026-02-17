@@ -10,19 +10,24 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.SyncDownloadContext
+import java.io.Writer
 
 @Service
 class SyncDataApiService(
-  private val productDefinitionRepository: ProductDefinitionRepository,
+  productDefinitionRepository: ProductDefinitionRepository,
   private val configuredApiRepository: ConfiguredApiRepository,
-  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
+  productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   identifiedHelper: IdentifiedHelper,
-  @Value("\${URL_ENV_SUFFIX:#{null}}") val env: String? = null,
-) : CommonDataApiService(identifiedHelper) {
+  @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
+) : CommonDataApiService(
+  identifiedHelper = identifiedHelper,
+  productDefinitionRepository = productDefinitionRepository,
+  productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+  env = env,
+) {
 
   companion object {
     const val INVALID_REPORT_ID_MESSAGE = "Invalid report id provided:"
@@ -173,14 +178,48 @@ class SyncDataApiService(
       .map { row -> toMetricData(row) }
   }
 
-  private fun checkAuth(
-    productDefinition: WithPolicy,
+  fun prepareSyncDownloadContext(
+    reportId: String,
+    reportVariantId: String,
+    dataProductDefinitionsPath: String?,
+    filters: Map<String, String>,
+    selectedColumns: List<String>?,
+    sortColumn: String?,
+    sortedAsc: Boolean?,
     userToken: DprAuthAwareAuthenticationToken?,
-  ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
-      throw UserAuthorisationException("User does not have correct authorisation")
-    }
-    return true
+  ): SyncDownloadContext {
+    val coreContext = buildCoreDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filters = filters,
+      selectedColumns = selectedColumns,
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
+      userToken = userToken,
+    )
+    return SyncDownloadContext(
+      core = coreContext.first,
+      query = coreContext.second.reportDataset.query,
+      policyEngineResult = PolicyEngine(coreContext.second.policy, userToken).execute(),
+      reportFilter = coreContext.second.report.filter,
+    )
+  }
+
+  fun downloadCsv(
+    writer: Writer,
+    downloadContext: SyncDownloadContext,
+  ) {
+    configuredApiRepository.streamTableResult(
+      query = downloadContext.query,
+      filters = downloadContext.validatedFilters,
+      policyEngineResult = downloadContext.policyEngineResult,
+      sortedAsc = downloadContext.sortedAsc,
+      sortColumn = downloadContext.sortColumn,
+      reportFilter = downloadContext.reportFilter,
+      rowConsumer = populateRowConsumer(downloadContext, writer),
+    )
+    writer.flush()
   }
 
   private fun applyFormulasSelectivelyAndFormatColumns(

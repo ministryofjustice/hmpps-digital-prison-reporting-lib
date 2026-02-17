@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Multiph
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
@@ -59,7 +58,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -76,7 +74,7 @@ import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 import java.util.UUID
 
-class AsyncDataApiServiceTest {
+class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -1703,7 +1701,7 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `prepareDownloadContext should return DownloadContext with validated inputs`() {
+  fun `prepareAsyncDownloadContext should return DownloadContext with validated inputs`() {
     val selectedColumns = listOf("name ", "date")
     val sortColumn = "name"
 
@@ -1714,7 +1712,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.prepareDownloadContext(
+    val actual = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1740,7 +1738,7 @@ class AsyncDataApiServiceTest {
     "last-month, columnNotInSchema, schema",
     "fewer-spec-fields-than-dataset-schema-fields, date, report specification",
   )
-  fun `prepareDownloadContext should throw IllegalArgumentException when selected column is not in dataset schema or report spec`(variantId: String, column: String, errorMessage: String) {
+  fun `prepareAsyncDownloadContext should throw IllegalArgumentException when selected column is not in dataset schema or report spec`(variantId: String, column: String, errorMessage: String) {
     val selectedColumns = listOf(column)
 
     whenever(
@@ -1751,7 +1749,7 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val e = assertThrows<IllegalArgumentException> {
-      asyncDataApiService.prepareDownloadContext(
+      asyncDataApiService.prepareAsyncDownloadContext(
         reportId = reportId,
         reportVariantId = variantId,
         dataProductDefinitionsPath = null,
@@ -1796,7 +1794,7 @@ class AsyncDataApiServiceTest {
             SchemaField(
               name = "col2",
               type = ParameterType.String,
-              display = "column 2",
+              display = "column, 2",
               filter = null,
             ),
           ),
@@ -1814,7 +1812,7 @@ class AsyncDataApiServiceTest {
         userToken = any(),
       ),
     ).thenReturn(true)
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1836,7 +1834,7 @@ class AsyncDataApiServiceTest {
     asyncDataApiService.downloadCsv(
       writer = writer,
       tableId = tableId,
-      downloadContext = downloadContext,
+      asyncDownloadContext = downloadContext,
     )
 
     val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
@@ -1853,7 +1851,7 @@ class AsyncDataApiServiceTest {
     val output = writer.toString()
     val lines = output.lines()
 
-    assertThat(lines[0]).isEqualTo("column 1,column 2")
+    assertThat(lines[0]).isEqualTo("column 1,\"column, 2\"")
     assertThat(lines[1]).isEqualTo("value1,value2")
   }
 
@@ -1920,7 +1918,7 @@ class AsyncDataApiServiceTest {
         userToken = any(),
       ),
     ).thenReturn(true)
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1946,7 +1944,7 @@ class AsyncDataApiServiceTest {
     asyncDataApiService.downloadCsv(
       writer = writer,
       tableId = tableId,
-      downloadContext = downloadContext,
+      asyncDownloadContext = downloadContext,
     )
 
     val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
@@ -1966,42 +1964,6 @@ class AsyncDataApiServiceTest {
     assertThat(lines[0]).isEqualTo("Report Display Column 2,column 1")
     assertThat(lines[1]).isEqualTo("value2,value1")
   }
-
-  private fun report(fields: List<ReportField>? = null): Report = Report(
-    id = "reportId",
-    name = "reportName",
-    version = "1",
-    render = RenderMethod.HTML,
-    dataset = "10",
-    specification =
-    Specification(
-      template = Template.List,
-      field = fields ?: listOf(
-        ReportField(name = "13", display = null),
-      ),
-      section = null,
-    ),
-    created = null,
-  )
-
-  private fun dataset(schedule: String? = null, fields: List<SchemaField>? = null): Dataset = Dataset(
-    id = "10",
-    name = "11",
-    datasource = "12A",
-    query = "12",
-    schema = Schema(
-      field = fields
-        ?: listOf(
-          SchemaField(
-            name = "13",
-            type = ParameterType.Long,
-            display = "14",
-            filter = null,
-          ),
-        ),
-    ),
-    schedule = schedule,
-  )
 
   private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {
     val fullDatasource = Datasource(

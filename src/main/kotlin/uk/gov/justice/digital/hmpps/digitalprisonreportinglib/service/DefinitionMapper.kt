@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.GranularityDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.QuickFilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -32,7 +33,13 @@ abstract class DefinitionMapper(
   identifiedHelper: IdentifiedHelper,
   val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
   val alertCategoryCacheService: AlertCategoryCacheService,
-) : CommonDataApiService(identifiedHelper) {
+  productDefinitionRepository: ProductDefinitionRepository,
+  productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
+) : CommonDataApiService(
+  identifiedHelper = identifiedHelper,
+  productDefinitionRepository = productDefinitionRepository,
+  productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+) {
 
   companion object {
     const val DEFAULT_MAX_STATIC_OPTIONS: Long = 30

@@ -6,9 +6,12 @@ import io.swagger.v3.oas.annotations.headers.Header
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -24,13 +27,23 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.C
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 import java.util.Collections.singletonList
 
 @Validated
 @RestController
 @Tag(name = "Data API - Synchronous")
-class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filterHelper: FilterHelper) {
+class DataApiSyncController(
+  val dataApiSyncService: SyncDataApiService,
+  val filterHelper: FilterHelper,
+  val csvStreamingSupport: CsvStreamingSupport,
+) {
+
+  companion object {
+    private val log = LoggerFactory.getLogger(this::class.java)
+  }
+
   object FiltersPrefix {
     const val FILTERS_PREFIX = "filters."
     const val RANGE_FILTER_START_SUFFIX = ".start"
@@ -309,5 +322,59 @@ class DataApiSyncController(val dataApiSyncService: SyncDataApiService, val filt
       .status(HttpStatus.OK)
       .headers(headers)
       .body(emptyList())
+  }
+
+  @GetMapping("/reports/{reportId}/{reportVariantId}/download", produces = ["text/csv"])
+  @Operation(
+    description = "Streams the entire result set of the sync query execution as a csv file.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun downloadCsv(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    dataProductDefinitionsPath: String? = null,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @Parameter(
+      description = "List of column names to include in the generated report. If not provided all the columns will be returned.",
+    )
+    @RequestParam(required = false)
+    columns: List<String>? = null,
+    @RequestParam sortColumn: String?,
+    @RequestParam sortedAsc: Boolean?,
+    authentication: Authentication,
+    request: HttpServletRequest,
+    response: HttpServletResponse,
+  ) {
+    val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filters = filterHelper.filtersOnly(filters),
+      selectedColumns = columns,
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+      userToken = authentication as? DprAuthAwareAuthenticationToken,
+    )
+
+    csvStreamingSupport.streamCsv(
+      reportId,
+      reportVariantId,
+      request,
+      response,
+    ) { writer ->
+      dataApiSyncService.downloadCsv(
+        writer = writer,
+        downloadContext = downloadContext,
+      )
+    }
   }
 }

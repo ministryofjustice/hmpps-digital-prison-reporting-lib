@@ -31,15 +31,18 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
-import java.io.OutputStreamWriter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import java.util.Collections.singletonList
-import java.util.zip.GZIPOutputStream
 
 @Validated
 @RestController
 @Tag(name = "Data API - Asynchronous")
 @ConditionalOnProperty("dpr.lib.aws.sts.enabled", havingValue = "true")
-class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val filterHelper: FilterHelper) {
+class DataApiAsyncController(
+  val asyncDataApiService: AsyncDataApiService,
+  val filterHelper: FilterHelper,
+  val csvStreamingSupport: CsvStreamingSupport,
+) {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -578,7 +581,7 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
@@ -589,37 +592,17 @@ class DataApiAsyncController(val asyncDataApiService: AsyncDataApiService, val f
       userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     )
 
-    response.contentType = "text/csv"
-
-    val acceptsGzip =
-      request.getHeader("Accept-Encoding")?.contains("gzip") == true
-
-    val outputStream =
-      if (acceptsGzip) {
-        log.debug("Streaming gzip content...")
-        response.setHeader("Content-Encoding", "gzip")
-        GZIPOutputStream(response.outputStream)
-      } else {
-        log.debug("Streaming csv content...")
-        response.outputStream
-      }
-
-    response.setHeader(
-      "Content-Disposition",
-      "attachment; filename=$reportId-$reportVariantId.csv",
-    )
-
-    outputStream.use { out ->
-      OutputStreamWriter(out, Charsets.UTF_8).use { writer ->
-        // Write 0xEF 0xBB 0xBF to the start of the file so that it's recognised as utf8 with BOM so that excel opens it properly
-        writer.write("\ufeff")
-        asyncDataApiService.downloadCsv(
-          writer = writer,
-          tableId = tableId,
-          downloadContext = downloadContext,
-        )
-        log.debug("Successfully wrote the entire ${if (acceptsGzip) "gzip" else "csv"} data.")
-      }
+    csvStreamingSupport.streamCsv(
+      reportId,
+      reportVariantId,
+      request,
+      response,
+    ) { writer ->
+      asyncDataApiService.downloadCsv(
+        writer = writer,
+        tableId = tableId,
+        asyncDownloadContext = downloadContext,
+      )
     }
   }
 }
