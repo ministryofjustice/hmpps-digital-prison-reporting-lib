@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 10.0.0
+- Make DashboardSection and DashboardVisualisation display fields mandatory.
+
 # 9.12.3
 - Added new streaming CSV download endpoint for the sync journey.  
 
