@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 9.12.4
+- Make DashboardSection display field mandatory.
+
 # 9.12.3
 - Added new streaming CSV download endpoint for the sync journey.  
 
