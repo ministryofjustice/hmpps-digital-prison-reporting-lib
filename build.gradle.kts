@@ -53,8 +53,8 @@ dependencies {
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
 
   // Fix for security issue in transient dependency
-  implementation("ch.qos.logback:logback-classic:1.5.31")
-  implementation("ch.qos.logback:logback-core:1.5.31")
+  implementation("ch.qos.logback:logback-classic:1.5.32")
+  implementation("ch.qos.logback:logback-core:1.5.32")
 }
 
 java {
