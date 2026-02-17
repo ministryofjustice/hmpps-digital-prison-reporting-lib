@@ -3,7 +3,7 @@ import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.3.0"
   kotlin("jvm") version "2.3.10"
-  kotlin("plugin.spring") version "2.3.0"
+  kotlin("plugin.spring") version "2.3.10"
   kotlin("plugin.jpa") version "2.3.10"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "4.0.1"
@@ -16,7 +16,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.41.25"
+val awsSdkVersion = "2.41.30"
 val testContainersVersion = "1.21.4"
 
 dependencies {
@@ -40,7 +40,7 @@ dependencies {
   // Postgres dependencies
   implementation("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  implementation("org.postgresql:postgresql:42.7.9")
+  implementation("org.postgresql:postgresql:42.7.10")
 
   // Testing
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
@@ -48,13 +48,13 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.13.0")
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
-  testImplementation("org.postgresql:postgresql:42.7.9")
+  testImplementation("org.postgresql:postgresql:42.7.10")
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
 
   // Fix for security issue in transient dependency
-  implementation("ch.qos.logback:logback-classic:1.5.27")
-  implementation("ch.qos.logback:logback-core:1.5.27")
+  implementation("ch.qos.logback:logback-classic:1.5.32")
+  implementation("ch.qos.logback:logback-core:1.5.32")
 }
 
 java {
