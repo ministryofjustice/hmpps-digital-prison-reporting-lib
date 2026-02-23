@@ -1717,7 +1717,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
       filters = emptyMap(),
-        selectedColumns = selectedColumns,
+      selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = true,
       userToken = authToken,
