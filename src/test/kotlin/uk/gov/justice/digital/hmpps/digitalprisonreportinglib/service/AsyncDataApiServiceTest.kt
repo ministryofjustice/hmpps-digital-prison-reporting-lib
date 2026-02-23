@@ -1987,8 +1987,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val output = writer.toString()
     val lines = output.lines()
 
-    assertThat(lines[0]).isEqualTo("Report Display Column 2,column 1")
-    assertThat(lines[1]).isEqualTo("value2,value1")
+    assertThat(lines[0]).isEqualTo("column 1,Report Display Column 2")
+    assertThat(lines[1]).isEqualTo("value1,value2")
   }
 
   private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {

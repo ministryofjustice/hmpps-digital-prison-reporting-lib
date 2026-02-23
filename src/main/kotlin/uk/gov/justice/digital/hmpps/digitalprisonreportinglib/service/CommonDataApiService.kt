@@ -272,7 +272,7 @@ abstract class CommonDataApiService(
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toHashSet().orEmpty()
     val defFieldNames = productDefinition.reportDataset.schema.field.map { it.name }
     val orderedColumnsTrimmed = defFieldNames.filter { it in columnsTrimmed }.toSet().takeIf { it.isNotEmpty() }
-    validateColumns(productDefinition, orderedColumnsTrimmed)
+    validateColumns(productDefinition, columnsTrimmed)
     return CoreDownloadContext(
       schemaFields = productDefinition.reportDataset.schema.field,
       reportFields = productDefinition.report.specification?.field,
