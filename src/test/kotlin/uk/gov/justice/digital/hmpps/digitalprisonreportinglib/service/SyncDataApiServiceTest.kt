@@ -1535,7 +1535,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
       filters = emptyMap(),
-      selectedColumns = null,
+      selectedColumns = listOf("col2", "col1"),
       sortColumn = sortColumn,
       sortedAsc = true,
       userToken = authToken,
