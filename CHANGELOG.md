@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 10.0.1
+- Make download columns match order in DPD report specification
+
 # 10.0.0
 - Make DashboardSection and DashboardVisualisation display fields mandatory.
 

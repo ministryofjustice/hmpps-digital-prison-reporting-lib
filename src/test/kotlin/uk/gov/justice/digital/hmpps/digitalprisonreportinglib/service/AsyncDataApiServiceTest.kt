@@ -1701,6 +1701,32 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   }
 
   @Test
+  fun `prepareAsyncDownloadContext should return DownloadContext with columns in the same order as the DPD, even when given in a different order`() {
+    val selectedColumns = listOf("destination", "name", "origin", "date")
+    val sortColumn = "name"
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.prepareAsyncDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = null,
+      filters = emptyMap(),
+      selectedColumns = selectedColumns,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      userToken = authToken,
+    )
+
+    assertThat(actual.selectedAndValidatedColumns).containsExactly("name", "date", "origin", "destination")
+  }
+
+  @Test
   fun `prepareAsyncDownloadContext should return DownloadContext with validated inputs`() {
     val selectedColumns = listOf("name ", "date")
     val sortColumn = "name"
@@ -1961,8 +1987,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val output = writer.toString()
     val lines = output.lines()
 
-    assertThat(lines[0]).isEqualTo("Report Display Column 2,column 1")
-    assertThat(lines[1]).isEqualTo("value2,value1")
+    assertThat(lines[0]).isEqualTo("column 1,Report Display Column 2")
+    assertThat(lines[1]).isEqualTo("value1,value2")
   }
 
   private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {
