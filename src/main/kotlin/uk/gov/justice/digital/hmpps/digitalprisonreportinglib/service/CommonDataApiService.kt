@@ -270,7 +270,7 @@ abstract class CommonDataApiService(
     checkAuth(productDefinition, userToken)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toHashSet().orEmpty()
-    val defFieldNames = productDefinition.reportDataset.schema.field.map { it.name }
+    val defFieldNames = productDefinition.report.specification?.field.orEmpty().map { it.name }.map { it.removePrefix(REF_PREFIX) }
     val orderedColumnsTrimmed = defFieldNames.filter { it in columnsTrimmed }.toSet().takeIf { it.isNotEmpty() }
     validateColumns(productDefinition, columnsTrimmed)
     return CoreDownloadContext(
