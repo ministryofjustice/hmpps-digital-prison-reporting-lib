@@ -16,7 +16,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.41.34"
+val awsSdkVersion = "2.42.1"
 val testContainersVersion = "1.21.4"
 
 dependencies {
