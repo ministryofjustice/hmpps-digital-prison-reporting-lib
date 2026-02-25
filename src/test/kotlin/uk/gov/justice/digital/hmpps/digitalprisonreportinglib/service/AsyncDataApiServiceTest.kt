@@ -1882,7 +1882,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   }
 
   @Test
-  fun `downloadCsv should write header and rows for the selected columns with the selected column order`() {
+  fun `downloadCsv should write header and rows for the selected columns with the report specification field order`() {
     val selectedColumns = listOf("col2", "col1")
     val sortColumn = "col1"
     val writer = StringWriter()
