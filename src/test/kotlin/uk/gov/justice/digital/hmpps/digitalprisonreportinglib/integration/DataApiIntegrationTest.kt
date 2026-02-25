@@ -225,7 +225,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectBody(String::class.java)
       .value { body ->
         val expected = """
-          Prison Number,Name,From,To
+          ﻿Prison Number,Name,From,To
           ${movementPrisoner4[PRISON_NUMBER]},"${movementPrisoner4[NAME]}",${movementPrisoner4[ORIGIN]},${movementPrisoner4[DESTINATION]}
         """.trimIndent()
         assertThat(body.trim()).isEqualTo(expected)
