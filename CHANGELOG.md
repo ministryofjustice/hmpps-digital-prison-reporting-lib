@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 10.0.2
+- Removed logging no longer required. This was logging the deserialisation of each individual DPD retrieved from Dynamo DB.
+
 # 10.0.1
 - Make download columns match order in DPD report specification
 
