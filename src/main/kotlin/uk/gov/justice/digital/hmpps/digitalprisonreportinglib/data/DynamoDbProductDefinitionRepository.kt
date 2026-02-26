@@ -102,11 +102,8 @@ class DynamoDbProductDefinitionRepository(
     response.items()
       .filter { it[properties.dynamoDb.definitionFieldName] != null }
       .forEach {
-        val deserialisationStopwatch = StopWatch.createStarted()
         val definition =
           gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinitionSummary::class.java)
-        deserialisationStopwatch.stop()
-        log.debug("Deserialisation of product definition {} took: {}", definition.id, deserialisationStopwatch.time)
         val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
         definition.path =
           DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
