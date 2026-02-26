@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperti
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
+import kotlin.time.measureTime
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
@@ -74,6 +75,8 @@ class DynamoDbProductDefinitionRepository(
     }
     // Make sure every path has results
     if (cachedDefinitions.all { it.isNotEmpty() }) {
+      overallStopwatch.stop()
+      log.debug("Getting product definitions from the cache - took overall: {}", overallStopwatch.time)
       return cachedDefinitions.flatten()
     }
 
@@ -89,7 +92,9 @@ class DynamoDbProductDefinitionRepository(
     var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
 
     while (response.hasLastEvaluatedKey()) {
+      scanStopwatch.suspend()
       addToDefinitionsMap(response, definitionMap)
+      scanStopwatch.resume()
       response = dynamoDbClient.scan(getScanRequest(properties, usePaths, response.lastEvaluatedKey()))
     }
     scanStopwatch.stop()
