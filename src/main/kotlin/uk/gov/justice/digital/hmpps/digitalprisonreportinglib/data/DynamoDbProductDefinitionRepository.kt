@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperti
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
-import kotlin.time.measureTime
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
