@@ -74,8 +74,7 @@ class DynamoDbProductDefinitionRepository(
     }
     // Make sure every path has results
     if (cachedDefinitions.all { it.isNotEmpty() }) {
-      overallStopwatch.stop()
-      log.debug("Getting product definitions from the cache - took overall: {}", overallStopwatch.time)
+      log.debug("Getting product definitions from the cache.")
       return cachedDefinitions.flatten()
     }
 
