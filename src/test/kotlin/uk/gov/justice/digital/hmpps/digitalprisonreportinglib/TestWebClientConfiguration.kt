@@ -10,7 +10,7 @@ import java.time.Duration
 
 @TestConfiguration
 class TestWebClientConfiguration(
-  @Value("\${hmpps.manage-users.url}")
+  @Value("\${dpr.lib.manage-users.host}")
   private val manageUsersApiUri: String,
   @Value("\${api.timeout:20s}")
   private val healthTimeout: Duration,
