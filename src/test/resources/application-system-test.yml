@@ -42,6 +42,8 @@ dpr:
         secret: dpr-api-client-secret
     system:
       role: PRISONS_REPORTING_USER
+      token:
+        enabled: true
     aws:
       sts:
         enabled: true
