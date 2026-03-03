@@ -36,6 +36,8 @@ management.endpoint:
 
 dpr:
   lib:
+    manage-users:
+      host: http://localhost:8082
     api:
       client:
         id: dpr-api-client-id
@@ -50,8 +52,6 @@ dpr:
 hmpps:
   auth:
     url: http://localhost:8090/auth
-  manage-users:
-    url: http://localhost:8082
 
 logging:
   level:

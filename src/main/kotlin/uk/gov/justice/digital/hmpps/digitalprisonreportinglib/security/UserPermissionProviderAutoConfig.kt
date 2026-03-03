@@ -14,7 +14,7 @@ import java.time.Duration
 @Configuration
 @ConditionalOnProperty(name = ["dpr.lib.system.role"])
 class UserPermissionProviderAutoConfig(
-  @Value("\${hmpps.manage-users.url}")
+  @Value("\${dpr.lib.manage-users.host}")
   private val manageUsersApiUri: String,
   @Value("\${api.timeout:20s}")
   private val healthTimeout: Duration,
