@@ -13,7 +13,7 @@ import uk.gov.justice.hmpps.kotlin.auth.HmppsResourceServerConfiguration
 import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomizer
 
 @Configuration("dprResourceServerConfiguration")
-@ConditionalOnProperty(name = ["dpr.lib.system.token.enabled"], havingValue = "false")
+@ConditionalOnProperty(name = ["dpr.lib.system.token.enabled"], havingValue = "false", matchIfMissing = true)
 @Deprecated("Use DprSystemAuthResourceConfiguration instead")
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
 class DprResourceServerConfiguration(
