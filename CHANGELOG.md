@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
-# 10.0.5
-- Provide support for system tokens.
+# 10.0.4
+- Updated manage-users env variable to from hmpps.manage-users.url to dpr.lib.manage-users.host.
+
+# 10.0.3
+- Provided support for system tokens based on the dpr.lib.system.token.enabled flag.
 
 # 10.0.2
 - Removed logging no longer required. This was logging the deserialisation of each individual DPD retrieved from Dynamo DB.
