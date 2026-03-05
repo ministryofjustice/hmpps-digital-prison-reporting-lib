@@ -74,7 +74,6 @@ class DynamoDbProductDefinitionRepository(
     }
     // Make sure every path has results
     if (cachedDefinitions.all { it.isNotEmpty() }) {
-      log.debug("Getting product definitions from the cache.")
       return cachedDefinitions.flatten()
     }
 
@@ -90,9 +89,7 @@ class DynamoDbProductDefinitionRepository(
     var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
 
     while (response.hasLastEvaluatedKey()) {
-      scanStopwatch.suspend()
       addToDefinitionsMap(response, definitionMap)
-      scanStopwatch.resume()
       response = dynamoDbClient.scan(getScanRequest(properties, usePaths, response.lastEvaluatedKey()))
     }
     scanStopwatch.stop()
@@ -105,8 +102,11 @@ class DynamoDbProductDefinitionRepository(
     response.items()
       .filter { it[properties.dynamoDb.definitionFieldName] != null }
       .forEach {
+        val deserialisationStopwatch = StopWatch.createStarted()
         val definition =
           gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinitionSummary::class.java)
+        deserialisationStopwatch.stop()
+        log.debug("Deserialisation of product definition {} took: {}", definition.id, deserialisationStopwatch.time)
         val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
         definition.path =
           DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
