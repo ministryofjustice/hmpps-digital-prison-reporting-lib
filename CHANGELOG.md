@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 10.0.5
+- fix bug with manage users bean
+
 # 10.0.4
 - Updated manage-users env variable to from hmpps.manage-users.url to dpr.lib.manage-users.host.
 
