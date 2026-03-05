@@ -6,7 +6,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.hmpps.kotlin.auth.authorisedWebClient
 import java.time.Duration
@@ -19,12 +23,23 @@ class UserPermissionProviderAutoConfig(
   @Value("\${api.timeout:20s}")
   private val healthTimeout: Duration,
 ) {
-  @Bean
-  @ConditionalOnMissingBean(UserPermissionProvider::class)
-  fun userPermissionProvider(@Qualifier("manageUsersWebClient") webClient: WebClient): UserPermissionProvider = DefaultUserPermissionProvider(webClient)
 
   @Bean
-  @ConditionalOnMissingBean(UserPermissionProvider::class)
+  fun authorizedClientManager(
+    clientRegistration: ClientRegistrationRepository,
+  ): OAuth2AuthorizedClientManager {
+    val service = InMemoryOAuth2AuthorizedClientService(clientRegistration)
+    val authorizedClientManager = AuthorizedClientServiceOAuth2AuthorizedClientManager(clientRegistration, service)
+
+    val authorizedClientProvider = OAuth2AuthorizedClientProviderBuilder
+      .builder()
+      .clientCredentials()
+      .build()
+    authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider)
+    return authorizedClientManager
+  }
+
+  @Bean
   fun manageUsersWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     builder: WebClient.Builder,
@@ -34,4 +49,8 @@ class UserPermissionProviderAutoConfig(
     url = manageUsersApiUri,
     healthTimeout,
   )
+
+  @Bean
+  @ConditionalOnMissingBean(UserPermissionProvider::class)
+  fun userPermissionProvider(@Qualifier("manageUsersWebClient") webClient: WebClient): UserPermissionProvider = DefaultUserPermissionProvider(webClient)
 }
