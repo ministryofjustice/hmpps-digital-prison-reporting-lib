@@ -73,7 +73,9 @@ class DynamoDbProductDefinitionRepository(
       }.orEmpty()
     }
     // Make sure every path has results
+    log.debug("Cache sizes: {}", cachedDefinitions.map { it.size })
     if (cachedDefinitions.all { it.isNotEmpty() }) {
+      log.debug("Cache hit.")
       return cachedDefinitions.flatten()
     }
 
