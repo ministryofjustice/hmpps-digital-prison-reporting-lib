@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import java.util.concurrent.TimeUnit
 
@@ -54,7 +53,7 @@ class ProductDefinitionRepositoryAutoConfig(
 
   @Bean
   @ConditionalOnProperty("dpr.lib.dataProductDefinitions.cache.enabled", havingValue = "true")
-  fun definitionsCache(): Cache<String, List<ProductDefinition>> = CacheBuilder.newBuilder()
+  fun definitionsCache(): Cache<String, List<ProductDefinitionSummary>> = CacheBuilder.newBuilder()
     .expireAfterWrite(cacheDurationMinutes, TimeUnit.MINUTES)
     .concurrencyLevel(Runtime.getRuntime().availableProcessors())
     .build()

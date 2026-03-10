@@ -1,5 +1,11 @@
 Below you can find the changes included in each release.
 
+# 10.0.7
+- Fix definitions caching. 
+- Changed scan operation to query in definitions retrieval from DDB.
+- Performed two queries on the category (index partition key) instead of a single combined scan on the entire table.
+- Used queryPaginator instead of manually paginating. 
+
 # 10.0.6
 - Added debug log to log caching behaviour. 
 

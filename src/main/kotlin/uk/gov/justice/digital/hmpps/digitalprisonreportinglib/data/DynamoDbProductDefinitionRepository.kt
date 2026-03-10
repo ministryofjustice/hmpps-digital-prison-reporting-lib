@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest
-import software.amazon.awssdk.services.dynamodb.model.ScanResponse
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
+import kotlin.collections.emptyList
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
@@ -25,17 +25,25 @@ class DynamoDbProductDefinitionRepository(
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)
-    fun getScanRequest(properties: AwsProperties, paths: List<String>, exclusiveStartKey: Map<String, AttributeValue>? = null): ScanRequest {
-      val attrValues: Map<String, AttributeValue> = mapOf(":${properties.dynamoDb.categoryFieldName}" to AttributeValue.fromSs(paths))
+    private val pathLookup = DataDefinitionPath.entries.associateBy { it.value }
 
-      return ScanRequest.builder()
-        .tableName(properties.getDynamoDbTableArn())
-        .indexName(properties.dynamoDb.categoryIndexName)
-        .filterExpression("contains(:${properties.dynamoDb.categoryFieldName}, ${properties.dynamoDb.categoryFieldName})")
-        .expressionAttributeValues(attrValues)
-        .exclusiveStartKey(exclusiveStartKey)
-        .build()
-    }
+    fun getQueryRequest(properties: AwsProperties, path: String): QueryRequest = QueryRequest.builder()
+      .tableName(properties.getDynamoDbTableArn())
+      .indexName(properties.dynamoDb.categoryIndexName)
+      .keyConditionExpression("#cat = :category")
+      .expressionAttributeNames(
+        mapOf(
+          "#cat" to properties.dynamoDb.categoryFieldName,
+          "#def" to properties.dynamoDb.definitionFieldName,
+        ),
+      )
+      .expressionAttributeValues(
+        mapOf(
+          ":category" to AttributeValue.builder().s(path).build(),
+        ),
+      )
+      .projectionExpression("#def, #cat")
+      .build()
   }
 
   override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
@@ -56,64 +64,41 @@ class DynamoDbProductDefinitionRepository(
     val item = response.item()
     val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
-    definition.path = DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
+    definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
     stopwatch.stop()
     log.debug("Getting product definition for {} {} took overall: {}", definitionId, path, stopwatch.time)
     return definition
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinitionSummary> {
-    log.info("Definitions cache present: {}", definitionsCache != null)
-    val overallStopwatch = StopWatch.createStarted()
-    val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
-    usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
-
-    val cachedDefinitions = usePaths.map { usePath ->
-      definitionsCache?.let { cache ->
-        usePath.let { path -> cache.getIfPresent(path) }
-      }.orEmpty()
-    }
-    // Make sure every path has results
-    log.debug("Cache sizes: {}", cachedDefinitions.map { it.size })
-    if (cachedDefinitions.all { it.isNotEmpty() }) {
-      log.debug("Getting product definitions from the cache.")
-      return cachedDefinitions.flatten()
-    }
-
-    val definitionMap = usePaths.associateWith { mutableListOf<ProductDefinitionSummary>() }
-    scanAndPopulateDefinitionsMap(usePaths, definitionMap)
-    overallStopwatch.stop()
-    log.debug("Getting product definitions took overall: {}", overallStopwatch.time)
-    return definitionMap.values.flatten()
-  }
-
-  private fun scanAndPopulateDefinitionsMap(usePaths: MutableList<String>, definitionMap: Map<String, MutableList<ProductDefinitionSummary>>) {
-    val scanStopwatch = StopWatch.createStarted()
-    var response = dynamoDbClient.scan(getScanRequest(properties, usePaths))
-
-    while (response.hasLastEvaluatedKey()) {
-      scanStopwatch.suspend()
-      addToDefinitionsMap(response, definitionMap)
-      scanStopwatch.resume()
-      response = dynamoDbClient.scan(getScanRequest(properties, usePaths, response.lastEvaluatedKey()))
-    }
-    scanStopwatch.stop()
-    log.debug("DynamoDB scan for product definitions took: {}", scanStopwatch.time)
-
-    addToDefinitionsMap(response, definitionMap)
-  }
-
-  private fun addToDefinitionsMap(response: ScanResponse, definitionMap: Map<String, MutableList<ProductDefinitionSummary>>) {
-    response.items()
-      .filter { it[properties.dynamoDb.definitionFieldName] != null }
-      .forEach {
-        val definition =
-          gson.fromJson(it[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinitionSummary::class.java)
-        val definitionPath = it[properties.dynamoDb.categoryFieldName]!!.s()
-        definition.path =
-          DataDefinitionPath.entries.firstOrNull { path -> path.value == definitionPath } ?: DataDefinitionPath.OTHER
-        definitionMap[definitionPath]?.add(definition)
+    val requestedPath =
+      if (path.isNullOrBlank()) DataDefinitionPath.ORPHANAGE.value else path
+    val missingDefs = loadFromCache(DataDefinitionPath.MISSING.value)
+    val requestedDefs =
+      if (requestedPath == DataDefinitionPath.MISSING.value) {
+        emptyList()
+      } else {
+        loadFromCache(requestedPath)
       }
-    definitionMap.forEach { definitionsCache?.put(it.key, it.value) }
+    return missingDefs + requestedDefs
+  }
+
+  private fun loadFromCache(path: String): List<ProductDefinitionSummary> = definitionsCache?.get(path) {
+    queryDefinitionsForPath(path)
+  } ?: queryDefinitionsForPath(path)
+
+  private fun queryDefinitionsForPath(path: String): List<ProductDefinitionSummary> {
+    val results = mutableListOf<ProductDefinitionSummary>()
+    val request = getQueryRequest(properties, path)
+    val paginator = dynamoDbClient.queryPaginator(request)
+    paginator.items().forEach { item ->
+      val json = item[properties.dynamoDb.definitionFieldName]!!.s()
+      val definition =
+        gson.fromJson(json, ProductDefinitionSummary::class.java)
+      val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
+      definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
+      results.add(definition)
+    }
+    return results
   }
 }
