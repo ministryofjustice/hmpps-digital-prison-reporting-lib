@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 10.0.6
+- Added debug log to log caching behaviour. 
+
 # 10.0.5
 - fix bug with manage users bean
 
