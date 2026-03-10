@@ -71,6 +71,7 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinitionSummary> {
+    val stopWatch = StopWatch.createStarted()
     val requestedPath =
       if (path.isNullOrBlank()) DataDefinitionPath.ORPHANAGE.value else path
     val missingDefs = loadFromCache(DataDefinitionPath.MISSING.value)
@@ -80,6 +81,7 @@ class DynamoDbProductDefinitionRepository(
       } else {
         loadFromCache(requestedPath)
       }
+    log.debug("Definition retrieval took: ${stopWatch.time} ms.")
     return missingDefs + requestedDefs
   }
 
@@ -88,6 +90,7 @@ class DynamoDbProductDefinitionRepository(
   } ?: queryDefinitionsForPath(path)
 
   private fun queryDefinitionsForPath(path: String): List<ProductDefinitionSummary> {
+    log.debug("Retrieving definitions from DynamoDB for path: $path")
     val results = mutableListOf<ProductDefinitionSummary>()
     val request = getQueryRequest(properties, path)
     val paginator = dynamoDbClient.queryPaginator(request)

@@ -4,19 +4,21 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
+import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
+import software.amazon.awssdk.core.pagination.sync.SdkIterable
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest
-import software.amazon.awssdk.services.dynamodb.model.ScanResponse
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import software.amazon.awssdk.services.dynamodb.paginators.QueryIterable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
@@ -152,17 +154,28 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
-      val response = Mockito.mock<ScanResponse>()
       val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
       val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
-      given(response.items()).willReturn(
-        listOf(
-          mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-          mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-          mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
-        ),
+      val orphanageItems = listOf(
+        mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+        mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
       )
-      given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
+      val missingItems = listOf(mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)))
+
+      val missingPaginator = mock<QueryIterable>()
+      val orphanagePaginator = mock<QueryIterable>()
+
+      given(missingPaginator.items()).willReturn(SdkIterable { missingItems.toMutableList().iterator() })
+      given(orphanagePaginator.items()).willReturn(SdkIterable { orphanageItems.toMutableList().iterator() })
+      given(dynamoDbClient.queryPaginator(any<QueryRequest>())).willAnswer { invocation ->
+        val request = invocation.getArgument<QueryRequest>(0)
+        val category = request.expressionAttributeValues()[":category"]?.s()
+        when (category) {
+          DataDefinitionPath.MISSING.value -> missingPaginator
+          DataDefinitionPath.ORPHANAGE.value -> orphanagePaginator
+          else -> throw IllegalArgumentException("Unexpected category: $category")
+        }
+      }
 
       val result = webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
@@ -212,10 +225,12 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastYearVariant.name).isEqualTo("Last year")
       assertThat(lastYearVariant.isMissing).isEqualTo(false)
 
-      val requestCaptor = ArgumentCaptor.forClass(ScanRequest::class.java)
-      then(dynamoDbClient).should().scan(requestCaptor.capture())
+      val requestCaptor = ArgumentCaptor.forClass(QueryRequest::class.java)
+      then(dynamoDbClient).should(times(2)).queryPaginator(requestCaptor.capture())
+      val capturedRequests = requestCaptor.allValues
 
-      assertThat(requestCaptor.value.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition")
+      assertThat(capturedRequests).hasSize(2)
+      capturedRequests.forEach { assertThat(it.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition") }
 
       val externalMovementsTest2Definition = result.responseBody!!.find { it.id == "external-movements-test2" }!!
       assertThat(externalMovementsTest2Definition.variants[0].isMissing).isEqualTo(true)
