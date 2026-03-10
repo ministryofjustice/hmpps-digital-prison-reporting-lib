@@ -63,6 +63,7 @@ class DynamoDbProductDefinitionRepository(
   }
 
   override fun getProductDefinitions(path: String?): List<ProductDefinitionSummary> {
+    log.info("Definitions cache present: {}", definitionsCache != null)
     val overallStopwatch = StopWatch.createStarted()
     val usePaths = mutableListOf(DataDefinitionPath.MISSING.value)
     usePaths.add(if (path?.isEmpty() == false) path else DataDefinitionPath.ORPHANAGE.value)
