@@ -149,6 +149,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.aws.dynamodb.enabled") { "true" }
         registry.add("dpr.lib.aws.accountId") { "1" }
+        registry.add("dpr.lib.dataProductDefinitions.cache.enabled") { "true" }
       }
     }
 
@@ -236,6 +237,22 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(externalMovementsTest2Definition.variants[0].isMissing).isEqualTo(true)
       assertThat(externalMovementsTest2Definition.variants[1].isMissing).isEqualTo(true)
       assertThat(externalMovementsTest2Definition.variants[2].isMissing).isEqualTo(true)
+
+      val secondCall = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBodyList<ReportDefinitionSummary>()
+        .returnResult()
+
+      assertThat(secondCall.responseBody).isEqualTo(result.responseBody)
+      then(dynamoDbClient).shouldHaveNoMoreInteractions()
     }
   }
 
