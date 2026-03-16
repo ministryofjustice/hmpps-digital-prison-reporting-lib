@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
 import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.Row
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
@@ -19,7 +20,8 @@ class EstablishmentsToWingsRepository(
   override val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   override val athenaWorkgroup: String,
-) : AthenaReferenceDataRepository<EstablishmentToWing>(athenaClient, tableIdGenerator, athenaWorkgroup) {
+  override val identifiedHelper: IdentifiedHelper,
+) : AthenaReferenceDataRepository<EstablishmentToWing>(athenaClient, tableIdGenerator, athenaWorkgroup, identifiedHelper) {
 
   companion object {
     const val ESTABLISHMENTS_TO_WINGS_QUERY = "SELECT DISTINCT LIVING_UNITS.agy_loc_id as establishment_code, AGENCY_LOCATIONS.description as establishment_name, LIVING_UNITS.AGY_LOC_ID || '-' || LIVING_UNITS.LEVEL_1_CODE as wing FROM OMS_OWNER.LIVING_UNITS JOIN OMS_OWNER.AGENCY_LOCATIONS ON LIVING_UNITS.agy_loc_id = AGENCY_LOCATIONS.agy_loc_id;"

@@ -1298,6 +1298,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(productDefRepo.getProductDefinitions())
       .thenReturn(listOf(productDefinition))
 
+    val datasource = Datasource("id", dataSourceName)
     val singleReportProductDefinition = SingleReportProductDefinition(
       id = "1",
       name = "2",
@@ -1309,9 +1310,10 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       policy = listOf(policy),
       reportDataset = dataSet,
       report = report,
-      datasource = Datasource("id", dataSourceName),
+      datasource = datasource,
       allDatasets = listOf(dataSet),
       allReports = emptyList(),
+      allDatasources = listOf(datasource),
     )
     whenever(productDefRepo.getSingleReportProductDefinition(reportId, reportVariantId))
       .thenReturn(
@@ -1477,12 +1479,13 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val writer = StringWriter()
     val rs = mock<ResultSet>()
     val meta = mock<ResultSetMetaData>()
+    val datasource = Datasource("dataId", "dataName")
     val singleReportProductDefinition =
       SingleReportProductDefinition(
         id = "dpdId",
         name = "name",
         metadata = MetaData("auth", "v1", "owner"),
-        datasource = Datasource("dataId", "dataName"),
+        datasource = datasource,
         report =
         report(
           listOf(
@@ -1515,6 +1518,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         ),
         allDatasets = emptyList(),
         allReports = emptyList(),
+        allDatasources = listOf(datasource),
       )
     val productDefinitionRepository = mock<ProductDefinitionRepository>()
     whenever(productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)).thenReturn(singleReportProductDefinition)

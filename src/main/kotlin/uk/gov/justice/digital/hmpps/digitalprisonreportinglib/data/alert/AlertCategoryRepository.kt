@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
 import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.Row
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 
@@ -19,7 +20,8 @@ class AlertCategoryRepository(
   override val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   override val athenaWorkgroup: String,
-) : AthenaReferenceDataRepository<AlertCategory>(athenaClient, tableIdGenerator, athenaWorkgroup) {
+  override val identifiedHelper: IdentifiedHelper,
+) : AthenaReferenceDataRepository<AlertCategory>(athenaClient, tableIdGenerator, athenaWorkgroup, identifiedHelper) {
 
   companion object {
     const val ALERT_CATEGORY_QUERY = "SELECT DOMAIN, CODE, DESCRIPTION FROM OMS_OWNER.REFERENCE_CODES WHERE DOMAIN='ALERT' OR DOMAIN IS NULL OR DOMAIN='ALERT_CODE' ORDER BY DOMAIN;"

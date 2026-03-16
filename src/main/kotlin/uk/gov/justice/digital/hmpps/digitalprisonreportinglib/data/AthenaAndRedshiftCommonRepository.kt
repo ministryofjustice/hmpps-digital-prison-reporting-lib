@@ -43,6 +43,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String? = null,
     multiphaseQueries: List<MultiphaseQuery>? = null,
+    allDatasources: List<Datasource>? = null,
   ): StatementExecutionResponse
 
   abstract fun getStatementStatus(statementId: String): StatementExecutionStatus

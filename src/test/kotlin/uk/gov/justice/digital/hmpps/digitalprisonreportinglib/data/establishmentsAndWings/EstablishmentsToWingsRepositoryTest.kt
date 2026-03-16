@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository.Companion.DIGITAL_PRISON_REPORTING_DB
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository.Companion.NOMIS_CATALOG
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FAILED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository.Companion.ESTABLISHMENTS_TO_WINGS_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
@@ -38,7 +39,12 @@ class EstablishmentsToWingsRepositoryTest {
     val tableIdGenerator = mock<TableIdGenerator>()
     val statementId = "statementId"
     val athenaWorkgroup = "workgroup-1"
-    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup)
+    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(
+      athenaClient,
+      tableIdGenerator,
+      athenaWorkgroup,
+      IdentifiedHelper(),
+    )
     setupMocksForStartQueryExecution(athenaWorkgroup, athenaClient, statementId)
     setupMocksForGetStatus(statementId, athenaClient, "SUCCEEDED")
 
@@ -84,7 +90,7 @@ class EstablishmentsToWingsRepositoryTest {
     val tableIdGenerator = mock<TableIdGenerator>()
     val statementId = "statementId"
     val athenaWorkgroup = "workgroup-1"
-    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup)
+    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup, IdentifiedHelper())
     setupMocksForStartQueryExecution(athenaWorkgroup, athenaClient, statementId)
     setupMocksForGetStatus(statementId, athenaClient, "SUCCEEDED")
 
@@ -142,7 +148,7 @@ class EstablishmentsToWingsRepositoryTest {
     val tableIdGenerator = mock<TableIdGenerator>()
     val statementId = "statementId"
     val athenaWorkgroup = "workgroup-1"
-    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup)
+    val establishmentsToWingsRepository = EstablishmentsToWingsRepository(athenaClient, tableIdGenerator, athenaWorkgroup, IdentifiedHelper())
     setupMocksForStartQueryExecution(athenaWorkgroup, athenaClient, statementId)
     setupMocksForGetStatus(statementId, athenaClient, QUERY_FAILED)
 
