@@ -7,4 +7,6 @@ data class Datasource(
   val catalog: String? = null,
   val connection: DatasourceConnection? = null,
   val dialect: SqlDialect? = null,
-)
+) : Identified {
+  override fun getIdentifier() = this.id
+}

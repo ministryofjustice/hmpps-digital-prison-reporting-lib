@@ -221,6 +221,7 @@ class ReportDefinitionMapperTest {
     ),
     allDatasets = listOf(fullDataset),
     allReports = listOf(fullReport, childReport),
+    allDatasources = listOf(fullDatasource),
   )
 
   private val policy: Policy = Policy(
@@ -247,6 +248,7 @@ class ReportDefinitionMapperTest {
     policy = listOf(policy),
     allDatasets = listOf(fullDataset),
     allReports = listOf(fullReport, childReport),
+    allDatasources = listOf(fullDatasource),
   )
 
   private val configuredApiService: SyncDataApiService = mock()
@@ -342,6 +344,7 @@ class ReportDefinitionMapperTest {
       configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
 
+    val datasource = Datasource("datasourceId", "datasourceName")
     val productDefinition = SingleReportProductDefinition(
       id = "1",
       name = "2",
@@ -391,9 +394,10 @@ class ReportDefinitionMapperTest {
           rule = listOf(Rule(Effect.PERMIT, emptyList())),
         ),
       ),
-      datasource = Datasource("datasourceId", "datasourceName"),
+      datasource = datasource,
       allDatasets = listOf(fullDataset),
       allReports = emptyList(),
+      allDatasources = listOf(datasource),
     )
 
     val result = mapper.mapReport(productDefinition, authToken)
@@ -1072,7 +1076,7 @@ class ReportDefinitionMapperTest {
     )
     val multiphaseQuery = MultiphaseQuery(
       index = 0,
-      datasource = mock(),
+      datasource = "ds1",
       query = "SELECT * FROM a",
       parameters = listOf(parameter),
     )
@@ -1117,7 +1121,7 @@ class ReportDefinitionMapperTest {
     )
     val multiphaseQuery = MultiphaseQuery(
       index = 0,
-      datasource = mock(),
+      datasource = "ds1",
       query = "SELECT * FROM a",
       parameters = listOf(parameter),
     )
@@ -1211,6 +1215,7 @@ class ReportDefinitionMapperTest {
       ),
       allDatasets = listOf(sourceDataset),
       allReports = listOf(fullReport, childReport),
+      allDatasources = listOf(fullDatasource),
     )
 
     val result = mapper.mapReport(definition = sourceDefinition, userToken = authToken)
@@ -1412,60 +1417,64 @@ class ReportDefinitionMapperTest {
       visible = visible,
     ),
     multiphaseQueries: List<MultiphaseQuery>? = null,
-  ): SingleReportProductDefinition = SingleReportProductDefinition(
-    id = "1",
-    name = "2",
-    metadata = MetaData(
-      author = "3",
-      owner = "4",
-      version = "5",
-    ),
-    datasource = Datasource("datasourceId", "datasourceName"),
-    reportDataset =
-    Dataset(
-      id = "10",
-      name = "11",
-      datasource = "12A",
-      query = "12",
-      schema = Schema(
-        field = listOf(
-          SchemaField(
-            name = "13",
-            type = ParameterType.Date,
-            display = datasetDisplay,
-            filter = null,
+  ): SingleReportProductDefinition {
+    val datasource = Datasource("datasourceId", "datasourceName")
+    return SingleReportProductDefinition(
+      id = "1",
+      name = "2",
+      metadata = MetaData(
+        author = "3",
+        owner = "4",
+        version = "5",
+      ),
+      datasource = datasource,
+      reportDataset =
+      Dataset(
+        id = "10",
+        name = "11",
+        datasource = "12A",
+        query = "12",
+        schema = Schema(
+          field = listOf(
+            SchemaField(
+              name = "13",
+              type = ParameterType.Date,
+              display = datasetDisplay,
+              filter = null,
+            ),
           ),
         ),
+        parameters = parameters,
+        multiphaseQuery = multiphaseQueries,
       ),
-      parameters = parameters,
-      multiphaseQuery = multiphaseQueries,
-    ),
-    report =
-    Report(
-      id = "16",
-      name = "17",
-      created = LocalDateTime.MAX,
-      version = "18",
-      dataset = "\$ref:10",
-      render = RenderMethod.HTML,
-      specification = Specification(
-        template = Template.List,
-        section = null,
-        field = listOf(
-          reportField,
+      report =
+      Report(
+        id = "16",
+        name = "17",
+        created = LocalDateTime.MAX,
+        version = "18",
+        dataset = "\$ref:10",
+        render = RenderMethod.HTML,
+        specification = Specification(
+          template = Template.List,
+          section = null,
+          field = listOf(
+            reportField,
+          ),
+        ),
+        classification = "someClassification",
+        metadata = interactive?.takeIf { it }?.let { ReportMetadata(hints = listOf(ReportMetadataHint.INTERACTIVE)) },
+      ),
+      policy = listOf(
+        Policy(
+          id = "caseload",
+          type = PolicyType.ACCESS,
+          rule = listOf(Rule(Effect.PERMIT, emptyList())),
         ),
       ),
-      classification = "someClassification",
-      metadata = interactive?.takeIf { it }?.let { ReportMetadata(hints = listOf(ReportMetadataHint.INTERACTIVE)) },
-    ),
-    policy = listOf(
-      Policy(
-        id = "caseload",
-        type = PolicyType.ACCESS,
-        rule = listOf(Rule(Effect.PERMIT, emptyList())),
-      ),
-    ),
-    allDatasets = listOf(fullDataset),
-    allReports = emptyList(),
-  )
+      allDatasets = listOf(fullDataset),
+      allReports = emptyList(),
+      allDatasources = listOf(datasource),
+    )
+  }
 }

@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 11.0.0
+- Changed the MutliphasQuery datasource field type from Datasource to String. This String datasource is now referencing an item from the top level DPD datasource array. 
+
 # 10.0.7
 - Fix definitions caching. 
 - Changed scan operation to query in definitions retrieval from DDB.
