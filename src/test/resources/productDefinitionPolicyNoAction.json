@@ -79,7 +79,6 @@
     "classification": "report classification",
     "version" : "1.2.3",
     "dataset" : "$ref:definition-policy-no-action",
-    "policy" : [ ],
     "render" : "HTML",
     "specification" : {
       "template" : "list",

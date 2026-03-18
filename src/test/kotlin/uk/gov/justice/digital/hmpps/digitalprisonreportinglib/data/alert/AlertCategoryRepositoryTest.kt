@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository.Companion.DIGITAL_PRISON_REPORTING_DB
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaReferenceDataRepository.Companion.NOMIS_CATALOG
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategoryRepository.Companion.ALERT_CATEGORY_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import java.time.Duration
@@ -32,7 +33,7 @@ class AlertCategoryRepositoryTest {
   val tableIdGenerator = mock<TableIdGenerator>()
   val statementId = "statementId"
   val athenaWorkgroup = "workgroup-1"
-  val alertCategoryRepository = AlertCategoryRepository(athenaClient, tableIdGenerator, athenaWorkgroup)
+  val alertCategoryRepository = AlertCategoryRepository(athenaClient, tableIdGenerator, athenaWorkgroup, IdentifiedHelper())
 
   @Test
   fun `should execute the statement, poll for the status and get the results`() {

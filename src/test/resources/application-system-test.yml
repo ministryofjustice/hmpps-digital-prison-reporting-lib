@@ -36,20 +36,22 @@ management.endpoint:
 
 dpr:
   lib:
+    manage-users:
+      host: http://localhost:8082
     api:
       client:
         id: dpr-api-client-id
         secret: dpr-api-client-secret
     system:
       role: PRISONS_REPORTING_USER
+      token:
+        enabled: true
     aws:
       sts:
         enabled: true
 hmpps:
   auth:
     url: http://localhost:8090/auth
-  manage-users:
-    url: http://localhost:8082
 
 logging:
   level:

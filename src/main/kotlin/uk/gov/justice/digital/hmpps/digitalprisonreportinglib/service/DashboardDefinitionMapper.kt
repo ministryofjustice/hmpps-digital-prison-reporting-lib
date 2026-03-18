@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UnitTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisationColumn
@@ -34,7 +35,16 @@ class DashboardDefinitionMapper(
   identifiedHelper: IdentifiedHelper,
   establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService,
   alertCategoryCacheService: AlertCategoryCacheService,
-) : DefinitionMapper(syncDataApiService, identifiedHelper, establishmentCodesToWingsCacheService, alertCategoryCacheService) {
+  productDefinitionRepository: ProductDefinitionRepository,
+  productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
+) : DefinitionMapper(
+  syncDataApiService = syncDataApiService,
+  identifiedHelper = identifiedHelper,
+  establishmentCodesToWingsCacheService = establishmentCodesToWingsCacheService,
+  alertCategoryCacheService = alertCategoryCacheService,
+  productDefinitionRepository = productDefinitionRepository,
+  productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+) {
 
   companion object {
     private val log = LoggerFactory.getLogger(this::class.java)

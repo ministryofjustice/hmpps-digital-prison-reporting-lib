@@ -2,22 +2,23 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.CacheBuilder
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
+import org.mockito.kotlin.times
+import software.amazon.awssdk.core.pagination.sync.SdkIterable
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse
-import software.amazon.awssdk.services.dynamodb.model.ScanRequest
-import software.amazon.awssdk.services.dynamodb.model.ScanResponse
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest
+import software.amazon.awssdk.services.dynamodb.paginators.QueryIterable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.getScanRequest
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.getQueryRequest
 import java.util.concurrent.TimeUnit
 
 class DynamoDbProductDefinitionRepositoryTest {
@@ -39,28 +40,32 @@ class DynamoDbProductDefinitionRepositoryTest {
       .build(),
   )
 
-  @BeforeEach
-  fun setup() {
-    val response = mock<ScanResponse>()
-    given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
-    given(response.items()).willReturn(
-      listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-      ),
-    )
-  }
-
   @Test
   fun `returns the correct product definitions`() {
+    val missingItems = listOf(mapOf("definition" to AttributeValue.fromS("""{"id": "test2"}"""), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)))
+    val orphanageItems = listOf(mapOf("definition" to AttributeValue.fromS("""{"id": "test1"}"""), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)))
+    val missingPaginator = mock<QueryIterable>()
+    val orphanagePaginator = mock<QueryIterable>()
+
+    given(missingPaginator.items()).willReturn(SdkIterable { missingItems.toMutableList().iterator() })
+    given(orphanagePaginator.items()).willReturn(SdkIterable { orphanageItems.toMutableList().iterator() })
+    given(dynamoDbClient.queryPaginator(any<QueryRequest>())).willAnswer { invocation ->
+      val request = invocation.getArgument<QueryRequest>(0)
+      val category = request.expressionAttributeValues()[":category"]?.s()
+      when (category) {
+        DataDefinitionPath.MISSING.value -> missingPaginator
+        DataDefinitionPath.ORPHANAGE.value -> orphanagePaginator
+        else -> throw IllegalArgumentException("Unexpected category: $category")
+      }
+    }
     val productDefinitions = repo.getProductDefinitions()
 
     assertThat(productDefinitions).isNotNull
     assertThat(productDefinitions.count()).isEqualTo(2)
-    assertThat(productDefinitions[0].path).isEqualTo(DataDefinitionPath.ORPHANAGE)
+    assertThat(productDefinitions[0].path).isEqualTo(DataDefinitionPath.MISSING)
     assertThat(productDefinitions[1].path).isEqualTo(DataDefinitionPath.ORPHANAGE)
 
-    then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
   }
 
   @Test
@@ -82,14 +87,23 @@ class DynamoDbProductDefinitionRepositoryTest {
   @Test
   fun `returns the correct product definitions using a path after first querying for the default`() {
     val path = "some/other/value"
-    val response = mock<ScanResponse>()
-    given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
-    given(response.items()).willReturn(
-      listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-      ),
-    )
+    val missingItems = listOf(mapOf("definition" to AttributeValue.fromS("""{"id": "test1"}"""), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)))
+    val orphanageItems = listOf(mapOf("definition" to AttributeValue.fromS("""{"id": "test2"}"""), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)))
+    val otherItems = listOf(mapOf("definition" to AttributeValue.fromS("""{"id": "test3"}"""), "category" to AttributeValue.fromS(path)))
+    val missingPaginator = mock<QueryIterable>()
+    val orphanagePaginator = mock<QueryIterable>()
+    val otherPaginator = mock<QueryIterable>()
+
+    given(missingPaginator.items()).willReturn(SdkIterable { missingItems.toMutableList().iterator() })
+    given(orphanagePaginator.items()).willReturn(SdkIterable { orphanageItems.toMutableList().iterator() })
+    given(otherPaginator.items()).willReturn(SdkIterable { otherItems.toMutableList().iterator() })
+    given(dynamoDbClient.queryPaginator(getQueryRequest(properties, DataDefinitionPath.MISSING.value)))
+      .willReturn(missingPaginator)
+    given(dynamoDbClient.queryPaginator(getQueryRequest(properties, DataDefinitionPath.ORPHANAGE.value)))
+      .willReturn(orphanagePaginator)
+    given(dynamoDbClient.queryPaginator(getQueryRequest(properties, path)))
+      .willReturn(otherPaginator)
+
     val productDefinitions = repo.getProductDefinitions()
 
     assertThat(productDefinitions).isNotNull
@@ -99,14 +113,9 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinitions[0].id).isEqualTo("test1")
     assertThat(productDefinitions[1].id).isEqualTo("test2")
 
-    then(dynamoDbClient).should().scan(getScanRequest(properties, listOf(DataDefinitionPath.MISSING.value, DataDefinitionPath.ORPHANAGE.value)))
+    then(dynamoDbClient).should().queryPaginator(getQueryRequest(properties, DataDefinitionPath.MISSING.value))
+    then(dynamoDbClient).should().queryPaginator(getQueryRequest(properties, DataDefinitionPath.ORPHANAGE.value))
 
-    given(response.items()).willReturn(
-      listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test3\"}"), "category" to AttributeValue.fromS(path)),
-      ),
-    )
     val productDefinitions2 = repo.getProductDefinitions(path)
 
     assertThat(productDefinitions2).isNotNull
@@ -115,6 +124,9 @@ class DynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinitions2[1].path).isEqualTo(DataDefinitionPath.OTHER)
     assertThat(productDefinitions2[0].id).isEqualTo("test1")
     assertThat(productDefinitions2[1].id).isEqualTo("test3")
+
+    then(dynamoDbClient).should().queryPaginator(getQueryRequest(properties, path))
+    then(dynamoDbClient).shouldHaveNoMoreInteractions()
   }
 
   @Test
@@ -136,18 +148,29 @@ class DynamoDbProductDefinitionRepositoryTest {
 
   @Test
   fun `returns definitions from missing as well as main path if cache is loaded`() {
-    val response = mock<ScanResponse>()
-    given(dynamoDbClient.scan(any(ScanRequest::class.java))).willReturn(response)
-    given(response.items()).willReturn(
-      listOf(
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test1\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-        mapOf("definition" to AttributeValue.fromS("{\"id\": \"test2\"}"), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)),
-      ),
-    )
+    val missingItems = listOf(mapOf("definition" to AttributeValue.fromS("""{"id": "test2"}"""), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)))
+    val orphanageItems = listOf(mapOf("definition" to AttributeValue.fromS("""{"id": "test1"}"""), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)))
+    val missingPaginator = mock<QueryIterable>()
+    val orphanagePaginator = mock<QueryIterable>()
+
+    given(missingPaginator.items()).willReturn(SdkIterable { missingItems.toMutableList().iterator() })
+    given(orphanagePaginator.items()).willReturn(SdkIterable { orphanageItems.toMutableList().iterator() })
+    given(dynamoDbClient.queryPaginator(any<QueryRequest>())).willAnswer { invocation ->
+      val request = invocation.getArgument<QueryRequest>(0)
+      val category = request.expressionAttributeValues()[":category"]?.s()
+      when (category) {
+        DataDefinitionPath.MISSING.value -> missingPaginator
+        DataDefinitionPath.ORPHANAGE.value -> orphanagePaginator
+        else -> throw IllegalArgumentException("Unexpected category: $category")
+      }
+    }
+
     val productDefinitions = repo.getProductDefinitions()
     assertThat(productDefinitions).hasSize(2)
 
-    // Run the get again, which will hit the cache
-    assertThat(repo.getProductDefinitions()).hasSize(2)
+    val cached = repo.getProductDefinitions()
+    assertThat(cached).hasSize(2)
+
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
   }
 }

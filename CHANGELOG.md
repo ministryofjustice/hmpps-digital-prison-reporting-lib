@@ -1,5 +1,47 @@
 Below you can find the changes included in each release.
 
+# 11.0.0
+- Changed the MutliphasQuery datasource field type from Datasource to String. This String datasource is now referencing an item from the top level DPD datasource array. 
+
+# 10.0.7
+- Fix definitions caching. 
+- Changed scan operation to query in definitions retrieval from DDB.
+- Performed two queries on the category (index partition key) instead of a single combined scan on the entire table.
+- Used queryPaginator instead of manually paginating. 
+
+# 10.0.6
+- Added debug log to log caching behaviour. 
+
+# 10.0.5
+- fix bug with manage users bean
+
+# 10.0.4
+- Updated manage-users env variable to from hmpps.manage-users.url to dpr.lib.manage-users.host.
+
+# 10.0.3
+- Provided support for system tokens based on the dpr.lib.system.token.enabled flag.
+
+# 10.0.2
+- Removed logging no longer required. This was logging the deserialisation of each individual DPD retrieved from Dynamo DB.
+
+# 10.0.1
+- Make download columns match order in DPD report specification
+
+# 10.0.0
+- Make DashboardSection and DashboardVisualisation display fields mandatory.
+
+# 9.12.3
+- Added new streaming CSV download endpoint for the sync journey.  
+
+# 9.12.2
+- Made MissingReportSubmissionsRepository conditional on MissingReportService bean.
+
+# 9.12.1
+- Fixed issue with missing report submissions erroring. 
+
+# 9.12.0
+- Formula engine does not produce HTML and returns the value as it is when the execution mode is CSV.
+
 # 9.11.21
 - Fix issue with checking if an S3 file is missing as part of the summary endpoint.
 

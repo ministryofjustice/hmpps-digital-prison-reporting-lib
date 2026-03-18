@@ -50,7 +50,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Multiph
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
@@ -59,7 +58,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Specification
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -76,7 +74,7 @@ import java.sql.ResultSet
 import java.sql.ResultSetMetaData
 import java.util.UUID
 
-class AsyncDataApiServiceTest {
+class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json"),
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -144,7 +142,7 @@ class AsyncDataApiServiceTest {
     val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val sortColumn = "date"
     val sortedAsc = true
-    val productDefinition = datamartProductDefinitionRepository.getProductDefinitions().first()
+    val productDefinition = datamartProductDefinitionRepository.getProductDefinition("external-movements")
     val singleReportProductDefinition = datamartProductDefinitionRepository.getSingleReportProductDefinition(productDefinition.id, productDefinition.report.first().id)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
@@ -166,6 +164,7 @@ class AsyncDataApiServiceTest {
         productDefinitionName = singleReportProductDefinition.name,
         reportOrDashboardId = singleReportProductDefinition.report.id,
         reportOrDashboardName = singleReportProductDefinition.report.name,
+        allDatasources = productDefinition.datasource,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -194,6 +193,7 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleReportProductDefinition.name,
       reportOrDashboardId = singleReportProductDefinition.report.id,
       reportOrDashboardName = singleReportProductDefinition.report.name,
+      allDatasources = productDefinition.datasource,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -206,7 +206,7 @@ class AsyncDataApiServiceTest {
       identifiedHelper = IdentifiedHelper(),
     )
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
-    val productDefinition = productDefinitionRepository.getProductDefinitions().first()
+    val productDefinition = productDefinitionRepository.getProductDefinition("missing-ethnicity-metrics")
     val singleDashboardProductDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinition.id, productDefinition.dashboard!!.first().id)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
@@ -231,6 +231,7 @@ class AsyncDataApiServiceTest {
         productDefinitionName = singleDashboardProductDefinition.name,
         reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
         reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+        allDatasources = productDefinition.datasource,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -262,6 +263,7 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleDashboardProductDefinition.name,
       reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
       reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+      allDatasources = productDefinition.datasource,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -442,7 +444,7 @@ class AsyncDataApiServiceTest {
     val repositoryFilters = listOf(Filter("is_closed", "true", BOOLEAN), Filter("date", "2023-04-25", DATE_RANGE_START), Filter("date", "2023-09-10", DATE_RANGE_END))
     val sortColumn = "date"
     val sortedAsc = true
-    val productDefinition = productDefinitionRepository.getProductDefinitions().first()
+    val productDefinition = productDefinitionRepository.getProductDefinition("external-movements")
     val singleReportProductDefinition = productDefinitionRepository.getSingleReportProductDefinition(productDefinition.id, productDefinition.report.first().id)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
@@ -464,6 +466,7 @@ class AsyncDataApiServiceTest {
         productDefinitionName = singleReportProductDefinition.name,
         reportOrDashboardId = singleReportProductDefinition.report.id,
         reportOrDashboardName = singleReportProductDefinition.report.name,
+        allDatasources = productDefinition.datasource,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -492,6 +495,7 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleReportProductDefinition.name,
       reportOrDashboardId = singleReportProductDefinition.report.id,
       reportOrDashboardName = singleReportProductDefinition.report.name,
+      allDatasources = productDefinition.datasource,
     )
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionResponse, actual)
@@ -509,6 +513,7 @@ class AsyncDataApiServiceTest {
     val schema = mock<Schema>()
     val field = mock<SchemaField>()
     val datasource = mock<Datasource>()
+    val allDatasources = listOf(datasource)
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
@@ -535,6 +540,7 @@ class AsyncDataApiServiceTest {
     whenever(singleDashboardProductDefinition.allDatasets).thenReturn(listOf(dashboardDataset))
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
+    whenever(singleDashboardProductDefinition.allDatasources).thenReturn(allDatasources)
     whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
     whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
@@ -554,6 +560,7 @@ class AsyncDataApiServiceTest {
         productDefinitionName = singleDashboardProductDefinition.name,
         reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
         reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+        allDatasources = allDatasources,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -585,6 +592,7 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleDashboardProductDefinition.name,
       reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
       reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+      allDatasources = allDatasources,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -601,6 +609,8 @@ class AsyncDataApiServiceTest {
     val schema = mock<Schema>()
     val field = mock<SchemaField>()
     val datasource = mock<Datasource>()
+    val datasource2 = mock<Datasource>()
+    val allDatasources = listOf(datasource, datasource2)
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
@@ -608,8 +618,8 @@ class AsyncDataApiServiceTest {
     val parameterName = "establishment_code"
     val parameterValue = "BFI"
     val parameter = Parameter(0, parameterName, ParameterType.String, FilterType.AutoComplete, "Estabishment Code", true, ReferenceType.ESTABLISHMENT)
-    val multiphaseQuery1 = MultiphaseQuery(0, datasource, "SELECT * FROM a", listOf(parameter))
-    val multiphaseQuery2 = MultiphaseQuery(1, datasource, "SELECT * FROM b", listOf(parameter))
+    val multiphaseQuery1 = MultiphaseQuery(0, "datasource1", "SELECT * FROM a", listOf(parameter))
+    val multiphaseQuery2 = MultiphaseQuery(1, "datasource2", "SELECT * FROM b", listOf(parameter))
     val caseload = "caseloadA"
     val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
     whenever(
@@ -633,6 +643,7 @@ class AsyncDataApiServiceTest {
     whenever(singleDashboardProductDefinition.allDatasets).thenReturn(listOf(dashboardDataset))
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
+    whenever(singleDashboardProductDefinition.allDatasources).thenReturn(allDatasources)
     whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
     whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
@@ -645,7 +656,6 @@ class AsyncDataApiServiceTest {
         prompts = listOf(prompt),
         userToken = authToken,
         query = singleDashboardProductDefinition.dashboardDataset.query,
-        multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
         allDatasets = singleDashboardProductDefinition.allDatasets,
@@ -653,6 +663,8 @@ class AsyncDataApiServiceTest {
         productDefinitionName = singleDashboardProductDefinition.name,
         reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
         reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+        multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
+        allDatasources = listOf(datasource, datasource2),
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -677,7 +689,6 @@ class AsyncDataApiServiceTest {
       prompts = listOf(prompt),
       userToken = authToken,
       query = singleDashboardProductDefinition.dashboardDataset.query,
-      multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
       allDatasets = singleDashboardProductDefinition.allDatasets,
@@ -685,6 +696,8 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleDashboardProductDefinition.name,
       reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
       reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
+      multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
+      allDatasources = allDatasources,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -699,6 +712,8 @@ class AsyncDataApiServiceTest {
     val reportDataset = mock<Dataset>()
     val query = ""
     val datasource = mock<Datasource>()
+    val datasource2 = mock<Datasource>()
+    val allDatasources = listOf(datasource, datasource2)
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
@@ -706,8 +721,8 @@ class AsyncDataApiServiceTest {
     val parameterName = "establishment_code"
     val parameterValue = "BFI"
     val parameter = Parameter(0, parameterName, ParameterType.String, FilterType.AutoComplete, "Estabishment Code", true, ReferenceType.ESTABLISHMENT)
-    val multiphaseQuery1 = MultiphaseQuery(0, datasource, "SELECT * FROM a", listOf(parameter))
-    val multiphaseQuery2 = MultiphaseQuery(1, datasource, "SELECT * FROM b", listOf(parameter))
+    val multiphaseQuery1 = MultiphaseQuery(0, "datasource1", "SELECT * FROM a", listOf(parameter))
+    val multiphaseQuery2 = MultiphaseQuery(1, "datasource2", "SELECT * FROM b", listOf(parameter))
     val caseload = "caseloadA"
     val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
     whenever(
@@ -729,6 +744,7 @@ class AsyncDataApiServiceTest {
     whenever(singleReportProductDefinition.allDatasets).thenReturn(listOf(reportDataset))
     whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
+    whenever(singleReportProductDefinition.allDatasources).thenReturn(allDatasources)
     whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
     whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
     whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
@@ -741,7 +757,6 @@ class AsyncDataApiServiceTest {
         prompts = listOf(prompt),
         userToken = authToken,
         query = singleReportProductDefinition.reportDataset.query,
-        multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
         reportSummaries = emptyList(),
@@ -750,6 +765,8 @@ class AsyncDataApiServiceTest {
         productDefinitionName = singleReportProductDefinition.name,
         reportOrDashboardId = singleReportProductDefinition.report.id,
         reportOrDashboardName = singleReportProductDefinition.report.name,
+        multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
+        allDatasources = allDatasources,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -776,7 +793,6 @@ class AsyncDataApiServiceTest {
       prompts = listOf(prompt),
       userToken = authToken,
       query = singleReportProductDefinition.reportDataset.query,
-      multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
       reportSummaries = emptyList(),
@@ -785,6 +801,8 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleReportProductDefinition.name,
       reportOrDashboardId = singleReportProductDefinition.report.id,
       reportOrDashboardName = singleReportProductDefinition.report.name,
+      multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
+      allDatasources = allDatasources,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -1234,7 +1252,7 @@ class AsyncDataApiServiceTest {
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper = IdentifiedHelper(),
     )
-    val productDefinition = productDefinitionRepository.getProductDefinitions().first()
+    val productDefinition = productDefinitionRepository.getProductDefinition("external-movements-with-parameters")
     val singleReportProductDefinition = productDefinitionRepository.getSingleReportProductDefinition(productDefinition.id, productDefinition.report.first().id)
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val parameter1Name = "establishment_code"
@@ -1273,6 +1291,7 @@ class AsyncDataApiServiceTest {
         productDefinitionName = singleReportProductDefinition.name,
         reportOrDashboardId = singleReportProductDefinition.report.id,
         reportOrDashboardName = singleReportProductDefinition.report.name,
+        allDatasources = productDefinition.datasource,
       ),
     ).thenReturn(statementExecutionResponse)
 
@@ -1301,6 +1320,7 @@ class AsyncDataApiServiceTest {
       productDefinitionName = singleReportProductDefinition.name,
       reportOrDashboardId = singleReportProductDefinition.report.id,
       reportOrDashboardName = singleReportProductDefinition.report.name,
+      allDatasources = productDefinition.datasource,
     )
     assertEquals(statementExecutionResponse, actual)
   }
@@ -1703,7 +1723,33 @@ class AsyncDataApiServiceTest {
   }
 
   @Test
-  fun `prepareDownloadContext should return DownloadContext with validated inputs`() {
+  fun `prepareAsyncDownloadContext should return DownloadContext with columns in the same order as the DPD, even when given in a different order`() {
+    val selectedColumns = listOf("destination", "name", "origin", "date")
+    val sortColumn = "name"
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.prepareAsyncDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = null,
+      filters = emptyMap(),
+      selectedColumns = selectedColumns,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      userToken = authToken,
+    )
+
+    assertThat(actual.selectedAndValidatedColumns).containsExactly("name", "date", "origin", "destination")
+  }
+
+  @Test
+  fun `prepareAsyncDownloadContext should return DownloadContext with validated inputs`() {
     val selectedColumns = listOf("name ", "date")
     val sortColumn = "name"
 
@@ -1714,7 +1760,7 @@ class AsyncDataApiServiceTest {
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.prepareDownloadContext(
+    val actual = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1740,7 +1786,7 @@ class AsyncDataApiServiceTest {
     "last-month, columnNotInSchema, schema",
     "fewer-spec-fields-than-dataset-schema-fields, date, report specification",
   )
-  fun `prepareDownloadContext should throw IllegalArgumentException when selected column is not in dataset schema or report spec`(variantId: String, column: String, errorMessage: String) {
+  fun `prepareAsyncDownloadContext should throw IllegalArgumentException when selected column is not in dataset schema or report spec`(variantId: String, column: String, errorMessage: String) {
     val selectedColumns = listOf(column)
 
     whenever(
@@ -1751,7 +1797,7 @@ class AsyncDataApiServiceTest {
     ).thenReturn(true)
 
     val e = assertThrows<IllegalArgumentException> {
-      asyncDataApiService.prepareDownloadContext(
+      asyncDataApiService.prepareAsyncDownloadContext(
         reportId = reportId,
         reportVariantId = variantId,
         dataProductDefinitionsPath = null,
@@ -1772,16 +1818,17 @@ class AsyncDataApiServiceTest {
     val tableId = "table1"
     val rs = mock<ResultSet>()
     val meta = mock<ResultSetMetaData>()
+    val datasource = Datasource("dataId", "dataName")
     val singleReportProductDefinition =
       SingleReportProductDefinition(
         id = "dpdId",
         name = "name",
         metadata = MetaData("auth", "v1", "owner"),
-        datasource = Datasource("dataId", "dataName"),
+        datasource = datasource,
         report =
         report(
           listOf(
-            ReportField(name = "col1", display = null),
+            ReportField(name = "col1", display = null, formula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/abc', my-url-text,TRUE)"),
             ReportField(name = "col2", display = null),
           ),
         ),
@@ -1796,7 +1843,7 @@ class AsyncDataApiServiceTest {
             SchemaField(
               name = "col2",
               type = ParameterType.String,
-              display = "column 2",
+              display = "column, 2",
               filter = null,
             ),
           ),
@@ -1804,6 +1851,7 @@ class AsyncDataApiServiceTest {
         policy = emptyList(),
         allDatasets = emptyList(),
         allReports = emptyList(),
+        allDatasources = listOf(datasource),
       )
     val productDefinitionRepository = mock<ProductDefinitionRepository>()
     whenever(productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)).thenReturn(singleReportProductDefinition)
@@ -1814,7 +1862,7 @@ class AsyncDataApiServiceTest {
         userToken = any(),
       ),
     ).thenReturn(true)
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1836,7 +1884,7 @@ class AsyncDataApiServiceTest {
     asyncDataApiService.downloadCsv(
       writer = writer,
       tableId = tableId,
-      downloadContext = downloadContext,
+      asyncDownloadContext = downloadContext,
     )
 
     val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
@@ -1853,29 +1901,30 @@ class AsyncDataApiServiceTest {
     val output = writer.toString()
     val lines = output.lines()
 
-    assertThat(lines[0]).isEqualTo("column 1,column 2")
+    assertThat(lines[0]).isEqualTo("column 1,\"column, 2\"")
     assertThat(lines[1]).isEqualTo("value1,value2")
   }
 
   @Test
-  fun `downloadCsv should write header and rows for the selected columns with the selected column order`() {
+  fun `downloadCsv should write header and rows for the selected columns with the report specification field order`() {
     val selectedColumns = listOf("col2", "col1")
     val sortColumn = "col1"
     val writer = StringWriter()
     val tableId = "table1"
     val rs = mock<ResultSet>()
     val meta = mock<ResultSetMetaData>()
+    val datasource = Datasource("dataId", "dataName")
     val singleReportProductDefinition =
       SingleReportProductDefinition(
         id = "dpdId",
         name = "name",
         metadata = MetaData("auth", "v1", "owner"),
-        datasource = Datasource("dataId", "dataName"),
+        datasource = datasource,
         report =
         report(
           listOf(
             ReportField(name = "\$ref:col1", display = null),
-            ReportField(name = "col2", display = "Report Display Column 1"),
+            ReportField(name = "col2", display = "Report Display Column 2"),
             ReportField(name = "col3", display = null),
           ),
         ),
@@ -1910,6 +1959,7 @@ class AsyncDataApiServiceTest {
         policy = emptyList(),
         allDatasets = emptyList(),
         allReports = emptyList(),
+        allDatasources = listOf(datasource),
       )
     val productDefinitionRepository = mock<ProductDefinitionRepository>()
     whenever(productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)).thenReturn(singleReportProductDefinition)
@@ -1920,7 +1970,7 @@ class AsyncDataApiServiceTest {
         userToken = any(),
       ),
     ).thenReturn(true)
-    val downloadContext = asyncDataApiService.prepareDownloadContext(
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = null,
@@ -1946,7 +1996,7 @@ class AsyncDataApiServiceTest {
     asyncDataApiService.downloadCsv(
       writer = writer,
       tableId = tableId,
-      downloadContext = downloadContext,
+      asyncDownloadContext = downloadContext,
     )
 
     val consumerCaptor = argumentCaptor<(ResultSet) -> Unit>()
@@ -1963,44 +2013,9 @@ class AsyncDataApiServiceTest {
     val output = writer.toString()
     val lines = output.lines()
 
-    assertThat(lines[0]).isEqualTo("Report Display Column 1,column 1")
+    assertThat(lines[0]).isEqualTo("column 1,Report Display Column 2")
+    assertThat(lines[1]).isEqualTo("value1,value2")
   }
-
-  private fun report(fields: List<ReportField>? = null): Report = Report(
-    id = "reportId",
-    name = "reportName",
-    version = "1",
-    render = RenderMethod.HTML,
-    dataset = "10",
-    specification =
-    Specification(
-      template = Template.List,
-      field = fields ?: listOf(
-        ReportField(name = "13", display = null),
-      ),
-      section = null,
-    ),
-    created = null,
-  )
-
-  private fun dataset(schedule: String? = null, fields: List<SchemaField>? = null): Dataset = Dataset(
-    id = "10",
-    name = "11",
-    datasource = "12A",
-    query = "12",
-    schema = Schema(
-      field = fields
-        ?: listOf(
-          SchemaField(
-            name = "13",
-            type = ParameterType.Long,
-            display = "14",
-            filter = null,
-          ),
-        ),
-    ),
-    schedule = schedule,
-  )
 
   private fun definition(scheduled: Boolean, dataset: Dataset): SingleReportProductDefinition {
     val fullDatasource = Datasource(
@@ -2032,6 +2047,7 @@ class AsyncDataApiServiceTest {
       ),
       allDatasets = listOf(dataset),
       allReports = emptyList(),
+      allDatasources = listOf(fullDatasource),
     )
   }
 }

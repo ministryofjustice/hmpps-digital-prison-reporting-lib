@@ -201,6 +201,39 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
   }
 
+  @Test
+  fun `Data API is streaming results to the downloaded csv file`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month/download")
+          .queryParam("columns", "prisonNumber")
+          .queryParam("columns", "name")
+          .queryParam("columns", "origin")
+          .queryParam("columns", "destination")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectHeader().contentType("text/csv")
+      .expectHeader().valueEquals(
+        "Content-Disposition",
+        "attachment; filename=external-movements-last-month.csv",
+      )
+      .expectBody(String::class.java)
+      .value { body ->
+        val expected = """
+          ﻿Prison Number,Name,From,To
+          ${movementPrisoner4[PRISON_NUMBER]},"${movementPrisoner4[NAME]}",${movementPrisoner4[ORIGIN]},${movementPrisoner4[DESTINATION]}
+        """.trimIndent()
+        assertThat(body.trim()).isEqualTo(expected)
+      }
+
+    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
+  }
+
   class ConfiguredApiFormulaTest : IntegrationTestBase() {
     companion object {
       @JvmStatic

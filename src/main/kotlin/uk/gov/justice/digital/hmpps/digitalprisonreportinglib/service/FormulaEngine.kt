@@ -14,7 +14,13 @@ class FormulaEngine(
   private val reportFields: List<ReportField>,
   private val env: String? = null,
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper(),
+  private val executionMode: FormulaExecutionMode? = FormulaExecutionMode.STANDARD,
 ) {
+
+  enum class FormulaExecutionMode {
+    STANDARD,
+    CSV_EXPORT,
+  }
 
   companion object {
     const val MAKE_URL_FORMULA_PREFIX = "make_url("
@@ -43,8 +49,9 @@ class FormulaEngine(
 
   private fun findFormula(columnName: String) = identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { null }
 
-  private fun interpolate(formula: String, row: Map<String, Any?>): String = when {
-    formula.startsWith(MAKE_URL_FORMULA_PREFIX) -> interpolateUrlFormula(formula, row)
+  private fun interpolate(formula: String, row: Map<String, Any?>): String? = when {
+    formula.startsWith(MAKE_URL_FORMULA_PREFIX) && executionMode == FormulaExecutionMode.STANDARD -> interpolateUrlFormula(formula, row)
+    formula.startsWith(MAKE_URL_FORMULA_PREFIX) && executionMode == FormulaExecutionMode.CSV_EXPORT -> null
     formula.startsWith(FORMAT_DATE_FORMULA_PREFIX) -> interpolateFormatDateFormula(formula, row)
     formula.startsWith(FORMAT_NUMBER_FORMULA_PREFIX) -> interpolateFormatNumberFormula(formula, row)
     formula.startsWith(DEFAULT_VALUE_FORMULA_PREFIX) -> interpolateDefaultValueFormula(formula, row)

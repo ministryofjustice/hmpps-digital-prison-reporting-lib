@@ -58,6 +58,10 @@ class ReportDefinitionServiceTest {
     schema = Schema(emptyList()),
   )
 
+  val datasource = Datasource(
+    id = "20",
+    name = "21",
+  )
   private val minimalSingleDefinition = SingleReportProductDefinition(
     id = "1",
     name = "2",
@@ -70,10 +74,7 @@ class ReportDefinitionServiceTest {
       render = HTML,
     ),
     reportDataset = dataset,
-    datasource = Datasource(
-      id = "20",
-      name = "21",
-    ),
+    datasource = datasource,
     metadata = MetaData(
       author = "30",
       version = "31",
@@ -82,6 +83,7 @@ class ReportDefinitionServiceTest {
     policy = listOf(policy),
     allDatasets = listOf(dataset),
     allReports = emptyList(),
+    allDatasources = listOf(datasource),
   )
 
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()

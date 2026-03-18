@@ -125,7 +125,8 @@ SELECT * FROM dataset_'
     athenaClient,
     tableIdGenerator,
     athenaWorkgroup,
-    jdbcTemplate,
+    jdbcTemplate = jdbcTemplate,
+    identifiedHelper = IdentifiedHelper(),
   )
   private val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
   private val dataset = mock<Dataset>()
@@ -477,10 +478,11 @@ SELECT * FROM dataset_'
     )
     val datasource1 = Datasource("id", "name", database, catalog)
     val datasource2 = Datasource("id2", "name2", database, catalog, DatasourceConnection.AWS_DATA_CATALOG)
+    val allDatasources = listOf(datasource1, datasource2)
     val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
-      MultiphaseQuery(0, datasource1, dpdQuery),
-      MultiphaseQuery(1, datasource2, query2),
+      MultiphaseQuery(0, "id", dpdQuery),
+      MultiphaseQuery(1, "id2", query2),
     )
     val tableId2 = "tableId2"
 
@@ -507,6 +509,7 @@ SELECT * FROM dataset_'
       reportOrDashboardId = productDefinition.report.id,
       reportOrDashboardName = productDefinition.report.name,
       multiphaseQueries = multiphaseQuery,
+      allDatasources = allDatasources,
     )
     val firstMultiphaseInsert = """insert into 
           admin.multiphase_query_state (
@@ -574,16 +577,17 @@ SELECT * FROM dataset_'
       query = multiphaseSqlNonLastQuery(),
     )
     val datasource = Datasource("id", "name", database, catalog, DatasourceConnection.FEDERATED, dialect = SqlDialect.ORACLE11g)
-    val datasource2 = Datasource("id", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
-    val datasource3 = Datasource("id", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
+    val datasource2 = Datasource("id2", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
+    val datasource3 = Datasource("id3", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
+    val allDatasources = listOf(datasource, datasource2, datasource3)
     val tableId2 = "tableId2"
     val tableId3 = "tableId3"
     val query2 = "SELECT count(*) as total from \${table[0]}"
     val query3 = "SELECT count(*) + 1 as total_plus_one from \${table[1]}"
     val multiphaseQuery = listOf(
-      MultiphaseQuery(0, datasource, dpdQuery),
-      MultiphaseQuery(1, datasource2, query2),
-      MultiphaseQuery(2, datasource3, query3),
+      MultiphaseQuery(0, "id", dpdQuery),
+      MultiphaseQuery(1, "id2", query2),
+      MultiphaseQuery(2, "id3", query3),
     )
     whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
     whenever(
@@ -609,6 +613,7 @@ SELECT * FROM dataset_'
       reportOrDashboardId = productDefinition.report.id,
       reportOrDashboardName = productDefinition.report.name,
       multiphaseQueries = multiphaseQuery,
+      allDatasources = allDatasources,
     )
     val firstMultiphaseInsert = """insert into 
           admin.multiphase_query_state (
@@ -700,8 +705,9 @@ SELECT * FROM dataset_'
       query = sqlStatement(tableId),
     )
     val datasource = Datasource("id", "name", database, catalog)
+    val allDatasources = listOf(datasource)
     val multiphaseQuery = listOf(
-      MultiphaseQuery(0, datasource, dpdQuery),
+      MultiphaseQuery(0, "id", dpdQuery),
     )
     whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
     whenever(
@@ -725,6 +731,7 @@ SELECT * FROM dataset_'
       reportOrDashboardId = productDefinition.report.id,
       reportOrDashboardName = productDefinition.report.name,
       multiphaseQueries = multiphaseQuery,
+      allDatasources = allDatasources,
     )
     val firstMultiphaseInsert = """insert into 
           admin.multiphase_query_state (
@@ -768,10 +775,11 @@ SELECT * FROM dataset_'
     )
     val datasource1 = Datasource("id", "name", database, catalog)
     val datasource2 = Datasource("id2", "name2", database, catalog)
+    val allDatasources = listOf(datasource1, datasource2)
     val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
-      MultiphaseQuery(0, datasource1, dpdQuery),
-      MultiphaseQuery(1, datasource2, query2),
+      MultiphaseQuery(0, "id", dpdQuery),
+      MultiphaseQuery(1, "id2", query2),
     )
     val tableId2 = "tableId2"
 
@@ -799,6 +807,7 @@ SELECT * FROM dataset_'
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
         multiphaseQueries = multiphaseQuery,
+        allDatasources = allDatasources,
       )
     }
     assertEquals(exception.message, "Query at index 1 has no connection defined in its datasource.")
@@ -815,10 +824,11 @@ SELECT * FROM dataset_'
     )
     val datasource1 = Datasource("id", "name", database, catalog)
     val datasource2 = Datasource("id2", "name2", database, catalog, DatasourceConnection.FEDERATED)
+    val allDatasources = listOf(datasource1, datasource2)
     val query2 = "SELECT count(*) as total from \${table[5]}"
     val multiphaseQuery = listOf(
-      MultiphaseQuery(0, datasource1, dpdQuery),
-      MultiphaseQuery(1, datasource2, query2),
+      MultiphaseQuery(0, "id", dpdQuery),
+      MultiphaseQuery(1, "id2", query2),
     )
     val tableId2 = "tableId2"
 
@@ -846,6 +856,7 @@ SELECT * FROM dataset_'
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
         multiphaseQueries = multiphaseQuery,
+        allDatasources = allDatasources,
       )
     }
     assertEquals(exception.message, "Invalid index. There is no table at index 5.")

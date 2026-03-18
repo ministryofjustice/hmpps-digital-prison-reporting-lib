@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.BeforeEach
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.whenever
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionOut
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.allPrisoners
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9846
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9847
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848
@@ -729,6 +732,73 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       reportFilter = productDefinition.report.filter,
     )
     Assertions.assertEquals(1, actual.size)
+  }
+
+  @Test
+  fun `streamTableResult should call the rowConsumer with the full query result set when there is no filter`() {
+    val collectedRows = mutableListOf<PrisonerEntity>()
+
+    configuredApiRepository.streamTableResult(
+      query = "SELECT id, number, firstname, lastname, living_unit_reference FROM datamart.domain.prisoner_prisoner",
+      filters = emptyList(),
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      rowConsumer = { rs ->
+        collectedRows.add(
+          PrisonerEntity(
+            id = rs.getLong("id"),
+            number = rs.getString("number"),
+            firstName = rs.getString("firstname"),
+            lastName = rs.getString("lastname"),
+            livingUnitReference = rs.getObject(
+              "living_unit_reference",
+              java.lang.Long::class.java,
+            ) as Long?,
+          ),
+        )
+      },
+    )
+    assertThat(collectedRows)
+      .usingRecursiveFieldByFieldElementComparator()
+      .containsExactlyElementsOf(allPrisoners)
+  }
+
+  @Test
+  fun `streamTableResult should call the rowConsumer with the filtered query result set when there is a matching filter`() {
+    val collectedRows = mutableListOf<String>()
+
+    configuredApiRepository.streamTableResult(
+      query = "SELECT lastname, firstname FROM datamart.domain.prisoner_prisoner",
+      filters = listOf(
+        Filter("lastname", "LastName1", FilterType.STANDARD),
+      ),
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      rowConsumer = { rs ->
+        collectedRows.add(rs.getString("lastname"))
+      },
+    )
+    assertThat(collectedRows).hasSize(2)
+    assertThat(collectedRows).allMatch { it == "LastName1" }
+  }
+
+  @Test
+  fun `streamTableResult should call the rowConsumer with the filtered query result set when there is more than one matching filter`() {
+    val collectedRows = mutableListOf<Pair<String, String>>()
+
+    configuredApiRepository.streamTableResult(
+      query = "SELECT lastname, firstname FROM datamart.domain.prisoner_prisoner",
+      filters = listOf(
+        Filter("lastname", "LastName1", FilterType.STANDARD),
+        Filter("firstname", "FirstName1", FilterType.STANDARD),
+      ),
+      sortedAsc = true,
+      policyEngineResult = PolicyResult.POLICY_PERMIT,
+      rowConsumer = { rs ->
+        collectedRows.add(Pair(rs.getString("lastname"), rs.getString("firstname")))
+      },
+    )
+    assertThat(collectedRows).containsExactly("LastName1" to "FirstName1")
   }
 
   @Test

@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -55,7 +54,15 @@ class DashboardDefinitionMapperTest {
   private val syncDataApiService: SyncDataApiService = mock()
   private val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService = mock()
   private val alertCategoryCacheService: AlertCategoryCacheService = mock()
-  private val dashboardDefinitionMapper = DashboardDefinitionMapper(syncDataApiService, IdentifiedHelper(), establishmentCodesToWingsCacheService, alertCategoryCacheService)
+  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
+  private val dashboardDefinitionMapper = DashboardDefinitionMapper(
+    syncDataApiService = syncDataApiService,
+    identifiedHelper = IdentifiedHelper(),
+    establishmentCodesToWingsCacheService = establishmentCodesToWingsCacheService,
+    alertCategoryCacheService = alertCategoryCacheService,
+    productDefinitionRepository = productDefinitionRepository,
+    productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+  )
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
@@ -241,7 +248,7 @@ class DashboardDefinitionMapperTest {
     )
     val multiphaseQuery = MultiphaseQuery(
       index = 0,
-      datasource = mock<Datasource>(),
+      datasource = "ds1",
       query = "SELECT * FROM a",
       parameters = listOf(parameter),
     )

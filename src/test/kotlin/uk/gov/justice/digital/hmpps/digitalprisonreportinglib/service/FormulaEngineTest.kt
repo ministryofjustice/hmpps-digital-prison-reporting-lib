@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.FormulaExecutionMode.CSV_EXPORT
 import java.lang.IllegalArgumentException
 import java.time.LocalDate
 import java.util.*
@@ -401,6 +402,41 @@ class FormulaEngineTest {
       DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields)
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine returns the value as it is without converting to HTML when the make_url formula is executed in CSV mode`() {
+    val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},FALSE)"
+    val prisonNumber = "ABC123"
+    val name = "LastName6, F"
+    val row: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val reportFields = listOf(
+      ReportField(
+        name = "\$ref:destination",
+        display = "Destination",
+        visible = Visible.TRUE,
+        formula = makeUrlFormula,
+      ),
+      ReportField(
+        name = "\$ref:$NAME",
+        display = "Name And Number",
+        visible = Visible.TRUE,
+        formula = "\${$NAME} and \${$PRISON_NUMBER}",
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      NAME to "$name and $prisonNumber",
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(reportFields = reportFields, executionMode = CSV_EXPORT)
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
 

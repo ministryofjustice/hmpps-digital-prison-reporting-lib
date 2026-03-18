@@ -11,7 +11,8 @@ abstract class AthenaReferenceDataRepository<T>(
   override val tableIdGenerator: TableIdGenerator,
   @Value("\${dpr.lib.redshiftdataapi.athenaworkgroup:workgroupArn}")
   override val athenaWorkgroup: String,
-) : AthenaApiRepository(athenaClient, tableIdGenerator, athenaWorkgroup) {
+  override val identifiedHelper: IdentifiedHelper,
+) : AthenaApiRepository(athenaClient, tableIdGenerator, athenaWorkgroup, identifiedHelper) {
 
   companion object {
     const val NOMIS_CATALOG = "nomis"
