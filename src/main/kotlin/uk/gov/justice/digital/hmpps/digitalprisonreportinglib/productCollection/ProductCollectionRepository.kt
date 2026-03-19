@@ -180,7 +180,7 @@ class ProductCollectionRowMapper : RowMapper<ProductCollectionResult> {
   override fun mapRow(
     rs: ResultSet,
     rowNum: Int,
-  ): ProductCollectionResult? {
+  ): ProductCollectionResult {
     val id = rs.getString("id")
     val name = rs.getString("name")
     val version = rs.getString("version")

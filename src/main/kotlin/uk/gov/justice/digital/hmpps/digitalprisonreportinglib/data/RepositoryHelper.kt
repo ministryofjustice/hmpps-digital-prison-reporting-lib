@@ -68,7 +68,7 @@ abstract class RepositoryHelper {
     }
   }
 
-  protected fun transformTimestampToLocalDateTime(it: MutableMap<String, Any>) = it.entries.associate { (k, v) ->
+  protected fun transformTimestampToLocalDateTime(it: MutableMap<String, Any?>) = it.entries.associate { (k, v) ->
     if (v is Timestamp) {
       k to v.toLocalDateTime()
     } else {

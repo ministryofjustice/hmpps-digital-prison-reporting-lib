@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.NotNull
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -115,7 +117,7 @@ class DataApiSyncController(
       )
   } catch (exception: NoDataAvailableException) {
     val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
 
     ResponseEntity
       .status(HttpStatus.OK)
@@ -168,7 +170,7 @@ class DataApiSyncController(
       )
   } catch (exception: NoDataAvailableException) {
     val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
 
     ResponseEntity
       .status(HttpStatus.OK)
@@ -233,7 +235,7 @@ class DataApiSyncController(
       )
   } catch (exception: NoDataAvailableException) {
     val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
 
     ResponseEntity
       .status(HttpStatus.OK)
