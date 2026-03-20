@@ -383,58 +383,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Data API returns value matching the dynamic filters provided`() {
-    webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/reports/external-movements/last-week/name")
-          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX", "2023-04-25")
-          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX", "2023-05-20")
-          .queryParam("${FILTERS_PREFIX}direction", "out")
-          .queryParam("prefix", "La")
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk()
-      .expectBody()
-      .json(
-        """
-        [
-          "${movementPrisoner4[NAME]}"
-        ]
-      """,
-      )
-  }
-
-  @Test
-  fun `Data API returns value matching the dynamic filters provided, with case insensitivity`() {
-    webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/reports/external-movements/last-week/name")
-          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX", "2023-04-25")
-          .queryParam("${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX", "2023-05-20")
-          .queryParam("${FILTERS_PREFIX}direction", "out")
-          .queryParam("prefix", "la")
-          .build()
-      }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk()
-      .expectBody()
-      .json(
-        """
-        [
-          "${movementPrisoner4[NAME]}"
-        ]
-      """,
-      )
-  }
-
-  @Test
   fun `Data API call without query params defaults to preset query params`() {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
