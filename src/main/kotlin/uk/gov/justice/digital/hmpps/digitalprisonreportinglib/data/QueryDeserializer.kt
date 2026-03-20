@@ -4,7 +4,6 @@ import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import java.lang.reflect.Type
 
@@ -22,10 +21,7 @@ class QueryDeserializer : JsonDeserializer<List<MultiphaseQuery>> {
         listOf(
           MultiphaseQuery(
             index = 0,
-            datasource = Datasource(
-              id = "default",
-              name = "default"
-            ),
+            datasource = "default",
             query = json.asString
           )
         )
