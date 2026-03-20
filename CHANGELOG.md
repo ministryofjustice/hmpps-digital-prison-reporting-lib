@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 12.0.0
+- Removed `/reports/{reportId}/{reportVariantId}/{fieldId}` endpoint as it is no longer used.
+
 # 11.0.0
 - Changed the MutliphasQuery datasource field type from Datasource to String. This String datasource is now referencing an item from the top level DPD datasource array. 
 
