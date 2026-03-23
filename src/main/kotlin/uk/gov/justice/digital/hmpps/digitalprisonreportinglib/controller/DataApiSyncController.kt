@@ -9,8 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotEmpty
-import jakarta.validation.constraints.NotNull
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -114,87 +112,6 @@ class DataApiSyncController(
           userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(emptyList())
-  }
-
-  @GetMapping("/reports/{reportId}/{reportVariantId}/{fieldId}")
-  @Operation(
-    description = "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",
-    security = [SecurityRequirement(name = "bearer-jwt")],
-    responses = [
-      ApiResponse(
-        headers = [
-          Header(
-            name = ResponseHeader.NO_DATA_WARNING_HEADER_NAME,
-            description = "Provides additional information about why no data has been returned.",
-          ),
-        ],
-      ),
-    ],
-  )
-  fun configuredApiDynamicFilter(
-    @RequestParam(defaultValue = "10")
-    @Min(1)
-    pageSize: Long,
-    @RequestParam sortedAsc: Boolean?,
-    @Parameter(
-      description = FILTERS_QUERY_DESCRIPTION,
-      example = FILTERS_QUERY_EXAMPLE,
-    )
-    @RequestParam
-    filters: Map<String, String>,
-    @Parameter(
-      description = "The value to match the start of the fieldId",
-      example = "Lond",
-    )
-    @RequestParam
-    prefix: String,
-    @PathVariable("reportId") reportId: String,
-    @PathVariable("reportVariantId") reportVariantId: String,
-    @Parameter(
-      description = "The name of the schema field which will be used as a dynamic filter.",
-      example = "name",
-    )
-    @PathVariable("fieldId")
-    @NotNull
-    @NotEmpty
-    fieldId: String,
-    @Parameter(
-      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
-      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
-  ): ResponseEntity<List<String>> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        dataApiSyncService.validateAndFetchData(
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          filters = filterHelper.filtersOnly(filters),
-          selectedPage = 1,
-          pageSize = pageSize,
-          sortColumn = fieldId,
-          sortedAsc = sortedAsc,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
-          reportFieldId = setOf(fieldId),
-          prefix = prefix,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
-        ).asSequence()
-          .flatMap {
-            it.asSequence()
-          }.groupBy({ it.key }, { it.value })
-          .values.flatten().map { it.toString() },
       )
   } catch (exception: NoDataAvailableException) {
     val headers = HttpHeaders()
