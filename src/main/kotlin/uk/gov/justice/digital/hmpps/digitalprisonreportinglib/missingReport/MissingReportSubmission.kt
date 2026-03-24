@@ -21,5 +21,5 @@ class MissingReportSubmission(
 ) {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  val id: Int? = null
+  var id: Int? = null
 }

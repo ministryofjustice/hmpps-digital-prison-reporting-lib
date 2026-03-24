@@ -75,7 +75,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
         MapSqlParameterSource(),
       )
       .map {
-        transformTimestampToLocalDateTime(it)
+        transformTimestampToLocalDateTime(it.toMutableMap())
       }
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)

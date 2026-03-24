@@ -225,10 +225,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectBody(String::class.java)
       .value { body ->
         val expected = """
-          ﻿Prison Number,Name,From,To
+          Prison Number,Name,From,To
           ${movementPrisoner4[PRISON_NUMBER]},"${movementPrisoner4[NAME]}",${movementPrisoner4[ORIGIN]},${movementPrisoner4[DESTINATION]}
         """.trimIndent()
-        assertThat(body.trim()).isEqualTo(expected)
+        assertThat(body?.startsWith("\uFEFF")).isTrue()
+        assertThat(body?.trim()?.replace("\uFEFF", "")).isEqualTo(expected)
       }
 
     assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
@@ -345,7 +346,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/reports/external-movements/last-month/count")
-          .queryParam("filters.direction", direction?.lowercase())
+          .queryParam("filters.direction", direction?.lowercase() ?: "")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -419,7 +420,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/reports/external-movements/last-month")
-          .queryParam("${FILTERS_PREFIX}direction", direction)
+          .queryParam("${FILTERS_PREFIX}direction", direction ?: "")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -466,7 +467,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectHeader()
-      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, listOf(WARNING_NO_ACTIVE_CASELOAD).toString())
       .expectBody()
       .json("[]")
   }
@@ -491,7 +492,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectHeader()
-      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, listOf(WARNING_NO_ACTIVE_CASELOAD).toString())
       .expectBody()
       .jsonPath("count").isEqualTo("0")
   }

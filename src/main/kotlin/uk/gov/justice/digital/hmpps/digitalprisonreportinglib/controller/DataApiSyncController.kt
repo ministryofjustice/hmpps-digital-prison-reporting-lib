@@ -115,7 +115,7 @@ class DataApiSyncController(
       )
   } catch (exception: NoDataAvailableException) {
     val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
 
     ResponseEntity
       .status(HttpStatus.OK)
@@ -168,7 +168,7 @@ class DataApiSyncController(
       )
   } catch (exception: NoDataAvailableException) {
     val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
 
     ResponseEntity
       .status(HttpStatus.OK)
@@ -233,7 +233,7 @@ class DataApiSyncController(
       )
   } catch (exception: NoDataAvailableException) {
     val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason)
+    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
 
     ResponseEntity
       .status(HttpStatus.OK)

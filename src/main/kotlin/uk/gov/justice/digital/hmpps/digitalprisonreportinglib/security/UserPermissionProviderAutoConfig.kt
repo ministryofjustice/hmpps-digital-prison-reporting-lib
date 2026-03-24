@@ -42,8 +42,7 @@ class UserPermissionProviderAutoConfig(
   @Bean
   fun manageUsersWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
-    builder: WebClient.Builder,
-  ): WebClient = builder.authorisedWebClient(
+  ): WebClient = WebClient.builder().authorisedWebClient(
     authorizedClientManager,
     registrationId = "DPR_LIB_API",
     url = manageUsersApiUri,
