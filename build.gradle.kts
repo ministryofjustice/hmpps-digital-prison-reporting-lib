@@ -1,7 +1,7 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.3.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.5"
   kotlin("jvm") version "2.3.10"
   kotlin("plugin.spring") version "2.3.10"
   kotlin("plugin.jpa") version "2.3.10"
@@ -20,7 +20,7 @@ val awsSdkVersion = "2.42.12"
 val testContainersVersion = "1.21.4"
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.2")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -35,7 +35,7 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 
   // Postgres dependencies
   implementation("org.flywaydb:flyway-core")
@@ -43,7 +43,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.10")
 
   // Testing
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.2")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.2")
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.13.0")
@@ -51,6 +51,8 @@ dependencies {
   testImplementation("org.postgresql:postgresql:42.7.10")
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
+  testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
 
   // Fix for security issue in transient dependency
   implementation("ch.qos.logback:logback-classic:1.5.32")

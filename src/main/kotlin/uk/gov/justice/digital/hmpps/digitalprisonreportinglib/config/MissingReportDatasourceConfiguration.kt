@@ -5,8 +5,8 @@ import com.zaxxer.hikari.HikariDataSource
 import org.hibernate.jpa.HibernatePersistenceProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
 import org.springframework.boot.context.properties.bind.Binder
+import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
@@ -28,7 +28,7 @@ class MissingReportDatasourceConfiguration(
       .bind("spring.datasource.missingreport.hikari", HikariConfig::class.java)
       .orElse(HikariConfig())
 
-    hikariConfig.jdbcUrl = properties.url
+    hikariConfig!!.jdbcUrl = properties.url
     hikariConfig.username = properties.username
     hikariConfig.password = properties.password
     hikariConfig.driverClassName = properties.driverClassName

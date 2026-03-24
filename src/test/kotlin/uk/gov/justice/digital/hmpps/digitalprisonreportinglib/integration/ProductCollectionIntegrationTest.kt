@@ -13,6 +13,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.context.annotation.Import
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
@@ -38,6 +39,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("test")
 @Import(TestFlywayConfig::class)
+@AutoConfigureWebTestClient
 class ProductCollectionIntegrationTest {
 
   @Value("\${dpr.lib.user.role}")
