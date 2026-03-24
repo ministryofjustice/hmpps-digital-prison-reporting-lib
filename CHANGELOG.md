@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 13.0.0
+- Updated to Spring Boot 4.X 
+
 # 12.0.0
 - Removed `/reports/{reportId}/{reportVariantId}/{fieldId}` endpoint as it is no longer used.
 
