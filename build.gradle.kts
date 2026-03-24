@@ -23,8 +23,6 @@ dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.2")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.springframework.boot:spring-boot-starter-webclient")
-  implementation("org.jetbrains.kotlin:kotlin-stdlib")
 
   implementation("com.google.code.gson:gson:2.13.2")
   implementation("com.google.guava:guava:33.5.0-jre")
@@ -53,7 +51,8 @@ dependencies {
   testImplementation("org.postgresql:postgresql:42.7.10")
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
-  testImplementation("org.springframework.boot:spring-boot-resttestclient")
+  testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
 
   // Fix for security issue in transient dependency
   implementation("ch.qos.logback:logback-classic:1.5.32")
@@ -88,7 +87,7 @@ publishing {
         group = "uk.gov.justice.service.hmpps"
         name.set(base.archivesName)
         artifactId = base.archivesName.get()
-        version = project.findProperty("publishVersion") as String?
+        version = "1.0.0"
         description.set("A Spring Boot reporting library to be integrated into your project and allow you to produce reports.")
         url.set("https://github.com/ministryofjustice/hmpps-digital-prison-reporting-lib")
         licenses {

@@ -8,19 +8,14 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.springframework.core.ParameterizedTypeReference
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.StatusAssertions
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
-import org.springframework.web.util.UriComponentsBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -43,8 +38,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Externa
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 import java.time.LocalDateTime
-import java.util.List
-
 
 class DataApiIntegrationTest : IntegrationTestBase() {
   companion object {
@@ -84,56 +77,23 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `Data API returns value using defaultSort on DPD with sortedAsc but no column`() {
-//      webTestClient.get()
-//        .uri { uriBuilder: UriBuilder ->
-//          uriBuilder
-//            .path("/reports/external-movements/last-month")
-//            .queryParam("selectedPage", 1)
-//            .queryParam("pageSize", 3)
-//            .queryParam("sortedAsc", true)
-//            .build()
-//        }
-//        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-//        .exchange()
-//        .expectStatus()
-//        .isOk()
-//        .expectBody()
-//        .jsonPath("$.[0].date")
-//        .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
-//        .jsonPath("$.[1].date")
-//        .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
-
-      val url = UriComponentsBuilder
-        .fromPath("/reports/external-movements/last-month")
-        .queryParam("selectedPage", 1)
-        .queryParam("pageSize", 3)
-        .queryParam("sortedAsc", true)
-        .toUriString()
-
-      val headers = HttpHeaders().apply {
-        setAuthorisation(this.toString(), listOf(authorisedRole))
-      }
-
-      val requestEntity = HttpEntity<Void>(headers)
-
-      val response: ResponseEntity<List<Map<String, Any>>> =
-        testRestTemplate.exchange(
-          url,
-          HttpMethod.GET,
-          requestEntity,
-          object : ParameterizedTypeReference<List<Map<String, Any>>>() {}
-        )
-
-      // Status assertion
-      assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
-
-      val body = response.body!!
-
-      // Body assertions
-      assertThat(body[0]["date"])
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortedAsc", true)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("$.[0].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
-
-      assertThat(body[1]["date"])
+        .jsonPath("$.[1].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
 
       assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
@@ -265,10 +225,10 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectBody(String::class.java)
       .value { body ->
         val expected = """
-          ﻿Prison Number,Name,From,To
+          Prison Number,Name,From,To
           ${movementPrisoner4[PRISON_NUMBER]},"${movementPrisoner4[NAME]}",${movementPrisoner4[ORIGIN]},${movementPrisoner4[DESTINATION]}
         """.trimIndent()
-        assertThat(body?.trim()).isEqualTo(expected)
+        assertThat(body?.trim()?.replace("\uFEFF", "")).isEqualTo(expected)
       }
 
     assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
@@ -380,12 +340,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     "Out, 1",
     ",    1",
   )
-  fun `Data API count returns filtered value`(direction: String, numberOfResults: Int) {
+  fun `Data API count returns filtered value`(direction: String?, numberOfResults: Int) {
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/reports/external-movements/last-month/count")
-          .queryParam("filters.direction", direction.lowercase())
+          .queryParam("filters.direction", direction?.lowercase() ?: "")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -454,12 +414,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     "Out, 1",
     ",    1",
   )
-  fun `Data API returns filtered values`(direction: String, numberOfResults: Int) {
+  fun `Data API returns filtered values`(direction: String?, numberOfResults: Int) {
     val results = webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/reports/external-movements/last-month")
-          .queryParam("${FILTERS_PREFIX}direction", direction)
+          .queryParam("${FILTERS_PREFIX}direction", direction ?: "")
           .build()
       }
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -506,7 +466,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectHeader()
-      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, listOf(WARNING_NO_ACTIVE_CASELOAD).toString())
       .expectBody()
       .json("[]")
   }
@@ -531,7 +491,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectHeader()
-      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, WARNING_NO_ACTIVE_CASELOAD)
+      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, listOf(WARNING_NO_ACTIVE_CASELOAD).toString())
       .expectBody()
       .jsonPath("count").isEqualTo("0")
   }

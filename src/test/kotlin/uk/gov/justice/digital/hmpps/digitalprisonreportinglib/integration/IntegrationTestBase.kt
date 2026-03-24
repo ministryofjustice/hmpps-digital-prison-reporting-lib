@@ -11,8 +11,6 @@ import org.mockito.Mockito.mock
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.resttestclient.TestRestTemplate
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
@@ -27,6 +25,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
+import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -42,7 +41,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("test")
 @Import(TestFlywayConfig::class)
-@AutoConfigureTestRestTemplate
+@AutoConfigureWebTestClient
 abstract class IntegrationTestBase {
 
   @Value("\${dpr.lib.user.role}")
@@ -52,9 +51,6 @@ abstract class IntegrationTestBase {
   lateinit var webTestClient: WebTestClient
 
   @Autowired
-  lateinit var testRestTemplate: TestRestTemplate
-
-    @Autowired
   protected lateinit var jwtAuthorisationHelper: JwtAuthorisationHelper
 
   @Autowired
@@ -68,6 +64,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var configuredApiRepository: ConfiguredApiRepository
+
+  @Autowired
+  lateinit var objectMapper: ObjectMapper
 
   @MockitoBean
   lateinit var dynamoDbClient: DynamoDbClient
