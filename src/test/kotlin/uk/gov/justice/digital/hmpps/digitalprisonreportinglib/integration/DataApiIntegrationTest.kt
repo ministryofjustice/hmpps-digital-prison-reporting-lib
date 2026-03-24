@@ -228,6 +228,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           Prison Number,Name,From,To
           ${movementPrisoner4[PRISON_NUMBER]},"${movementPrisoner4[NAME]}",${movementPrisoner4[ORIGIN]},${movementPrisoner4[DESTINATION]}
         """.trimIndent()
+        assertThat(body?.startsWith("\uFEFF")).isTrue()
         assertThat(body?.trim()?.replace("\uFEFF", "")).isEqualTo(expected)
       }
 
