@@ -12,6 +12,6 @@ class DateSerializer : StdSerializer<Date>(Date::class.java) {
 
   override fun serialize(value: Date, gen: JsonGenerator, ctxt: SerializationContext) {
     val formattedDate = formatter.format(value)
-    gen.writeNumber(formattedDate)
+    gen.writeString(formattedDate)
   }
 }
