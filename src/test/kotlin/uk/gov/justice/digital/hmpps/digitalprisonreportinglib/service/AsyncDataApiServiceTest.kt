@@ -430,10 +430,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
   @ParameterizedTest
   @CsvSource(
-    "nomis_db, nomis, productDefinitionNomis.json",
-    "bodmis_db, bodmis, productDefinitionBodmis.json",
+    "productDefinitionNomis.json",
+    "productDefinitionBodmis.json",
+    "productDefinitionNomisWithListOfQuery.json",
   )
-  fun `should make the async call to the AthenaApiRepository for nomis and bodmis with all provided arguments when validateAndExecuteStatementAsync is called`(database: String, catalog: String, definitionFile: String) {
+  fun `should make the async call to the AthenaApiRepository for nomis and bodmis with all provided arguments when validateAndExecuteStatementAsync is called`(definitionFile: String) {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
