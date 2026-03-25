@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
@@ -33,7 +34,7 @@ open class CommonDataApiServiceTestBase {
     id = "10",
     name = "11",
     datasource = "12A",
-    query = "12",
+    query = listOf(MultiphaseQuery(index = 0, datasource = "ds1", query = "12")),
     schema = Schema(
       field = fields
         ?: listOf(

@@ -141,7 +141,9 @@ SELECT * FROM dataset_'
   )
   fun `executeQueryAsync should call the athena data api with the correct query which includes the context_ cte and return the execution id and table id`(policyEngineResult: String, whereClauseCondition: String) {
     val startQueryExecutionRequest = setupBasicMocks(whereClause = whereClauseCondition)
-    whenever(dataset.query).thenReturn(dpdQuery)
+    val query = mock<MultiphaseQuery>()
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
       filters = emptyList(),
       sortColumn = "column_a",
@@ -167,7 +169,9 @@ SELECT * FROM dataset_'
   fun `executeQueryAsync should map prompts to the prompt_ CTE correctly`() {
     val startQueryExecutionRequest = setupBasicMocks(promptsCte = "$PROMPT AS (SELECT ''filterValue1'' AS filterName1, ''filterValue2'' AS filterName2 FROM DUAL)")
     val prompts = listOf(Prompt("filterName1", "filterValue1", FilterType.Text), Prompt("filterName2", "filterValue2", FilterType.Text))
-    whenever(dataset.query).thenReturn(defaultDatasetCte)
+    val query = mock<MultiphaseQuery>()
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
       filters = emptyList(),
       sortColumn = "column_a",
@@ -194,7 +198,9 @@ SELECT * FROM dataset_'
   fun `executeQueryAsync should map prompts to the prompt_ CTE correctly for date prompts`() {
     val startQueryExecutionRequest = setupBasicMocks(promptsCte = "$PROMPT AS (SELECT TO_DATE(''01/01/2023'',''yyyy-mm-dd'') AS start_date FROM DUAL)")
     val prompts = listOf(Prompt("start_date", "01/01/2023", FilterType.Date))
-    whenever(dataset.query).thenReturn(defaultDatasetCte)
+    val query = mock<MultiphaseQuery>()
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn(defaultDatasetCte)
     val actual = athenaApiRepository.executeQueryAsync(
       filters = emptyList(),
       sortColumn = "column_a",
@@ -221,8 +227,9 @@ SELECT * FROM dataset_'
   fun `executeQueryAsync should use the existing main report query when the dataset_ CTE is already embedded into the query`() {
     val dpdQuery = "dataset_ as (SELECT column_c,column_d FROM schema_a.table_a)"
     val startQueryExecutionRequest = setupBasicMocks(datasetCte = dpdQuery)
-
-    whenever(dataset.query).thenReturn(dpdQuery)
+    val query = mock<MultiphaseQuery>()
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
       filters = emptyList(),
       sortColumn = "column_a",
@@ -248,8 +255,9 @@ SELECT * FROM dataset_'
   fun `executeQueryAsync should use add the report filter CTE to the final query when it exists`() {
     val reportFilter = ReportFilter(name = "someprefiltername_", query = "someprefiltername_ AS (SELECT a,b FROM dataset_)")
     val startQueryExecutionRequest = setupBasicMocks(reportFilter = reportFilter)
-
-    whenever(dataset.query).thenReturn(dpdQuery)
+    val query = mock<MultiphaseQuery>()
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn(dpdQuery)
     val actual = athenaApiRepository.executeQueryAsync(
       filters = emptyList(),
       sortColumn = "column_a",
@@ -486,7 +494,7 @@ SELECT * FROM dataset_'
     )
     val tableId2 = "tableId2"
 
-    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(dataset.query).thenReturn(multiphaseQuery)
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
     ).thenReturn(
@@ -499,7 +507,7 @@ SELECT * FROM dataset_'
       sortedAsc = true,
       policyEngineResult = TRUE_WHERE_CLAUSE,
       userToken = userToken,
-      query = "",
+      query = multiphaseQuery,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
       reportSummaries = productDefinition.report.summary,
@@ -508,7 +516,6 @@ SELECT * FROM dataset_'
       productDefinitionName = productDefinition.name,
       reportOrDashboardId = productDefinition.report.id,
       reportOrDashboardName = productDefinition.report.name,
-      multiphaseQueries = multiphaseQuery,
       allDatasources = allDatasources,
     )
     val firstMultiphaseInsert = """insert into 
@@ -589,7 +596,7 @@ SELECT * FROM dataset_'
       MultiphaseQuery(1, "id2", query2),
       MultiphaseQuery(2, "id3", query3),
     )
-    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(dataset.query).thenReturn(multiphaseQuery)
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
     ).thenReturn(
@@ -603,7 +610,7 @@ SELECT * FROM dataset_'
       sortedAsc = true,
       policyEngineResult = TRUE_WHERE_CLAUSE,
       userToken = userToken,
-      query = "",
+      query = multiphaseQuery,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
       reportSummaries = productDefinition.report.summary,
@@ -612,7 +619,6 @@ SELECT * FROM dataset_'
       productDefinitionName = productDefinition.name,
       reportOrDashboardId = productDefinition.report.id,
       reportOrDashboardName = productDefinition.report.name,
-      multiphaseQueries = multiphaseQuery,
       allDatasources = allDatasources,
     )
     val firstMultiphaseInsert = """insert into 
@@ -696,75 +702,6 @@ SELECT * FROM dataset_'
   }
 
   @Test
-  fun `executeQueryAsync should run a multiphase query once when there is exactly one multiphaseQuery defined`() {
-    val database = "db"
-    val catalog = "catalog"
-    val startQueryExecutionRequest = setupBasicMocks(
-      database = database,
-      catalog = catalog,
-      query = sqlStatement(tableId),
-    )
-    val datasource = Datasource("id", "name", database, catalog)
-    val allDatasources = listOf(datasource)
-    val multiphaseQuery = listOf(
-      MultiphaseQuery(0, "id", dpdQuery),
-    )
-    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
-    whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      tableId,
-    )
-    val actual = athenaApiRepository.executeQueryAsync(
-      filters = emptyList(),
-      sortColumn = "column_a",
-      sortedAsc = true,
-      policyEngineResult = TRUE_WHERE_CLAUSE,
-      userToken = userToken,
-      query = "",
-      reportFilter = productDefinition.report.filter,
-      datasource = productDefinition.datasource,
-      reportSummaries = productDefinition.report.summary,
-      allDatasets = productDefinition.allDatasets,
-      productDefinitionId = productDefinition.id,
-      productDefinitionName = productDefinition.name,
-      reportOrDashboardId = productDefinition.report.id,
-      reportOrDashboardName = productDefinition.report.name,
-      multiphaseQueries = multiphaseQuery,
-      allDatasources = allDatasources,
-    )
-    val firstMultiphaseInsert = """insert into 
-          admin.multiphase_query_state (
-          root_execution_id,
-          current_execution_id,
-          datasource_name,
-          catalog,
-          database,
-          index,
-          query,
-          sequence_number,
-          last_update
-          )
-          values (
-            'someId',
-            'someId',
-            'name',
-            'catalog',
-            'db',
-            0,
-            'ICAgICAgICAgIC8qIGRwZElkIGRwZE5hbWUgcmVwb3J0SWQgcmVwb3J0TmFtZSAqLwogICAgICAgICAgQ1JFQVRFIFRBQkxFIEF3c0RhdGFDYXRhbG9nLnJlcG9ydHMuX2E2MjI3NDE3X2JkYWNfNDBiYl9iYzgxXzQ5Yzc1MGRhYWNkNyAKICAgICAgICAgIFdJVEggKAogICAgICAgICAgICBmb3JtYXQgPSAnUEFSUVVFVCcKICAgICAgICAgICkgCiAgICAgICAgICBBUyAoCiAgICAgICAgICBTRUxFQ1QgKiBGUk9NIFRBQkxFKHN5c3RlbS5xdWVyeShxdWVyeSA9PgogICAgICAgICAgICdXSVRIIGNvbnRleHRfIEFTICgKICAgICAgU0VMRUNUIAogICAgICAnJ2FVc2VyJycgQVMgdXNlcm5hbWUsIAogICAgICAnJ2FDYXNlbG9hZCcnIEFTIGNhc2Vsb2FkLCAKICAgICAgJydHRU5FUkFMJycgQVMgYWNjb3VudF90eXBlIAogICAgICBGUk9NIERVQUwKICAgICAgKSxwcm9tcHRfIEFTIChTRUxFQ1QgJycnJyBGUk9NIERVQUwpLGRhdGFzZXRfIEFTIChTRUxFQ1QgY29sdW1uX2EsY29sdW1uX2IgRlJPTSBzY2hlbWFfYS50YWJsZV9hKSxyZXBvcnRfIEFTIChTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfKSxwb2xpY3lfIEFTIChTRUxFQ1QgKiBGUk9NIHJlcG9ydF8gV0hFUkUgMT0xKSxmaWx0ZXJfIEFTIChTRUxFQ1QgKiBGUk9NIHBvbGljeV8gV0hFUkUgMT0xKQpTRUxFQ1QgKgogICAgICAgICAgRlJPTSBmaWx0ZXJfIE9SREVSIEJZIGNvbHVtbl9hIGFzYycKICAgICAgICAgICApKSAKICAgICAgICAgICk7',
-            0,
-            SYSDATE
-          )"""
-
-    verify(jdbcTemplate).execute(firstMultiphaseInsert)
-    verify(jdbcTemplate, times(1)).execute(any())
-    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
-    verify(athenaClient, times(1)).startQueryExecution(any(StartQueryExecutionRequest::class.java))
-    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
-  }
-
-  @Test
   fun `executeQueryAsync should throw an error when a subsequent multiphase query does not define a datasource connection`() {
     val database = "db"
     val catalog = "catalog"
@@ -783,7 +720,7 @@ SELECT * FROM dataset_'
     )
     val tableId2 = "tableId2"
 
-    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(dataset.query).thenReturn(multiphaseQuery)
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
     ).thenReturn(
@@ -797,7 +734,7 @@ SELECT * FROM dataset_'
         sortedAsc = true,
         policyEngineResult = TRUE_WHERE_CLAUSE,
         userToken = userToken,
-        query = "",
+        query = multiphaseQuery,
         reportFilter = productDefinition.report.filter,
         datasource = productDefinition.datasource,
         reportSummaries = productDefinition.report.summary,
@@ -806,7 +743,6 @@ SELECT * FROM dataset_'
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
-        multiphaseQueries = multiphaseQuery,
         allDatasources = allDatasources,
       )
     }
@@ -832,7 +768,7 @@ SELECT * FROM dataset_'
     )
     val tableId2 = "tableId2"
 
-    whenever(dataset.multiphaseQuery).thenReturn(multiphaseQuery)
+    whenever(dataset.query).thenReturn(multiphaseQuery)
     whenever(
       tableIdGenerator.generateNewExternalTableId(),
     ).thenReturn(
@@ -846,7 +782,7 @@ SELECT * FROM dataset_'
         sortedAsc = true,
         policyEngineResult = TRUE_WHERE_CLAUSE,
         userToken = userToken,
-        query = "",
+        query = multiphaseQuery,
         reportFilter = productDefinition.report.filter,
         datasource = productDefinition.datasource,
         reportSummaries = productDefinition.report.summary,
@@ -855,7 +791,6 @@ SELECT * FROM dataset_'
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
-        multiphaseQueries = multiphaseQuery,
         allDatasources = allDatasources,
       )
     }

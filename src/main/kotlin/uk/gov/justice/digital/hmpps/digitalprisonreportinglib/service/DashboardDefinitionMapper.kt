@@ -105,7 +105,7 @@ class DashboardDefinitionMapper(
     userToken: DprAuthAwareAuthenticationToken?,
     filters: Map<String, String>?,
   ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, userToken, filters) +
-    maybeConvertParametersToReportFields(dataset.multiphaseQuery, dataset.parameters)
+    maybeConvertParametersToReportFields(dataset.query, dataset.parameters)
 
   private fun convertDatasetFilterFieldsToReportFields(
     dataset: Dataset,

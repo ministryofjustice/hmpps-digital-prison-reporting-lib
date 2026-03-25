@@ -510,6 +510,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val dashboard = mock<Dashboard>()
     val dashboardDataset = mock<Dataset>()
     val query = "select * from a"
+    val multiphaseQuery = mock<MultiphaseQuery>()
     val schema = mock<Schema>()
     val field = mock<SchemaField>()
     val datasource = mock<Datasource>()
@@ -532,8 +533,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(dashboard.name).thenReturn("name2")
     whenever(dashboard.filter).thenReturn(mock<ReportFilter>())
     whenever(singleDashboardProductDefinition.dashboardDataset).thenReturn(dashboardDataset)
-    whenever(dashboardDataset.query).thenReturn(query)
-    whenever(dashboardDataset.multiphaseQuery).thenReturn(null)
+    whenever(dashboardDataset.query).thenReturn(listOf(multiphaseQuery))
+    whenever(dashboardDataset.query.first().query).thenReturn(query)
     whenever(dashboardDataset.schema).thenReturn(schema)
     whenever(schema.field).thenReturn(listOf(field))
     whenever(field.name).thenReturn("fieldName")
@@ -605,7 +606,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val singleDashboardProductDefinition = mock<SingleDashboardProductDefinition>()
     val dashboard = mock<Dashboard>()
     val dashboardDataset = mock<Dataset>()
-    val query = ""
     val schema = mock<Schema>()
     val field = mock<SchemaField>()
     val datasource = mock<Datasource>()
@@ -635,8 +635,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(dashboard.name).thenReturn("name2")
     whenever(dashboard.filter).thenReturn(mock<ReportFilter>())
     whenever(singleDashboardProductDefinition.dashboardDataset).thenReturn(dashboardDataset)
-    whenever(dashboardDataset.query).thenReturn(query)
-    whenever(dashboardDataset.multiphaseQuery).thenReturn(listOf(multiphaseQuery1, multiphaseQuery2))
+    whenever(dashboardDataset.query).thenReturn(listOf(multiphaseQuery1, multiphaseQuery2))
     whenever(dashboardDataset.schema).thenReturn(schema)
     whenever(schema.field).thenReturn(listOf(field))
     whenever(field.name).thenReturn("fieldName")
@@ -655,7 +654,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         policyEngineResult = policyEngineResult,
         prompts = listOf(prompt),
         userToken = authToken,
-        query = singleDashboardProductDefinition.dashboardDataset.query,
+        query = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
         allDatasets = singleDashboardProductDefinition.allDatasets,
@@ -663,7 +662,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         productDefinitionName = singleDashboardProductDefinition.name,
         reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
         reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
-        multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
         allDatasources = listOf(datasource, datasource2),
       ),
     ).thenReturn(statementExecutionResponse)
@@ -688,7 +686,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       policyEngineResult = policyEngineResult,
       prompts = listOf(prompt),
       userToken = authToken,
-      query = singleDashboardProductDefinition.dashboardDataset.query,
+      query = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
       allDatasets = singleDashboardProductDefinition.allDatasets,
@@ -696,7 +694,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       productDefinitionName = singleDashboardProductDefinition.name,
       reportOrDashboardId = singleDashboardProductDefinition.dashboard.id,
       reportOrDashboardName = singleDashboardProductDefinition.dashboard.name,
-      multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
       allDatasources = allDatasources,
     )
     assertEquals(statementExecutionResponse, actual)
@@ -710,7 +707,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val report = mock<Report>()
     val specification = mock<Specification>()
     val reportDataset = mock<Dataset>()
-    val query = ""
     val datasource = mock<Datasource>()
     val datasource2 = mock<Datasource>()
     val allDatasources = listOf(datasource, datasource2)
@@ -739,8 +735,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(singleReportProductDefinition.name).thenReturn("name2")
     whenever(report.filter).thenReturn(mock<ReportFilter>())
     whenever(singleReportProductDefinition.reportDataset).thenReturn(reportDataset)
-    whenever(reportDataset.query).thenReturn(query)
-    whenever(reportDataset.multiphaseQuery).thenReturn(listOf(multiphaseQuery1, multiphaseQuery2))
+    whenever(reportDataset.query).thenReturn(listOf(multiphaseQuery1, multiphaseQuery2))
     whenever(singleReportProductDefinition.allDatasets).thenReturn(listOf(reportDataset))
     whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
@@ -756,7 +751,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         policyEngineResult = policyEngineResult,
         prompts = listOf(prompt),
         userToken = authToken,
-        query = singleReportProductDefinition.reportDataset.query,
+        query = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
         reportSummaries = emptyList(),
@@ -765,7 +760,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         productDefinitionName = singleReportProductDefinition.name,
         reportOrDashboardId = singleReportProductDefinition.report.id,
         reportOrDashboardName = singleReportProductDefinition.report.name,
-        multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
         allDatasources = allDatasources,
       ),
     ).thenReturn(statementExecutionResponse)
@@ -792,7 +786,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       policyEngineResult = policyEngineResult,
       prompts = listOf(prompt),
       userToken = authToken,
-      query = singleReportProductDefinition.reportDataset.query,
+      query = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
       reportSummaries = emptyList(),
@@ -801,7 +795,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       productDefinitionName = singleReportProductDefinition.name,
       reportOrDashboardId = singleReportProductDefinition.report.id,
       reportOrDashboardName = singleReportProductDefinition.report.name,
-      multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2),
       allDatasources = allDatasources,
     )
     assertEquals(statementExecutionResponse, actual)

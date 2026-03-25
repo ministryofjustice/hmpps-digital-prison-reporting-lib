@@ -7,12 +7,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
@@ -37,7 +39,7 @@ class ReportDefinitionSummaryMapperTest {
     id = "10",
     name = "11",
     datasource = "12A",
-    query = "12",
+    query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "12")),
     schema = Schema(
       field = listOf(
         SchemaField(
@@ -165,7 +167,7 @@ class ReportDefinitionSummaryMapperTest {
           id = "10",
           name = "11",
           datasource = "12A",
-          query = "12",
+          query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "12")),
           schema = Schema(
             field = emptyList(),
           ),
