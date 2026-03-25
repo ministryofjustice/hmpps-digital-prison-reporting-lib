@@ -1,7 +1,7 @@
 Below you can find the changes included in each release.
 
 # 14.0.0
-- Stopped for the `dataset.multiphaseQuery` DPD field. This is now handled by the `query` field which supports both a query `String` and a `List<MultiphaseQuery>`,  
+- Stopped support for the `dataset.multiphaseQuery` DPD field. This is now handled by the `query` field which supports both a query `String` and a `List<MultiphaseQuery>`,  
 
 # 13.0.0
 - Updated to Spring Boot 4.X 
