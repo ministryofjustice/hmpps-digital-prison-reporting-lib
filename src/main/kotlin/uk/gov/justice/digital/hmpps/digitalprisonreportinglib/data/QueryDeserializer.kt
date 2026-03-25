@@ -10,6 +10,7 @@ import java.lang.reflect.Type
 class QueryDeserializer : JsonDeserializer<List<MultiphaseQuery>> {
 
   companion object {
+    //This is not used in single element MultiphaseQuery lists. It is here for compatibility with multiple query element execution as the datasource is required and used in MultiphaseQuery in this case.
     const val PLACEHOLDER_DATASOURCE = "PLACEHOLDER_DATASOURCE"
   }
 

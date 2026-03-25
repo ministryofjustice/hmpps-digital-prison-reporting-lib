@@ -1,7 +1,9 @@
 Below you can find the changes included in each release.
 
 # 14.0.0
-- Ended support of the `dataset.multiphaseQuery` DPD field. This is now handled by the `query` field which supports both a query `String` and a `List<MultiphaseQuery>`,  
+- Ended support of the `dataset.multiphaseQuery` DPD field. This is now handled by the `query` field which supports both a query `String` and a `List<MultiphaseQuery>`.
+- For `dataset.query` of String type the query execution functions seamlessly as it was previously. 
+- For `dataset.query` of type `List<MultiphaseQuery>`, each element has to have specified an index, a datasource and a string query field. For single list elements, the datasource is required for compatibility with how multiple multiphase queries run. But in practice for a single list element query the datasource used in the execution is the `dataset.datasource`.  
 
 # 13.0.0
 - Updated to Spring Boot 4.X 
