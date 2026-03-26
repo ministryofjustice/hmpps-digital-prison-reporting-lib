@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -177,7 +178,7 @@ class DashboardDefinitionMapperTest {
       datasetId,
       "name",
       "datasource",
-      "query",
+      listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "query")),
       Schema(listOf(SchemaField("n", ParameterType.String, "d"))),
       listOf(
         parameter,
@@ -246,19 +247,24 @@ class DashboardDefinitionMapperTest {
       true,
       ReferenceType.ESTABLISHMENT,
     )
-    val multiphaseQuery = MultiphaseQuery(
+    // Parameters are taken from the MultiphaseQuery when there are at least 2 queries. Otherwise, the parameters are taken from the dataset parameters are originally for the single queries.
+    val multiphaseQuery1 = MultiphaseQuery(
       index = 0,
       datasource = "ds1",
       query = "SELECT * FROM a",
       parameters = listOf(parameter),
     )
+    val multiphaseQuery2 = MultiphaseQuery(
+      index = 0,
+      datasource = "ds1",
+      query = "SELECT * FROM a",
+    )
     val dashboardDataset = Dataset(
       id = datasetId,
       name = "name",
       datasource = "datasource",
-      query = "",
+      query = listOf(multiphaseQuery1, multiphaseQuery2),
       schema = Schema(listOf(SchemaField("n", ParameterType.String, "d"))),
-      multiphaseQuery = listOf(multiphaseQuery),
     )
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
@@ -324,7 +330,7 @@ class DashboardDefinitionMapperTest {
       id = datasetId,
       name = "name",
       datasource = "datasource",
-      query = "query",
+      query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "query")),
       schema = Schema(
         listOf(
           schemaField,

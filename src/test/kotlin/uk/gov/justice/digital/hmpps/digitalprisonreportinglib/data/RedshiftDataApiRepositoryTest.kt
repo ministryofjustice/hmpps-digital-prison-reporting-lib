@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
@@ -84,6 +85,7 @@ class RedshiftDataApiRepositoryTest {
   private val report = mock<Report>()
   private val identifiedHelper = IdentifiedHelper()
   private val redShiftSummaryTableHelper = mock<RedShiftSummaryTableHelper>()
+  private val query = mock<MultiphaseQuery>()
 
   @BeforeEach
   fun setup() {
@@ -96,7 +98,8 @@ class RedshiftDataApiRepositoryTest {
     whenever(productDefinition.name).thenReturn(productDefinitionName)
     whenever(productDefinition.report.id).thenReturn(reportId)
     whenever(productDefinition.report.name).thenReturn(reportName)
-    whenever(dataset.query).thenReturn(REPOSITORY_TEST_QUERY)
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn(REPOSITORY_TEST_QUERY)
   }
 
   @Test
@@ -217,7 +220,8 @@ SELECT *
     val productDefinition = mock<SingleDashboardProductDefinition>()
     val dataset = mock<Dataset>()
     whenever(productDefinition.dashboardDataset).thenReturn(dataset)
-    whenever(dataset.query).thenReturn("SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality")
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn("SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality")
     whenever(productDefinition.dashboard).thenReturn(mock())
     whenever(productDefinition.datasource).thenReturn(datasource)
     val policyEngineResult = "(establishment_id='ABC')"
@@ -480,7 +484,7 @@ SELECT *
   @Test
   fun `executeQueryAsync should build the filters CTE correctly for multiselect filters`() {
     val selectSql = """SELECT ABC, DEF FROM GHI"""
-    whenever(dataset.query).thenReturn(selectSql)
+    whenever(dataset.query.first().query).thenReturn(selectSql)
     val multiselectFilter = Filter("ABC", "q,w,e", FilterType.MULTISELECT)
     val standardFilter = Filter("DEF", "r", FilterType.STANDARD)
     val executionId = "someId"

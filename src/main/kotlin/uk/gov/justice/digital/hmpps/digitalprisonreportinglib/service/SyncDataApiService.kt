@@ -63,7 +63,7 @@ class SyncDataApiService(
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return configuredApiRepository
       .executeQuery(
-        query = datasetForFilter?.query ?: productDefinition.reportDataset.query,
+        query = datasetForFilter?.query?.firstOrNull()?.query ?: productDefinition.reportDataset.query.first().query,
         filters = validateAndMapFilters(productDefinition, filters, null, reportFieldId) + dynamicFilter,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -93,7 +93,7 @@ class SyncDataApiService(
     val formulaEngine = FormulaEngine(emptyList(), env, identifiedHelper)
     return configuredApiRepository
       .executeQuery(
-        query = dataset.query,
+        query = dataset.query.first().query,
         filters = emptyList(),
         selectedPage = 1,
         pageSize = pageSize,
@@ -129,7 +129,7 @@ class SyncDataApiService(
     return Count(
       configuredApiRepository.count(
         filters = validateAndMapFilters(productDefinition, filters, null),
-        query = productDefinition.reportDataset.query,
+        query = productDefinition.reportDataset.query.first().query,
         reportId = reportId,
         policyEngineResult = policyEngine.execute(),
         dataSourceName = productDefinition.datasource.name,
@@ -158,7 +158,7 @@ class SyncDataApiService(
     val policyEngine = PolicyEngine(dashboardDefinition.policy, userToken)
     return configuredApiRepository
       .executeQuery(
-        query = datasetForFilter?.query ?: dashboardDefinition.dashboardDataset.query,
+        query = datasetForFilter?.query?.firstOrNull()?.query ?: dashboardDefinition.dashboardDataset.query.first().query,
         filters = validateAndMapFilters(dashboardDefinition, filters, false),
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -200,7 +200,7 @@ class SyncDataApiService(
     )
     return SyncDownloadContext(
       core = coreContext.first,
-      query = coreContext.second.reportDataset.query,
+      query = coreContext.second.reportDataset.query.first().query,
       policyEngineResult = PolicyEngine(coreContext.second.policy, userToken).execute(),
       reportFilter = coreContext.second.report.filter,
     )

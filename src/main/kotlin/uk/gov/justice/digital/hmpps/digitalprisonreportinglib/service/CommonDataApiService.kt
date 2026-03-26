@@ -230,17 +230,26 @@ abstract class CommonDataApiService(
     parameters: List<Parameter>?,
   ) = parameters?.any { it.name == e.key } ?: false
 
-  protected fun extractParameters(dataset: Dataset, multiphaseQuery: List<MultiphaseQuery>? = null) = multiphaseQuery?.takeIf { it.isNotEmpty() }?.mapNotNull { q -> q.parameters }
-    ?.filterNot { p -> p.isEmpty() }?.flatten()?.distinct()
+  protected fun extractParameters(dataset: Dataset): List<Parameter>? = extractParametersFromMultiphase(dataset)
     ?: dataset.parameters
 
+  private fun extractParametersFromMultiphase(dataset: Dataset): List<Parameter>? = dataset.query
+    .takeIf { it.size > 1 }
+    ?.mapNotNull { it.parameters }
+    ?.filterNot { p -> p.isEmpty() }
+    ?.flatten()
+    ?.distinct()
+
   protected fun buildPrompts(
-    multiphaseQuery: List<MultiphaseQuery>?,
+    query: List<MultiphaseQuery>,
     promptsMap: List<Map.Entry<String, String>>,
-    parameters: List<Parameter>?,
+    datasetParameters: List<Parameter>?,
   ) = (
-    multiphaseQuery?.takeIf { it.isNotEmpty() }?.flatMap { q -> buildPrompts(promptsMap, q.parameters) }?.distinct()
-      ?: buildPrompts(promptsMap, parameters)
+    query
+      .takeIf { it.size > 1 }
+      ?.flatMap { q -> buildPrompts(promptsMap, q.parameters) }
+      ?.distinct()
+      ?: buildPrompts(promptsMap, datasetParameters)
     )
 
   private fun buildPrompts(

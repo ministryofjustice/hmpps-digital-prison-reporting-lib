@@ -46,7 +46,7 @@ class RedshiftDataApiRepository(
     dynamicFilterFieldId: Set<String>?,
     prompts: List<Prompt>?,
     userToken: DprAuthAwareAuthenticationToken?,
-    query: String,
+    query: List<MultiphaseQuery>,
     reportFilter: ReportFilter?,
     datasource: Datasource,
     reportSummaries: List<ReportSummary>?,
@@ -56,7 +56,6 @@ class RedshiftDataApiRepository(
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String?,
-    multiphaseQueries: List<MultiphaseQuery>?,
     allDatasources: List<Datasource>?,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
@@ -67,7 +66,7 @@ class RedshiftDataApiRepository(
           AS ( 
           ${
       buildFinalQuery(
-        datasetQuery = checkAndBuildDatasetQuery(query, preGeneratedDatasetTableId),
+        datasetQuery = checkAndBuildDatasetQuery(query.first().query, preGeneratedDatasetTableId),
         reportQuery = buildReportQuery(reportFilter),
         policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
         filtersQuery = buildFiltersQuery(filters),
@@ -141,7 +140,7 @@ class RedshiftDataApiRepository(
     reportSummaries: List<ReportSummary>?,
     allDatasets: List<Dataset>,
   ): String = reportSummaries?.joinToString(" ") {
-    val query = identifiedHelper.findOrFail(allDatasets, it.dataset).query
+    val query = identifiedHelper.findOrFail(allDatasets, it.dataset).query.first().query
 
     redShiftSummaryTableHelper.buildSummaryQuery(
       query,
@@ -192,7 +191,7 @@ class RedshiftDataApiRepository(
           LOCATION 's3://$s3location/$tableId/' 
           AS ( 
             ${buildFinalQuery(
-      datasetQuery = buildDatasetQuery(productDefinition.dashboardDataset.query),
+      datasetQuery = buildDatasetQuery(productDefinition.dashboardDataset.query.first().query),
       reportQuery = DEFAULT_REPORT_CTE,
       policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName()),
       filtersQuery = buildFiltersQuery(filters),

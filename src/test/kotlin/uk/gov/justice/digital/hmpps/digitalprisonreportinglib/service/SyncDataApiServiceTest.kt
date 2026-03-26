@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.BOOLEAN
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.RenderMethod
@@ -128,7 +130,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -143,7 +145,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = repositoryFilters,
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -182,7 +184,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -209,7 +211,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     )
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = repositoryFilters,
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -235,7 +237,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       id = "establishment-dataset",
       name = "establishment-dataset-name",
       datasource = "redshift",
-      query = "select * from table",
+      query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select * from table")),
       schema = Schema(
         listOf(
           SchemaField(estCodeSchemaFieldName, ParameterType.String, "Establishment Code", null),
@@ -260,7 +262,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = filterDataset.query,
+        query = filterDataset.query.first().query,
         filters = emptyList(),
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -287,7 +289,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     )
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = filterDataset.query,
+      query = filterDataset.query.first().query,
       filters = emptyList(),
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -313,7 +315,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       configuredApiRepository.count(
         filters = repositoryFilters,
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         reportId = reportId,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
@@ -325,7 +327,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       reportId = reportId,
       policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
@@ -349,7 +351,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -364,7 +366,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = repositoryFilters,
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -389,7 +391,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       configuredApiRepository.count(
         filters = repositoryFilters,
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         reportId = reportId,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
@@ -401,7 +403,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       reportId = reportId,
       policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
@@ -426,7 +428,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -441,7 +443,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      dataSet.query,
+      dataSet.query.first().query,
       repositoryFilters,
       selectedPage,
       pageSize,
@@ -466,7 +468,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       configuredApiRepository.count(
         filters = repositoryFilters,
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         reportId = reportId,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
@@ -478,7 +480,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       reportId = reportId,
       policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
@@ -502,7 +504,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -517,7 +519,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = repositoryFilters,
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -554,7 +556,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -569,7 +571,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = repositoryFilters,
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -594,7 +596,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       configuredApiRepository.count(
         filters = repositoryFilters,
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         reportId = reportId,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
@@ -606,7 +608,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       reportId = reportId,
       policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
@@ -628,7 +630,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = emptyList(),
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -647,7 +649,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = emptyList(),
       selectedPage = 1,
       pageSize = 10,
@@ -675,7 +677,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       configuredApiRepository.count(
         filters = emptyList(),
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         reportId = reportId,
         policyEngineResult = policyEngineResult,
         dataSourceName = dataSourceName,
@@ -687,7 +689,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     verify(configuredApiRepository, times(1)).count(
       filters = emptyList(),
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       reportId = reportId,
       policyEngineResult = policyEngineResult,
       dataSourceName = dataSourceName,
@@ -1198,7 +1200,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -1213,7 +1215,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, null, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = repositoryFilters,
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -1233,7 +1235,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         "datasetId",
         "datasetname",
         "redshift",
-        "select *",
+        query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select *")),
         Schema(listOf(SchemaField("9", ParameterType.String, display = "", filter = null))),
       )
     val report = Report(
@@ -1326,7 +1328,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = emptyList(),
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -1341,7 +1343,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, null, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = emptyList(),
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -1387,7 +1389,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = repositoryFilters,
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -1402,7 +1404,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = repositoryFilters,
       selectedPage = selectedPage,
       pageSize = pageSize,
@@ -1445,7 +1447,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.executeQuery(
-        query = dataSet.query,
+        query = dataSet.query.first().query,
         filters = emptyList(),
         selectedPage = selectedPage,
         pageSize = pageSize,
@@ -1460,7 +1462,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = configuredApiService.validateAndFetchDataForDashboard(dashboardId, dashboardReportId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, authToken)
 
     verify(configuredApiRepository, times(1)).executeQuery(
-      query = dataSet.query,
+      query = dataSet.query.first().query,
       filters = emptyList(),
       selectedPage = selectedPage,
       pageSize = pageSize,

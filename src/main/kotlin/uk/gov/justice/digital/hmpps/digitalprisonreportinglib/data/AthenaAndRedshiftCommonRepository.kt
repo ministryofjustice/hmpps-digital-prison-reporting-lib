@@ -32,7 +32,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     dynamicFilterFieldId: Set<String>? = null,
     prompts: List<Prompt>? = null,
     userToken: DprAuthAwareAuthenticationToken? = null,
-    query: String,
+    query: List<MultiphaseQuery>,
     reportFilter: ReportFilter? = null,
     datasource: Datasource,
     reportSummaries: List<ReportSummary>? = null,
@@ -42,7 +42,6 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String? = null,
-    multiphaseQueries: List<MultiphaseQuery>? = null,
     allDatasources: List<Datasource>? = null,
   ): StatementExecutionResponse
 

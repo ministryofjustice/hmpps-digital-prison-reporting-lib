@@ -122,12 +122,12 @@ abstract class DefinitionMapper(
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 
-  protected fun maybeConvertParametersToReportFields(multiphaseQueries: List<MultiphaseQuery>?, parameters: List<Parameter>?) = maybeConvertMultiphaseQueryParameters(multiphaseQueries)
+  protected fun maybeConvertParametersToReportFields(multiphaseQueries: List<MultiphaseQuery>, parameters: List<Parameter>?) = maybeConvertMultiphaseQueryParameters(multiphaseQueries)
     ?: maybeConvertToReportFields(parameters)
 
   private fun maybeConvertToReportFields(parameters: List<Parameter>?) = parameters?.map { mapParameterToField(it) } ?: emptyList()
 
-  private fun maybeConvertMultiphaseQueryParameters(multiphaseQuery: List<MultiphaseQuery>?) = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let { collectAllParametersAndMapToDistinctReportFields(it) }
+  private fun maybeConvertMultiphaseQueryParameters(multiphaseQuery: List<MultiphaseQuery>) = multiphaseQuery.takeIf { it.size > 1 }?.let { collectAllParametersAndMapToDistinctReportFields(it) }
 
   private fun collectAllParametersAndMapToDistinctReportFields(queries: List<MultiphaseQuery>): List<FieldDefinition> {
     val distinctParameters =
@@ -150,9 +150,9 @@ abstract class DefinitionMapper(
     val displaySchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
     val prompts: List<Prompt>? = filters?.takeIf { it.isNotEmpty() }?.let {
       buildPrompts(
-        multiphaseQuery = reportDataset.multiphaseQuery,
+        query = reportDataset.query,
         promptsMap = extractPromptOnly(it, reportDataset),
-        parameters = reportDataset.parameters,
+        datasetParameters = reportDataset.parameters,
       )
     }
     return syncDataApiService.validateAndFetchDataForFilterWithDataset(
@@ -174,7 +174,7 @@ abstract class DefinitionMapper(
     reportDataset: Dataset,
   ): List<Map.Entry<String, String>> = partitionToPromptsAndFilters(
     map,
-    extractParameters(reportDataset, reportDataset.multiphaseQuery),
+    extractParameters(reportDataset),
   ).first
 
   private fun mapParameterToField(parameter: Parameter): FieldDefinition = FieldDefinition(

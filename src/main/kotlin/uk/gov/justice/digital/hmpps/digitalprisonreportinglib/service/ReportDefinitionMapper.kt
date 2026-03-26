@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FeatureType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Report
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportChild
@@ -91,7 +90,6 @@ class ReportDefinitionMapper(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
       parameters = dataSet.parameters,
-      multiphaseQueries = dataSet.multiphaseQuery,
       reportDataset = dataSet,
       filters = filters,
     ),
@@ -150,7 +148,6 @@ class ReportDefinitionMapper(
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset> = emptyList(),
     parameters: List<Parameter>? = null,
-    multiphaseQueries: List<MultiphaseQuery>? = null,
     reportDataset: Dataset,
     filters: Map<String, String>?,
   ): Specification? {
@@ -170,7 +167,7 @@ class ReportDefinitionMapper(
         allDatasets = allDatasets,
         reportDataset = reportDataset,
         filters = filters,
-      ) + maybeConvertParametersToReportFields(multiphaseQueries, parameters),
+      ) + maybeConvertParametersToReportFields(reportDataset.query, parameters),
     )
   }
 

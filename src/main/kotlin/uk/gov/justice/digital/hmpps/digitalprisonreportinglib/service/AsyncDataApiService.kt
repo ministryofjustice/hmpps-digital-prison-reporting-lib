@@ -82,7 +82,7 @@ class AsyncDataApiService(
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(
       filters,
-      extractParameters(productDefinition.reportDataset, productDefinition.reportDataset.multiphaseQuery),
+      extractParameters(productDefinition.reportDataset),
     )
     val preGeneratedTableId = checkForScheduledDataset(productDefinition)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
@@ -94,7 +94,7 @@ class AsyncDataApiService(
         policyEngineResult = policyEngine.execute(),
         dynamicFilterFieldId = reportFieldId,
         prompts = buildPrompts(
-          productDefinition.reportDataset.multiphaseQuery,
+          productDefinition.reportDataset.query,
           promptsMap,
           productDefinition.reportDataset.parameters,
         ),
@@ -109,7 +109,6 @@ class AsyncDataApiService(
         reportOrDashboardId = productDefinition.report.id,
         reportOrDashboardName = productDefinition.report.name,
         preGeneratedDatasetTableId = preGeneratedTableId,
-        multiphaseQueries = productDefinition.reportDataset.multiphaseQuery,
         allDatasources = productDefinition.allDatasources,
       )
   }
@@ -130,7 +129,7 @@ class AsyncDataApiService(
     val policyEngine = PolicyEngine(productDefinition.policy, userToken)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(
       filters,
-      extractParameters(productDefinition.dashboardDataset, productDefinition.dashboardDataset.multiphaseQuery),
+      extractParameters(productDefinition.dashboardDataset),
     )
     log.debug("All filters from user are: {}", filters)
     log.debug("Prompts are: {}", promptsMap)
@@ -141,7 +140,7 @@ class AsyncDataApiService(
         sortedAsc = true,
         policyEngineResult = policyEngine.execute(),
         prompts = buildPrompts(
-          productDefinition.dashboardDataset.multiphaseQuery,
+          productDefinition.dashboardDataset.query,
           promptsMap,
           productDefinition.dashboardDataset.parameters,
         ),
@@ -154,7 +153,6 @@ class AsyncDataApiService(
         productDefinitionName = productDefinition.name,
         reportOrDashboardId = productDefinition.dashboard.id,
         reportOrDashboardName = productDefinition.dashboard.name,
-        multiphaseQueries = productDefinition.dashboardDataset.multiphaseQuery,
         allDatasources = productDefinition.allDatasources,
       )
   }
@@ -163,7 +161,7 @@ class AsyncDataApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return getStatementExecutionStatus(
-      productDefinition.reportDataset.multiphaseQuery,
+      productDefinition.reportDataset.query,
       productDefinition.datasource.name,
       statementId,
       tableId,
@@ -174,7 +172,7 @@ class AsyncDataApiService(
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
     return getStatementExecutionStatus(
-      productDefinition.dashboardDataset.multiphaseQuery,
+      productDefinition.dashboardDataset.query,
       productDefinition.datasource.name,
       statementId,
       tableId,
@@ -322,7 +320,7 @@ class AsyncDataApiService(
     if (tableExists && s3DataExists) {
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } else if (!tableExists && !s3DataExists) {
-      configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query, productDefinition.datasource.name)
+      configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition.datasource.name)
       // Might need a small delay here as reading straight after creation might fail
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } else {
@@ -393,17 +391,17 @@ class AsyncDataApiService(
   }
 
   private fun getStatementExecutionStatus(
-    multiphaseQuery: List<MultiphaseQuery>?,
+    multiphaseQuery: List<MultiphaseQuery>,
     datasourceName: String,
     statementId: String,
     tableId: String?,
   ): StatementExecutionStatus = getStatusOrThrowIfTableIsMissing(tableId, calculateStatementStatus(multiphaseQuery, datasourceName, statementId))
 
   private fun calculateStatementStatus(
-    multiphaseQuery: List<MultiphaseQuery>?,
+    multiphaseQuery: List<MultiphaseQuery>,
     datasourceName: String,
     statementId: String,
-  ): StatementExecutionStatus = multiphaseQuery?.takeIf { it.isNotEmpty() }?.let {
+  ): StatementExecutionStatus = multiphaseQuery.takeIf { it.size > 1 }?.let {
     redshiftDataApiRepository.getStatementStatusForMultiphaseQuery(statementId)
   } ?: getRepo(datasourceName).getStatementStatus(statementId)
 

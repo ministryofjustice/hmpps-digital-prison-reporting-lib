@@ -74,7 +74,7 @@ class AthenaApiRepository(
     dynamicFilterFieldId: Set<String>?,
     prompts: List<Prompt>?,
     userToken: DprAuthAwareAuthenticationToken?,
-    query: String,
+    query: List<MultiphaseQuery>,
     reportFilter: ReportFilter?,
     datasource: Datasource,
     reportSummaries: List<ReportSummary>?,
@@ -84,9 +84,8 @@ class AthenaApiRepository(
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     preGeneratedDatasetTableId: String?,
-    multiphaseQueries: List<MultiphaseQuery>?,
     allDatasources: List<Datasource>?,
-  ): StatementExecutionResponse = multiphaseQueries?.takeIf { it.isNotEmpty() }?.let {
+  ): StatementExecutionResponse = query.takeIf { it.size > 1 }?.let {
     executeMultiphaseQuery(
       productDefinitionId,
       productDefinitionName,
@@ -109,7 +108,7 @@ class AthenaApiRepository(
       reportOrDashboardName,
       userToken,
       prompts,
-      query,
+      query.first().query,
       reportFilter,
       policyEngineResult,
       dynamicFilterFieldId,

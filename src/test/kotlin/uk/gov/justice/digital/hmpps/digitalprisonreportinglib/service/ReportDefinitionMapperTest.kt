@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing.Companion.ALL_WINGS
@@ -77,7 +78,7 @@ class ReportDefinitionMapperTest {
     id = "10",
     name = "11",
     datasource = "12A",
-    query = "12",
+    query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "12")),
     schema = Schema(
       field = listOf(
         SchemaField(
@@ -569,7 +570,7 @@ class ReportDefinitionMapperTest {
       estDatasetId,
       "establishment-dataset-name",
       "12A",
-      "select * from table",
+      query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select * from table")),
       Schema(
         listOf(
           establishmentCodeSchemaField,
@@ -625,7 +626,7 @@ class ReportDefinitionMapperTest {
       id = estDatasetId,
       name = "establishment-dataset-name",
       datasource = "12A",
-      query = "select * from table",
+      query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select * from table")),
       schema = Schema(
         listOf(
           establishmentNameSchemaField,
@@ -640,7 +641,7 @@ class ReportDefinitionMapperTest {
       id = "10",
       name = "11",
       datasource = "12A",
-      query = "12",
+      query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "12")),
       schema = Schema(
         field = listOf(
           SchemaField(
@@ -783,7 +784,7 @@ class ReportDefinitionMapperTest {
           id = "10",
           name = "11",
           datasource = "12A",
-          query = "12",
+          query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "12")),
           schema = Schema(
             field = listOf(
               SchemaField(
@@ -1074,13 +1075,19 @@ class ReportDefinitionMapperTest {
       display = parameterDisplay,
       mandatory = true,
     )
-    val multiphaseQuery = MultiphaseQuery(
+    // Parameters are taken from the MultiphaseQuery when there are at least 2 queries. Otherwise, the parameters are taken from the dataset parameters are originally for the single queries.
+    val multiphaseQuery1 = MultiphaseQuery(
       index = 0,
       datasource = "ds1",
       query = "SELECT * FROM a",
       parameters = listOf(parameter),
     )
-    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery))
+    val multiphaseQuery2 = MultiphaseQuery(
+      index = 0,
+      datasource = "ds2",
+      query = "SELECT * FROM b",
+    )
+    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2))
 
     val result = mapper.mapReport(productDefinition, authToken)
 
@@ -1119,13 +1126,19 @@ class ReportDefinitionMapperTest {
       mandatory = true,
       referenceType = ReferenceType.ESTABLISHMENT,
     )
-    val multiphaseQuery = MultiphaseQuery(
+    // Parameters are taken from the MultiphaseQuery when there are at least 2 queries. Otherwise, the parameters are taken from the dataset parameters are originally for the single queries.
+    val multiphaseQuery1 = MultiphaseQuery(
       index = 0,
       datasource = "ds1",
       query = "SELECT * FROM a",
       parameters = listOf(parameter),
     )
-    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery))
+    val multiphaseQuery2 = MultiphaseQuery(
+      index = 0,
+      datasource = "ds2",
+      query = "SELECT * FROM a",
+    )
+    val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2))
     val bfiEstCode = "BFI"
     val bfiDescription = "BEDFORD (HMP)"
     val bsiEstCode = "BSI"
@@ -1176,7 +1189,7 @@ class ReportDefinitionMapperTest {
       id = "10",
       name = "11",
       datasource = "12A",
-      query = "12",
+      query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "12")),
       schema = Schema(
         field = listOf(
           SchemaField(
@@ -1433,7 +1446,7 @@ class ReportDefinitionMapperTest {
         id = "10",
         name = "11",
         datasource = "12A",
-        query = "12",
+        query = multiphaseQueries ?: listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "12")),
         schema = Schema(
           field = listOf(
             SchemaField(
@@ -1445,7 +1458,6 @@ class ReportDefinitionMapperTest {
           ),
         ),
         parameters = parameters,
-        multiphaseQuery = multiphaseQueries,
       ),
       report =
       Report(
