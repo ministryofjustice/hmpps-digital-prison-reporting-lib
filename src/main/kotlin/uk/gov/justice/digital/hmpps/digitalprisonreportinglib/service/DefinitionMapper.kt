@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
@@ -192,6 +193,7 @@ abstract class DefinitionMapper(
       staticOptions = populateStaticOptionsForParameter(parameter),
       index = parameter.index,
     ),
+    fieldDefinitionType = FieldSource.ParamField
   )
 
   private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? = parameter.referenceType

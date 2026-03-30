@@ -266,6 +266,11 @@
           "type" : "caseloads",
           "mandatory": "false"
         }
+      }, {
+        "name" : "$ref:establishment_code",
+        "display": "Establishment Code",
+        "sortable" : false,
+        "defaultsort" : false
       } ]
     },
     "destination" : [ ],
