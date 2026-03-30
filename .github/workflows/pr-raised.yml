@@ -15,33 +15,24 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
         with:
-          java-version: '21'
-          distribution: 'corretto'
+          java-version: "21"
+          distribution: "corretto"
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa
 
       - name: Add linting fixes
         run: ./gradlew ktlintFormat
 
-      - name: Commit linting fixes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Linting fixes
-
       - name: Calculate test coverage
         id: calculate-test-coverage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew jacocoTestReport > logs.txt
-          grep 'Test Coverage:' logs.txt -A6 > message.txt
-
-      - name: PR comment
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          comment_tag: coverage
-          filePath: message.txt
+          gh pr comment ${{ github.event.pull_request.number }} --body "$(grep 'Test Coverage:' logs.txt -A6)"
