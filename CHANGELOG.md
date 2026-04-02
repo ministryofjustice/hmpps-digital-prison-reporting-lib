@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 14.0.1
+- Bug fix for java.sql.Date format
+
 # 14.0.0
 - Ended support of the `dataset.multiphaseQuery` DPD field. This is now handled by the `query` field which supports both a query `String` and a `List<MultiphaseQuery>`.
 - For `dataset.query` of String type the query execution functions seamlessly as it was previously. 
