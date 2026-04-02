@@ -8,7 +8,7 @@ import tools.jackson.databind.deser.std.StdDeserializer
 import java.text.SimpleDateFormat
 import java.util.Date
 
-class DateDeserializer : StdDeserializer<Date>(Date::class.java) {
+class DateUtilDeserializer : StdDeserializer<Date>(Date::class.java) {
   private val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   companion object {

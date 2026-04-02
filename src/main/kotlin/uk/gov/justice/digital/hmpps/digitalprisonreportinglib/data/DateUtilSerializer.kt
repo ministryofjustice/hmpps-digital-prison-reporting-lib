@@ -6,7 +6,7 @@ import tools.jackson.databind.ser.std.StdSerializer
 import java.text.SimpleDateFormat
 import java.util.Date
 
-class DateSerializer : StdSerializer<Date>(Date::class.java) {
+class DateUtilSerializer : StdSerializer<Date>(Date::class.java) {
 
   private val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
