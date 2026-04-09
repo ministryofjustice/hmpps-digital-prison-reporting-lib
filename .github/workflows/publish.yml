@@ -45,18 +45,25 @@ jobs:
 
       - name: Bump version
         id: bump-version
+        shell: bash
         run: |
           VERSION="${{ steps.get-version.outputs.current_version }}"
           TYPE="${{ inputs.versionType }}"
 
+          if [[ -z "$VERSION" ]]; then
+            echo "Failed to determine current version"
+            exit 1
+          fi
+
           echo "Current version: $VERSION"
           echo "Bump type: $TYPE"
 
-          # Split version into parts (assumes semver: X.Y.Z[-suffix])
-          BASE_VERSION=$(echo "$VERSION" | cut -d'-' -f1)
-          SUFFIX=$(echo "$VERSION" | cut -s -d'-' -f2)
+          BASE_VERSION="${VERSION%%-*}"
 
           IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
 
           case "$TYPE" in
             major)
@@ -76,7 +83,7 @@ jobs:
               ;;
             alpha)
               if [[ "$VERSION" == *"-alpha."* ]]; then
-                ALPHA_NUM=$(echo "$VERSION" | grep -oP '(?<=alpha\.)\d+')
+                ALPHA_NUM=$(echo "$VERSION" | sed -n 's/.*alpha\.\([0-9]\+\).*/\1/p')
                 ((ALPHA_NUM++))
               else
                 ALPHA_NUM=1
