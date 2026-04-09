@@ -45,10 +45,52 @@ jobs:
 
       - name: Bump version
         id: bump-version
-        uses: christian-draeger/increment-semantic-version@4ac542a8ebf91f4edc224cbe3a19cc086826ae77
-        with:
-          current-version: ${{ steps.get-version.outputs.current_version }}
-          version-fragment: ${{ inputs.versionType }}
+        run: |
+          VERSION="${{ steps.get-version.outputs.current_version }}"
+          TYPE="${{ inputs.versionType }}"
+
+          echo "Current version: $VERSION"
+          echo "Bump type: $TYPE"
+
+          # Split version into parts (assumes semver: X.Y.Z[-suffix])
+          BASE_VERSION=$(echo "$VERSION" | cut -d'-' -f1)
+          SUFFIX=$(echo "$VERSION" | cut -s -d'-' -f2)
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+
+          case "$TYPE" in
+            major)
+              ((MAJOR++))
+              MINOR=0
+              PATCH=0
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+              ;;
+            feature)
+              ((MINOR++))
+              PATCH=0
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+              ;;
+            bug)
+              ((PATCH++))
+              NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+              ;;
+            alpha)
+              if [[ "$VERSION" == *"-alpha."* ]]; then
+                ALPHA_NUM=$(echo "$VERSION" | grep -oP '(?<=alpha\.)\d+')
+                ((ALPHA_NUM++))
+              else
+                ALPHA_NUM=1
+              fi
+              NEW_VERSION="$BASE_VERSION-alpha.$ALPHA_NUM"
+              ;;
+            *)
+              echo "Unknown version type: $TYPE"
+              exit 1
+              ;;
+          esac
+
+          echo "Next version: $NEW_VERSION"
+          echo "next-version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Publish to Sonatype
         id: publish-to-sonatype
