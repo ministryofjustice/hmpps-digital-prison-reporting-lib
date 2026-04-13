@@ -1,5 +1,10 @@
 Below you can find the changes included in each release.
 
+# 14.1.0
+- Update to spring-boot 4.0.4 (hmpps starter libs) and kotlin 2.3.20
+- Update aws libs by minor versions
+- Harden GHA, update dependabot config
+
 # 14.0.1
 - Bug fix for java.sql.Date format
 
