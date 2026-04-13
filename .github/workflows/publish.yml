@@ -78,9 +78,11 @@ jobs:
               NEW_VERSION="$MAJOR.$MINOR.$PATCH"
               ;;
             feature)
-            echo "type was minor"
+              echo "type was minor"
               ((MINOR++))
+              echo "line1"
               PATCH=0
+              echo "line2"
               NEW_VERSION="$MAJOR.$MINOR.$PATCH"
               echo "end of feature bit"
               ;;
