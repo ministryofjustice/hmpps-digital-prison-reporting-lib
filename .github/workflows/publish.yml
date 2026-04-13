@@ -79,7 +79,7 @@ jobs:
               ;;
             feature)
               echo "type was minor"
-              ((MINOR++))
+              MINOR=$((MINOR+1))
               echo "line1"
               PATCH=0
               echo "line2"
