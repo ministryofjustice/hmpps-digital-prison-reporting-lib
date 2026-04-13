@@ -82,6 +82,7 @@ jobs:
               ((MINOR++))
               PATCH=0
               NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+              echo "end of feature bit"
               ;;
             bug)
               echo "type was patch"
