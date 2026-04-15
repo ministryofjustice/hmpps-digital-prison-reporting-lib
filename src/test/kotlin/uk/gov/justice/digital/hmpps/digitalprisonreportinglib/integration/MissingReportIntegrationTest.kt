@@ -78,4 +78,86 @@ class MissingReportIntegrationTest : IntegrationTestBase() {
     assertThat(result.responseBody!!.reason).isEqualTo("a reason")
     assertThat(result.responseBody!!.id).isGreaterThan(0)
   }
+
+  @Test
+  fun `getting a missing report submission works as intended`() {
+    webTestClient.post()
+      .uri("/missingRequest/external-movements/last-month")
+      .bodyValue("a reason")
+      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody<MissingReportSubmission>()
+      .returnResult()
+
+    val result = webTestClient.get()
+      .uri("/missingRequest/1")
+      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody<MissingReportSubmission>()
+      .returnResult()
+
+    assertThat(result.responseBody).isNotNull()
+    assertThat(result.responseBody!!.userId).isEqualTo("foo")
+    assertThat(result.responseBody!!.reportId).isEqualTo("external-movements")
+    assertThat(result.responseBody!!.reportVariantId).isEqualTo("last-month")
+    assertThat(result.responseBody!!.reason).isEqualTo("a reason")
+    assertThat(result.responseBody!!.id).isGreaterThan(0)
+  }
+
+  @Test
+  fun `getting a missing report submission does not work`() {
+    val result = webTestClient.get()
+      .uri("/missingRequest/100")
+      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .exchange()
+      .expectStatus().isEqualTo(400)
+      .expectBody()
+      .jsonPath("$.developerMessage")
+      .isEqualTo(
+        "Missing report submission not found for id=100",
+      )
+  }
+
+  @Test
+  fun `getting a missing report submission for reportID and reportVariantId works as intended`() {
+    webTestClient.post()
+      .uri("/missingRequest/external-movements/last-month")
+      .bodyValue("a reason")
+      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody<MissingReportSubmission>()
+      .returnResult()
+
+    val result = webTestClient.get()
+      .uri("/missingRequest/external-movements/last-month")
+      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody<MissingReportSubmission>()
+      .returnResult()
+
+    assertThat(result.responseBody).isNotNull()
+    assertThat(result.responseBody!!.userId).isEqualTo("foo")
+    assertThat(result.responseBody!!.reportId).isEqualTo("external-movements")
+    assertThat(result.responseBody!!.reportVariantId).isEqualTo("last-month")
+    assertThat(result.responseBody!!.reason).isEqualTo("a reason")
+    assertThat(result.responseBody!!.id).isGreaterThan(0)
+  }
+
+  @Test
+  fun `getting a missing report submission for reportID and reportVariantId does not work`() {
+    webTestClient.get()
+      .uri("/missingRequest/external-movements/last-month-1")
+      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .exchange()
+      .expectStatus().isEqualTo(400)
+      .expectBody()
+      .jsonPath("$.developerMessage")
+      .isEqualTo(
+        "Missing report submission not found for reportId=external-movements or variantId=last-month-1",
+      )
+  }
 }
