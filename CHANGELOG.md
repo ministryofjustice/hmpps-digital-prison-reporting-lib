@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 14.2.0
+- Add a `fieldsource` attribute to `fielddefinition` to differentiate between returned fields in `specification` being from the original spec, or from parameters
+
 # 14.1.0
 - Update to spring-boot 4.0.4 (hmpps starter libs) and kotlin 2.3.20
 - Update aws libs by minor versions

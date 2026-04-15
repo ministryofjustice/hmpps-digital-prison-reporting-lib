@@ -14,6 +14,7 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.core.pagination.sync.SdkIterable
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
@@ -22,6 +23,7 @@ import software.amazon.awssdk.services.dynamodb.paginators.QueryIterable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -355,7 +357,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
       assertThat(lastMonthVariant.specification).isNotNull
-      assertThat(lastMonthVariant.specification?.fields).hasSize(10)
+      assertThat(lastMonthVariant.specification?.fields).hasSize(11)
       assertThat(lastMonthVariant.printable).isEqualTo(true)
 
       val directionField = lastMonthVariant.specification?.fields?.find { it.name == "direction" }
@@ -661,6 +663,24 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                      "visible":true,
                      "calculated":false,
                      "header":false
+                  },
+                  {
+                    "name": "establishment_code",
+                    "display": "Establishment",
+                    "filter": {
+                      "mandatory": true,
+                      "interactive": false,
+                      "index": 0,
+                      "type": "autocomplete"
+                    },
+                    "sortable": false,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": false,
+                    "calculated": false,
+                    "header": false,
+                    "fieldSource": "paramfield"
                   }
                 ]
               },
@@ -675,6 +695,27 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
       prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
     }
+  }
+
+  @Test
+  fun `should put correct fieldsource on fielddefinitions when they come from params vs spec`() {
+    prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
+    externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
+
+    val reportDef = webTestClient.get()
+      .uri("/definitions/external-movements/last-month")
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody<SingleVariantReportDefinition>()
+      .returnResult()
+
+    assertThat(reportDef.responseBody!!.variant.specification!!.fields.size).isEqualTo(11)
+    assertThat(reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.SpecField }.size).isEqualTo(10)
+    val paramFields = reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.ParamField }
+    assertThat(paramFields.size).isEqualTo(1)
+    assertThat(paramFields.first().name).isEqualTo("establishment_code")
   }
 
   @Test

@@ -15,4 +15,5 @@ data class FieldDefinition(
   val visible: Boolean = true,
   val calculated: Boolean = false,
   val header: Boolean = false,
+  val fieldSource: FieldSource = FieldSource.SpecField,
 )
