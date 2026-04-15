@@ -193,7 +193,7 @@ abstract class DefinitionMapper(
       staticOptions = populateStaticOptionsForParameter(parameter),
       index = parameter.index,
     ),
-    fieldSource = FieldSource.ParamField
+    fieldSource = FieldSource.ParamField,
   )
 
   private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? = parameter.referenceType
