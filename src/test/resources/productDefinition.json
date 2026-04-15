@@ -19,6 +19,18 @@
   "dataset" : [ {
     "id" : "external-movements",
     "name" : "All movements",
+    "parameters": [
+      {
+        "index": 0,
+        "name": "establishment_code",
+        "filterType": "autocomplete",
+        "reportFieldType": "string",
+        "display": "Establishment",
+        "description": "@prompt('Establishment Code','A','Establishment\\Establishment Code',Mono,Free,Not_Persistent,,User:0)",
+        "mandatory": "true",
+        "referenceType": "establishment"
+      }
+    ],
     "query" : "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM datamart.domain.movement_movement as movements\nJOIN datamart.domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id",
     "schema" : {
       "field" : [ {
@@ -266,7 +278,7 @@
           "type" : "caseloads",
           "mandatory": "false"
         }
-      } ]
+      }]
     },
     "destination" : [ ],
     "summary": [{

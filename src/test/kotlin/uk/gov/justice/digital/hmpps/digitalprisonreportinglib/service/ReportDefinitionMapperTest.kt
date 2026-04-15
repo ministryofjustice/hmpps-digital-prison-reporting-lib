@@ -13,6 +13,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Multiselect
@@ -892,6 +893,7 @@ class ReportDefinitionMapperTest {
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
     val expectedReportField = FieldDefinition(
+      fieldSource = FieldSource.ParamField,
       type = FieldType.String,
       name = parameterName,
       display = parameterDisplay,
@@ -1094,6 +1096,7 @@ class ReportDefinitionMapperTest {
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
     val expectedReportField = FieldDefinition(
+      fieldSource = FieldSource.ParamField,
       type = FieldType.String,
       name = parameterName,
       display = parameterDisplay,
@@ -1288,6 +1291,7 @@ class ReportDefinitionMapperTest {
     parameter: Parameter,
     expectedStaticOptions: List<FilterOption>?,
   ) = FieldDefinition(
+    fieldSource = FieldSource.ParamField,
     type = FieldType.String,
     name = parameter.name,
     display = parameter.display,
