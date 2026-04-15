@@ -24,7 +24,7 @@ jobs:
           distribution: "corretto"
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa
+        uses: gradle/gradle-build-action@ac2d340dc04d9e1113182899e983b5400c17cda1
 
       - name: Add linting fixes
         run: ./gradlew ktlintFormat
