@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.D
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
@@ -202,6 +203,7 @@ class DashboardDefinitionMapperTest {
           type = FieldType.String,
           mandatory = false,
           visible = false,
+          fieldSource = FieldSource.ParamField,
           filter = FilterDefinition(
             type = FilterType.AutoComplete,
             mandatory = parameter.mandatory,
@@ -284,6 +286,7 @@ class DashboardDefinitionMapperTest {
           type = FieldType.String,
           mandatory = false,
           visible = false,
+          fieldSource = FieldSource.ParamField,
           filter = FilterDefinition(
             type = FilterType.AutoComplete,
             mandatory = parameter.mandatory,
