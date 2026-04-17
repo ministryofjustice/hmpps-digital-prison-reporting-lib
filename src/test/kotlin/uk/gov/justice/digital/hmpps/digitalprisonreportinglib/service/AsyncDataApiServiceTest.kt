@@ -883,7 +883,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   }
 
   @Test
-  fun `getStatementStatus should return EXPIRED when a tableId is provided, the table is missing and the status is FINISHED`() {
+  fun `getStatementStatus should return 404 when a tableId is provided, the table is missing and the status is FINISHED`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionNomis.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
@@ -908,8 +908,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(true)
     whenever(
-      redshiftDataApiRepository.isTableMissing(tableId),
-    ).thenReturn(true)
+      s3ApiService.doesPrefixExist(tableId),
+    ).thenReturn(false)
 
     val exception = assertThrows<MissingTableException> {
       asyncDataApiService.getStatementStatus(
@@ -921,7 +921,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       )
     }
     assertThat(exception).message().isEqualTo("Table reports.$tableId not found.")
-    verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
+    verify(s3ApiService, times(1)).doesPrefixExist(eq(tableId))
     verify(athenaApiRepository, times(1)).getStatementStatus(eq(statementId))
   }
 
@@ -983,8 +983,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     )
     val tableId = TableIdGenerator().generateNewExternalTableId()
     whenever(
-      redshiftDataApiRepository.isTableMissing(tableId),
-    ).thenReturn(false)
+      s3ApiService.doesPrefixExist(tableId),
+    ).thenReturn(true)
 
     whenever(
       athenaApiRepository.getStatementStatus(statementId),
@@ -1005,7 +1005,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       tableId = tableId,
     )
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
-    verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
+    verify(s3ApiService, times(1)).doesPrefixExist(eq(tableId))
     assertEquals(statementExecutionStatus, actual)
   }
 

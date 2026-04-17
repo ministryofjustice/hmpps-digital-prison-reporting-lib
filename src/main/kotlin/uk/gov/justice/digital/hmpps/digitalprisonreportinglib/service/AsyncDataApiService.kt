@@ -410,7 +410,7 @@ class AsyncDataApiService(
     statementStatus: StatementExecutionStatus,
   ): StatementExecutionStatus {
     tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
-      if (redshiftDataApiRepository.isTableMissing(tableId)) {
+      if (!s3ApiService.doesPrefixExist(tableId)) {
         throw MissingTableException(tableId)
       }
     }
