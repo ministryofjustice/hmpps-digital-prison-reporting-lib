@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 14.4.0
+- Replace JDBC call to Redshift which check the table existence in the status endpoint with an S3 call.  
+
 # 14.3.0
 - Update 10.1.2 -> 10.2.0 for hmpps gradle spring boot plugin
 
