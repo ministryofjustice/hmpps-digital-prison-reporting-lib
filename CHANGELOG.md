@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 14.3.0
+- Update 10.1.2 -> 10.2.0 for hmpps gradle spring boot plugin
+
 # 14.2.0
 - Add a `fieldsource` attribute to `fielddefinition` to differentiate between returned fields in `specification` being from the original spec, or from parameters
 
