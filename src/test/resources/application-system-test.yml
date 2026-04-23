@@ -41,9 +41,6 @@ management.endpoint:
 
 dpr:
   lib:
-    probation:
-      caseloads:
-        host: http://localhost:9999
     caseloads:
       host: http://localhost:9999
     manage-users:
