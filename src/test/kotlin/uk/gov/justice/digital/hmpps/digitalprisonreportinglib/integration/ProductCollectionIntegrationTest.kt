@@ -26,7 +26,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollection
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionAttribute
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionDTO
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionProduct
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
@@ -145,7 +150,15 @@ class ProductCollectionIntegrationTest {
       ProductCollection(name = "coll1", version = "1", ownerName = "bob", products = mutableSetOf(), attributes = mutableSetOf()),
     )
     val pc2 = productCollectionRepository.save(ProductCollection("coll2", "1", "jane", mutableSetOf(), mutableSetOf()))
-    val pc3 = productCollectionRepository.save(ProductCollection("coll3", "1", "marley", mutableSetOf(), mutableSetOf()))
+    val pc3 = productCollectionRepository.save(
+      ProductCollection(
+        "coll3",
+        "1",
+        "marley",
+        mutableSetOf(),
+        mutableSetOf(),
+      ),
+    )
 
     val productCollections = webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
