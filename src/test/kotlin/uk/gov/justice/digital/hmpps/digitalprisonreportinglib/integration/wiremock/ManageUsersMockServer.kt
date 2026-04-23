@@ -20,14 +20,14 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
             "authSource": "NOMIS",
             "active": true,
             "accountType": "GENERAL",
-            ${activeCaseloadId?.let { 
-              """
+            ${activeCaseloadId?.let {
+      """
               "activeCaseload": {
                 "id": "$activeCaseloadId",
                 "name": "WANDSWORTH (HMP)"
               },
-              """.trimIndent()
-            } ?: ""}
+      """.trimIndent()
+    } ?: ""}
             ${caseloads ?: """
               "caseloads": [
                 {
@@ -43,7 +43,7 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
                   "name": "Lowestoft (North East Suffolk) Magistrat"
                 }
               ]
-            """.trimIndent()}
+    """.trimIndent()}
           }
     """.trimIndent()
     stubFor(
@@ -73,16 +73,18 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(AuthUser(
-              username = username,
-              active = true,
-              name = username,
-              authSource = authSource,
-              userId = "123456",
-              uuid = "1a1a1a-1a1a1a1-1a1a1a1-1a1a1a1",
-              staffId = null,
-              activeCaseLoadId = activeCaseloadId,
-            ).toJson()).withStatus(200),
+            .withBody(
+              AuthUser(
+                username = username,
+                active = true,
+                name = username,
+                authSource = authSource,
+                userId = "123456",
+                uuid = "1a1a1a-1a1a1a1-1a1a1a1-1a1a1a1",
+                staffId = null,
+                activeCaseLoadId = activeCaseloadId,
+              ).toJson(),
+            ).withStatus(200),
         ),
     )
   }

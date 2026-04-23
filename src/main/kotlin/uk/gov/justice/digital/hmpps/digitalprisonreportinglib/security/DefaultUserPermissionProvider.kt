@@ -55,13 +55,15 @@ class DefaultUserPermissionProvider(private val manageUsersWebClient: WebClient)
     .header("Content-Type", "application/json")
     .exchangeToMono { response ->
       if (response.statusCode().value() == 404) {
-        response.releaseBody().thenReturn(CaseloadResponse(
-          username = username,
-          active = false,
-          accountType = AuthSource.DELIUS.toString(),
-          caseloads = emptyList(),
-          activeCaseload = null
-        ))
+        response.releaseBody().thenReturn(
+          CaseloadResponse(
+            username = username,
+            active = false,
+            accountType = AuthSource.DELIUS.toString(),
+            caseloads = emptyList(),
+            activeCaseload = null,
+          ),
+        )
       } else {
         response.bodyToMono(CaseloadResponse::class.java)
       }

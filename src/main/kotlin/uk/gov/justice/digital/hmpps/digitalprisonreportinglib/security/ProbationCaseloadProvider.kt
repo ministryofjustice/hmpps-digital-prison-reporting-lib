@@ -5,7 +5,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyValueWithType
 
 class ProbationCaseloadProvider(
-  private val probationCaseloadsWebClient: WebClient
+  private val probationCaseloadsWebClient: WebClient,
 ) {
   fun getCrnAccess(username: String, crns: List<String>): ProbationAccessResponse {
     if (crns.isEmpty()) {

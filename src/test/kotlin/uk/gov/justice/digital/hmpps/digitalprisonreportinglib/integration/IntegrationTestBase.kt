@@ -154,15 +154,17 @@ abstract class IntegrationTestBase {
     whenever(authentication.name).then { "TESTUSER1" }
     whenever(authentication.getUsername()).then { "TESTUSER1" }
     whenever(authentication.userName).then { "TESTUSER1" }
-    whenever(authentication.getCaseLoads()).then { listOf(
-      Caseload("ABC", "ABCPRISON (ABC)"),
-      Caseload("DEF", "DEFPRISON (DEF)"),
-      Caseload("GHI", "GHIPRISON (GHI)"),
-      Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
-      Caseload("WWI", "WANDSWORTH (HMP)"),
-      Caseload("AKI", "Acklington (HMP)"),
-    ) }
-    whenever(authentication.getCaseLoadIds()).then { listOf("ABC", "DEF", "GHI", "LWSTMC", "WWI", "AKI")}
+    whenever(authentication.getCaseLoads()).then {
+      listOf(
+        Caseload("ABC", "ABCPRISON (ABC)"),
+        Caseload("DEF", "DEFPRISON (DEF)"),
+        Caseload("GHI", "GHIPRISON (GHI)"),
+        Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+        Caseload("AKI", "Acklington (HMP)"),
+      )
+    }
+    whenever(authentication.getCaseLoadIds()).then { listOf("ABC", "DEF", "GHI", "LWSTMC", "WWI", "AKI") }
     whenever(authentication.getActiveCaseLoadId()).then { "LWSTMC" }
     authenticationHelper.authentication = authentication
   }

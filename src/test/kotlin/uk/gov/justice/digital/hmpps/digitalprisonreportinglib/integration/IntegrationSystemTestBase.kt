@@ -147,7 +147,7 @@ abstract class IntegrationSystemTestBase {
             "name": "GHIPRISON (GHI)"
           }
         ]
-      """.trimIndent()
+      """.trimIndent(),
     )
     manageUsersMockServer.stubGetUserInfo("request-user", "ABC")
   }

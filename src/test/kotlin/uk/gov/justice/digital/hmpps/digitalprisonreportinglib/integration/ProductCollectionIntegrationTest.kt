@@ -29,8 +29,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremo
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.*
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
-import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
@@ -119,8 +117,8 @@ class ProductCollectionIntegrationTest {
     hmppsAuthMockServer.stubGrantToken()
     manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
     manageUsersMockServer.stubLookupUserCaseload(
-    "request-user",
-    "ABC",
+      "request-user",
+      "ABC",
       """
         "caseloads": [
           {
@@ -136,7 +134,7 @@ class ProductCollectionIntegrationTest {
             "name": "GHIPRISON (GHI)"
           }
         ]
-      """.trimIndent()
+      """.trimIndent(),
     )
     manageUsersMockServer.stubGetUserInfo("request-user", "ABC")
   }
@@ -239,7 +237,7 @@ class ProductCollectionIntegrationTest {
             "name": "ABCPRISON (ABC)"
           }
         ]
-      """.trimIndent()
+      """.trimIndent(),
     )
     productCollectionRepository.save(ProductCollection("coll1", "1", "bob", mutableSetOf(ProductCollectionProduct("123")), mutableSetOf()))
     productCollectionRepository.save(

@@ -1,16 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.StatusAssertions
@@ -265,7 +260,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `Data API returns empty String as the value from the repository for a field which has a formula and whose result set value is null`() {
-
       externalMovementRepository.delete(externalMovement4)
       val externalMovement4WithNullType = ExternalMovementEntity(
         4,
