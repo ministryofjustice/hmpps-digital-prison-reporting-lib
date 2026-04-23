@@ -2,6 +2,11 @@ server:
   shutdown: immediate
 
 spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/datamart
@@ -36,8 +41,15 @@ management.endpoint:
 
 dpr:
   lib:
+    probation:
+      caseloads:
+        host: http://localhost:9999
+    caseloads:
+      host: http://localhost:9999
     manage-users:
       host: http://localhost:8082
+    user:
+      role: ROLE_PRISONS_REPORTING_USER
     api:
       client:
         id: dpr-api-client-id

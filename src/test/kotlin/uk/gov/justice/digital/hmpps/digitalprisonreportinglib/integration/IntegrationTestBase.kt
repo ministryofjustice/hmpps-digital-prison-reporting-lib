@@ -34,8 +34,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovem
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PrisonerRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategoryRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprUserAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.UserPermissionProvider
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
@@ -68,6 +73,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var objectMapper: ObjectMapper
 
+  @Autowired
+  lateinit var userPermissionProvider: UserPermissionProvider
+
   @MockitoBean
   lateinit var dynamoDbClient: DynamoDbClient
 
@@ -81,6 +89,12 @@ abstract class IntegrationTestBase {
   lateinit var asyncDataApiService: AsyncDataApiService
 
   companion object {
+
+    @JvmField
+    val hmppsAuthMockServer = HmppsAuthMockServer()
+
+    @JvmField
+    val manageUsersMockServer = ManageUsersMockServer()
 
     lateinit var wireMockServer: WireMockServer
     val pgContainer = PostgresContainer.instance
@@ -102,12 +116,16 @@ abstract class IntegrationTestBase {
         WireMockConfiguration.wireMockConfig().port(9999),
       )
       wireMockServer.start()
+      hmppsAuthMockServer.start()
+      manageUsersMockServer.start()
     }
 
     @AfterAll
     @JvmStatic
     fun teardownClass() {
       wireMockServer.stop()
+      hmppsAuthMockServer.stop()
+      manageUsersMockServer.stop()
     }
 
     const val TEST_TOKEN = "TestToken"
@@ -118,6 +136,10 @@ abstract class IntegrationTestBase {
     wireMockServer.resetAll()
     stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
     stubDefinitionsResponse()
+    hmppsAuthMockServer.stubGrantToken()
+    manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
+    manageUsersMockServer.stubLookupUserCaseload("request-user", "LWSTMC")
+    manageUsersMockServer.stubGetUserInfo()
     ConfiguredApiRepositoryTest.AllMovements.allExternalMovements.forEach {
       externalMovementRepository.save(it)
     }
@@ -125,9 +147,23 @@ abstract class IntegrationTestBase {
       prisonerRepository.save(it)
     }
     val jwt = mock<Jwt>()
-    val authentication = mock<DprUserAuthAwareAuthenticationToken>()
+    val authentication = mock<DprSystemAuthAwareAuthenticationToken>()
     whenever(jwt.tokenValue).then { TEST_TOKEN }
     whenever(authentication.jwt).then { jwt }
+    whenever(authentication.authSource).then { AuthSource.NONE }
+    whenever(authentication.name).then { "TESTUSER1" }
+    whenever(authentication.getUsername()).then { "TESTUSER1" }
+    whenever(authentication.userName).then { "TESTUSER1" }
+    whenever(authentication.getCaseLoads()).then { listOf(
+      Caseload("ABC", "ABCPRISON (ABC)"),
+      Caseload("DEF", "DEFPRISON (DEF)"),
+      Caseload("GHI", "GHIPRISON (GHI)"),
+      Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
+      Caseload("WWI", "WANDSWORTH (HMP)"),
+      Caseload("AKI", "Acklington (HMP)"),
+    ) }
+    whenever(authentication.getCaseLoadIds()).then { listOf("ABC", "DEF", "GHI", "LWSTMC", "WWI", "AKI")}
+    whenever(authentication.getActiveCaseLoadId()).then { "LWSTMC" }
     authenticationHelper.authentication = authentication
   }
 
@@ -153,6 +189,7 @@ abstract class IntegrationTestBase {
     """
       {
         "username": "TESTUSER1",
+        "authSource": "NONE",
         "active": true,
         "accountType": "GENERAL",
         "activeCaseload": {

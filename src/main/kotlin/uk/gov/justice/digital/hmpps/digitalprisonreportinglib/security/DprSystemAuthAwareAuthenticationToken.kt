@@ -22,21 +22,15 @@ class DprSystemAuthAwareAuthenticationToken(
   override fun getUsername(): String = userName!!
 
   override fun getActiveCaseLoadId(): String? {
-    if (authSource != AuthSource.NOMIS) {
-      return null
-    }
     if (this.activeCaseload == null) {
       this.activeCaseload = this.userName?.let {
-        userPermissionProvider.getActiveCaseloadId(it)
+        userPermissionProvider.getUserInfo(it).activeCaseLoadId
       }
     }
     return this.activeCaseload
   }
 
   override fun getCaseLoadIds(): List<String> {
-    if (authSource != AuthSource.NOMIS) {
-      return emptyList()
-    }
     if (this.caseloads == null) {
       this.caseloads = getCaseLoads()
     }
@@ -44,9 +38,6 @@ class DprSystemAuthAwareAuthenticationToken(
   }
 
   override fun getCaseLoads(): List<Caseload> {
-    if (authSource != AuthSource.NOMIS) {
-      return emptyList()
-    }
     if (this.caseloads == null) {
       this.caseloads = this.userName?.let {
         userPermissionProvider.getCaseloads(it)

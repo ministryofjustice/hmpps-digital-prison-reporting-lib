@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.time.LocalDateTime
 
 class DataApiIntegrationTest : IntegrationTestBase() {
@@ -95,8 +96,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
         .jsonPath("$.[1].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
@@ -119,8 +118,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
         .jsonPath("$.[1].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
@@ -142,8 +139,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
         .jsonPath("$.[1].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
@@ -167,8 +162,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .isEqualTo(dateTimeWithSeconds(movementPrisoner4[DATE]))
         .jsonPath("$.[1].date")
         .isEqualTo(dateTimeWithSeconds(movementPrisonerDestinationCaseloadDirectionIn[DATE]))
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
   }
 
@@ -197,8 +190,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       ]       
       """,
       )
-
-    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
   }
 
   @Test
@@ -231,8 +222,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         assertThat(body?.startsWith("\uFEFF")).isTrue()
         assertThat(body?.trim()?.replace("\uFEFF", "")).isEqualTo(expected)
       }
-
-    assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
   }
 
   class ConfiguredApiFormulaTest : IntegrationTestBase() {
@@ -272,12 +261,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       ]       
       """,
         )
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
 
     @Test
     fun `Data API returns empty String as the value from the repository for a field which has a formula and whose result set value is null`() {
+
       externalMovementRepository.delete(externalMovement4)
       val externalMovement4WithNullType = ExternalMovementEntity(
         4,
@@ -318,8 +306,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       ]       
       """,
         )
-
-      assertThat(wireMockServer.findAll(RequestPatternBuilder().withUrl("/users/me/caseloads")).size).isEqualTo(2)
     }
   }
 
@@ -442,14 +428,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Data API returns empty list and warning header if no active caseloads`() {
     wireMockServer.resetAll()
-    wireMockServer.stubFor(
-      WireMock.get("/users/me/caseloads").willReturn(
-        WireMock.aResponse()
-          .withStatus(HttpStatus.OK.value())
-          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody(caseloadsWithNoneActive),
-      ),
-    )
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user", null)
     stubDefinitionsResponse()
 
     webTestClient.get()
@@ -473,16 +453,36 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Data API count returns zero and warning header if no active caseloads`() {
+  fun `Data API returns empty list and no warning header if no active caseloads and not NOMIS user`() {
     wireMockServer.resetAll()
-    wireMockServer.stubFor(
-      WireMock.get("/users/me/caseloads").willReturn(
-        WireMock.aResponse()
-          .withStatus(HttpStatus.OK.value())
-          .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .withBody(caseloadsWithNoneActive),
-      ),
-    )
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null, null)
+    manageUsersMockServer.stubGetUserInfo("request-user", null, AuthSource.DELIUS)
+    stubDefinitionsResponse()
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month")
+          .queryParam("selectedPage", 1)
+          .queryParam("pageSize", 3)
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectHeader()
+      .doesNotExist(ResponseHeader.NO_DATA_WARNING_HEADER_NAME)
+      .expectBody()
+      .json("[]")
+  }
+
+  @Test
+  fun `Data API count returns zero and warning header if no active caseloads`() {
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user", null)
     stubDefinitionsResponse()
 
     webTestClient.get()

@@ -20,6 +20,8 @@ import java.time.Duration
 class UserPermissionProviderAutoConfig(
   @Value("\${dpr.lib.manage-users.host}")
   private val manageUsersApiUri: String,
+  @Value("\${dpr.lib.probation.caseloads.host}")
+  private val probationCaseloadsApiUri: String,
   @Value("\${api.timeout:20s}")
   private val healthTimeout: Duration,
 ) {
@@ -46,6 +48,16 @@ class UserPermissionProviderAutoConfig(
     authorizedClientManager,
     registrationId = "DPR_LIB_API",
     url = manageUsersApiUri,
+    healthTimeout,
+  )
+
+  @Bean
+  fun probationCaseloadsWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+  ): WebClient = WebClient.builder().authorisedWebClient(
+    authorizedClientManager,
+    registrationId = "DPR_LIB_API",
+    url = probationCaseloadsApiUri,
     healthTimeout,
   )
 

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import jakarta.persistence.EntityManager
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -26,14 +24,13 @@ import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollection
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionAttribute
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionDTO
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionProduct
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprUserAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
@@ -74,8 +71,13 @@ class ProductCollectionIntegrationTest {
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
     }
 
-    lateinit var wireMockServer: WireMockServer
     val pgContainer = PostgresContainer.instance
+
+    @JvmField
+    val hmppsAuthMockServer = HmppsAuthMockServer()
+
+    @JvmField
+    val manageUsersMockServer = ManageUsersMockServer()
 
     @JvmStatic
     @DynamicPropertySource
@@ -90,16 +92,15 @@ class ProductCollectionIntegrationTest {
     @BeforeAll
     @JvmStatic
     fun setupClass() {
-      wireMockServer = WireMockServer(
-        WireMockConfiguration.wireMockConfig().port(9999),
-      )
-      wireMockServer.start()
+      hmppsAuthMockServer.start()
+      manageUsersMockServer.start()
     }
 
     @AfterAll
     @JvmStatic
     fun teardownClass() {
-      wireMockServer.stop()
+      hmppsAuthMockServer.stop()
+      manageUsersMockServer.stop()
     }
 
     const val TEST_TOKEN = "TestToken"
@@ -107,29 +108,20 @@ class ProductCollectionIntegrationTest {
 
   @BeforeEach
   fun setup() {
-    wireMockServer.resetAll()
     transactionTemplate.executeWithoutResult {
       entityManager.createNativeQuery("TRUNCATE product_.product_collection CASCADE").executeUpdate()
     }
     val jwt = mock<Jwt>()
-    val authentication = mock<DprUserAuthAwareAuthenticationToken>()
+    val authentication = mock<DprSystemAuthAwareAuthenticationToken>()
     whenever(jwt.tokenValue).then { TEST_TOKEN }
     whenever(authentication.jwt).then { jwt }
     authenticationHelper.authentication = authentication
-  }
-
-  @Test
-  fun `Getting product collections for a user with caseloads but collections have no caseload restrictions returns all collections`() {
-    stubMeCaseloadsResponse(
+    hmppsAuthMockServer.stubGrantToken()
+    manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
+    manageUsersMockServer.stubLookupUserCaseload(
+    "request-user",
+    "ABC",
       """
-      {
-        "username": "TESTUSER1",
-        "active": true,
-        "accountType": "GENERAL",
-        "activeCaseload": {
-          "id": "ABC",
-          "name": "ABCPRISON (ABC)"
-        },
         "caseloads": [
           {
             "id": "ABC",
@@ -144,10 +136,13 @@ class ProductCollectionIntegrationTest {
             "name": "GHIPRISON (GHI)"
           }
         ]
-      }
-      """.trimIndent(),
-      wireMockServer,
+      """.trimIndent()
     )
+    manageUsersMockServer.stubGetUserInfo("request-user", "ABC")
+  }
+
+  @Test
+  fun `Getting product collections for a user with caseloads but collections have no caseload restrictions returns all collections`() {
     val pc1 = productCollectionRepository.save(
       ProductCollection(name = "coll1", version = "1", ownerName = "bob", products = mutableSetOf(), attributes = mutableSetOf()),
     )
@@ -176,35 +171,7 @@ class ProductCollectionIntegrationTest {
 
   @Test
   fun `Getting product collections for a user with all caseloads with all caseload restrictions returns all collections`() {
-    stubMeCaseloadsResponse(
-      """
-      {
-        "username": "TESTUSER1",
-        "active": true,
-        "accountType": "GENERAL",
-        "activeCaseload": {
-          "id": "ABC",
-          "name": "ABCPRISON (ABC)"
-        },
-        "caseloads": [
-          {
-            "id": "ABC",
-            "name": "ABCPRISON (ABC)"
-          },
-          {
-            "id": "DEF",
-            "name": "DEFPRISON (DEF)"
-          },
-          {
-            "id": "GHI",
-            "name": "GHIPRISON (GHI)"
-          }
-        ]
-      }
-      """.trimIndent(),
-      wireMockServer,
-    )
-    val pc1 = productCollectionRepository.save(
+    productCollectionRepository.save(
       ProductCollection(
         "coll1",
         "1",
@@ -216,7 +183,7 @@ class ProductCollectionIntegrationTest {
         ),
       ),
     )
-    val pc2 = productCollectionRepository.save(
+    productCollectionRepository.save(
       ProductCollection(
         "coll2",
         "1",
@@ -227,7 +194,7 @@ class ProductCollectionIntegrationTest {
         ),
       ),
     )
-    val pc3 = productCollectionRepository.save(
+    productCollectionRepository.save(
       ProductCollection(
         "coll3",
         "1",
@@ -262,28 +229,20 @@ class ProductCollectionIntegrationTest {
 
   @Test
   fun `Getting product collections for a user with caseloads but collections have mixed restrictions returns 2 collections`() {
-    stubMeCaseloadsResponse(
+    manageUsersMockServer.stubLookupUserCaseload(
+      "request-user",
+      "ABC",
       """
-      {
-        "username": "TESTUSER1",
-        "active": true,
-        "accountType": "GENERAL",
-        "activeCaseload": {
-          "id": "ABC",
-          "name": "ABCPRISON (ABC)"
-        },
         "caseloads": [
           {
             "id": "ABC",
             "name": "ABCPRISON (ABC)"
           }
         ]
-      }
-      """.trimIndent(),
-      wireMockServer,
+      """.trimIndent()
     )
-    val pc1 = productCollectionRepository.save(ProductCollection("coll1", "1", "bob", mutableSetOf(ProductCollectionProduct("123")), mutableSetOf()))
-    val pc2 = productCollectionRepository.save(
+    productCollectionRepository.save(ProductCollection("coll1", "1", "bob", mutableSetOf(ProductCollectionProduct("123")), mutableSetOf()))
+    productCollectionRepository.save(
       ProductCollection(
         "coll2",
         "1",
@@ -294,7 +253,7 @@ class ProductCollectionIntegrationTest {
         ),
       ),
     )
-    val pc3 = productCollectionRepository.save(
+    productCollectionRepository.save(
       ProductCollection(
         "coll3",
         "1",
@@ -328,26 +287,6 @@ class ProductCollectionIntegrationTest {
 
   @Test
   fun `Getting product collections for a user with caseloads shows you only need to match one attribute value`() {
-    stubMeCaseloadsResponse(
-      """
-      {
-        "username": "TESTUSER1",
-        "active": true,
-        "accountType": "GENERAL",
-        "activeCaseload": {
-          "id": "ABC",
-          "name": "ABCPRISON (ABC)"
-        },
-        "caseloads": [
-          {
-            "id": "ABC",
-            "name": "ABCPRISON (ABC)"
-          }
-        ]
-      }
-      """.trimIndent(),
-      wireMockServer,
-    )
     productCollectionRepository.save(
       ProductCollection(
         "coll2",
@@ -381,26 +320,6 @@ class ProductCollectionIntegrationTest {
 
   @Test
   fun `Getting single product collection by id succeeds`() {
-    stubMeCaseloadsResponse(
-      """
-      {
-        "username": "TESTUSER1",
-        "active": true,
-        "accountType": "GENERAL",
-        "activeCaseload": {
-          "id": "ABC",
-          "name": "ABCPRISON (ABC)"
-        },
-        "caseloads": [
-          {
-            "id": "ABC",
-            "name": "ABCPRISON (ABC)"
-          }
-        ]
-      }
-      """.trimIndent(),
-      wireMockServer,
-    )
     val coll = productCollectionRepository.save(
       ProductCollection(
         "coll2",
@@ -437,26 +356,6 @@ class ProductCollectionIntegrationTest {
 
   @Test
   fun `Getting single product collection by id fails`() {
-    stubMeCaseloadsResponse(
-      """
-      {
-        "username": "TESTUSER1",
-        "active": true,
-        "accountType": "GENERAL",
-        "activeCaseload": {
-          "id": "ABC",
-          "name": "ABCPRISON (ABC)"
-        },
-        "caseloads": [
-          {
-            "id": "ABC",
-            "name": "ABCPRISON (ABC)"
-          }
-        ]
-      }
-      """.trimIndent(),
-      wireMockServer,
-    )
     productCollectionRepository.save(
       ProductCollection(
         "coll2",
