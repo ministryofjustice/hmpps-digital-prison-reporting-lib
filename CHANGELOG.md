@@ -1,7 +1,8 @@
 Below you can find the changes included in each release.
 
-# 14.4.0
+# 15.0.0
 - Don't try and get caseload details if user is not from a NOMIS AuthSource
+- Remove all deprecated auth token (user based) authorisation code
 
 # 14.3.1
 - Update 10.2.0 -> 10.2.1 for hmpps gradle spring boot plugin
