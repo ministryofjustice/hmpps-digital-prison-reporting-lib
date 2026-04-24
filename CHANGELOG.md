@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 14.3.1
+- Update 10.2.0 -> 10.2.1 for hmpps gradle spring boot plugin
+
 # 14.3.0
 - Update 10.1.2 -> 10.2.0 for hmpps gradle spring boot plugin
 
