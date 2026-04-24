@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCa
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.UserPermissionProvider
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
@@ -154,13 +155,19 @@ abstract class IntegrationTestBase {
     whenever(authentication.getUsername()).then { "TESTUSER1" }
     whenever(authentication.userName).then { "TESTUSER1" }
     whenever(authentication.getCaseLoads()).then {
-      listOf(
-        Caseload("ABC", "ABCPRISON (ABC)"),
-        Caseload("DEF", "DEFPRISON (DEF)"),
-        Caseload("GHI", "GHIPRISON (GHI)"),
-        Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
-        Caseload("WWI", "WANDSWORTH (HMP)"),
-        Caseload("AKI", "Acklington (HMP)"),
+      CaseloadResponse(
+        username = "TESTUSER1",
+        active = true,
+        accountType = "GENERAL",
+        activeCaseload = Caseload(id = "LWSTMC", name = "Lowestoft (North East Suffolk) Magistrat"),
+        caseloads = listOf(
+          Caseload("ABC", "ABCPRISON (ABC)"),
+          Caseload("DEF", "DEFPRISON (DEF)"),
+          Caseload("GHI", "GHIPRISON (GHI)"),
+          Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
+          Caseload("WWI", "WANDSWORTH (HMP)"),
+          Caseload("AKI", "Acklington (HMP)"),
+        ),
       )
     }
     whenever(authentication.getCaseLoadIds()).then { listOf("ABC", "DEF", "GHI", "LWSTMC", "WWI", "AKI") }

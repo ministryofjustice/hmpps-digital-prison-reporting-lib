@@ -41,8 +41,6 @@ management.endpoint:
 
 dpr:
   lib:
-    caseloads:
-      host: http://localhost:9999
     manage-users:
       host: http://localhost:8082
     user:

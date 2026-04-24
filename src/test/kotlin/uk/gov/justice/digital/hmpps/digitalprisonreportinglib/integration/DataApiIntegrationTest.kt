@@ -423,7 +423,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   fun `Data API returns empty list and warning header if no active caseloads`() {
     wireMockServer.resetAll()
     manageUsersMockServer.stubLookupUserCaseload("request-user", null)
-    manageUsersMockServer.stubGetUserInfo("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user")
     stubDefinitionsResponse()
 
     webTestClient.get()
@@ -449,8 +449,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Data API returns empty list and no warning header if no active caseloads and not NOMIS user`() {
     wireMockServer.resetAll()
-    manageUsersMockServer.stubLookupUserCaseload("request-user", null, null)
-    manageUsersMockServer.stubGetUserInfo("request-user", null, AuthSource.DELIUS)
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
     stubDefinitionsResponse()
 
     webTestClient.get()
@@ -476,7 +476,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Data API count returns zero and warning header if no active caseloads`() {
     manageUsersMockServer.stubLookupUserCaseload("request-user", null)
-    manageUsersMockServer.stubGetUserInfo("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user")
     stubDefinitionsResponse()
 
     webTestClient.get()

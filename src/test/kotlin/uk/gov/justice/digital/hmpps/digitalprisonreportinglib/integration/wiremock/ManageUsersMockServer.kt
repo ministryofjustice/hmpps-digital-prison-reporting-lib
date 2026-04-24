@@ -12,46 +12,64 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
   fun stubLookupUserCaseload(
     username: String = "request-user",
     activeCaseloadId: String? = "WWI",
-    caseloads: String? = null,
+    caseloads: String = """
+      [
+        {
+          "id": "WWI",
+          "name": "WANDSWORTH (HMP)"
+        },
+        {
+          "id": "AKI",
+          "name": "Acklington (HMP)"
+        },
+        {
+          "id": "LWSTMC",
+          "name": "Lowestoft (North East Suffolk) Magistrat"
+        }
+      ]
+    """.trimIndent(),
   ) {
-    val payload = """
+    val payloadArr = mutableListOf(
+      """
           {
             "username": "$username",
             "authSource": "NOMIS",
             "active": true,
-            "accountType": "GENERAL",
-            ${activeCaseloadId?.let {
-      """
-              "activeCaseload": {
-                "id": "$activeCaseloadId",
-                "name": "WANDSWORTH (HMP)"
-              },
-      """.trimIndent()
-    } ?: ""}
-            ${caseloads ?: """
-              "caseloads": [
-                {
-                  "id": "WWI",
-                  "name": "WANDSWORTH (HMP)"
-                },
-                {
-                  "id": "AKI",
-                  "name": "Acklington (HMP)"
-                },
-                {
-                  "id": "LWSTMC",
-                  "name": "Lowestoft (North East Suffolk) Magistrat"
-                }
-              ]
-    """.trimIndent()}
-          }
-    """.trimIndent()
+            "accountType": "GENERAL"
+      """.trimIndent(),
+    )
+
+    if (activeCaseloadId != null) {
+      payloadArr.add(
+        """
+        "activeCaseload": {
+          "id": "$activeCaseloadId",
+          "name": "WANDSWORTH (HMP)"
+        }
+        """.trimIndent(),
+      )
+    }
+
+    payloadArr.add("\"caseloads\":${(caseloads).trimIndent()}")
+
+    val payload = payloadArr.joinToString(",") + "}"
     stubFor(
       get("$urlPrefix/prisonusers/$username/caseloads")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(payload).withStatus(200),
+        ),
+    )
+  }
+
+  fun stubLookupUserCaseload404(username: String) {
+    stubFor(
+      get("$urlPrefix/prisonusers/$username/caseloads")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(404),
         ),
     )
   }
@@ -67,7 +85,7 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetUserInfo(username: String = "request-user", activeCaseloadId: String? = "LWSTMC", authSource: AuthSource = AuthSource.NOMIS) {
+  fun stubGetUserInfo(username: String = "request-user", authSource: AuthSource = AuthSource.NOMIS) {
     stubFor(
       get("$urlPrefix/users/$username")
         .willReturn(
@@ -81,8 +99,6 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
                 authSource = authSource,
                 userId = "123456",
                 uuid = "1a1a1a-1a1a1a1-1a1a1a1-1a1a1a1",
-                staffId = null,
-                activeCaseLoadId = activeCaseloadId,
               ).toJson(),
             ).withStatus(200),
         ),

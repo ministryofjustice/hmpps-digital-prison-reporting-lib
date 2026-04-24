@@ -9,6 +9,4 @@ data class AuthUser(
   val authSource: AuthSource,
   val userId: String,
   val uuid: String,
-  val staffId: Int?,
-  val activeCaseLoadId: String?,
 )

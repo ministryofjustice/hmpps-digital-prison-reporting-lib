@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishment
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.TEST_TOKEN
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
@@ -122,7 +123,15 @@ abstract class IntegrationSystemTestBase {
     authenticationHelper.authentication = authentication
     whenever(authentication.authSource).then { AuthSource.NOMIS }
     whenever(authentication.getRoles()).thenReturn(listOf(authorisedRole))
-    whenever(authentication.getCaseLoads()).thenReturn(listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
+    whenever(authentication.getCaseLoads()).thenReturn(
+      CaseloadResponse(
+        username = "request-user",
+        active = true,
+        accountType = "GENERAL",
+        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+        caseloads = listOf(Caseload("WWI", "WANDSWORTH (HMP)")),
+      ),
+    )
     whenever(authentication.getActiveCaseLoadId()).thenReturn("WWI")
     whenever(authentication.getCaseLoadIds()).thenReturn(listOf("WWI"))
     whenever(authentication.getUsername()).thenReturn("request-user")
@@ -149,7 +158,7 @@ abstract class IntegrationSystemTestBase {
         ]
       """.trimIndent(),
     )
-    manageUsersMockServer.stubGetUserInfo("request-user", "ABC")
+    manageUsersMockServer.stubGetUserInfo("request-user")
   }
 
   protected fun setAuthorisation(

@@ -125,7 +125,7 @@ class ProductCollectionIntegrationTest {
       "request-user",
       "ABC",
       """
-        "caseloads": [
+        [
           {
             "id": "ABC",
             "name": "ABCPRISON (ABC)"
@@ -141,7 +141,7 @@ class ProductCollectionIntegrationTest {
         ]
       """.trimIndent(),
     )
-    manageUsersMockServer.stubGetUserInfo("request-user", "ABC")
+    manageUsersMockServer.stubGetUserInfo("request-user")
   }
 
   @Test
@@ -244,7 +244,7 @@ class ProductCollectionIntegrationTest {
       "request-user",
       "ABC",
       """
-        "caseloads": [
+        [
           {
             "id": "ABC",
             "name": "ABCPRISON (ABC)"

@@ -32,13 +32,6 @@ class DefaultUserPermissionProviderTest : IntegrationTestBase() {
   private val webClient = mock<WebClient>()
 
   @Test
-  fun `get active caseload ID`() {
-    val actual = userPermissionProvider.getUserInfo("request-user").activeCaseLoadId
-
-    assertEquals("LWSTMC", actual)
-  }
-
-  @Test
   fun `get available caseloads`() {
     val actual = userPermissionProvider.getCaseloads("request-user")
 
@@ -48,26 +41,38 @@ class DefaultUserPermissionProviderTest : IntegrationTestBase() {
         Caseload("AKI", "Acklington (HMP)"),
         Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
       ).sortedBy { it.id },
-      actual.sortedBy { it.id },
+      actual.caseloads.sortedBy { it.id },
     )
   }
 
   @Test
   fun `getActiveCaseloadId should throw NoDataAvailableException for NOMIS account type with no active caseload`() {
-    manageUsersMockServer.stubGetUserInfo("request-user", null)
-    val exception = assertThrows<NoDataAvailableException> { userPermissionProvider.getUserInfo("request-user").activeCaseLoadId }
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.NOMIS)
+    val exception = assertThrows<NoDataAvailableException> { userPermissionProvider.getCaseloads("request-user") }
 
     assertEquals("User has not set an active caseload.", exception.reason)
   }
 
   @Test
+  fun `getActiveCaseloadId should throw NoDataAvailableException for NOMIS account type with no caseloads`() {
+    manageUsersMockServer.resetAll()
+    manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
+    manageUsersMockServer.stubLookupUserCaseload("request-user", "WKI", "[]")
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.NOMIS)
+    val exception = assertThrows<NoDataAvailableException> { userPermissionProvider.getCaseloads("request-user") }
+
+    assertEquals("User does not have any caseloads.", exception.reason)
+  }
+
+  @Test
   fun `getActiveCaseloadId should not throw NoDataAvailableException for non-NOMIS account with no active caseload`() {
-    manageUsersMockServer.stubGetUserInfo("request-user", null, AuthSource.DELIUS)
-    val info = userPermissionProvider.getUserInfo("request-user")
+    manageUsersMockServer.stubLookupUserCaseload404("request-user")
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+    val info = userPermissionProvider.getCaseloads("request-user")
 
     assertEquals(info.username, "request-user")
-    assertEquals(info.authSource, AuthSource.DELIUS)
-    assertEquals(info.activeCaseLoadId, null)
+    assertEquals(info.activeCaseload, null)
   }
 
   private fun mockWebClientCall(expectedCaseloadResponse: CaseloadResponse) {

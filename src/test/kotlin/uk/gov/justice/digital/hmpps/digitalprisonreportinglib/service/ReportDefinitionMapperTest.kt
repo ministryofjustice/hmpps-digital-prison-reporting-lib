@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DefinitionMapper.Companion.DEFAULT_MAX_STATIC_OPTIONS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
@@ -1245,9 +1246,15 @@ class ReportDefinitionMapperTest {
   @Test
   fun `Report fields with 'caseloads' filter type are mapped to 'multiselect' and have the static options populated `() {
     whenever(authToken.getCaseLoads()).thenReturn(
-      listOf(
-        Caseload("KMI", "KIRKHAM"),
-        Caseload("WWI", "WANDSWORTH (HMP)"),
+      CaseloadResponse(
+        username = "request-user",
+        active = true,
+        accountType = "GENERAL",
+        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+        caseloads = listOf(
+          Caseload("KMI", "KIRKHAM"),
+          Caseload("WWI", "WANDSWORTH (HMP)"),
+        ),
       ),
     )
     whenever(authToken.getCaseLoadIds()).thenReturn(

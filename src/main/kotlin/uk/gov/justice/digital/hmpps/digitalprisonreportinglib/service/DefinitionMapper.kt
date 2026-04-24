@@ -99,7 +99,7 @@ abstract class DefinitionMapper(
     filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
-      return userToken?.getCaseLoads()?.map { FilterOption(it.id, it.name) }
+      return userToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
