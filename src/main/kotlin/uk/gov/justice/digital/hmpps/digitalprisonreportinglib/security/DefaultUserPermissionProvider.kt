@@ -31,7 +31,7 @@ class DefaultUserPermissionProvider(private val manageUsersWebClient: WebClient)
 
   override fun getUserInfo(username: String): AuthUser {
     val user = manageUsersWebClient.get()
-      .uri("/users/$username/me")
+      .uri("/users/$username")
       .header("Content-Type", "application/json")
       .retrieve()
       .bodyToMono(AuthUser::class.java)

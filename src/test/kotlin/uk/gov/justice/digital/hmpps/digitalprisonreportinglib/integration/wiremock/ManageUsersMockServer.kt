@@ -69,7 +69,7 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
 
   fun stubGetUserInfo(username: String = "request-user", activeCaseloadId: String? = "LWSTMC", authSource: AuthSource = AuthSource.NOMIS) {
     stubFor(
-      get("$urlPrefix/users/$username/me")
+      get("$urlPrefix/users/$username")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

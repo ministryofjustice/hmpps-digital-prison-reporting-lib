@@ -134,7 +134,6 @@ abstract class IntegrationTestBase {
   @BeforeEach
   fun setup() {
     wireMockServer.resetAll()
-    stubMeCaseloadsResponse(createCaseloadJsonResponse("LWSTMC"))
     stubDefinitionsResponse()
     hmppsAuthMockServer.stubGrantToken()
     manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
@@ -183,10 +182,6 @@ abstract class IntegrationTestBase {
     )
   }
 
-  protected fun stubMeCaseloadsResponse(body: String) {
-    stubMeCaseloadsResponse(body, wireMockServer)
-  }
-
   protected fun createCaseloadJsonResponse(activeCaseloadId: String) =
     """
       {
@@ -224,17 +219,6 @@ abstract class IntegrationTestBase {
     username = user,
     scope = scopes,
     roles = roles,
-  )
-}
-
-fun stubMeCaseloadsResponse(body: String, wiremockServer: WireMockServer) {
-  wiremockServer.stubFor(
-    WireMock.get("/users/me/caseloads").willReturn(
-      WireMock.aResponse()
-        .withStatus(HttpStatus.OK.value())
-        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .withBody(body),
-    ),
   )
 }
 
