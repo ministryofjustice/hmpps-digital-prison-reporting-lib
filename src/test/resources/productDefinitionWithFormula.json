@@ -34,7 +34,8 @@
         "type" : "string"
       }, {
         "name" : "destination",
-        "type" : "string"
+        "type" : "string",
+        "formula" : "make_url('https://prisoner-${env}.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}',${name},TRUE)"
       },{
         "name" : "destination_code",
         "type" : "string"
@@ -257,5 +258,59 @@
       } ]
     },
     "destination" : [ ]
-  } ]
+  } ],
+  "dashboard": [
+    {
+      "id": "age-breakdown-dashboard-1",
+      "name": "Age Breakdown Dashboard",
+      "description": "Age Breakdown Dashboard Description",
+      "dataset": "external-movements",
+      "section": [
+        {
+          "id": "totals-breakdown",
+          "display": "Totals breakdown",
+          "visualisation": [
+            {
+              "id": "total-prisoners",
+              "type": "list",
+              "display": "Total prisoners by wing",
+              "column": {
+                "key": [
+                  {
+                    "id": "establishment_id",
+                    "display": "Establishmnent ID"
+                  },
+                  {
+                    "id": "wing",
+                    "display": "Wing"
+                  }
+                ],
+                "measure": [
+                  {
+                    "id": "establishment_id",
+                    "display": "Establishmnent ID"
+                  },
+                  {
+                    "id": "wing",
+                    "display": "Wing"
+                  },
+                  {
+                    "id": "total_prisoners",
+                    "display": "Total prisoners"
+                  }
+                ],
+                "filter": [
+                  {
+                    "id": "establishment_id",
+                    "equals": null
+                  }
+                ],
+                "expectNull": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

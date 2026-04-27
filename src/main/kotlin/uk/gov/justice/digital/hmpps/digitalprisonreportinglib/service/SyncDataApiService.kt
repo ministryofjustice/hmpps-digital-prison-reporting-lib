@@ -156,6 +156,7 @@ class SyncDataApiService(
       .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
     checkAuth(dashboardDefinition, userToken)
     val policyEngine = PolicyEngine(dashboardDefinition.policy, userToken)
+    val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return configuredApiRepository
       .executeQuery(
         query = datasetForFilter?.query?.firstOrNull()?.query ?: dashboardDefinition.dashboardDataset.query.first().query,
@@ -175,6 +176,7 @@ class SyncDataApiService(
           dashboardDefinition.dashboardDataset.schema.field.map(SchemaField::name),
         )
       }
+      .map(formulaEngine::applyFormulas)
       .map { row -> toMetricData(row) }
   }
 

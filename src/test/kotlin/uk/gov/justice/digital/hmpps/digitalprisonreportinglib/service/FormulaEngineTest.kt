@@ -7,7 +7,9 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementOriginCaseloadDirectionIn
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.FormulaExecutionMode.CSV_EXPORT
 import java.lang.IllegalArgumentException
@@ -851,6 +853,35 @@ class FormulaEngineTest {
       DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields, "dev")
+    assertEquals(expectedRow, formulaEngine.applyFormulas(row))
+  }
+
+  @Test
+  fun `Formula engine applies the make_url formula when the formula exists only in dataset schema fields`() {
+    val makeUrlFormula = "make_url('https://prisoner-\${env}.digital.prison.service.justice.gov.uk/prisoner/\${prison_number}',\${name},TRUE)"
+    val prisonNumber = "ABC123"
+    val name = "LastName6, F"
+    val row: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to prisonNumber,
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val schemaFields = listOf(
+      SchemaField(
+        name = "\$ref:prison_number",
+        type = ParameterType.String,
+        display = "Prison Number",
+        formula = makeUrlFormula,
+      ),
+    )
+    val expectedRow: Map<String, Any> = mapOf(
+      NAME to name,
+      PRISON_NUMBER to "<a href=\'https://prisoner-test.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' target=\"_blank\">$name</a>",
+      DESTINATION to "Manchester",
+      DESTINATION_CODE to "MNCH",
+    )
+    val formulaEngine = FormulaEngine(datasetSchemaFields = schemaFields, env = "test")
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
   }
 

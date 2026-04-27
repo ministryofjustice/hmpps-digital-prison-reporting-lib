@@ -301,6 +301,61 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       """,
         )
     }
+
+    @Test
+    fun `Data API returns value from the repository applying formulas correctly to the dashboard result dataset`() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/dashboards/age-breakdown-dashboard-1")
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", false)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .json(
+          """
+        [
+          {
+            "prisonNumber": {
+              "raw": "G3411VR"
+            },
+            "name": {
+              "raw": "LastName5, F"
+            },
+            "date": {
+              "raw": "2023-05-01T15:19:00"
+            },
+            "direction": {
+              "raw": "Out"
+            },
+            "type": {
+              "raw": "Transfer"
+            },
+            "origin": {
+              "raw": "Lowestoft (North East Suffolk) Magistrat"
+            },
+            "origin_code": {
+              "raw": "LWSTMC"
+            },
+            "destination": {
+              "raw": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/G3411VR' target=\"_blank\">LastName5, F</a>"
+            },
+            "destination_code": {
+              "raw": "WWI"
+            },
+            "reason": {
+              "raw": "Transfer Out to Other Establishment"
+            }
+          }
+        ]
+      """,
+        )
+    }
   }
 
   @Test

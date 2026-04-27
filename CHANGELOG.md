@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 15.1.0
+- Dashboards to support formulas at the dataset schema field level.
+
 # 15.0.0
 - Don't try and get caseload details if user is not from a NOMIS AuthSource
 - Remove all deprecated auth token (user based) authorisation code
