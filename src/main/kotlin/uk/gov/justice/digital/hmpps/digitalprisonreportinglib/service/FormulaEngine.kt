@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -11,10 +12,11 @@ import java.util.*
 import kotlin.text.split
 
 class FormulaEngine(
-  private val reportFields: List<ReportField>,
+  private val reportFields: List<ReportField>? = null,
   private val env: String? = null,
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper(),
   private val executionMode: FormulaExecutionMode? = FormulaExecutionMode.STANDARD,
+  val datasetSchemaFields: List<SchemaField>? = null,
 ) {
 
   enum class FormulaExecutionMode {
@@ -47,7 +49,8 @@ class FormulaEngine(
       } ?: e.value
     )
 
-  private fun findFormula(columnName: String) = identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { null }
+  private fun findFormula(columnName: String) = identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { return null }
+    ?: identifiedHelper.findOrNull(datasetSchemaFields, columnName)?. formula?.ifEmpty { return null }
 
   private fun interpolate(formula: String, row: Map<String, Any?>): String? = when {
     formula.startsWith(MAKE_URL_FORMULA_PREFIX) && executionMode == FormulaExecutionMode.STANDARD -> interpolateUrlFormula(formula, row)

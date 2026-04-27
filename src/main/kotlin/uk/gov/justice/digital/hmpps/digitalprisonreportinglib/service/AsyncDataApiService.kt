@@ -268,6 +268,7 @@ class AsyncDataApiService(
   ): List<List<Map<String, Any?>>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, userToken)
+    val formulaEngine = FormulaEngine(datasetSchemaFields = productDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return listOf(
       redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
         tableId = tableId,
@@ -281,6 +282,7 @@ class AsyncDataApiService(
             productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
           )
         }
+        .map(formulaEngine::applyFormulas)
         .map { row -> toMetricData(row) },
     )
   }

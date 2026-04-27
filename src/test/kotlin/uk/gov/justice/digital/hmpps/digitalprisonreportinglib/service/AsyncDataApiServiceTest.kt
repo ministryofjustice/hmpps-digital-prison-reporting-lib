@@ -1413,6 +1413,47 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   }
 
   @Test
+  fun `getDashboardStatementResult should apply formulas to the rows returned by the repository`() {
+    val selectedPage = 1L
+    val pageSize = 20L
+    val expectedRepositoryResult = listOf(
+      mapOf("PRISONNUMBER" to "1", "NAME" to "FirstName", "ORIGIN" to "OriginLocation", "destination" to "destinationLocation"),
+    )
+    val expectedServiceResult = listOf(
+      mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "destination" to "<a href='https://prisoner.digital.prison.service.justice.gov.uk/prisoner/1' target=\"_blank\">FirstName</a>"),
+    )
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithFormula.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
+    val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
+    val executionID = UUID.randomUUID().toString()
+    whenever(
+      redshiftDataApiRepository.getPaginatedExternalTableResult(executionID, selectedPage, pageSize, emptyList(), false, "date"),
+    ).thenReturn(expectedRepositoryResult)
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        userToken = any(),
+      ),
+    ).thenReturn(true)
+
+    val actual = asyncDataApiService.getStatementResult(
+      tableId = executionID,
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      selectedPage = selectedPage,
+      pageSize = pageSize,
+      filters = emptyMap(),
+      sortedAsc = false,
+      userToken = authToken,
+    )
+    assertEquals(expectedServiceResult, actual)
+  }
+
+  @Test
   fun `should call the repository with all provided arguments when getDashboardStatementResult is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboard.json"),
