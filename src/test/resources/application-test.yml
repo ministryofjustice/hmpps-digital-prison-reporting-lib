@@ -25,6 +25,16 @@ spring:
 
   security:
     oauth2:
+      client:
+        registration:
+          DPR_LIB_API:
+            provider: hmpps-auth
+            client-id: ${dpr.lib.api.client.id}
+            client-secret: ${dpr.lib.api.client.secret}
+            authorization-grant-type: client_credentials
+        provider:
+          hmpps-auth:
+            token-uri: ${hmpps.auth.url}/oauth/token
       resourceserver:
         jwt:
           jwk-set-uri: ${hmpps.auth.url}/.well-known/jwks.json
@@ -38,15 +48,19 @@ dpr:
     caseloads:
       host: http://localhost:9999
     manage-users:
-      host: http://localhost:9999
+      host: http://localhost:8082
     user:
       role: ROLE_PRISONS_REPORTING_USER
+    system:
+      role: PRISONS_REPORTING_USER
+      token:
+        enabled: true
     aws:
       sts:
         enabled: true
 hmpps:
   auth:
-    url: http://localhost:9090/auth
+    url: http://localhost:8090/auth
 
 logging:
   level:

@@ -1,10 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 
 interface UserPermissionProvider {
-  fun getActiveCaseloadId(username: String): String
-  fun getCaseloads(username: String): List<Caseload>
+  fun getUserInfo(username: String): AuthUser
+  fun getCaseloads(username: String): CaseloadResponse
   fun getUsersRoles(username: String): List<String>
-  fun getPrisonUsersCaseload(username: String): CaseloadResponse
 }

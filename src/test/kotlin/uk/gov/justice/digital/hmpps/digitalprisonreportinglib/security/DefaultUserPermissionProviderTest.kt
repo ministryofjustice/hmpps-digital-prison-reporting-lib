@@ -7,63 +7,72 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.anyVararg
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClient.RequestHeadersUriSpec
 import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
-class DefaultUserPermissionProviderTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class DefaultUserPermissionProviderTest : IntegrationTestBase() {
+
+  companion object {
+    @JvmStatic
+    @DynamicPropertySource
+    fun registerProperties(registry: DynamicPropertyRegistry) {
+      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+    }
+  }
 
   private val webClient = mock<WebClient>()
-  private val userPermissionProvider: UserPermissionProvider = DefaultUserPermissionProvider(webClient)
-
-  @Test
-  fun `get active caseload ID`() {
-    val expectedCaseloadResponse =
-      CaseloadResponse(
-        "user1",
-        true,
-        "GENERAL",
-        Caseload("WWI", "WANDSWORTH (HMP)"),
-        listOf(
-          Caseload("WWI", "WANDSWORTH (HMP)"),
-        ),
-      )
-    mockWebClientCall(expectedCaseloadResponse)
-    val actual = userPermissionProvider.getActiveCaseloadId("user1")
-
-    assertEquals(expectedCaseloadResponse.activeCaseload!!.id, actual)
-  }
 
   @Test
   fun `get available caseloads`() {
-    val expectedCaseloadResponse =
-      CaseloadResponse("user1", true, "GENERAL", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)"), Caseload("LEI", "Leeds (HMP)")))
-    mockWebClientCall(expectedCaseloadResponse)
-    val actual = userPermissionProvider.getCaseloads("user1")
+    val actual = userPermissionProvider.getCaseloads("request-user")
 
-    assertEquals(expectedCaseloadResponse.caseloads.sortedBy { it.id }, actual)
+    assertEquals(
+      listOf(
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+        Caseload("AKI", "Acklington (HMP)"),
+        Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
+      ).sortedBy { it.id },
+      actual.caseloads.sortedBy { it.id },
+    )
   }
 
   @Test
-  fun `getActiveCaseloadId should throw NoDataAvailableException for any account type other than GENERAL`() {
-    val expectedCaseloadResponse =
-      CaseloadResponse("user1", true, "GLOBAL_SEARCH", Caseload("WWI", "WANDSWORTH (HMP)"), listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
-    mockWebClientCall(expectedCaseloadResponse)
-    val exception = assertThrows<NoDataAvailableException> { userPermissionProvider.getActiveCaseloadId("user1") }
+  fun `getActiveCaseloadId should throw NoDataAvailableException for NOMIS account type with no active caseload`() {
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.NOMIS)
+    val exception = assertThrows<NoDataAvailableException> { userPermissionProvider.getCaseloads("request-user") }
 
-    assertEquals(exception.reason, "'GLOBAL_SEARCH' account types are currently not supported.")
+    assertEquals("User has not set an active caseload.", exception.reason)
   }
 
   @Test
-  fun `getActiveCaseloadId should throw an exception in no caseload is active`() {
-    val expectedCaseloadResponse =
-      CaseloadResponse("user1", true, "GENERAL", null, listOf(Caseload("WWI", "WANDSWORTH (HMP)")))
-    mockWebClientCall(expectedCaseloadResponse)
-    val exception = assertThrows<NoDataAvailableException> { userPermissionProvider.getActiveCaseloadId("user1") }
+  fun `getActiveCaseloadId should throw NoDataAvailableException for NOMIS account type with no caseloads`() {
+    manageUsersMockServer.resetAll()
+    manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
+    manageUsersMockServer.stubLookupUserCaseload("request-user", "WKI", "[]")
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.NOMIS)
+    val exception = assertThrows<NoDataAvailableException> { userPermissionProvider.getCaseloads("request-user") }
 
-    assertEquals(exception.reason, "User has not set an active caseload.")
+    assertEquals("User does not have any caseloads.", exception.reason)
+  }
+
+  @Test
+  fun `getActiveCaseloadId should not throw NoDataAvailableException for non-NOMIS account with no active caseload`() {
+    manageUsersMockServer.stubLookupUserCaseload404("request-user")
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+    val info = userPermissionProvider.getCaseloads("request-user")
+
+    assertEquals(info.username, "request-user")
+    assertEquals(info.activeCaseload, null)
   }
 
   private fun mockWebClientCall(expectedCaseloadResponse: CaseloadResponse) {

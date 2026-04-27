@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
@@ -16,7 +15,7 @@ class DprSystemAuthAwareAuthenticationToken(
 ) : AuthAwareAuthenticationToken(jwt, clientId, userName, authSource, authorities),
   DprAuthAwareAuthenticationToken {
   private var activeCaseload: String? = null
-  private var caseloads: List<Caseload>? = null
+  private var caseloads: CaseloadResponse? = null
   private var roles: List<String>? = null
 
   override fun getUsername(): String = userName!!
@@ -24,7 +23,7 @@ class DprSystemAuthAwareAuthenticationToken(
   override fun getActiveCaseLoadId(): String? {
     if (this.activeCaseload == null) {
       this.activeCaseload = this.userName?.let {
-        userPermissionProvider.getActiveCaseloadId(it)
+        getCaseLoads().activeCaseload?.id
       }
     }
     return this.activeCaseload
@@ -34,14 +33,20 @@ class DprSystemAuthAwareAuthenticationToken(
     if (this.caseloads == null) {
       this.caseloads = getCaseLoads()
     }
-    return this.caseloads!!.map { it.id }
+    return this.caseloads!!.caseloads.map { it.id }
   }
 
-  override fun getCaseLoads(): List<Caseload> {
+  override fun getCaseLoads(): CaseloadResponse {
     if (this.caseloads == null) {
       this.caseloads = this.userName?.let {
         userPermissionProvider.getCaseloads(it)
-      } ?: emptyList()
+      } ?: CaseloadResponse(
+        username = "",
+        active = false,
+        accountType = "GENERAL",
+        activeCaseload = null,
+        caseloads = emptyList(),
+      )
     }
     return this.caseloads!!
   }

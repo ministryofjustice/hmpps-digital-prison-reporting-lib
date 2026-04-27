@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -309,7 +310,15 @@ class DashboardDefinitionMapperTest {
   @Test
   fun `getDashboardDefinition converts caseloads filter to multiselect filter and returns the dashboard definition`() {
     val userToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(userToken.getCaseLoads()).thenReturn(listOf(Caseload("KMI", "KIRKHAM"), Caseload("WWI", "WANDSWORTH (HMP)")))
+    whenever(userToken.getCaseLoads()).thenReturn(
+      CaseloadResponse(
+        username = "request-user",
+        active = true,
+        accountType = "GENERAL",
+        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+        caseloads = listOf(Caseload("KMI", "KIRKHAM"), Caseload("WWI", "WANDSWORTH (HMP)")),
+      ),
+    )
     val datasetId = "dataset-id"
     val id = "age-breakdown-dashboard-1"
     val name = "test-dashboard-name"

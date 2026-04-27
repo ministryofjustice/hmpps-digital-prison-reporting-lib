@@ -160,7 +160,7 @@ class DashboardDefinitionMapper(
     filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == FilterType.Caseloads) {
-      return userToken?.getCaseLoads()?.map { FilterOption(it.id, it.name) }
+      return userToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions
       ?.takeIf { it.returnAsStaticOptions }
