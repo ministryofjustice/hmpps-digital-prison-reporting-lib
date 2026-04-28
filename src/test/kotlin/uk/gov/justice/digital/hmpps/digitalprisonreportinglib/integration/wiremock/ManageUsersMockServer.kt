@@ -92,14 +92,16 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(
-              AuthUser(
-                username = username,
-                active = true,
-                name = username,
-                authSource = authSource,
-                userId = "123456",
-                uuid = "1a1a1a-1a1a1a1-1a1a1a1-1a1a1a1",
-              ).toJson(),
+              """{
+                "username":"$username",
+                "active":true,
+                "name":"$username",
+                "authSource":"${authSource.name}",
+                "staffId":488253,
+                "activeCaseLoadId":"KMI",
+                "userId":"488253",
+                "uuid":"bc04893a-1d41-4c66-9dc0-2f77c2b97c65"
+              }""".trimMargin()
             ).withStatus(200),
         ),
     )

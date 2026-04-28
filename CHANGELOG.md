@@ -1,5 +1,12 @@
 Below you can find the changes included in each release.
 
+# 15.2.0
+- Change webflux dependency to webclient to get spring auto configured webclient
+- Create new deserializer for AuthSource as the api returns lowercase, and the enum is uppercase
+- Use the auto configured webclient instead of always building a new one
+- Remove unneeded testwebclientconfiguration
+- Simplify test
+
 # 15.1.0
 - Dashboards to support formulas at the dataset schema field level.
 

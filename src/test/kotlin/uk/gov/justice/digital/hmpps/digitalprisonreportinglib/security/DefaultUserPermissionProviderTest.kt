@@ -68,7 +68,7 @@ class DefaultUserPermissionProviderTest : IntegrationTestBase() {
   @Test
   fun `getActiveCaseloadId should not throw NoDataAvailableException for non-NOMIS account with no active caseload`() {
     manageUsersMockServer.stubLookupUserCaseload404("request-user")
-    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+    manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.DELIUS)
     val info = userPermissionProvider.getCaseloads("request-user")
 
     assertEquals(info.username, "request-user")

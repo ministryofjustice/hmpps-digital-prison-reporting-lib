@@ -21,7 +21,7 @@ val testContainersVersion = "1.21.4"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.1.0")
-  implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.14.0")
@@ -52,7 +52,7 @@ dependencies {
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
   testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
-  testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux-test") // webclient-test does not autoconfig a webtestclient, so we need to use webflux-test
 
   // Fix for security issue in transient dependency
   implementation("ch.qos.logback:logback-classic:1.5.32")
