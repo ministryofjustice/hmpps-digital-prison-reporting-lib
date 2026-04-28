@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+
+# 15.2.1
+- Add new config class to auto imports file
+
 # 15.2.0
 - Change webflux dependency to webclient to get spring auto configured webclient
 - Create new deserializer for AuthSource as the api returns lowercase, and the enum is uppercase
