@@ -4,7 +4,6 @@ import org.springframework.boot.jackson.JacksonComponent
 import tools.jackson.databind.ValueDeserializer
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
-
 @JacksonComponent
 class CaseInsensitiveAuthSourceDeserializer : ValueDeserializer<AuthSource>() {
   override fun deserialize(

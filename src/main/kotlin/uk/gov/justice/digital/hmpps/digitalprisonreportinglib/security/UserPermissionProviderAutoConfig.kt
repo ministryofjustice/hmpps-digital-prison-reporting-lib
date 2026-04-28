@@ -45,11 +45,11 @@ class UserPermissionProviderAutoConfig(
     webclientBuilder: WebClient.Builder,
   ): WebClient = webclientBuilder
     .authorisedWebClient(
-    authorizedClientManager,
-    registrationId = "DPR_LIB_API",
-    url = manageUsersApiUri,
-    healthTimeout,
-  )
+      authorizedClientManager,
+      registrationId = "DPR_LIB_API",
+      url = manageUsersApiUri,
+      healthTimeout,
+    )
 
   @Bean
   @ConditionalOnMissingBean(UserPermissionProvider::class)

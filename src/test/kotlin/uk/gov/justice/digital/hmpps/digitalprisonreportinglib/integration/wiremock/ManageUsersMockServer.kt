@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wirem
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
 const val MANAGE_USERS_WIREMOCK_PORT = 8082
@@ -101,7 +100,8 @@ class ManageUsersMockServer : MockServer(MANAGE_USERS_WIREMOCK_PORT) {
                 "activeCaseLoadId":"KMI",
                 "userId":"488253",
                 "uuid":"bc04893a-1d41-4c66-9dc0-2f77c2b97c65"
-              }""".trimMargin()
+              }
+              """.trimMargin(),
             ).withStatus(200),
         ),
     )
