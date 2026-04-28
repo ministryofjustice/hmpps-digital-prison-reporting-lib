@@ -20,7 +20,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestWebClientConfiguration
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
@@ -38,7 +37,7 @@ import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
 @ActiveProfiles("system-test")
-@Import(TestWebClientConfiguration::class, TestFlywayConfig::class)
+@Import(TestFlywayConfig::class)
 @AutoConfigureWebTestClient
 abstract class IntegrationSystemTestBase {
 

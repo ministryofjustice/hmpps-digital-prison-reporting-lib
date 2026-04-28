@@ -42,12 +42,14 @@ class UserPermissionProviderAutoConfig(
   @Bean
   fun manageUsersWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
-  ): WebClient = WebClient.builder().authorisedWebClient(
-    authorizedClientManager,
-    registrationId = "DPR_LIB_API",
-    url = manageUsersApiUri,
-    healthTimeout,
-  )
+    webclientBuilder: WebClient.Builder,
+  ): WebClient = webclientBuilder
+    .authorisedWebClient(
+      authorizedClientManager,
+      registrationId = "DPR_LIB_API",
+      url = manageUsersApiUri,
+      healthTimeout,
+    )
 
   @Bean
   @ConditionalOnMissingBean(UserPermissionProvider::class)
