@@ -132,7 +132,7 @@ SELECT * FROM dataset_'
   private val dataset = mock<Dataset>()
   private val datasource = mock<Datasource>()
   private val report = mock<Report>()
-  private val userToken = mock<DprAuthAwareAuthenticationToken>()
+  private val authToken = mock<DprAuthAwareAuthenticationToken>()
 
   @ParameterizedTest
   @CsvSource(
@@ -149,7 +149,7 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
-      userToken = userToken,
+      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -178,7 +178,7 @@ SELECT * FROM dataset_'
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
-      userToken = userToken,
+      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -207,7 +207,7 @@ SELECT * FROM dataset_'
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
-      userToken = userToken,
+      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -235,7 +235,7 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
-      userToken = userToken,
+      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -263,7 +263,7 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
-      userToken = userToken,
+      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -506,7 +506,7 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = TRUE_WHERE_CLAUSE,
-      userToken = userToken,
+      authToken = authToken,
       query = multiphaseQuery,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -609,7 +609,7 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = TRUE_WHERE_CLAUSE,
-      userToken = userToken,
+      authToken = authToken,
       query = multiphaseQuery,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -733,7 +733,7 @@ SELECT * FROM dataset_'
         sortColumn = "column_a",
         sortedAsc = true,
         policyEngineResult = TRUE_WHERE_CLAUSE,
-        userToken = userToken,
+        authToken = authToken,
         query = multiphaseQuery,
         reportFilter = productDefinition.report.filter,
         datasource = productDefinition.datasource,
@@ -781,7 +781,7 @@ SELECT * FROM dataset_'
         sortColumn = "column_a",
         sortedAsc = true,
         policyEngineResult = TRUE_WHERE_CLAUSE,
-        userToken = userToken,
+        authToken = authToken,
         query = multiphaseQuery,
         reportFilter = productDefinition.report.filter,
         datasource = productDefinition.datasource,
@@ -850,9 +850,9 @@ SELECT * FROM dataset_'
       startQueryExecutionResponse.queryExecutionId(),
     ).thenReturn(executionId)
 
-    whenever(userToken.getUsername()).thenReturn(testUsername)
-    whenever(userToken.getActiveCaseLoadId()).thenReturn(testCaseload)
-    whenever(userToken.getCaseLoadIds()).thenReturn(listOf(testCaseload))
+    whenever(authToken.getUsername()).thenReturn(testUsername)
+    whenever(authToken.getActiveCaseLoadId()).thenReturn(testCaseload)
+    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(testCaseload))
 
     return startQueryExecutionRequest
   }

@@ -212,9 +212,9 @@ abstract class CommonDataApiService(
 
   protected fun checkAuth(
     productDefinition: WithPolicy,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
   ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, authToken)) {
       throw UserAuthorisationException("User does not have correct authorisation")
     }
     return true
@@ -273,10 +273,10 @@ abstract class CommonDataApiService(
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
   ): Pair<CoreDownloadContext, SingleReportProductDefinition> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, userToken)
+    checkAuth(productDefinition, authToken)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toHashSet().orEmpty()
     val defFieldNames = productDefinition.report.specification?.field.orEmpty().map { it.name }.map { it.removePrefix(REF_PREFIX) }

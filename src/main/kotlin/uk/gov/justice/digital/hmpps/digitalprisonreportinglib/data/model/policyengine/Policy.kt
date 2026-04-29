@@ -14,10 +14,10 @@ data class Policy(val id: String, val type: PolicyType, @SerializedName("action"
     const val POLICY_PERMIT = "TRUE"
     const val POLICY_DENY = "FALSE"
   }
-  fun execute(userToken: DprAuthAwareAuthenticationToken?, transformFun: (String) -> String): String {
+  fun execute(authToken: DprAuthAwareAuthenticationToken?, transformFun: (String) -> String): String {
     var effect = Effect.PERMIT
     for (r in rule) {
-      if (r.execute(userToken, transformFun) != Effect.PERMIT) {
+      if (r.execute(authToken, transformFun) != Effect.PERMIT) {
         effect = Effect.DENY
       }
       break

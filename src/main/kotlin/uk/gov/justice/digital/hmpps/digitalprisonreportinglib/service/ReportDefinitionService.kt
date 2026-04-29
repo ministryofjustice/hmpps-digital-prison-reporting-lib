@@ -19,30 +19,30 @@ class ReportDefinitionService(
 
   fun getListForUser(
     renderMethod: RenderMethod?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
   ): List<ReportDefinitionSummary> = productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
-    .map { summaryMapper.map(it, renderMethod, userToken) }
+    .map { summaryMapper.map(it, renderMethod, authToken) }
     .filter { containsReportVariantsOrDashboards(it) }
 
   fun getDefinitionSummary(
     reportId: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
-  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath).let { summaryMapper.map(it, null, userToken) }
+  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath).let { summaryMapper.map(it, null, authToken) }
 
   fun getDefinition(
     reportId: String,
     variantId: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>? = null,
   ): SingleVariantReportDefinition {
     val singleReportDefinitionDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
-    checkAuth(singleReportDefinitionDefinition, userToken)
+    checkAuth(singleReportDefinitionDefinition, authToken)
     return mapper.mapReport(
       definition = singleReportDefinitionDefinition,
-      userToken = userToken,
+      authToken = authToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filters,
     )
@@ -50,9 +50,9 @@ class ReportDefinitionService(
 
   private fun checkAuth(
     productDefinition: WithPolicy,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
   ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, userToken)) {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, authToken)) {
       throw UserAuthorisationException("User does not have correct authorisation")
     }
     return true

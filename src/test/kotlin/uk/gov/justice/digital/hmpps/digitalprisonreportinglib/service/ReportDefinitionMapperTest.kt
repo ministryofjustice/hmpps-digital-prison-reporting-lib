@@ -273,7 +273,7 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting report for user maps full data correctly`() {
-    val result = mapper.mapReport(definition = singleReportProductDefinition, userToken = authToken)
+    val result = mapper.mapReport(definition = singleReportProductDefinition, authToken = authToken)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(singleReportProductDefinition.id)
@@ -423,7 +423,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -435,7 +435,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-    val result = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -450,7 +450,7 @@ class ReportDefinitionMapperTest {
     val expectedDate3 = getExpectedDate(7, ChronoUnit.DAYS)
     val expectedResult = "$expectedDate1, $expectedDate2, $expectedDate3"
 
-    val result = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
 
@@ -476,7 +476,7 @@ class ReportDefinitionMapperTest {
     )
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.min).isEqualTo(expectedDate)
     assertThat(result.variant.specification!!.fields[0].filter!!.max).isEqualTo(expectedDate)
@@ -674,7 +674,7 @@ class ReportDefinitionMapperTest {
 
     val result = mapper.mapReport(
       definition = fullSingleProductDefinition,
-      userToken = authToken,
+      authToken = authToken,
       filters = filters,
     )
 
@@ -845,7 +845,7 @@ class ReportDefinitionMapperTest {
       visible = visibleDpd,
     )
 
-    val result: SingleVariantReportDefinition = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result: SingleVariantReportDefinition = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].visible).isEqualTo(visibleControllerModel)
     assertThat(result.variant.specification!!.fields[0].mandatory).isEqualTo(mandatoryControllerModel)
@@ -868,7 +868,7 @@ class ReportDefinitionMapperTest {
       reportFieldDisplay = reportDisplay,
     )
 
-    val result = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].display).isEqualTo(expectedDisplay)
 
@@ -1182,7 +1182,7 @@ class ReportDefinitionMapperTest {
   fun `Interactive report metadata hint is mapped to the report correctly`() {
     val defaultValue = createProductDefinition("today(-2,DAYS)", interactive = true)
 
-    val result = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.interactive).isEqualTo(true)
   }
@@ -1235,7 +1235,7 @@ class ReportDefinitionMapperTest {
       allDatasources = listOf(fullDatasource),
     )
 
-    val result = mapper.mapReport(definition = sourceDefinition, userToken = authToken)
+    val result = mapper.mapReport(definition = sourceDefinition, authToken = authToken)
 
     assertThat(result.variant.specification!!.fields[0].filter?.type.toString()).isEqualTo("Text")
     assertThat(result.variant.specification!!.fields[0].filter?.mandatory).isTrue()
@@ -1274,7 +1274,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.mapReport(definition = defaultValue, userToken = authToken)
+    val result = mapper.mapReport(definition = defaultValue, authToken = authToken)
 
     assertThat(result.variant.specification?.fields?.first()).isEqualTo(
       FieldDefinition(

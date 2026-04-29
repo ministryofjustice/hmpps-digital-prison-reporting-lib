@@ -14,7 +14,7 @@ class DashboardDefinitionService(
     dataProductDefinitionId: String,
     dashboardId: String,
     dataProductDefinitionsPath: String? = null,
-    userToken: DprAuthAwareAuthenticationToken? = null,
+    authToken: DprAuthAwareAuthenticationToken? = null,
     filters: Map<String, String>? = null,
   ): DashboardDefinition {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(
@@ -26,7 +26,7 @@ class DashboardDefinitionService(
     return dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = productDefinition.dashboard,
       allDatasets = productDefinition.allDatasets,
-      userToken = userToken,
+      authToken = authToken,
       filters = filters,
     )
   }

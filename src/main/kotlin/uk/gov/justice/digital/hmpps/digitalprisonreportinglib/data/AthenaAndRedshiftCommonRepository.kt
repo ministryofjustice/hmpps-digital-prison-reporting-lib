@@ -31,7 +31,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
     prompts: List<Prompt>? = null,
-    userToken: DprAuthAwareAuthenticationToken? = null,
+    authToken: DprAuthAwareAuthenticationToken? = null,
     query: List<MultiphaseQuery>,
     reportFilter: ReportFilter? = null,
     datasource: Datasource,
