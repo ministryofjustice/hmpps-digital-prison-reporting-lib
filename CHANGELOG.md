@@ -1,5 +1,7 @@
 Below you can find the changes included in each release.
 
+# 15.2.2
+- Add JacksonConfig config class to auto imports file
 
 # 15.2.1
 - Add new config class to auto imports file
