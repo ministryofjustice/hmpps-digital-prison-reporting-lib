@@ -1436,7 +1436,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1448,7 +1448,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       filters = emptyMap(),
       sortedAsc = false,
-      userToken = authToken,
+      authToken = authToken,
     )
     assertEquals(expectedServiceResult, actual)
   }
