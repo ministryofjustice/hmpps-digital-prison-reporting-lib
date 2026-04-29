@@ -42,4 +42,5 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.Product
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.S3ApiService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.JacksonConfig
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.CaseInsensitiveAuthSourceDeserializer
