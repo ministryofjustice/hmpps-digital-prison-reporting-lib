@@ -45,7 +45,7 @@ class RedshiftDataApiRepository(
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
     prompts: List<Prompt>?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     query: List<MultiphaseQuery>,
     reportFilter: ReportFilter?,
     datasource: Datasource,

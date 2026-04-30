@@ -48,7 +48,7 @@ class SyncDataApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
@@ -56,9 +56,9 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository
       .getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, userToken)
+    checkAuth(productDefinition, authToken)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
-    val policyEngine = PolicyEngine(productDefinition.policy, userToken)
+    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return configuredApiRepository
@@ -116,7 +116,7 @@ class SyncDataApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
@@ -124,8 +124,8 @@ class SyncDataApiService(
       reportVariantId,
       dataProductDefinitionsPath,
     )
-    checkAuth(productDefinition, userToken)
-    val policyEngine = PolicyEngine(productDefinition.policy, userToken)
+    checkAuth(productDefinition, authToken)
+    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
     return Count(
       configuredApiRepository.count(
         filters = validateAndMapFilters(productDefinition, filters, null),
@@ -146,7 +146,7 @@ class SyncDataApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
@@ -154,8 +154,8 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val dashboardDefinition = productDefinitionRepository
       .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
-    checkAuth(dashboardDefinition, userToken)
-    val policyEngine = PolicyEngine(dashboardDefinition.policy, userToken)
+    checkAuth(dashboardDefinition, authToken)
+    val policyEngine = PolicyEngine(dashboardDefinition.policy, authToken)
     val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return configuredApiRepository
       .executeQuery(
@@ -188,7 +188,7 @@ class SyncDataApiService(
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
   ): SyncDownloadContext {
     val coreContext = buildCoreDownloadContext(
       reportId = reportId,
@@ -198,12 +198,12 @@ class SyncDataApiService(
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      userToken = userToken,
+      authToken = authToken,
     )
     return SyncDownloadContext(
       core = coreContext.first,
       query = coreContext.second.reportDataset.query.first().query,
-      policyEngineResult = PolicyEngine(coreContext.second.policy, userToken).execute(),
+      policyEngineResult = PolicyEngine(coreContext.second.policy, authToken).execute(),
       reportFilter = coreContext.second.report.filter,
     )
   }

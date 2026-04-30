@@ -154,7 +154,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResultTrue,
         prompts = emptyList(),
-        userToken = authToken,
+        authToken = authToken,
         query = singleReportProductDefinition.reportDataset.query,
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -171,7 +171,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -183,7 +183,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResultTrue,
       prompts = emptyList(),
-      userToken = authToken,
+      authToken = authToken,
       query = singleReportProductDefinition.reportDataset.query,
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -222,7 +222,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = true,
         policyEngineResult = policyEngineResult,
         prompts = emptyList(),
-        userToken = authToken,
+        authToken = authToken,
         query = singleDashboardProductDefinition.dashboardDataset.query,
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
@@ -238,14 +238,14 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = "missing-ethnicity-metrics",
       dashboardId = "age-breakdown-dashboard-1",
-      userToken = authToken,
+      authToken = authToken,
       filters = emptyMap(),
     )
 
@@ -254,7 +254,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
       prompts = emptyList(),
-      userToken = authToken,
+      authToken = authToken,
       query = singleDashboardProductDefinition.dashboardDataset.query,
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
@@ -289,7 +289,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -325,7 +325,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -349,7 +349,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -378,7 +378,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -396,7 +396,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -418,7 +418,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -457,7 +457,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
         prompts = emptyList(),
-        userToken = authToken,
+        authToken = authToken,
         query = singleReportProductDefinition.reportDataset.query,
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -474,7 +474,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -486,7 +486,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
       prompts = emptyList(),
-      userToken = authToken,
+      authToken = authToken,
       query = singleReportProductDefinition.reportDataset.query,
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -553,7 +553,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = true,
         policyEngineResult = policyEngineResult,
         prompts = emptyList(),
-        userToken = authToken,
+        authToken = authToken,
         query = singleDashboardProductDefinition.dashboardDataset.query,
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
@@ -569,14 +569,14 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = reportId,
       dashboardId = dashboardId,
-      userToken = authToken,
+      authToken = authToken,
       filters = emptyMap(),
     )
 
@@ -585,7 +585,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
       prompts = emptyList(),
-      userToken = authToken,
+      authToken = authToken,
       query = singleDashboardProductDefinition.dashboardDataset.query,
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
@@ -654,7 +654,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = true,
         policyEngineResult = policyEngineResult,
         prompts = listOf(prompt),
-        userToken = authToken,
+        authToken = authToken,
         query = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
@@ -670,14 +670,14 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = reportId,
       dashboardId = dashboardId,
-      userToken = authToken,
+      authToken = authToken,
       filters = mapOf(parameterName to parameterValue),
     )
 
@@ -686,7 +686,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
       prompts = listOf(prompt),
-      userToken = authToken,
+      authToken = authToken,
       query = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
@@ -751,7 +751,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = false,
         policyEngineResult = policyEngineResult,
         prompts = listOf(prompt),
-        userToken = authToken,
+        authToken = authToken,
         query = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -768,7 +768,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -778,7 +778,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       filters = mapOf(parameterName to parameterValue),
       sortColumn = null,
       sortedAsc = true,
-      userToken = authToken,
+      authToken = authToken,
     )
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
@@ -786,7 +786,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = false,
       policyEngineResult = policyEngineResult,
       prompts = listOf(prompt),
-      userToken = authToken,
+      authToken = authToken,
       query = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -828,7 +828,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -872,7 +872,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -904,7 +904,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -916,7 +916,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         statementId = statementId,
         reportId = "external-movements",
         reportVariantId = "last-month",
-        userToken = authToken,
+        authToken = authToken,
         tableId = tableId,
       )
     }
@@ -947,14 +947,14 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     val actual = asyncDataApiService.getStatementStatus(
       statementId = statementId,
       reportId = "external-movements",
       reportVariantId = "last-month",
-      userToken = authToken,
+      authToken = authToken,
       tableId = tableId,
     )
     assertEquals(statementExecutionStatus, actual)
@@ -993,7 +993,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1001,7 +1001,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       statementId = statementId,
       reportId = "external-movements",
       reportVariantId = "last-month",
-      userToken = authToken,
+      authToken = authToken,
       tableId = tableId,
     )
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
@@ -1023,7 +1023,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1052,7 +1052,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1165,7 +1165,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1196,7 +1196,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1229,7 +1229,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1275,7 +1275,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResultTrue,
         prompts = prompts,
-        userToken = authToken,
+        authToken = authToken,
         query = singleReportProductDefinition.reportDataset.query,
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -1292,7 +1292,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1304,7 +1304,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResultTrue,
       prompts = prompts,
-      userToken = authToken,
+      authToken = authToken,
       query = singleReportProductDefinition.reportDataset.query,
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -1343,7 +1343,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1356,7 +1356,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       filters = mapOf("direction" to "in"),
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      userToken = authToken,
+      authToken = authToken,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -1395,7 +1395,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1407,7 +1407,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       filters = emptyMap(),
       sortedAsc = false,
-      userToken = authToken,
+      authToken = authToken,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -1436,7 +1436,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1448,7 +1448,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       filters = emptyMap(),
       sortedAsc = false,
-      userToken = authToken,
+      authToken = authToken,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -1488,7 +1488,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1499,7 +1499,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedPage = selectedPage,
       pageSize = pageSize,
       filters = emptyMap(),
-      userToken = authToken,
+      authToken = authToken,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -1531,7 +1531,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1543,7 +1543,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = emptyMap(),
-        userToken = authToken,
+        authToken = authToken,
       )
     }
     assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")
@@ -1560,7 +1560,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1570,7 +1570,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportId,
       reportVariantId,
       filters = emptyMap(),
-      userToken = authToken,
+      authToken = authToken,
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -1587,7 +1587,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1600,7 +1600,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportId,
       reportVariantId,
       filters = emptyMap(),
-      userToken = authToken,
+      authToken = authToken,
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -1619,7 +1619,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1639,7 +1639,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         reportId,
         reportVariantId,
         filters = emptyMap(),
-        userToken = authToken,
+        authToken = authToken,
       )
     }
     verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
@@ -1657,7 +1657,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1676,7 +1676,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         reportId,
         reportVariantId,
         filters = emptyMap(),
-        userToken = authToken,
+        authToken = authToken,
       )
     }
     verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
@@ -1708,7 +1708,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1765,7 +1765,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1777,7 +1777,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = true,
-      userToken = authToken,
+      authToken = authToken,
     )
 
     assertThat(actual.selectedAndValidatedColumns).containsExactly("name", "date", "origin", "destination")
@@ -1791,7 +1791,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1803,7 +1803,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = true,
-      userToken = authToken,
+      authToken = authToken,
     )
 
     assertEquals(
@@ -1827,7 +1827,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
 
@@ -1840,7 +1840,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         selectedColumns = selectedColumns,
         sortColumn = "name",
         sortedAsc = true,
-        userToken = authToken,
+        authToken = authToken,
       )
     }
     assertEquals("Invalid columns, not in $errorMessage: [$column]", e.message)
@@ -1894,7 +1894,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
@@ -1905,7 +1905,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = null,
       sortColumn = sortColumn,
       sortedAsc = true,
-      userToken = authToken,
+      authToken = authToken,
     )
 
     whenever(rs.metaData).thenReturn(meta)
@@ -2002,7 +2002,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
@@ -2013,7 +2013,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = true,
-      userToken = authToken,
+      authToken = authToken,
     )
 
     whenever(rs.metaData).thenReturn(meta)

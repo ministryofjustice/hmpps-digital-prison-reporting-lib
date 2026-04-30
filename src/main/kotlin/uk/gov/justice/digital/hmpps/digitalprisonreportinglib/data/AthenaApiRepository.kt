@@ -73,7 +73,7 @@ class AthenaApiRepository(
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
     prompts: List<Prompt>?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     query: List<MultiphaseQuery>,
     reportFilter: ReportFilter?,
     datasource: Datasource,
@@ -91,7 +91,7 @@ class AthenaApiRepository(
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      userToken,
+      authToken,
       prompts,
       reportFilter,
       policyEngineResult,
@@ -106,7 +106,7 @@ class AthenaApiRepository(
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      userToken,
+      authToken,
       prompts,
       query.first().query,
       reportFilter,
@@ -177,7 +177,7 @@ class AthenaApiRepository(
     reportOrDashboardId: String,
     reportOrDashboardName: String,
     tableId: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     query: String,
     reportFilter: ReportFilter?,
@@ -195,7 +195,7 @@ class AthenaApiRepository(
     // For single non-multiphase queries we keep existing functionality to run as Nomis queries.
     connection = datasource.connection ?: DatasourceConnection.FEDERATED,
     innerQuery = buildFinalInnerQuery(
-      buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ORACLE11g),
+      buildContextQuery(authToken, datasource.dialect ?: SqlDialect.ORACLE11g),
       buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ORACLE11g),
       buildDatasetQuery(query),
       buildReportQuery(reportFilter),
@@ -205,10 +205,10 @@ class AthenaApiRepository(
     ),
   )
 
-  private fun buildContextQuery(userToken: DprAuthAwareAuthenticationToken?, dialect: SqlDialect? = null): String = """WITH $CONTEXT AS (
+  private fun buildContextQuery(authToken: DprAuthAwareAuthenticationToken?, dialect: SqlDialect? = null): String = """WITH $CONTEXT AS (
       SELECT 
-      '${userToken?.getUsername()}' AS username, 
-      '${userToken?.getActiveCaseLoadId()}' AS caseload, 
+      '${authToken?.getUsername()}' AS username, 
+      '${authToken?.getActiveCaseLoadId()}' AS caseload, 
       'GENERAL' AS account_type 
       ${if (isOracleDialect(dialect)) "FROM DUAL" else ""}
       )"""
@@ -238,7 +238,7 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     reportFilter: ReportFilter?,
     policyEngineResult: String,
@@ -254,7 +254,7 @@ class AthenaApiRepository(
         productDefinitionName,
         reportOrDashboardId,
         reportOrDashboardName,
-        userToken,
+        authToken,
         prompts,
         reportFilter,
         multiphaseQueries,
@@ -272,7 +272,7 @@ class AthenaApiRepository(
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      userToken,
+      authToken,
       prompts,
       multiphaseQuerySortedByIndex,
       jdbcTemplate,
@@ -285,7 +285,7 @@ class AthenaApiRepository(
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      userToken,
+      authToken,
       prompts,
       firstStatementExecutionResponse,
       jdbcTemplate,
@@ -297,7 +297,7 @@ class AthenaApiRepository(
       productDefinitionName,
       reportOrDashboardId,
       reportOrDashboardName,
-      userToken,
+      authToken,
       prompts,
       multiphaseQuerySortedByIndex,
       reportFilter,
@@ -320,7 +320,7 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
     reportFilter: ReportFilter?,
@@ -341,7 +341,7 @@ class AthenaApiRepository(
       tableId = findTableIdOrThrow(indexToTableId, multiphaseQuerySortedByIndex.last().index),
       connection = datasource.connection ?: throwNoConnectionDefinedException(multiphaseQuerySortedByIndex.last().index),
       innerQuery = buildFinalInnerQuery(
-        buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ATHENA3),
+        buildContextQuery(authToken, datasource.dialect ?: SqlDialect.ATHENA3),
         buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ATHENA3),
         buildDatasetQuery(interpolateQuery(multiphaseQuerySortedByIndex.last().query, indexToTableId)),
         buildReportQuery(reportFilter),
@@ -371,7 +371,7 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     firstStatementExecutionResponse: StatementExecutionResponse,
     jdbcTemplate: JdbcTemplate,
@@ -395,7 +395,7 @@ class AthenaApiRepository(
         connection = datasource.connection ?: throwNoConnectionDefinedException(intermediateQuery.index),
         innerQuery = (
           listOf(
-            buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ATHENA3),
+            buildContextQuery(authToken, datasource.dialect ?: SqlDialect.ATHENA3),
             buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ATHENA3),
             buildDatasetQuery(interpolateQuery(intermediateQuery.query, indexToTableId)),
           )
@@ -429,7 +429,7 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     multiphaseQuerySortedByIndex: List<MultiphaseQuery>,
     jdbcTemplate: JdbcTemplate,
@@ -448,7 +448,7 @@ class AthenaApiRepository(
       connection = datasource.connection ?: DatasourceConnection.FEDERATED,
       innerQuery = (
         listOf(
-          buildContextQuery(userToken, datasource.dialect ?: SqlDialect.ORACLE11g),
+          buildContextQuery(authToken, datasource.dialect ?: SqlDialect.ORACLE11g),
           buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ORACLE11g),
           buildDatasetQuery(multiphaseQuerySortedByIndex[0].query),
         )
@@ -479,7 +479,7 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     reportFilter: ReportFilter?,
     multiphaseQueries: List<MultiphaseQuery>,
@@ -497,7 +497,7 @@ class AthenaApiRepository(
       reportOrDashboardId = reportOrDashboardId,
       reportOrDashboardName = reportOrDashboardName,
       tableId = tableId,
-      userToken = userToken,
+      authToken = authToken,
       prompts = prompts,
       reportFilter = reportFilter,
       query = multiphaseQueries.first().query,
@@ -562,7 +562,7 @@ class AthenaApiRepository(
     productDefinitionName: String,
     reportOrDashboardId: String,
     reportOrDashboardName: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     prompts: List<Prompt>?,
     query: String,
     reportFilter: ReportFilter?,
@@ -579,7 +579,7 @@ class AthenaApiRepository(
       reportOrDashboardId,
       reportOrDashboardName,
       tableId,
-      userToken,
+      authToken,
       prompts,
       query,
       reportFilter,

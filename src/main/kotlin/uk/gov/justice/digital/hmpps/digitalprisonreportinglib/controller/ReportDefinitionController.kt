@@ -116,7 +116,7 @@ class ReportDefinitionController(
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
     reportId = reportId,
     variantId = variantId,
-    userToken = authentication as? DprAuthAwareAuthenticationToken,
+    authToken = authentication as? DprAuthAwareAuthenticationToken,
     dataProductDefinitionsPath = dataProductDefinitionsPath,
     filters = filterHelper.filtersOnly(filters),
   )

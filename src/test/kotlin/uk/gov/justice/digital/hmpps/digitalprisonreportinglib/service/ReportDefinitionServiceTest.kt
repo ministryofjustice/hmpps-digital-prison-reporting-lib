@@ -95,7 +95,7 @@ class ReportDefinitionServiceTest {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
   }

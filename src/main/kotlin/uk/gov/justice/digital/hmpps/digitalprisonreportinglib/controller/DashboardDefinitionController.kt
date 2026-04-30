@@ -61,7 +61,7 @@ class DashboardDefinitionController(
     dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
     dataProductDefinitionsPath = dataProductDefinitionsPath,
-    userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     filters = filterHelper.filtersOnly(filters),
   )
 }

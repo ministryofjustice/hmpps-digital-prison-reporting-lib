@@ -97,7 +97,7 @@ class DataApiAsyncController(
           filters = filterHelper.filtersOnly(filters),
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -153,7 +153,7 @@ class DataApiAsyncController(
         asyncDataApiService.validateAndExecuteStatementAsync(
           reportId = reportId,
           dashboardId = dashboardId,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
         ),
@@ -217,7 +217,7 @@ class DataApiAsyncController(
         statementId = statementId,
         reportId = reportId,
         reportVariantId = reportVariantId,
-        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         dataProductDefinitionsPath,
         tableId,
       ),
@@ -272,7 +272,7 @@ class DataApiAsyncController(
         statementId = statementId,
         productDefinitionId = reportId,
         dashboardId = dashboardId,
-        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         dataProductDefinitionsPath,
         tableId,
       ),
@@ -304,7 +304,7 @@ class DataApiAsyncController(
         statementId,
         reportId,
         reportVariantId,
-        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         dataProductDefinitionsPath,
       ),
     )
@@ -335,7 +335,7 @@ class DataApiAsyncController(
         statementId,
         definitionId,
         dashboardId,
-        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
         dataProductDefinitionsPath,
       ),
     )
@@ -411,7 +411,7 @@ class DataApiAsyncController(
           reportId,
           reportVariantId,
           filterHelper.filtersOnly(filters),
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath,
         ),
       )
@@ -468,7 +468,7 @@ class DataApiAsyncController(
         filters = filterHelper.filtersOnly(filters),
         sortedAsc = sortedAsc,
         sortColumn = sortColumn,
-        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
       ),
     )
 
@@ -509,7 +509,7 @@ class DataApiAsyncController(
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = filterHelper.filtersOnly(filters),
-        userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
       ),
     )
 
@@ -543,7 +543,7 @@ class DataApiAsyncController(
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
-      userToken = authentication as? DprAuthAwareAuthenticationToken,
+      authToken = authentication as? DprAuthAwareAuthenticationToken,
     )
     return ResponseEntity
       .status(HttpStatus.OK)
@@ -589,7 +589,7 @@ class DataApiAsyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+      authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     )
 
     csvStreamingSupport.streamCsv(

@@ -10,9 +10,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 class ProductDefinitionTokenPolicyChecker {
   fun determineAuth(
     withPolicy: WithPolicy,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
   ): Boolean {
-    val policyEngine = PolicyEngine(withPolicy.policy, userToken)
+    val policyEngine = PolicyEngine(withPolicy.policy, authToken)
     val result = policyEngine.execute(PolicyType.ACCESS)
     return result == Policy.PolicyResult.POLICY_PERMIT
   }

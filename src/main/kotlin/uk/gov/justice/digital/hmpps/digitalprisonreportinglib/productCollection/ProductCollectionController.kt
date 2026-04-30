@@ -22,7 +22,7 @@ class ProductCollectionController(val productCollectionService: ProductCollectio
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getCollections(authentication: Authentication): Collection<ProductCollectionSummary> = productCollectionService.getProductCollections(
-    userToken = authentication as? DprAuthAwareAuthenticationToken,
+    authToken = authentication as? DprAuthAwareAuthenticationToken,
   )
 
   @GetMapping("/productCollections/{id}")

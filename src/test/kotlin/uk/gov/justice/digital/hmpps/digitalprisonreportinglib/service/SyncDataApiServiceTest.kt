@@ -110,7 +110,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
   }
@@ -283,7 +283,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       sortColumn = "name",
       sortedAsc = sortedAsc,
-      userToken = authToken,
+      authToken = authToken,
       reportFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
       datasetForFilter = filterDataset,
     )
@@ -916,7 +916,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      userToken = authToken,
+      authToken = authToken,
       reportFieldId = setOf("name"),
     )
 
@@ -958,7 +958,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      userToken = authToken,
+      authToken = authToken,
       reportFieldId = setOf("origin"),
     )
 
@@ -1533,7 +1533,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        userToken = any(),
+        authToken = any(),
       ),
     ).thenReturn(true)
     val downloadContext = syncDataApiService.prepareSyncDownloadContext(
@@ -1544,7 +1544,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = listOf("col2", "col1"),
       sortColumn = sortColumn,
       sortedAsc = true,
-      userToken = authToken,
+      authToken = authToken,
     )
 
     whenever(rs.metaData).thenReturn(meta)
