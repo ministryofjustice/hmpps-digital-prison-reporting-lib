@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
-# 15.2.2
+# 15.2.3
 - Rename all instances of `userToken` to `authToken` as we are no longer using user based tokens
+
+# 15.2.2
+- Add JacksonConfig config class to auto imports file
 
 # 15.2.1
 - Add new config class to auto imports file
