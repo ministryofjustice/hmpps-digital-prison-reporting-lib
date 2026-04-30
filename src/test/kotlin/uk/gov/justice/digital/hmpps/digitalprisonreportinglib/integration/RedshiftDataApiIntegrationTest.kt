@@ -7,7 +7,9 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -20,6 +22,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryStateRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -731,5 +735,138 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       )
+  }
+
+  @Test
+  fun `Calling the reports tableExpiryState endpoint returns 200 with the state of each requested table`() {
+    val requestBody = ResultTableExpiryStateRequest(listOf("123", "456"))
+    val expectedServiceResult =
+      listOf(
+        ResultTableExpiryState(
+          "123",
+          true,
+        ),
+        ResultTableExpiryState(
+          "456",
+          false,
+        ),
+      )
+
+    given(asyncDataApiService.getResultTableExpiryState(any()))
+      .willReturn(expectedServiceResult)
+
+    webTestClient.post()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/tableExpiryState")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .bodyValue(requestBody)
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectBody()
+      .json(
+        """
+        [
+          {"tableId":  "123", "expired":  true},
+          {"tableId":  "456", "expired":  false}
+        ]
+        """.trimIndent(),
+      )
+
+    verify(asyncDataApiService)
+      .getResultTableExpiryState(
+        eq(requestBody.tableIds.toSet()),
+      )
+  }
+
+  @Test
+  fun `Calling the reports tableExpiryState endpoint with more than 50 table IDs returns 400`() {
+    val requestBody = ResultTableExpiryStateRequest(
+      tableIds = (1..51).map { it.toString() },
+    )
+
+    webTestClient.post()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/tableExpiryState")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .bodyValue(requestBody)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+
+    verifyNoInteractions(asyncDataApiService)
+  }
+
+  @Test
+  fun `Calling the reports tableExpiryState endpoint with wrong content type returns 415`() {
+    val expectedServiceResult = emptyList<ResultTableExpiryState>()
+    given(asyncDataApiService.getResultTableExpiryState(any()))
+      .willReturn(expectedServiceResult)
+
+    webTestClient.post()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/tableExpiryState")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .contentType(MediaType.TEXT_PLAIN)
+      .bodyValue("""{"tableIds": ["1", "a"]}""")
+      .exchange()
+      .expectStatus()
+      .isEqualTo(415)
+
+    verifyNoInteractions(asyncDataApiService)
+  }
+
+  @Test
+  fun `Calling the reports tableExpiryState endpoint with null table IDs returns 400`() {
+    val expectedServiceResult = emptyList<ResultTableExpiryState>()
+    given(asyncDataApiService.getResultTableExpiryState(any()))
+      .willReturn(expectedServiceResult)
+
+    webTestClient.post()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/tableExpiryState")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue("""{"tableIds": [null, "a"]}""")
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+
+    verifyNoInteractions(asyncDataApiService)
+  }
+
+  @Test
+  fun `Calling the reports tableExpiryState endpoint with no request body returns 400`() {
+    val expectedServiceResult = emptyList<ResultTableExpiryState>()
+    given(asyncDataApiService.getResultTableExpiryState(any()))
+      .willReturn(expectedServiceResult)
+
+    webTestClient.post()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/tableExpiryState")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .contentType(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody()
+      .json("{}")
+
+    verifyNoInteractions(asyncDataApiService)
   }
 }

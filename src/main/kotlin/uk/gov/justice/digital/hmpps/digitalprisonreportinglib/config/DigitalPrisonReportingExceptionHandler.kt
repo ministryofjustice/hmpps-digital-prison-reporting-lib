@@ -6,11 +6,11 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.http.HttpStatus.GONE
-import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.ResponseEntity
 import org.springframework.jdbc.UncategorizedSQLException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -35,6 +35,24 @@ class DigitalPrisonReportingExceptionHandler {
   @ResponseStatus(BAD_REQUEST)
   fun handleIllegalArgumentExceptionException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
+  @ExceptionHandler(MethodArgumentNotValidException::class)
+  @ResponseStatus(BAD_REQUEST)
+  fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ErrorResponse> {
+    val errors = e.bindingResult.fieldErrors
+      .joinToString(", ") { "${it.field}: ${it.defaultMessage}" }
+
+    log.info("Validation exception: {}", errors)
+
+    return ResponseEntity
+      .status(BAD_REQUEST)
+      .body(
+        ErrorResponse(
+          status = BAD_REQUEST,
+          userMessage = "Validation failure: $errors",
+        ),
+      )
+  }
+
   @ExceptionHandler(ActiveStatementsExceededException::class)
   @ResponseStatus(TOO_MANY_REQUESTS)
   fun handleRedshiftActiveStatementsExceededException(e: Exception): ResponseEntity<ErrorResponse> = respondWithTooManyRequests(e)
@@ -57,7 +75,7 @@ class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(UncategorizedSQLException::class)
   fun handleEntityNotFound(e: Exception): ResponseEntity<ErrorResponse> {
     val entityNotFoundMessage = "EntityNotFoundException from glue - Entity Not Found"
-    return if (e.message?.contains(entityNotFoundMessage) == true) {
+    if (e.message?.contains(entityNotFoundMessage) == true) {
       log.warn("Table not found exception: {}", e.message)
       return ResponseEntity
         .status(NOT_FOUND)
@@ -69,7 +87,7 @@ class DigitalPrisonReportingExceptionHandler {
           ),
         )
     } else {
-      handleInternalServerError(e)
+      throw e
     }
   }
 
@@ -82,21 +100,6 @@ class DigitalPrisonReportingExceptionHandler {
         ErrorResponse(
           status = NOT_FOUND,
           userMessage = "The stored report or dashboard was not found.",
-          developerMessage = e.message,
-        ),
-      )
-  }
-
-  @ExceptionHandler(java.lang.Exception::class)
-  @ResponseStatus(INTERNAL_SERVER_ERROR)
-  fun handleInternalServerError(e: java.lang.Exception): ResponseEntity<ErrorResponse> {
-    log.error("Unexpected exception", e)
-    return ResponseEntity
-      .status(INTERNAL_SERVER_ERROR)
-      .body(
-        ErrorResponse(
-          status = INTERNAL_SERVER_ERROR,
-          userMessage = "Unexpected error.",
           developerMessage = e.message,
         ),
       )

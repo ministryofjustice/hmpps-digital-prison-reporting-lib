@@ -120,6 +120,20 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     return result.isNullOrEmpty()
   }
 
+  fun findExistingTables(tableIds: Set<String>, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): List<String> {
+    if (tableIds.isEmpty()) {
+      return emptyList()
+    }
+    val sql = "SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename IN (:tableIds)"
+    val params = MapSqlParameterSource()
+      .addValue("tableIds", tableIds)
+    val stopwatch = StopWatch.createStarted()
+    val result = jdbcTemplate.queryForList(sql, params, String::class.java)
+    stopwatch.stop()
+    log.debug("findExistingTables query Execution time in ms: {}", stopwatch.time)
+    return result.filterNotNull()
+  }
+
   fun getStatementStatusForMultiphaseQuery(rootExecutionId: String, jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate()): StatementExecutionStatus {
     val executions = getExecutions(rootExecutionId, jdbcTemplate)
     log.debug("All mapped QueryExecutions: {}", executions)

@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
@@ -1007,6 +1008,24 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
     verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
     assertEquals(statementExecutionStatus, actual)
+  }
+
+  @Test
+  fun `getResultTableExpiryState should return as non expired state the state of table IDs which exist in Redshift`() {
+    val tableIdsRequested = setOf("1", "2", "3")
+    val tableIdsThatExist = listOf("1", "2")
+    val expectedResult = listOf(
+      ResultTableExpiryState("1", false),
+      ResultTableExpiryState("2", false),
+      ResultTableExpiryState("3", true),
+    )
+    whenever(
+      redshiftDataApiRepository.findExistingTables(any(), anyOrNull()),
+    ).thenReturn(tableIdsThatExist)
+
+    val actual = asyncDataApiService.getResultTableExpiryState(tableIdsRequested)
+    assertEquals(expectedResult, actual)
+    verify(redshiftDataApiRepository, times(1)).findExistingTables(eq(tableIdsRequested), anyOrNull())
   }
 
   @Test
