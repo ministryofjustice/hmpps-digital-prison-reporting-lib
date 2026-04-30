@@ -99,7 +99,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       asyncDataApiService.validateAndExecuteStatementAsync(
         reportId = eq("some-metrics-dpd"),
         dashboardId = eq("some-dashboard-id"),
-        userToken = any<DprAuthAwareAuthenticationToken>(),
+        authToken = any<DprAuthAwareAuthenticationToken>(),
         dataProductDefinitionsPath = eq("definitions/prisons/orphanage"),
         filters = eq(emptyMap()),
       ),
@@ -394,7 +394,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         filters = eq(emptyMap()),
         sortedAsc = eq(null),
         sortColumn = eq(null),
-        userToken = any<DprAuthAwareAuthenticationToken>(),
+        authToken = any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -488,7 +488,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         filters = eq(emptyMap()),
         sortedAsc = eq(null),
         sortColumn = eq(null),
-        userToken = any<DprAuthAwareAuthenticationToken>(),
+        authToken = any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))

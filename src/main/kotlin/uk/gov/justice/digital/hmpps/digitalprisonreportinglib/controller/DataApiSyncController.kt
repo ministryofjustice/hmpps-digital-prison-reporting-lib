@@ -109,7 +109,7 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -162,7 +162,7 @@ class DataApiSyncController(
           reportId = reportId,
           reportVariantId = reportVariantId,
           filters = filterHelper.filtersOnly(filters),
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -227,7 +227,7 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          userToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -279,7 +279,7 @@ class DataApiSyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      userToken = authentication as? DprAuthAwareAuthenticationToken,
+      authToken = authentication as? DprAuthAwareAuthenticationToken,
     )
 
     csvStreamingSupport.streamCsv(

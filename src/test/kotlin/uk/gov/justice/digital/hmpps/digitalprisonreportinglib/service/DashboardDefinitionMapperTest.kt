@@ -309,8 +309,8 @@ class DashboardDefinitionMapperTest {
 
   @Test
   fun `getDashboardDefinition converts caseloads filter to multiselect filter and returns the dashboard definition`() {
-    val userToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(userToken.getCaseLoads()).thenReturn(
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
+    whenever(authToken.getCaseLoads()).thenReturn(
       CaseloadResponse(
         username = "request-user",
         active = true,
@@ -352,7 +352,7 @@ class DashboardDefinitionMapperTest {
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDatasets = listOf(dashboardDataset),
-      userToken = userToken,
+      authToken = authToken,
     )
     val expected = DashboardDefinition(
       id,

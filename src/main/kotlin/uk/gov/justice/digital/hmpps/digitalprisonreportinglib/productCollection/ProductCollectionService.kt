@@ -8,9 +8,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 class ProductCollectionService(
   val productCollectionRepository: ProductCollectionRepository,
 ) {
-  fun getProductCollections(userToken: DprAuthAwareAuthenticationToken?): Collection<ProductCollectionSummary> {
+  fun getProductCollections(authToken: DprAuthAwareAuthenticationToken?): Collection<ProductCollectionSummary> {
     // Set this to "NULL" if theres no values, which will fail the check, if a collection has any caseloadId attributes linked to it
-    val caseloadIds = userToken?.getCaseLoadIds()?.takeIf { it.isNotEmpty() } ?: listOf("NULL")
+    val caseloadIds = authToken?.getCaseLoadIds()?.takeIf { it.isNotEmpty() } ?: listOf("NULL")
     val groupBy = productCollectionRepository.findAll(caseloadIds)
       .groupBy { it.id }
       .values

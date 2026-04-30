@@ -66,7 +66,7 @@ abstract class DefinitionMapper(
   protected fun map(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
     staticOptions: List<FilterOption>?,
-    userToken: DprAuthAwareAuthenticationToken? = null,
+    authToken: DprAuthAwareAuthenticationToken? = null,
   ): FilterDefinition = FilterDefinition(
     type = populateFilterType(filterDefinition),
     staticOptions = staticOptions,
@@ -75,7 +75,7 @@ abstract class DefinitionMapper(
         minimumLength = filterDefinition.dynamicOptions.minimumLength,
       )
     },
-    defaultValue = populateDefaultValue(filterDefinition, userToken),
+    defaultValue = populateDefaultValue(filterDefinition, authToken),
     min = replaceTokens(filterDefinition.min),
     max = replaceTokens(filterDefinition.max),
     mandatory = filterDefinition.mandatory,
@@ -92,14 +92,14 @@ abstract class DefinitionMapper(
     reportVariantId: String,
     schemaFieldName: String,
     maxStaticOptions: Long?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
-      return userToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
+      return authToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
@@ -117,7 +117,7 @@ abstract class DefinitionMapper(
           reportVariantId,
           maxStaticOptions,
           schemaFieldName,
-          userToken,
+          authToken,
           dataProductDefinitionsPath,
         )
     } ?: filterDefinition.staticOptions?.map(this::map)
@@ -230,7 +230,7 @@ abstract class DefinitionMapper(
     reportVariantId: String,
     maxStaticOptions: Long?,
     schemaFieldName: String,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
   ) = syncDataApiService.validateAndFetchData(
     reportId = productDefinitionId,
@@ -240,7 +240,7 @@ abstract class DefinitionMapper(
     pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
     sortColumn = schemaFieldName,
     sortedAsc = true,
-    userToken = userToken,
+    authToken = authToken,
     reportFieldId = setOf(schemaFieldName),
     dataProductDefinitionsPath = dataProductDefinitionsPath,
   )
@@ -251,9 +251,9 @@ abstract class DefinitionMapper(
 
   private fun populateDefaultValue(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
   ) = if (filterDefinition.type == Caseloads) {
-    userToken?.getCaseLoadIds()?.joinToString(",")
+    authToken?.getCaseLoadIds()?.joinToString(",")
   } else {
     replaceTokens(filterDefinition.default)
   }

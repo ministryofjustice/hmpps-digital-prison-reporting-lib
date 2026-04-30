@@ -25,7 +25,7 @@ class DashboardDefinitionServiceTest {
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
     val dashboardDefinition: DashboardDefinition = mock()
-    val userToken = mock<DprAuthAwareAuthenticationToken>()
+    val authToken = mock<DprAuthAwareAuthenticationToken>()
     val productDefinition: SingleDashboardProductDefinition = mock()
     val dashboard: Dashboard = mock()
     val allDatasets: List<Dataset> = listOf(mock())
@@ -40,12 +40,12 @@ class DashboardDefinitionServiceTest {
     val actual = dashboardDefinitionService.getDashboardDefinition(
       dataProductDefinitionId = definitionId,
       dashboardId = dashboardId,
-      userToken = userToken,
+      authToken = authToken,
     )
 
     assertThat(actual).isEqualTo(dashboardDefinition)
 
     verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
-    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets, userToken)
+    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets, authToken)
   }
 }

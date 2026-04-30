@@ -18,7 +18,7 @@ class ReportDefinitionSummaryMapper {
   fun map(
     productDefinition: AnyProductDefinition,
     renderMethod: RenderMethod?,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
   ): ReportDefinitionSummary = ReportDefinitionSummary(
     id = productDefinition.id,
     name = productDefinition.name,
@@ -27,13 +27,13 @@ class ReportDefinitionSummaryMapper {
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
       .map { map(it, productDefinition.path == DataDefinitionPath.MISSING) },
     dashboards = productDefinition.dashboard?.map { map(it) },
-    authorised = determineAuth(productDefinition, userToken),
+    authorised = determineAuth(productDefinition, authToken),
   )
 
   private fun determineAuth(
     productDefinition: WithPolicy,
-    userToken: DprAuthAwareAuthenticationToken?,
-  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, userToken)
+    authToken: DprAuthAwareAuthenticationToken?,
+  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, authToken)
 
   private fun map(
     report: AnyReport,

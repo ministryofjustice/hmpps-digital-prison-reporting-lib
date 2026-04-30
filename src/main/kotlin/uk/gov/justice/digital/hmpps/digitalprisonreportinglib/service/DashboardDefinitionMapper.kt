@@ -53,7 +53,7 @@ class DashboardDefinitionMapper(
   fun toDashboardDefinition(
     dashboard: Dashboard,
     allDatasets: List<Dataset>,
-    userToken: DprAuthAwareAuthenticationToken? = null,
+    authToken: DprAuthAwareAuthenticationToken? = null,
     filters: Map<String, String>? = null,
   ): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
@@ -84,7 +84,7 @@ class DashboardDefinitionMapper(
           },
         )
       },
-      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, userToken, filters),
+      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, authToken, filters),
     )
   }
 
@@ -102,19 +102,19 @@ class DashboardDefinitionMapper(
   private fun mapAndAggregateAllFilters(
     dataset: Dataset,
     allDatasets: List<Dataset>,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     filters: Map<String, String>?,
-  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, userToken, filters) +
+  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, authToken, filters) +
     maybeConvertParametersToReportFields(dataset.query, dataset.parameters)
 
   private fun convertDatasetFilterFieldsToReportFields(
     dataset: Dataset,
     allDatasets: List<Dataset>,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     filters: Map<String, String>?,
   ) = dataset.schema.field
     .filter { it.filter != null }
-    .map { toFilterField(it, allDatasets, userToken, dataset, filters) }
+    .map { toFilterField(it, allDatasets, authToken, dataset, filters) }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
     DashboardVisualisationColumnDefinition(
@@ -131,7 +131,7 @@ class DashboardDefinitionMapper(
   private fun toFilterField(
     schemaField: SchemaField,
     allDatasets: List<Dataset>,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
   ) = FieldDefinition(
@@ -144,7 +144,7 @@ class DashboardDefinitionMapper(
         staticOptions = populateStaticOptions(
           filterDefinition = schemaField.filter,
           allDatasets = allDatasets,
-          userToken = userToken,
+          authToken = authToken,
           dashboardDataset = dashboardDataset,
           filters = filters,
         ),
@@ -155,12 +155,12 @@ class DashboardDefinitionMapper(
   private fun populateStaticOptions(
     filterDefinition: FilterDefinition,
     allDatasets: List<Dataset>,
-    userToken: DprAuthAwareAuthenticationToken?,
+    authToken: DprAuthAwareAuthenticationToken?,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == FilterType.Caseloads) {
-      return userToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
+      return authToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions
       ?.takeIf { it.returnAsStaticOptions }
