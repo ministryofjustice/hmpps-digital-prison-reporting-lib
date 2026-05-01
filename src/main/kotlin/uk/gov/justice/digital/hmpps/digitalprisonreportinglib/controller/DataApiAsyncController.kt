@@ -289,7 +289,7 @@ class DataApiAsyncController(
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getResultTableExpiryState(@Valid @RequestBody request: ResultTableExpiryStateRequest): ResponseEntity<List<ResultTableExpiryState>> {
-    log.debug("Table expiry state requested for table IDs: $request")
+    log.debug("Table expiry state was requested for table IDs: $request")
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(asyncDataApiService.getResultTableExpiryState(request.tableIds.filter { it.isNotBlank() }.toSet()))
