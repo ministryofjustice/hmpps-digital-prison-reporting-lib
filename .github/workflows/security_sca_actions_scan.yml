@@ -1,0 +1,29 @@
+name: Security SCA actions scan
+
+on:
+  schedule:
+    - cron: '19 6 * * MON-FRI' # Every weekday
+  pull_request:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  sca:
+    name: Software Composition Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      security-events: read
+
+    steps:
+      - name: Run SCA
+        uses: ministryofjustice/devsecops-actions/sca@9af7935ef39312305084f720326ffb0e6779b1d8 # v1.5.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          renovate: 'false'

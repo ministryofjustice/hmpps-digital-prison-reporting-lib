@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -430,4 +431,12 @@ class AsyncDataApiService(
   ) = records
     .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, schemaFields.map(SchemaField::name)) }
     .map(formulaEngine::applyFormulas)
+
+  fun getResultTableExpiryState(tableIds: Set<String>): List<ResultTableExpiryState> {
+    val existingTableIds = redshiftDataApiRepository.findExistingTables(tableIds).toHashSet()
+    if (existingTableIds.isEmpty()) {
+      return tableIds.map { ResultTableExpiryState(it, false) }
+    }
+    return tableIds.map { tableId -> ResultTableExpiryState(tableId = tableId, expired = tableId !in existingTableIds) }
+  }
 }

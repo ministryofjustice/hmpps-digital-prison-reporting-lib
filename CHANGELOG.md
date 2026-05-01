@@ -1,5 +1,15 @@
 Below you can find the changes included in each release.
 
+# 15.4.0
+- Update various spring-related and hmpps-spring related libs and gradle plugins
+- Updated aws libs
+
+# 15.3.0
+- Added new endpoint to check for result table existence.
+- Reduced the 500 responses which were being thrown by the generic Exception which was being caught and returned as a 500 response. 
+- Spring will now handle the exceptions and return an appropriate status code which will convert many of the 500s to 4XX responses.
+- Added handlers for MethodArgumentNotValidException and HttpMessageNotReadableException to return a more detailed reason why the validation and the request failed.
+
 # 15.2.3
 - Rename all instances of `userToken` to `authToken` as we are no longer using user based tokens
 
