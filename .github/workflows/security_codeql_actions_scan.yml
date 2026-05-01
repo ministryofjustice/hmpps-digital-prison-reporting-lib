@@ -11,7 +11,7 @@ jobs:
       actions: read
       security-events: write
     name: Project security CodeQL actions scan
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_codeql_actions.yml@607c82f9fa98d1c35286644d7d70f13c50c4316b
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_codeql_actions.yml@658ee37b404f39de63423d2bd7bdf1f2fce7da19
     with:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
     secrets: inherit
