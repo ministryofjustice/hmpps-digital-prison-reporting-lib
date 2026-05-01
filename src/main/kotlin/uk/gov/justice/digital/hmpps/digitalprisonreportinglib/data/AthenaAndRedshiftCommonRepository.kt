@@ -130,7 +130,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     val stopwatch = StopWatch.createStarted()
     val result = jdbcTemplate.queryForList(sql, params, String::class.java)
     stopwatch.stop()
-    log.debug("findExistingTables query Execution time in ms: {}", stopwatch.time)
+    log.debug("findExistingTables query Execution time in ms: {}. Total tableIds: {}", stopwatch.time, tableIds.size)
     return result.filterNotNull()
   }
 
