@@ -285,7 +285,7 @@ class DataApiAsyncController(
 
   @PostMapping("/reports/tableExpiryState")
   @Operation(
-    description = "Checks the list of table IDs provided for existence in Redshift and returns a set of the table IDs along with their expiration state.",
+    description = "Checks the list of table IDs provided for existence in Redshift and returns a list of the table IDs along with their expiration state.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
   fun getResultTableExpiryState(@Valid @RequestBody request: ResultTableExpiryStateRequest): ResponseEntity<List<ResultTableExpiryState>> {
