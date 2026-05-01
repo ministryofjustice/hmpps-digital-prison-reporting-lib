@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 15.4.0
+- Update various spring-related and hmpps-spring related libs and gradle plugins
+- Updated aws libs
+
 # 15.3.0
 - Added new endpoint to check for result table existence.
 - Reduced the 500 responses which were being thrown by the generic Exception which was being caught and returned as a 500 response. 
