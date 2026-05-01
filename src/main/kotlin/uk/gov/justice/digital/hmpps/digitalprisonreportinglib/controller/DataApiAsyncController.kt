@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -19,12 +20,16 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryStateRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -277,6 +282,18 @@ class DataApiAsyncController(
         tableId,
       ),
     )
+
+  @PostMapping("/reports/tableExpiryState")
+  @Operation(
+    description = "Checks the list of table IDs provided for existence in Redshift and returns a list of the table IDs along with their expiration state.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun getResultTableExpiryState(@Valid @RequestBody request: ResultTableExpiryStateRequest): ResponseEntity<List<ResultTableExpiryState>> {
+    log.debug("Table expiry state was requested for table IDs: $request")
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(asyncDataApiService.getResultTableExpiryState(request.tableIds.filter { it.isNotBlank() }.toSet()))
+  }
 
   @DeleteMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}")
   @Operation(

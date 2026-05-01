@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -887,5 +888,33 @@ SELECT *
       eq("SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename = '$tableId'"),
       any<MapSqlParameterSource>(),
     )
+  }
+
+  @Test
+  fun `findExistingTables should return the table IDs for the tables that exist`() {
+    val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val redshiftDataApiRepository = RedshiftDataApiRepository(
+      redshiftDataClient,
+      tableIdGenerator,
+      identifiedHelper,
+      redShiftSummaryTableHelper,
+      REDSHIFT_DATA_API_DB,
+      REDSHIFT_DATA_API_CLUSTER_ID,
+      REDSHIFT_DATA_API_SECRET_ARN,
+    )
+    val tableIds = setOf("1", "2", "3")
+    val params = MapSqlParameterSource()
+      .addValue("tableIds", tableIds)
+
+    whenever(jdbcTemplate.queryForList(any(), any<MapSqlParameterSource>(), eq(String::class.java))).thenReturn(tableIds.toList())
+
+    assertEquals(tableIds.toList(), redshiftDataApiRepository.findExistingTables(tableIds, jdbcTemplate))
+    val captor = argumentCaptor<MapSqlParameterSource>()
+    verify(jdbcTemplate).queryForList(
+      eq("SELECT tablename FROM SVV_EXTERNAL_TABLES WHERE schemaname = 'reports' AND tablename IN (:tableIds)"),
+      captor.capture(),
+      eq(String::class.java),
+    )
+    assertEquals(tableIds, captor.firstValue.getValue("tableIds"))
   }
 }
