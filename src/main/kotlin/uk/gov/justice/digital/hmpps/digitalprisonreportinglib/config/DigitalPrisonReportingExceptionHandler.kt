@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus.GONE
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.jdbc.UncategorizedSQLException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -49,6 +51,33 @@ class DigitalPrisonReportingExceptionHandler {
         ErrorResponse(
           status = BAD_REQUEST,
           userMessage = "Validation failure: $errors",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException::class)
+  fun handleHttpMessageNotReadableException(
+    e: HttpMessageNotReadableException,
+  ): ResponseEntity<ErrorResponse> {
+    val rootCause = e.cause
+    val userMessage = when (rootCause) {
+      is MismatchedInputException -> {
+        val path = rootCause.path.joinToString(".") { it.fieldName ?: "[${it.index}]" }
+        "Invalid value for field '$path'"
+      }
+      else -> "Malformed JSON request"
+    }
+
+    log.info("Request deserialization error: {}", e.message)
+
+    return ResponseEntity
+      .badRequest()
+      .body(
+        ErrorResponse(
+          status = BAD_REQUEST,
+          userMessage = userMessage,
+          developerMessage = e.message,
         ),
       )
   }
