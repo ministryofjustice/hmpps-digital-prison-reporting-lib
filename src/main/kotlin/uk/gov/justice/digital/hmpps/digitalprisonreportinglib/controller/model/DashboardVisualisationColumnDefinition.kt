@@ -8,4 +8,5 @@ data class DashboardVisualisationColumnDefinition(
   val displayValue: Boolean? = null,
   val axis: String? = null,
   val optional: Boolean? = null,
+  val type: FieldType? = null,
 )

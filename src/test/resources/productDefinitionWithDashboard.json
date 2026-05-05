@@ -58,7 +58,8 @@
                 "maximumOptions": 123
               },
               "interactive": true
-            }
+            },
+            "formula": "make_url('https://prisoner-${env}.digital.prison.service.justice.gov.uk/prison/${establishment_id}',${establishment_id},TRUE)"
           },
           {
             "name": "has_ethnicity",

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.D
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UnitTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
@@ -24,8 +25,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 
@@ -75,7 +78,7 @@ class DashboardDefinitionMapper(
               description = visualisation.description,
               columns = DashboardVisualisationColumnsDefinition(
                 keys = visualisation.column.key?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.column.key) },
-                measures = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure),
+                measures = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure, dataset),
                 filters = visualisation.column.filter?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
                 expectNulls = visualisation.column.expectNull,
               ),
@@ -116,7 +119,8 @@ class DashboardDefinitionMapper(
     .filter { it.filter != null }
     .map { toFilterField(it, allDatasets, authToken, dataset, filters) }
 
-  private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>) = dashboardVisualisationColumns.map {
+  private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>, dataset: Dataset? = null) = dashboardVisualisationColumns.map {
+    val schemaField = identifiedHelper.findOrNull(dataset?.schema?.field, it.id)
     DashboardVisualisationColumnDefinition(
       it.id.removePrefix(REF_PREFIX),
       it.display,
@@ -125,7 +129,15 @@ class DashboardDefinitionMapper(
       it.displayValue,
       it.axis,
       it.optional,
+      schemaField?.let { scField -> populateType(scField) }
     )
+  }
+
+  private fun populateType(schemaField: SchemaField): FieldType {
+    if (schemaField.formula?.startsWith(MAKE_URL_FORMULA_PREFIX) == true) {
+      return FieldType.HTML
+    }
+    return convertParameterTypeToFieldType(schemaField.type)
   }
 
   private fun toFilterField(
