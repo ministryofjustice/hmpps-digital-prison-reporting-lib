@@ -54,7 +54,8 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
                       "measures": [
                         {
                           "id": "establishment_id",
-                          "display": "Establishmnent ID"
+                          "display": "Establishmnent ID",
+                          "type": "HTML"
                         },
                         {
                           "id": "wing",

@@ -1428,7 +1428,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     )
     val expectedDashboardServiceResult = listOf(
       mapOf(
-        "establishment_id" to MetricData("OUT"),
+        "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/OUT' target=\"_blank\">OUT</a>"),
         "has_ethnicity" to MetricData("4000"),
         "ethnicity_is_missing" to MetricData("2"),
       ),

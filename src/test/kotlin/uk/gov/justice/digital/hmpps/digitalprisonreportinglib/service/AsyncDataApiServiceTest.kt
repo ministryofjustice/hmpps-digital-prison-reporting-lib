@@ -1489,7 +1489,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val expectedServiceResult = listOf(
       listOf(
         mapOf(
-          "establishment_id" to MetricData("1"),
+          "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/1' target=\"_blank\">1</a>"),
           "has_ethnicity" to MetricData("100"),
           "ethnicity_is_missing" to MetricData("30"),
         ),
