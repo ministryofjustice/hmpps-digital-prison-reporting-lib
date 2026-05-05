@@ -102,7 +102,7 @@ class DashboardDefinitionMapperTest {
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                   ),
                   measures = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
                   ),
