@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 15.4.1
+- Handle Redshift Data API error response when an execution statement is not found and return 400 instead of 500. 
+
 # 15.4.0
 - Update various spring-related and hmpps-spring related libs and gradle plugins
 - Updated aws libs
