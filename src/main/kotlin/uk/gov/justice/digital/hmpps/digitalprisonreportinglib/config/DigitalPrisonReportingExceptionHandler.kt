@@ -149,7 +149,6 @@ class DigitalPrisonReportingExceptionHandler {
       )
   }
 
-
   @ExceptionHandler(UserAuthorisationException::class)
   @ResponseStatus(FORBIDDEN)
   fun handleUserAuthorisationException(e: Exception): ResponseEntity<ErrorResponse> = respondWithForbiddenRequest(e)

@@ -105,14 +105,14 @@ class RedshiftDataApiRepository(
       .id(statementId)
       .build()
     try {
-    val describeStatementResponse = redshiftDataClient.describeStatement(statementRequest)
-    return StatementExecutionStatus(
-      status = describeStatementResponse.statusAsString(),
-      duration = describeStatementResponse.duration(),
-      resultRows = describeStatementResponse.resultRows(),
-      resultSize = describeStatementResponse.resultSize(),
-      error = describeStatementResponse.error(),
-    )
+      val describeStatementResponse = redshiftDataClient.describeStatement(statementRequest)
+      return StatementExecutionStatus(
+        status = describeStatementResponse.statusAsString(),
+        duration = describeStatementResponse.duration(),
+        resultRows = describeStatementResponse.resultRows(),
+        resultSize = describeStatementResponse.resultSize(),
+        error = describeStatementResponse.error(),
+      )
     } catch (e: ResourceNotFoundException) {
       throw ExecutionStatementNotFound(statementId, e.message)
     }
