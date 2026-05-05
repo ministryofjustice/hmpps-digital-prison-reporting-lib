@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
@@ -133,6 +134,21 @@ class DigitalPrisonReportingExceptionHandler {
         ),
       )
   }
+
+  @ExceptionHandler(ExecutionStatementNotFound::class)
+  fun handleExecutionStatementNotFound(e: ExecutionStatementNotFound): ResponseEntity<ErrorResponse> {
+    log.warn(e.message)
+    return ResponseEntity
+      .status(BAD_REQUEST)
+      .body(
+        ErrorResponse(
+          status = BAD_REQUEST,
+          userMessage = "Statement ${e.statementId} not found.",
+          developerMessage = e.message,
+        ),
+      )
+  }
+
 
   @ExceptionHandler(UserAuthorisationException::class)
   @ResponseStatus(FORBIDDEN)

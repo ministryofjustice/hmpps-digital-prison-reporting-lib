@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.redshiftdata.model.CancelStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import software.amazon.awssdk.services.redshiftdata.model.ResourceNotFoundException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
@@ -102,6 +104,7 @@ class RedshiftDataApiRepository(
     val statementRequest = DescribeStatementRequest.builder()
       .id(statementId)
       .build()
+    try {
     val describeStatementResponse = redshiftDataClient.describeStatement(statementRequest)
     return StatementExecutionStatus(
       status = describeStatementResponse.statusAsString(),
@@ -110,6 +113,9 @@ class RedshiftDataApiRepository(
       resultSize = describeStatementResponse.resultSize(),
       error = describeStatementResponse.error(),
     )
+    } catch (e: ResourceNotFoundException) {
+      throw ExecutionStatementNotFound(statementId, e.message)
+    }
   }
 
   override fun cancelStatementExecution(statementId: String): StatementCancellationResponse {
