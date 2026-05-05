@@ -22,9 +22,8 @@ jobs:
       security-events: read
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      # - name: Run SCA
-      #   uses: ministryofjustice/devsecops-actions/sca@9af7935ef39312305084f720326ffb0e6779b1d8 # v1.5.0
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     renovate: 'false'
+      - name: Run SCA
+        uses: ministryofjustice/devsecops-actions/sca@9af7935ef39312305084f720326ffb0e6779b1d8 # v1.5.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          renovate: 'false'
