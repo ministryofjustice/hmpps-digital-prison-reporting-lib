@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.AthenaError
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
+import software.amazon.awssdk.services.athena.model.InvalidRequestException
 import software.amazon.awssdk.services.athena.model.QueryExecutionContext
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDial
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
@@ -142,19 +144,23 @@ class AthenaApiRepository(
       .queryExecutionId(statementId)
       .build()
 
-    val getQueryExecutionResponse = athenaClient.getQueryExecution(getQueryExecutionRequest)
-    val status = getQueryExecutionResponse.queryExecution().status()
-    val stateChangeReason = status.stateChangeReason()
-    val error: AthenaError? = status.athenaError()
-    return StatementExecutionStatus(
-      status = mapAthenaStateToRedshiftState(status.state().toString()),
-      duration = calculateDuration(status),
-      resultRows = 0,
-      resultSize = 0,
-      error = error?.errorMessage(),
-      errorCategory = error?.errorCategory(),
-      stateChangeReason = stateChangeReason,
-    )
+    try {
+      val getQueryExecutionResponse = athenaClient.getQueryExecution(getQueryExecutionRequest)
+      val status = getQueryExecutionResponse.queryExecution().status()
+      val stateChangeReason = status.stateChangeReason()
+      val error: AthenaError? = status.athenaError()
+      return StatementExecutionStatus(
+        status = mapAthenaStateToRedshiftState(status.state().toString()),
+        duration = calculateDuration(status),
+        resultRows = 0,
+        resultSize = 0,
+        error = error?.errorMessage(),
+        errorCategory = error?.errorCategory(),
+        stateChangeReason = stateChangeReason,
+      )
+    } catch (e: InvalidRequestException) {
+      throw ExecutionStatementNotFound(statementId, e.message)
+    }
   }
 
   override fun cancelStatementExecution(statementId: String): StatementCancellationResponse {

@@ -278,7 +278,7 @@ class FormulaEngineTest {
     )
     val expectedRow: Map<String, Any> = mapOf(
       NAME to name,
-      PRISON_NUMBER to "<a href=\'https://prisoner-test.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' target=\"_blank\">$name</a>",
+      PRISON_NUMBER to "<a href=\'https://prisoner-test.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">$name</a>",
       DESTINATION to "Manchester",
       DESTINATION_CODE to "Manchester:MNCH:LastName6, F",
     )
@@ -308,7 +308,7 @@ class FormulaEngineTest {
     val expectedRow: Map<String, Any> = mapOf(
       NAME to name,
       PRISON_NUMBER to prisonNumber,
-      DESTINATION to "<a href=\'https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' >$name</a>",
+      DESTINATION to "<a href=\'https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' class=\"govuk-link\" >$name</a>",
       DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields, "dev")
@@ -337,7 +337,7 @@ class FormulaEngineTest {
     val expectedRow: Map<String, Any> = mapOf(
       NAME to name,
       PRISON_NUMBER to prisonNumber,
-      DESTINATION to "<a href=\'https://prisoner.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' >$name</a>",
+      DESTINATION to "<a href=\'https://prisoner.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' class=\"govuk-link\" >$name</a>",
       DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields)
@@ -373,7 +373,7 @@ class FormulaEngineTest {
     )
     val expectedRow: Map<String, Any> = mapOf(
       prisonCaseloadName to prisonCaseload,
-      nomisOffenderIdName to "<a href=\'https://${result}moic.service.justice.gov.uk/prisons/$prisonCaseload/prisoners/$nomisOffenderId/allocation/history' target=\"_blank\">$nomisOffenderId</a>",
+      nomisOffenderIdName to "<a href=\'https://${result}moic.service.justice.gov.uk/prisons/$prisonCaseload/prisoners/$nomisOffenderId/allocation/history' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">$nomisOffenderId</a>",
     )
     val formulaEngine = FormulaEngine(reportFields, environment)
     assertEquals(expectedRow, formulaEngine.applyFormulas(row))
@@ -400,7 +400,7 @@ class FormulaEngineTest {
     val expectedRow: Map<String, Any?> = mapOf(
       NAME to name,
       PRISON_NUMBER to null,
-      DESTINATION to "<a href=\'https://prisoner.digital.prison.service.justice.gov.uk/prisoner/\' >$name</a>",
+      DESTINATION to "<a href=\'https://prisoner.digital.prison.service.justice.gov.uk/prisoner/\' class=\"govuk-link\" >$name</a>",
       DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields)
@@ -849,7 +849,7 @@ class FormulaEngineTest {
     val expectedRow: Map<String, Any> = mapOf(
       NAME to name,
       PRISON_NUMBER to prisonNumber,
-      DESTINATION to "<a href=\'https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' target=\"_blank\">$name</a>",
+      DESTINATION to "<a href=\'https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">$name</a>",
       DESTINATION_CODE to "MNCH",
     )
     val formulaEngine = FormulaEngine(reportFields, "dev")
@@ -877,7 +877,7 @@ class FormulaEngineTest {
     )
     val expectedRow: Map<String, Any> = mapOf(
       NAME to name,
-      PRISON_NUMBER to "<a href=\'https://prisoner-test.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' target=\"_blank\">$name</a>",
+      PRISON_NUMBER to "<a href=\'https://prisoner-test.digital.prison.service.justice.gov.uk/prisoner/${prisonNumber}\' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">$name</a>",
       DESTINATION to "Manchester",
       DESTINATION_CODE to "MNCH",
     )
