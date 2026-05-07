@@ -6,7 +6,7 @@ Below you can find the changes included in each release.
 
 # 15.5.0
 - Add an optional `type` field to the DashboardVisualisationColumnDefinition and show this only for the measures.
-  This is computed in DashboardDefinitionMapper in a similar way as the ReportDefinitionMapper and not part of the DPD.    
+This is computed in DashboardDefinitionMapper in a similar way as the ReportDefinitionMapper and not part of the DPD.    
 
 # 15.4.1
 - Handle Redshift Data API error response when an execution statement is not found and return 400 instead of 500. 
