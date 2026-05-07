@@ -114,7 +114,7 @@ class FormulaEngine(
       .split(",")
     val href = interpolateStandardFormula(hrefPlaceholder, row)
     val linkText = interpolateStandardFormula(linkTextPlaceholder, row)
-    return """<a href='$href' ${if (newTab.uppercase() == "TRUE") "target=\"_blank\"" else ""}>$linkText</a>"""
+    return """<a href='$href' class="govuk-link" ${if (newTab.uppercase() == "TRUE") "rel=\"noreferrer noopener\" target=\"_blank\"" else ""}>$linkText</a>"""
   }
 
   private fun interpolateDefaultValueFormula(formula: String, row: Map<String, Any?>): String {

@@ -250,7 +250,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           """[
         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "01/05/2023", 
         "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN]}", 
-        "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
+        "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
         "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
         "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
@@ -294,7 +294,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           """[
         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "01/05/2023", 
         "origin": null, "origin_code": "", 
-        "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
+        "destination": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/${movementPrisoner4[PRISON_NUMBER]}' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">${movementPrisoner4[NAME]}</a>", 
         "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
         "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
@@ -343,7 +343,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
               "raw": "LWSTMC"
             },
             "destination": {
-              "raw": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/G3411VR' target=\"_blank\">LastName5, F</a>"
+              "raw": "<a href='https://prisoner-dev.digital.prison.service.justice.gov.uk/prisoner/G3411VR' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">LastName5, F</a>"
             },
             "destination_code": {
               "raw": "WWI"

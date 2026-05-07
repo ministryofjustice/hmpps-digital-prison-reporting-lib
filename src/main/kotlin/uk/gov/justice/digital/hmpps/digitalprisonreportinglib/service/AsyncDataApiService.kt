@@ -180,16 +180,6 @@ class AsyncDataApiService(
     )
   }
 
-  fun getStatementStatus(statementId: String, tableId: String? = null): StatementExecutionStatus {
-    val statementStatus = redshiftDataApiRepository.getStatementStatus(statementId)
-    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
-      if (redshiftDataApiRepository.isTableMissing(tableId)) {
-        throw MissingTableException(tableId)
-      }
-    }
-    return statementStatus
-  }
-
   fun prepareAsyncDownloadContext(
     reportId: String,
     reportVariantId: String,

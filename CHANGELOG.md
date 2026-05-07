@@ -7,6 +7,10 @@ This is computed in DashboardDefinitionMapper in a similar way as the ReportDefi
 # 15.4.1
 - Handle Redshift Data API error response when an execution statement is not found and return 400 instead of 500. 
 
+# 15.4.1
+- Added `class="govuk-link"` to the produced HTML of the make_url formula and `rel="noreferrer noopener"` when the link opens in a new tab.
+- Removed unused getStatementStatus method from AsyncDataApiService.
+
 # 15.4.0
 - Update various spring-related and hmpps-spring related libs and gradle plugins
 - Updated aws libs

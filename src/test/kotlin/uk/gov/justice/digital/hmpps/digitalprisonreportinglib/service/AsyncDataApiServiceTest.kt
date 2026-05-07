@@ -1083,6 +1083,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
   @Test
   fun `should call the RedshiftDataApiRepository with the statement execution ID when getStatementStatus is called`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionDatamart.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val statementId = "statementId"
     val status = "FINISHED"
@@ -1095,17 +1100,40 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       resultRows,
       resultSize,
     )
+    val tableId = TableIdGenerator().generateNewExternalTableId()
+
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        authToken = any(),
+      ),
+    ).thenReturn(true)
+    whenever(
+      redshiftDataApiRepository.isTableMissing(tableId),
+    ).thenReturn(false)
     whenever(
       redshiftDataApiRepository.getStatementStatus(statementId),
     ).thenReturn(statementExecutionStatus)
 
-    val actual = asyncDataApiService.getStatementStatus(statementId)
+    val actual = asyncDataApiService.getStatementStatus(
+      statementId = statementId,
+      reportId = "external-movements",
+      reportVariantId = "last-month",
+      authToken = authToken,
+      tableId = tableId,
+    )
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
+    verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
     assertEquals(statementExecutionStatus, actual)
   }
 
   @Test
   fun `should throw a MissingTableException when getStatementStatus is called with a tableId, the table is missing and the status is finished`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionDatamart.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val statementExecutionStatus = StatementExecutionStatus(
       "FINISHED",
@@ -1113,6 +1141,12 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       10L,
       100L,
     )
+    whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        authToken = any(),
+      ),
+    ).thenReturn(true)
     whenever(
       redshiftDataApiRepository.getStatementStatus("statementId"),
     ).thenReturn(statementExecutionStatus)
@@ -1124,6 +1158,9 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val exception = assertThrows<MissingTableException> {
       asyncDataApiService.getStatementStatus(
         statementId = "statementId",
+        reportId = "external-movements",
+        reportVariantId = "last-month",
+        authToken = authToken,
         tableId = tableId,
       )
     }
@@ -1134,6 +1171,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
   @Test
   fun `should not call isTableMissing when getStatementStatus is called for Redshift with a tableId and the status is not finished`() {
+    val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionDatamart.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val statementExecutionStatus = StatementExecutionStatus(
       QUERY_STARTED,
@@ -1143,11 +1185,23 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     )
     val statementId = "statementId"
     whenever(
+      productDefinitionTokenPolicyChecker.determineAuth(
+        withPolicy = any(),
+        authToken = any(),
+      ),
+    ).thenReturn(true)
+    whenever(
       redshiftDataApiRepository.getStatementStatus(statementId),
     ).thenReturn(statementExecutionStatus)
     val tableId = TableIdGenerator().generateNewExternalTableId()
 
-    val actual = asyncDataApiService.getStatementStatus(statementId = statementId, tableId = tableId)
+    val actual = asyncDataApiService.getStatementStatus(
+      statementId = statementId,
+      reportId = "external-movements",
+      reportVariantId = "last-month",
+      authToken = authToken,
+      tableId = tableId,
+    )
     assertEquals(statementExecutionStatus, actual)
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     verify(redshiftDataApiRepository, times(0)).isTableMissing(any(), anyOrNull())
@@ -1156,7 +1210,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   @Test
   fun `should return the status when the Redshift getStatementStatus method is called with a tableId and the table is not missing`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
-      listOf("productDefinitionNomis.json"),
+      listOf("productDefinitionDatamart.json"),
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper = IdentifiedHelper(),
     )
@@ -1190,6 +1244,9 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     val actual = asyncDataApiService.getStatementStatus(
       statementId = statementId,
+      reportId = "external-movements",
+      reportVariantId = "last-month",
+      authToken = authToken,
       tableId = tableId,
     )
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
@@ -1439,7 +1496,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       mapOf("PRISONNUMBER" to "1", "NAME" to "FirstName", "ORIGIN" to "OriginLocation", "destination" to "destinationLocation"),
     )
     val expectedServiceResult = listOf(
-      mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "destination" to "<a href='https://prisoner.digital.prison.service.justice.gov.uk/prisoner/1' target=\"_blank\">FirstName</a>"),
+      mapOf("prisonNumber" to "1", "name" to "FirstName", "origin" to "OriginLocation", "destination" to "<a href='https://prisoner.digital.prison.service.justice.gov.uk/prisoner/1' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">FirstName</a>"),
     )
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithFormula.json"),
@@ -1489,7 +1546,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val expectedServiceResult = listOf(
       listOf(
         mapOf(
-          "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/1' target=\"_blank\">1</a>"),
+          "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/1' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">1</a>"),
           "has_ethnicity" to MetricData("100"),
           "ethnicity_is_missing" to MetricData("30"),
         ),
