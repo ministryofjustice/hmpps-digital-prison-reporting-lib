@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 class DashboardDefinitionServiceTest {
 
@@ -25,14 +24,13 @@ class DashboardDefinitionServiceTest {
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
     val dashboardDefinition: DashboardDefinition = mock()
-    val authToken = mock<DprAuthAwareAuthenticationToken>()
     val productDefinition: SingleDashboardProductDefinition = mock()
     val dashboard: Dashboard = mock()
     val allDatasets: List<Dataset> = listOf(mock())
     val definitionId = "missing-ethnicity-metrics"
     val dashboardId = "age-breakdown-dashboard-1"
 
-    whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), any(), anyOrNull())).doReturn(dashboardDefinition)
+    whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), anyOrNull())).doReturn(dashboardDefinition)
     whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any(), anyOrNull())).doReturn(productDefinition)
     whenever(productDefinition.dashboard).doReturn(dashboard)
     whenever(productDefinition.allDatasets).doReturn(allDatasets)
@@ -40,12 +38,11 @@ class DashboardDefinitionServiceTest {
     val actual = dashboardDefinitionService.getDashboardDefinition(
       dataProductDefinitionId = definitionId,
       dashboardId = dashboardId,
-      authToken = authToken,
     )
 
     assertThat(actual).isEqualTo(dashboardDefinition)
 
     verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
-    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets, authToken)
+    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets)
   }
 }

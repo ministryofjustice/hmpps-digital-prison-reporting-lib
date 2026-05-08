@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.sql.SQLException
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -58,7 +57,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(mapOf(dateStartFilter to startDate, dateEndFilter to endDate)),
         eq("date"),
         eq(false),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(null),
         eq(null),
         eq("definitions/prisons/orphanage"),
@@ -99,7 +97,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       asyncDataApiService.validateAndExecuteStatementAsync(
         reportId = eq("some-metrics-dpd"),
         dashboardId = eq("some-dashboard-id"),
-        authToken = any<DprAuthAwareAuthenticationToken>(),
         dataProductDefinitionsPath = eq("definitions/prisons/orphanage"),
         filters = eq(emptyMap()),
       ),
@@ -135,7 +132,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(emptyMap()),
         eq("date"),
         eq(false),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(null),
         eq(null),
         eq("definitions/prisons/orphanage"),
@@ -166,7 +162,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(emptyMap()),
         eq("date"),
         eq(false),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(null),
         eq(null),
         eq("definitions/prisons/orphanage"),
@@ -208,7 +203,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         anyOrNull(),
       ),
@@ -258,7 +252,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(dashboardId),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         anyOrNull(),
       ),
@@ -301,7 +294,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
@@ -339,7 +331,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(dashboardId),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
@@ -394,7 +385,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         filters = eq(emptyMap()),
         sortedAsc = eq(null),
         sortColumn = eq(null),
-        authToken = any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -435,7 +425,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -467,7 +457,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(mapOf("direction" to "out")),
         eq(true),
         eq(sortColumn),
-        any<DprAuthAwareAuthenticationToken>(),
       )
   }
 
@@ -488,7 +477,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         filters = eq(emptyMap()),
         sortedAsc = eq(null),
         sortColumn = eq(null),
-        authToken = any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
@@ -525,7 +513,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -551,7 +539,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(emptyMap()),
-      any<DprAuthAwareAuthenticationToken>(),
     )
   }
 
@@ -573,7 +560,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -600,7 +587,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(mapOf("direction" to "out")),
-      any<DprAuthAwareAuthenticationToken>(),
     )
   }
 
@@ -612,7 +598,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val selectedPage = 2L
     val pageSize = 20L
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
 
     webTestClient.get()
@@ -636,7 +622,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(emptyMap()),
-      any<DprAuthAwareAuthenticationToken>(),
     )
   }
 
@@ -659,7 +644,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("last-month"),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(emptyMap()),
-        any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -709,7 +693,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val tableId = "tableId"
     val expectedServiceResult = Count(10)
 
-    given(asyncDataApiService.count(any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.count(any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -732,7 +716,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(mapOf("direction" to "out")),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       )
   }

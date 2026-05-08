@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,7 +14,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
 
 @Validated
@@ -50,10 +48,8 @@ class ReportDefinitionController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
     renderMethod,
-    authentication as? DprAuthAwareAuthenticationToken,
     dataProductDefinitionsPath,
   )
 
@@ -75,10 +71,8 @@ class ReportDefinitionController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
   ): ReportDefinitionSummary = reportDefinitionService.getDefinitionSummary(
     reportId,
-    authentication as? DprAuthAwareAuthenticationToken,
     dataProductDefinitionsPath,
   )
 
@@ -112,11 +106,9 @@ class ReportDefinitionController(
     )
     @RequestParam
     filters: Map<String, String>,
-    authentication: Authentication,
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
     reportId = reportId,
     variantId = variantId,
-    authToken = authentication as? DprAuthAwareAuthenticationToken,
     dataProductDefinitionsPath = dataProductDefinitionsPath,
     filters = filterHelper.filtersOnly(filters),
   )

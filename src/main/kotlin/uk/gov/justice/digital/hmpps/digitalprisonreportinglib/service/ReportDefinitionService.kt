@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.S
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Service
 class ReportDefinitionService(
@@ -19,30 +18,26 @@ class ReportDefinitionService(
 
   fun getListForUser(
     renderMethod: RenderMethod?,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
   ): List<ReportDefinitionSummary> = productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
-    .map { summaryMapper.map(it, renderMethod, authToken) }
+    .map { summaryMapper.map(it, renderMethod) }
     .filter { containsReportVariantsOrDashboards(it) }
 
   fun getDefinitionSummary(
     reportId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
-  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath).let { summaryMapper.map(it, null, authToken) }
+  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath).let { summaryMapper.map(it, null) }
 
   fun getDefinition(
     reportId: String,
     variantId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>? = null,
   ): SingleVariantReportDefinition {
     val singleReportDefinitionDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
-    checkAuth(singleReportDefinitionDefinition, authToken)
+    checkAuth(singleReportDefinitionDefinition)
     return mapper.mapReport(
       definition = singleReportDefinitionDefinition,
-      authToken = authToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filters,
     )
@@ -50,9 +45,8 @@ class ReportDefinitionService(
 
   private fun checkAuth(
     productDefinition: WithPolicy,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, authToken)) {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition)) {
       throw UserAuthorisationException("User does not have correct authorisation")
     }
     return true

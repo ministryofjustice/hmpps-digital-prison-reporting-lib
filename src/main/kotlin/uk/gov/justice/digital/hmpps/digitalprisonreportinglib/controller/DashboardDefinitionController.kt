@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,7 +14,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionService
 
 @Validated
@@ -56,12 +54,10 @@ class DashboardDefinitionController(
     )
     @RequestParam
     filters: Map<String, String>,
-    authentication: Authentication,
   ): DashboardDefinition = dashboardDefinitionService.getDashboardDefinition(
     dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
     dataProductDefinitionsPath = dataProductDefinitionsPath,
-    authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
     filters = filterHelper.filtersOnly(filters),
   )
 }

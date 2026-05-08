@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportM
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -49,7 +48,6 @@ class ReportDefinitionMapper(
 
   fun mapReport(
     definition: SingleReportProductDefinition,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>? = null,
   ): SingleVariantReportDefinition = SingleVariantReportDefinition(
@@ -60,7 +58,6 @@ class ReportDefinitionMapper(
       report = definition.report,
       dataSet = definition.reportDataset,
       productDefinitionId = definition.id,
-      authToken = authToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = definition.allDatasets,
       allReports = definition.allReports,
@@ -72,7 +69,6 @@ class ReportDefinitionMapper(
     report: Report,
     dataSet: Dataset,
     productDefinitionId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
     allDatasets: List<Dataset>,
     allReports: List<Report>,
@@ -86,7 +82,6 @@ class ReportDefinitionMapper(
       schemaFields = dataSet.schema.field,
       productDefinitionId = productDefinitionId,
       reportVariantId = report.id,
-      authToken = authToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
       parameters = dataSet.parameters,
@@ -102,7 +97,6 @@ class ReportDefinitionMapper(
       mapChildVariant(
         child = c,
         productDefinitionId = productDefinitionId,
-        authToken = authToken,
         dataProductDefinitionsPath = dataProductDefinitionsPath,
         allDatasets = allDatasets,
         allReports = allReports,
@@ -113,7 +107,6 @@ class ReportDefinitionMapper(
   private fun mapChildVariant(
     child: ReportChild,
     productDefinitionId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
     allDatasets: List<Dataset>,
     allReports: List<Report>,
@@ -124,7 +117,6 @@ class ReportDefinitionMapper(
       report = report,
       dataSet = identifiedHelper.findOrFail(allDatasets, report.dataset),
       productDefinitionId = productDefinitionId,
-      authToken = authToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
       allReports = allReports,
@@ -144,7 +136,6 @@ class ReportDefinitionMapper(
     schemaFields: List<SchemaField>,
     productDefinitionId: String,
     reportVariantId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset> = emptyList(),
     parameters: List<Parameter>? = null,
@@ -162,7 +153,6 @@ class ReportDefinitionMapper(
         schemaFields = schemaFields,
         productDefinitionId = productDefinitionId,
         reportVariantId = reportVariantId,
-        authToken = authToken,
         dataProductDefinitionsPath = dataProductDefinitionsPath,
         allDatasets = allDatasets,
         reportDataset = reportDataset,
@@ -193,7 +183,6 @@ class ReportDefinitionMapper(
     schemaFields: List<SchemaField>,
     productDefinitionId: String,
     reportVariantId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
@@ -204,7 +193,6 @@ class ReportDefinitionMapper(
       schemaFields = schemaFields,
       productDefinitionId = productDefinitionId,
       reportVariantId = reportVariantId,
-      authToken = authToken,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
       reportDataset = reportDataset,
@@ -217,7 +205,6 @@ class ReportDefinitionMapper(
     schemaFields: List<SchemaField>,
     productDefinitionId: String,
     reportVariantId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
@@ -237,13 +224,11 @@ class ReportDefinitionMapper(
             reportVariantId = reportVariantId,
             schemaFieldName = schemaField.name,
             maxStaticOptions = it.dynamicOptions?.maximumOptions,
-            authToken = authToken,
             dataProductDefinitionsPath = dataProductDefinitionsPath,
             allDatasets = allDatasets,
             reportDataset = reportDataset,
             filters = filters,
           ),
-          authToken = authToken,
         )
       },
       sortable = field.sortable,

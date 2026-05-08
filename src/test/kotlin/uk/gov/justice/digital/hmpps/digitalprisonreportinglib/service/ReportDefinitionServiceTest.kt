@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
@@ -95,7 +94,6 @@ class ReportDefinitionServiceTest {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
       ),
     ).thenReturn(true)
   }
@@ -113,7 +111,6 @@ class ReportDefinitionServiceTest {
       ),
       authorised = true,
     )
-    val authToken = mock<DprAuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository>()
     whenever(repository.getProductDefinitions()).thenReturn(listOf(minimalDefinition))
@@ -121,14 +118,14 @@ class ReportDefinitionServiceTest {
     val mapper = mock<ReportDefinitionMapper> {}
 
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
-      on { map(any(), any(), any()) } doReturn expectedResult
+      on { map(any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, summaryMapper, productDefinitionTokenPolicyChecker)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
+    val actualResult = service.getListForUser(RenderMethod.HTML)
 
     then(repository).should().getProductDefinitions()
-    then(summaryMapper).should().map(minimalDefinition, RenderMethod.HTML, authToken)
+    then(summaryMapper).should().map(minimalDefinition, RenderMethod.HTML)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -146,27 +143,25 @@ class ReportDefinitionServiceTest {
         resourceName = "3",
       ),
     )
-    val authToken = mock<DprAuthAwareAuthenticationToken>()
 
     val repository = mock<ProductDefinitionRepository>()
     whenever(repository.getSingleReportProductDefinition(any(), any(), anyOrNull())).thenReturn(minimalSingleDefinition)
 
     val mapper = mock<ReportDefinitionMapper> {
-      on { mapReport(any<SingleReportProductDefinition>(), any(), anyOrNull(), anyOrNull()) } doReturn expectedResult
+      on { mapReport(any<SingleReportProductDefinition>(), anyOrNull(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {}, productDefinitionTokenPolicyChecker)
 
     val actualResult = service.getDefinition(
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
-      authToken,
     )
 
     then(repository).should().getSingleReportProductDefinition(
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
     )
-    then(mapper).should().mapReport(minimalSingleDefinition, authToken)
+    then(mapper).should().mapReport(minimalSingleDefinition)
 
     assertThat(actualResult).isNotNull
     assertThat(actualResult).isEqualTo(expectedResult)
@@ -174,7 +169,6 @@ class ReportDefinitionServiceTest {
 
   @Test
   fun `Getting HTML report list with no matches returns no domains`() {
-    val authToken = mock<DprAuthAwareAuthenticationToken>()
     val definitionWithNoVariants = ReportDefinitionSummary(
       id = "1",
       name = "2",
@@ -186,11 +180,11 @@ class ReportDefinitionServiceTest {
 
     val mapper = mock<ReportDefinitionMapper> {}
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
-      on { map(any(), any(), any()) } doReturn definitionWithNoVariants
+      on { map(any(), any()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper, summaryMapper, productDefinitionTokenPolicyChecker)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML, authToken)
+    val actualResult = service.getListForUser(RenderMethod.HTML)
 
     assertThat(actualResult).hasSize(0)
   }

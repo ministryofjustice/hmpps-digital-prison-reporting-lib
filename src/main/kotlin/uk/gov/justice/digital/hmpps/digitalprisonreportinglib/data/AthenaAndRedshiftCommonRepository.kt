@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.ResultSet
 import java.util.Base64
@@ -31,7 +30,6 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
     prompts: List<Prompt>? = null,
-    authToken: DprAuthAwareAuthenticationToken? = null,
     query: List<MultiphaseQuery>,
     reportFilter: ReportFilter? = null,
     datasource: Datasource,

@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.SyncDownloadContext
 import java.io.Writer
@@ -48,7 +47,6 @@ class SyncDataApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
@@ -56,9 +54,9 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository
       .getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
-    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
+    val policyEngine = PolicyEngine(productDefinition.policy)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return configuredApiRepository
@@ -116,7 +114,6 @@ class SyncDataApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
@@ -124,8 +121,8 @@ class SyncDataApiService(
       reportVariantId,
       dataProductDefinitionsPath,
     )
-    checkAuth(productDefinition, authToken)
-    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
+    checkAuth(productDefinition)
+    val policyEngine = PolicyEngine(productDefinition.policy)
     return Count(
       configuredApiRepository.count(
         filters = validateAndMapFilters(productDefinition, filters, null),
@@ -146,7 +143,6 @@ class SyncDataApiService(
     pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
@@ -154,8 +150,8 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val dashboardDefinition = productDefinitionRepository
       .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
-    checkAuth(dashboardDefinition, authToken)
-    val policyEngine = PolicyEngine(dashboardDefinition.policy, authToken)
+    checkAuth(dashboardDefinition)
+    val policyEngine = PolicyEngine(dashboardDefinition.policy)
     val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return configuredApiRepository
       .executeQuery(
@@ -188,7 +184,6 @@ class SyncDataApiService(
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): SyncDownloadContext {
     val coreContext = buildCoreDownloadContext(
       reportId = reportId,
@@ -198,12 +193,11 @@ class SyncDataApiService(
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      authToken = authToken,
     )
     return SyncDownloadContext(
       core = coreContext.first,
       query = coreContext.second.reportDataset.query.first().query,
-      policyEngineResult = PolicyEngine(coreContext.second.policy, authToken).execute(),
+      policyEngineResult = PolicyEngine(coreContext.second.policy).execute(),
       reportFilter = coreContext.second.report.filter,
     )
   }

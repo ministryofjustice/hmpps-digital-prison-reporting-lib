@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -24,7 +23,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 import java.util.Collections.singletonList
@@ -96,7 +94,6 @@ class DataApiSyncController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -109,7 +106,6 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -153,7 +149,6 @@ class DataApiSyncController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
   ): ResponseEntity<Count> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -162,7 +157,6 @@ class DataApiSyncController(
           reportId = reportId,
           reportVariantId = reportVariantId,
           filters = filterHelper.filtersOnly(filters),
-          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -214,7 +208,6 @@ class DataApiSyncController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
   ): ResponseEntity<List<Map<String, Any?>>> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -227,7 +220,6 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -267,7 +259,6 @@ class DataApiSyncController(
     columns: List<String>? = null,
     @RequestParam sortColumn: String?,
     @RequestParam sortedAsc: Boolean?,
-    authentication: Authentication,
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
@@ -279,7 +270,6 @@ class DataApiSyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      authToken = authentication as? DprAuthAwareAuthenticationToken,
     )
 
     csvStreamingSupport.streamCsv(

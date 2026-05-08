@@ -116,7 +116,7 @@ class ReportDefinitionSummaryMapperTest {
   fun `Getting report list for user maps full data correctly`() {
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(fullProductDefinition, null, authToken)
+    val result = mapper.map(fullProductDefinition, null)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullProductDefinition.id)
@@ -146,7 +146,7 @@ class ReportDefinitionSummaryMapperTest {
     )
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(productDefinition, null, authToken)
+    val result = mapper.map(productDefinition, null)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(0)
@@ -196,7 +196,7 @@ class ReportDefinitionSummaryMapperTest {
     )
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(productDefinition, HTML, authToken)
+    val result = mapper.map(productDefinition, HTML)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(1)
@@ -228,7 +228,6 @@ class ReportDefinitionSummaryMapperTest {
           ),
         ),
       null,
-      authToken,
     )
 
     assertThat(result.dashboards!![0]).isEqualTo(dashboardDefinition)

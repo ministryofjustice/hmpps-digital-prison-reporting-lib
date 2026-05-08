@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProd
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyReport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Component
 class ReportDefinitionSummaryMapper {
@@ -18,7 +17,6 @@ class ReportDefinitionSummaryMapper {
   fun map(
     productDefinition: AnyProductDefinition,
     renderMethod: RenderMethod?,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): ReportDefinitionSummary = ReportDefinitionSummary(
     id = productDefinition.id,
     name = productDefinition.name,
@@ -27,13 +25,12 @@ class ReportDefinitionSummaryMapper {
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
       .map { map(it, productDefinition.path == DataDefinitionPath.MISSING) },
     dashboards = productDefinition.dashboard?.map { map(it) },
-    authorised = determineAuth(productDefinition, authToken),
+    authorised = determineAuth(productDefinition),
   )
 
   private fun determineAuth(
     productDefinition: WithPolicy,
-    authToken: DprAuthAwareAuthenticationToken?,
-  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, authToken)
+  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition)
 
   private fun map(
     report: AnyReport,

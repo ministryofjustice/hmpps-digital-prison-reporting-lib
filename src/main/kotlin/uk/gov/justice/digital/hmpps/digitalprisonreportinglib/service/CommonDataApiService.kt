@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.FormulaExecutionMode
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.CoreDownloadContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.DownloadContext
@@ -212,9 +211,8 @@ abstract class CommonDataApiService(
 
   protected fun checkAuth(
     productDefinition: WithPolicy,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, authToken)) {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition)) {
       throw UserAuthorisationException("User does not have correct authorisation")
     }
     return true
@@ -273,10 +271,9 @@ abstract class CommonDataApiService(
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): Pair<CoreDownloadContext, SingleReportProductDefinition> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toHashSet().orEmpty()
     val defFieldNames = productDefinition.report.specification?.field.orEmpty().map { it.name }.map { it.removePrefix(REF_PREFIX) }
