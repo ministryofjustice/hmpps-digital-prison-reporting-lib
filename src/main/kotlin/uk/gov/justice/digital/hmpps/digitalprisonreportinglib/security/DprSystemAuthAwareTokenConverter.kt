@@ -6,7 +6,7 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareTokenConverter
 import uk.gov.justice.hmpps.kotlin.auth.extractAuthorities
 
-class DprSystemAuthAwareTokenConverter(private val userPermissionProvider: UserPermissionProvider) : AuthAwareTokenConverter() {
+class DprSystemAuthAwareTokenConverter(private val manageUsersClient: ManageUsersClient) : AuthAwareTokenConverter() {
 
   override fun convert(jwt: Jwt): AuthAwareAuthenticationToken = super.convert(jwt)
     .let { authAwareAuthenticationToken ->
@@ -16,7 +16,7 @@ class DprSystemAuthAwareTokenConverter(private val userPermissionProvider: UserP
         authAwareAuthenticationToken.userName,
         authAwareAuthenticationToken.authSource,
         extractAuthorities(jwt, JwtGrantedAuthoritiesConverter()),
-        userPermissionProvider,
+        manageUsersClient,
       )
     }
 }

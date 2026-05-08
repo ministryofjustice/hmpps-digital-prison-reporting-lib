@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import jakarta.validation.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -28,6 +29,8 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.set
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_REPORT_CTE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
@@ -50,9 +53,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -121,6 +127,25 @@ SELECT * FROM dataset_'
   private val tableIdGenerator = mock<TableIdGenerator>()
   private val productDefinition = mock<SingleReportProductDefinition>()
   private val jdbcTemplate = mock<JdbcTemplate>()
+
+  @BeforeEach
+  fun setup() {
+    ExecutionContext
+      .get()
+      .copy(
+        CaseloadResponse(
+          username = testUsername,
+          active = true,
+          accountType = testAccountType,
+          caseloads = listOf(
+            Caseload(testCaseload, testCaseload),
+          ),
+          activeCaseload = Caseload(testCaseload, testCaseload),
+        ),
+        emptyList(),
+        AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      ).set()
+  }
   private val athenaApiRepository = AthenaApiRepository(
     athenaClient,
     tableIdGenerator,
@@ -132,7 +157,6 @@ SELECT * FROM dataset_'
   private val dataset = mock<Dataset>()
   private val datasource = mock<Datasource>()
   private val report = mock<Report>()
-  private val authToken = mock<DprAuthAwareAuthenticationToken>()
 
   @ParameterizedTest
   @CsvSource(
@@ -149,7 +173,6 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
-      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -178,7 +201,6 @@ SELECT * FROM dataset_'
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
-      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -207,7 +229,6 @@ SELECT * FROM dataset_'
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
       prompts = prompts,
-      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -235,7 +256,6 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
-      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -263,7 +283,6 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = POLICY_PERMIT,
-      authToken = authToken,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -506,7 +525,6 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = TRUE_WHERE_CLAUSE,
-      authToken = authToken,
       query = multiphaseQuery,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -609,7 +627,6 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = TRUE_WHERE_CLAUSE,
-      authToken = authToken,
       query = multiphaseQuery,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -733,7 +750,6 @@ SELECT * FROM dataset_'
         sortColumn = "column_a",
         sortedAsc = true,
         policyEngineResult = TRUE_WHERE_CLAUSE,
-        authToken = authToken,
         query = multiphaseQuery,
         reportFilter = productDefinition.report.filter,
         datasource = productDefinition.datasource,
@@ -781,7 +797,6 @@ SELECT * FROM dataset_'
         sortColumn = "column_a",
         sortedAsc = true,
         policyEngineResult = TRUE_WHERE_CLAUSE,
-        authToken = authToken,
         query = multiphaseQuery,
         reportFilter = productDefinition.report.filter,
         datasource = productDefinition.datasource,
@@ -849,10 +864,6 @@ SELECT * FROM dataset_'
     whenever(
       startQueryExecutionResponse.queryExecutionId(),
     ).thenReturn(executionId)
-
-    whenever(authToken.getUsername()).thenReturn(testUsername)
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(testCaseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(testCaseload))
 
     return startQueryExecutionRequest
   }

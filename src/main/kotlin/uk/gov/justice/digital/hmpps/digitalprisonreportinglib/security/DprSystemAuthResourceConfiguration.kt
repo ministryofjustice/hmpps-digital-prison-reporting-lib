@@ -16,7 +16,7 @@ import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomize
 @ConditionalOnProperty(name = ["dpr.lib.system.token.enabled"], havingValue = "true")
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
 class DprSystemAuthResourceConfiguration(
-  private val userPermissionProvider: UserPermissionProvider,
+  private val manageUsersClient: ManageUsersClient,
   @Value("\${dpr.lib.system.role}") private val systemRole: String,
 ) {
 
@@ -29,7 +29,7 @@ class DprSystemAuthResourceConfiguration(
 
   @Bean
   fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
-    oauth2 { tokenConverter = DprSystemAuthAwareTokenConverter(userPermissionProvider) }
+    oauth2 { tokenConverter = DprSystemAuthAwareTokenConverter(manageUsersClient) }
     securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**", "/missingRequest/**", "/productCollections/**") }
     anyRequestRole { defaultRole = systemRole.removePrefix("ROLE_") }
   }

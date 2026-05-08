@@ -11,7 +11,7 @@ class DprSystemAuthAwareAuthenticationToken(
   userName: String? = null,
   authSource: AuthSource = AuthSource.NONE,
   authorities: Collection<GrantedAuthority> = emptyList(),
-  private val userPermissionProvider: UserPermissionProvider,
+  private val manageUsersClient: ManageUsersClient,
 ) : AuthAwareAuthenticationToken(jwt, clientId, userName, authSource, authorities),
   DprAuthAwareAuthenticationToken {
   private var activeCaseload: String? = null
@@ -39,7 +39,7 @@ class DprSystemAuthAwareAuthenticationToken(
   override fun getCaseLoads(): CaseloadResponse {
     if (this.caseloads == null) {
       this.caseloads = this.userName?.let {
-        userPermissionProvider.getCaseloads(it)
+        manageUsersClient.getCaseloads(it)
       } ?: CaseloadResponse(
         username = "",
         active = false,
@@ -54,7 +54,7 @@ class DprSystemAuthAwareAuthenticationToken(
   override fun getRoles(): List<String> {
     if (this.roles == null) {
       this.roles = this.userName?.let {
-        userPermissionProvider.getUsersRoles(it)
+        manageUsersClient.getUsersRoles(it)
       } ?: emptyList()
     }
     return this.roles!!
