@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOADS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.ROLE
@@ -11,32 +11,30 @@ data class Condition(
   val exists: List<String>? = null,
 ) {
 
-  fun execute(authToken: DprAuthAwareAuthenticationToken?, interpolateVariables: (String) -> String): Boolean {
+  fun execute(interpolateVariables: (String) -> String): Boolean {
     match?.let { matchList ->
-      return executeMatch(matchList, authToken, interpolateVariables)
+      return executeMatch(matchList, interpolateVariables)
     }
     exists?.map {
-      return isNotNull(authToken, it)
+      return isNotNull(it)
     }
     return false
   }
 
   private fun executeMatch(
     matchList: List<String>,
-    authToken: DprAuthAwareAuthenticationToken?,
     interpolateVariables: (String) -> String,
   ): Boolean = if (matchList.contains(ROLE)) {
-    isAnyOfTheRolesInTheList(authToken, matchList)
+    isAnyOfTheRolesInTheList(matchList)
   } else {
     isTheInterpolatedVarInTheList(matchList, interpolateVariables)
   }
 
   private fun isAnyOfTheRolesInTheList(
-    authToken: DprAuthAwareAuthenticationToken?,
     matchList: List<String>,
   ): Boolean {
-    val userRoles = authToken?.getRoles()?.removeRolePrefix()
-    return userRoles?.any { it in matchList.removeRolePrefix() } ?: false
+    val userRoles = ExecutionContext.get().userRoles.removeRolePrefix()
+    return userRoles.any { it in matchList.removeRolePrefix() }
   }
 
   private fun isTheInterpolatedVarInTheList(
@@ -47,14 +45,13 @@ data class Condition(
   }.toSet().count() == 1
 
   private fun isNotNull(
-    authToken: DprAuthAwareAuthenticationToken?,
     varPlaceholder: String,
   ): Boolean {
     val varMappings = mapOf(
-      TOKEN to authToken,
-      ROLE to authToken?.getRoles(),
-      CASELOAD to authToken?.getActiveCaseLoadId(),
-      CASELOADS to authToken?.getCaseLoadIds(),
+      TOKEN to ExecutionContext.hasValidAuth(),
+      ROLE to ExecutionContext.get().userRoles,
+      CASELOAD to ExecutionContext.getActiveCaseLoadId(),
+      CASELOADS to ExecutionContext.getCaseLoadIds(),
     )
     return varMappings[varPlaceholder] != null
   }

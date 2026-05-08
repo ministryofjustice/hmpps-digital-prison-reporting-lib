@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -10,6 +11,8 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.set
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
@@ -41,10 +44,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Referen
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition as DataFilterDefinition
 
 class DashboardDefinitionMapperTest {
@@ -58,6 +63,8 @@ class DashboardDefinitionMapperTest {
   private val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService = mock()
   private val alertCategoryCacheService: AlertCategoryCacheService = mock()
   private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
+  private val manageUsersClient: ManageUsersClient = org.mockito.kotlin.mock<ManageUsersClient>()
+
   private val dashboardDefinitionMapper = DashboardDefinitionMapper(
     syncDataApiService = syncDataApiService,
     identifiedHelper = IdentifiedHelper(),
@@ -66,6 +73,26 @@ class DashboardDefinitionMapperTest {
     productDefinitionRepository = productDefinitionRepository,
     productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
   )
+
+  @BeforeEach
+  fun setup() {
+    ExecutionContext
+      .get()
+      .copy(
+        CaseloadResponse(
+          username = "request-user",
+          active = true,
+          accountType = "GENERAL",
+          caseloads = listOf(
+            Caseload("KMI", "KIRKHAM"),
+            Caseload("WWI", "WANDSWORTH (HMP)"),
+          ),
+          activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+        ),
+        listOf("ROLE_PRISONS_REPORTING_USER"),
+        AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      ).set()
+  }
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
@@ -309,16 +336,6 @@ class DashboardDefinitionMapperTest {
 
   @Test
   fun `getDashboardDefinition converts caseloads filter to multiselect filter and returns the dashboard definition`() {
-    val authToken = mock<DprAuthAwareAuthenticationToken>()
-    whenever(authToken.getCaseLoads()).thenReturn(
-      CaseloadResponse(
-        username = "request-user",
-        active = true,
-        accountType = "GENERAL",
-        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
-        caseloads = listOf(Caseload("KMI", "KIRKHAM"), Caseload("WWI", "WANDSWORTH (HMP)")),
-      ),
-    )
     val datasetId = "dataset-id"
     val id = "age-breakdown-dashboard-1"
     val name = "test-dashboard-name"
@@ -352,7 +369,6 @@ class DashboardDefinitionMapperTest {
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDatasets = listOf(dashboardDataset),
-      authToken = authToken,
     )
     val expected = DashboardDefinition(
       id,
@@ -369,6 +385,7 @@ class DashboardDefinitionMapperTest {
           mandatory = false,
           visible = true,
           filter = FilterDefinition(
+            defaultValue = "KMI,WWI",
             type = FilterType.Multiselect,
             mandatory = false,
             interactive = false,

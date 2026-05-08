@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DynamicFilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
@@ -21,7 +22,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Paramet
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReferenceType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticFilterOption
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
@@ -66,7 +66,6 @@ abstract class DefinitionMapper(
   protected fun map(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
     staticOptions: List<FilterOption>?,
-    authToken: DprAuthAwareAuthenticationToken? = null,
   ): FilterDefinition = FilterDefinition(
     type = populateFilterType(filterDefinition),
     staticOptions = staticOptions,
@@ -75,7 +74,7 @@ abstract class DefinitionMapper(
         minimumLength = filterDefinition.dynamicOptions.minimumLength,
       )
     },
-    defaultValue = populateDefaultValue(filterDefinition, authToken),
+    defaultValue = populateDefaultValue(filterDefinition),
     min = replaceTokens(filterDefinition.min),
     max = replaceTokens(filterDefinition.max),
     mandatory = filterDefinition.mandatory,
@@ -92,14 +91,13 @@ abstract class DefinitionMapper(
     reportVariantId: String,
     schemaFieldName: String,
     maxStaticOptions: Long?,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
-      return authToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
+      return ExecutionContext.get().prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->
@@ -117,7 +115,6 @@ abstract class DefinitionMapper(
           reportVariantId,
           maxStaticOptions,
           schemaFieldName,
-          authToken,
           dataProductDefinitionsPath,
         )
     } ?: filterDefinition.staticOptions?.map(this::map)
@@ -230,7 +227,6 @@ abstract class DefinitionMapper(
     reportVariantId: String,
     maxStaticOptions: Long?,
     schemaFieldName: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String?,
   ) = syncDataApiService.validateAndFetchData(
     reportId = productDefinitionId,
@@ -240,7 +236,6 @@ abstract class DefinitionMapper(
     pageSize = maxStaticOptions ?: DEFAULT_MAX_STATIC_OPTIONS,
     sortColumn = schemaFieldName,
     sortedAsc = true,
-    authToken = authToken,
     reportFieldId = setOf(schemaFieldName),
     dataProductDefinitionsPath = dataProductDefinitionsPath,
   )
@@ -251,9 +246,8 @@ abstract class DefinitionMapper(
 
   private fun populateDefaultValue(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
-    authToken: DprAuthAwareAuthenticationToken?,
   ) = if (filterDefinition.type == Caseloads) {
-    authToken?.getCaseLoadIds()?.joinToString(",")
+    ExecutionContext.getCaseLoadIds().joinToString(",")
   } else {
     replaceTokens(filterDefinition.default)
   }
