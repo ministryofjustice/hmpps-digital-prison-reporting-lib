@@ -30,10 +30,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishment
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.TEST_TOKEN
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 

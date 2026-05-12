@@ -41,7 +41,7 @@ class MissingReportSubmissionController(
     @PathVariable("variantId")
     variantId: String,
     @RequestBody body: String?,
-    httpRequest: HttpServletRequest
+    httpRequest: HttpServletRequest,
   ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
     MissingReportSubmissionRequest(
       httpRequest.getUserContext(manageUsersClient).userInfo.username,
