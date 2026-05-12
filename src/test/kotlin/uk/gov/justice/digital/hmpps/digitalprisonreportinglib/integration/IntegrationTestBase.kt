@@ -154,26 +154,7 @@ abstract class IntegrationTestBase {
     whenever(authentication.jwt).then { jwt }
     whenever(authentication.authSource).then { AuthSource.NONE }
     whenever(authentication.name).then { "TESTUSER1" }
-    whenever(authentication.getUsername()).then { "TESTUSER1" }
     whenever(authentication.userName).then { "TESTUSER1" }
-    whenever(authentication.getCaseLoads()).then {
-      CaseloadResponse(
-        username = "TESTUSER1",
-        active = true,
-        accountType = "GENERAL",
-        activeCaseload = Caseload(id = "LWSTMC", name = "Lowestoft (North East Suffolk) Magistrat"),
-        caseloads = listOf(
-          Caseload("ABC", "ABCPRISON (ABC)"),
-          Caseload("DEF", "DEFPRISON (DEF)"),
-          Caseload("GHI", "GHIPRISON (GHI)"),
-          Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
-          Caseload("WWI", "WANDSWORTH (HMP)"),
-          Caseload("AKI", "Acklington (HMP)"),
-        ),
-      )
-    }
-    whenever(authentication.getCaseLoadIds()).then { listOf("ABC", "DEF", "GHI", "LWSTMC", "WWI", "AKI") }
-    whenever(authentication.getActiveCaseLoadId()).then { "LWSTMC" }
     authenticationHelper.authentication = authentication
     val secContext = mock<SecurityContext>()
     whenever(secContext.authentication).thenReturn(authentication)

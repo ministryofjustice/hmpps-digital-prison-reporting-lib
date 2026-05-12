@@ -70,7 +70,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
@@ -119,7 +119,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       "reason" to "normal transfer",
     ),
   )
-  private val authToken = mock<DprAuthAwareAuthenticationToken>()
+  private val authToken = mock<DprSystemAuthAwareAuthenticationToken>()
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"

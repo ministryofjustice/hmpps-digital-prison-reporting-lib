@@ -122,20 +122,7 @@ abstract class IntegrationSystemTestBase {
     whenever(jwt.tokenValue).then { TEST_TOKEN }
     whenever(authentication.jwt).then { jwt }
     whenever(authentication.authSource).then { AuthSource.NOMIS }
-    whenever(authentication.getRoles()).thenReturn(listOf(authorisedRole))
-    whenever(authentication.getCaseLoads()).thenReturn(
-      CaseloadResponse(
-        username = "request-user",
-        active = true,
-        accountType = "GENERAL",
-        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
-        caseloads = listOf(Caseload("WWI", "WANDSWORTH (HMP)")),
-      ),
-    )
-    whenever(authentication.getActiveCaseLoadId()).thenReturn("WWI")
-    whenever(authentication.getCaseLoadIds()).thenReturn(listOf("WWI"))
     whenever(authentication.name).then { "TESTUSER1" }
-    whenever(authentication.getUsername()).then { "TESTUSER1" }
     whenever(authentication.userName).then { "TESTUSER1" }
     authenticationHelper.authentication = authentication
 

@@ -4,16 +4,17 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MissingReportSubmissionRequest
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 
 @Validated
 @ConditionalOnProperty("spring.datasource.missingreport.url")
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAw
 @Tag(name = "Missing report submission API")
 class MissingReportSubmissionController(
   val missingReportService: MissingReportService,
+  val manageUsersClient: ManageUsersClient,
 ) {
 
   @ConditionalOnBean(MissingReportService::class)
@@ -39,10 +41,10 @@ class MissingReportSubmissionController(
     @PathVariable("variantId")
     variantId: String,
     @RequestBody body: String?,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest
   ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
     MissingReportSubmissionRequest(
-      (authentication as DprAuthAwareAuthenticationToken).getUsername(),
+      httpRequest.getUserContext(manageUsersClient).userInfo.username,
       reportId,
       variantId,
       body,

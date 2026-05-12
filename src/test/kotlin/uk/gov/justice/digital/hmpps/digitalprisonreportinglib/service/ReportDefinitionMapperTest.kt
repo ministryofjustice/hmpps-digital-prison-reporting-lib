@@ -62,7 +62,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DefinitionMapper.Companion.DEFAULT_MAX_STATIC_OPTIONS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
@@ -258,7 +258,7 @@ class ReportDefinitionMapperTest {
   )
 
   private val configuredApiService: SyncDataApiService = mock()
-  private val authToken = mock<DprAuthAwareAuthenticationToken>()
+  private val authToken = mock<DprSystemAuthAwareAuthenticationToken>()
   private val identifiedHelper = IdentifiedHelper()
   private val establishmentCodesToWingsCacheService = mock<EstablishmentCodesToWingsCacheService>()
   private val alertCategoryCacheService: AlertCategoryCacheService = mock()
