@@ -70,7 +70,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
@@ -119,7 +118,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       "reason" to "normal transfer",
     ),
   )
-  private val authToken = mock<DprSystemAuthAwareAuthenticationToken>()
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
@@ -551,7 +549,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
-    val caseload = "caseloadA"
     whenever(
       productDefinitionRepository.getSingleDashboardProductDefinition(
         definitionId = reportId,
@@ -574,9 +571,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(singleDashboardProductDefinition.allDatasources).thenReturn(allDatasources)
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(
@@ -652,7 +646,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val parameter = Parameter(0, parameterName, ParameterType.String, FilterType.AutoComplete, "Estabishment Code", true, ReferenceType.ESTABLISHMENT)
     val multiphaseQuery1 = MultiphaseQuery(0, "datasource1", "SELECT * FROM a", listOf(parameter))
     val multiphaseQuery2 = MultiphaseQuery(1, "datasource2", "SELECT * FROM b", listOf(parameter))
-    val caseload = "caseloadA"
     val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
     whenever(
       productDefinitionRepository.getSingleDashboardProductDefinition(
@@ -675,9 +668,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(singleDashboardProductDefinition.allDatasources).thenReturn(allDatasources)
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(
@@ -751,7 +741,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val parameter = Parameter(0, parameterName, ParameterType.String, FilterType.AutoComplete, "Estabishment Code", true, ReferenceType.ESTABLISHMENT)
     val multiphaseQuery1 = MultiphaseQuery(0, "datasource1", "SELECT * FROM a", listOf(parameter))
     val multiphaseQuery2 = MultiphaseQuery(1, "datasource2", "SELECT * FROM b", listOf(parameter))
-    val caseload = "caseloadA"
     val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
     whenever(
       productDefinitionRepository.getSingleReportProductDefinition(
@@ -772,9 +761,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(singleReportProductDefinition.allDatasources).thenReturn(allDatasources)
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(
