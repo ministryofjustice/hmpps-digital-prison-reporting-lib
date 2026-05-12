@@ -9,6 +9,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.then
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
@@ -29,6 +30,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
@@ -89,11 +94,27 @@ class ReportDefinitionServiceTest {
 
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
 
+  private val executionContext = ExecutionContext(
+    CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("KMI", "KIRKHAM"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+      activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    ),
+    emptyList(),
+    AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
+
   @BeforeEach
   fun setup() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
   }
@@ -118,14 +139,14 @@ class ReportDefinitionServiceTest {
     val mapper = mock<ReportDefinitionMapper> {}
 
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
-      on { map(any(), any()) } doReturn expectedResult
+      on { map(any(), any(), any()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, summaryMapper, productDefinitionTokenPolicyChecker)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML)
+    val actualResult = service.getListForUser(executionContext, RenderMethod.HTML)
 
     then(repository).should().getProductDefinitions()
-    then(summaryMapper).should().map(minimalDefinition, RenderMethod.HTML)
+    then(summaryMapper).should().map(minimalDefinition, RenderMethod.HTML, executionContext)
 
     assertThat(actualResult).isNotEmpty
     assertThat(actualResult).hasSize(1)
@@ -148,20 +169,21 @@ class ReportDefinitionServiceTest {
     whenever(repository.getSingleReportProductDefinition(any(), any(), anyOrNull())).thenReturn(minimalSingleDefinition)
 
     val mapper = mock<ReportDefinitionMapper> {
-      on { mapReport(any<SingleReportProductDefinition>(), anyOrNull(), anyOrNull()) } doReturn expectedResult
+      on { mapReport(any<SingleReportProductDefinition>(), any(), anyOrNull(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {}, productDefinitionTokenPolicyChecker)
 
     val actualResult = service.getDefinition(
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
+      executionContext,
     )
 
     then(repository).should().getSingleReportProductDefinition(
       minimalSingleDefinition.id,
       minimalSingleDefinition.report.id,
     )
-    then(mapper).should().mapReport(minimalSingleDefinition)
+    then(mapper).should().mapReport(minimalSingleDefinition, executionContext)
 
     assertThat(actualResult).isNotNull
     assertThat(actualResult).isEqualTo(expectedResult)
@@ -180,11 +202,11 @@ class ReportDefinitionServiceTest {
 
     val mapper = mock<ReportDefinitionMapper> {}
     val summaryMapper = mock<ReportDefinitionSummaryMapper> {
-      on { map(any(), any()) } doReturn definitionWithNoVariants
+      on { map(any(), any(), any()) } doReturn definitionWithNoVariants
     }
     val service = ReportDefinitionService(repository, mapper, summaryMapper, productDefinitionTokenPolicyChecker)
 
-    val actualResult = service.getListForUser(RenderMethod.HTML)
+    val actualResult = service.getListForUser(executionContext, RenderMethod.HTML)
 
     assertThat(actualResult).hasSize(0)
   }

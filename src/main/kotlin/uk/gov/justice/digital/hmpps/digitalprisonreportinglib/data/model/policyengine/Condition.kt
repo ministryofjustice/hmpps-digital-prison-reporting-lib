@@ -11,12 +11,12 @@ data class Condition(
   val exists: List<String>? = null,
 ) {
 
-  fun execute(interpolateVariables: (String) -> String): Boolean {
+  fun execute(executionContext: ExecutionContext, interpolateVariables: (String) -> String): Boolean {
     match?.let { matchList ->
-      return executeMatch(matchList, interpolateVariables)
+      return executeMatch(matchList, interpolateVariables, executionContext)
     }
     exists?.map {
-      return isNotNull(it)
+      return isNotNull(it, executionContext)
     }
     return false
   }
@@ -24,16 +24,18 @@ data class Condition(
   private fun executeMatch(
     matchList: List<String>,
     interpolateVariables: (String) -> String,
+    executionContext: ExecutionContext,
   ): Boolean = if (matchList.contains(ROLE)) {
-    isAnyOfTheRolesInTheList(matchList)
+    isAnyOfTheRolesInTheList(matchList, executionContext)
   } else {
     isTheInterpolatedVarInTheList(matchList, interpolateVariables)
   }
 
   private fun isAnyOfTheRolesInTheList(
     matchList: List<String>,
+    executionContext: ExecutionContext,
   ): Boolean {
-    val userRoles = ExecutionContext.get().userRoles.removeRolePrefix()
+    val userRoles = executionContext.userRoles.removeRolePrefix()
     return userRoles.any { it in matchList.removeRolePrefix() }
   }
 
@@ -46,12 +48,13 @@ data class Condition(
 
   private fun isNotNull(
     varPlaceholder: String,
+    executionContext: ExecutionContext,
   ): Boolean {
     val varMappings = mapOf(
-      TOKEN to ExecutionContext.hasValidAuth(),
-      ROLE to ExecutionContext.get().userRoles,
-      CASELOAD to ExecutionContext.getActiveCaseLoadId(),
-      CASELOADS to ExecutionContext.getCaseLoadIds(),
+      TOKEN to executionContext.hasValidAuth(),
+      ROLE to executionContext.userRoles,
+      CASELOAD to executionContext.getActiveCaseLoadId(),
+      CASELOADS to executionContext.getCaseLoadIds(),
     )
     return varMappings[varPlaceholder] != null
   }

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -211,8 +212,9 @@ abstract class CommonDataApiService(
 
   protected fun checkAuth(
     productDefinition: WithPolicy,
+    executionContext: ExecutionContext,
   ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition)) {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, executionContext)) {
       throw UserAuthorisationException("User does not have correct authorisation")
     }
     return true
@@ -271,9 +273,10 @@ abstract class CommonDataApiService(
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
+    executionContext: ExecutionContext,
   ): Pair<CoreDownloadContext, SingleReportProductDefinition> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition)
+    checkAuth(productDefinition, executionContext)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toHashSet().orEmpty()
     val defFieldNames = productDefinition.report.specification?.field.orEmpty().map { it.name }.map { it.removePrefix(REF_PREFIX) }

@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.mock
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
@@ -27,13 +27,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.StaticF
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Template
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Visible
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.WordWrap
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.time.LocalDateTime
 import java.util.Collections.singletonMap
 
 class ReportDefinitionSummaryMapperTest {
-
-  val authToken = mock<DprAuthAwareAuthenticationToken>()
 
   private val fullDataset = Dataset(
     id = "10",
@@ -112,11 +113,26 @@ class ReportDefinitionSummaryMapperTest {
     report = listOf(fullReport),
   )
 
+  private val executionContext = ExecutionContext(
+    CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("KMI", "KIRKHAM"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+      activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    ),
+    emptyList(),
+    AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
+
   @Test
   fun `Getting report list for user maps full data correctly`() {
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(fullProductDefinition, null)
+    val result = mapper.map(fullProductDefinition, null, executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullProductDefinition.id)
@@ -146,7 +162,7 @@ class ReportDefinitionSummaryMapperTest {
     )
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(productDefinition, null)
+    val result = mapper.map(productDefinition, null, executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(0)
@@ -196,7 +212,7 @@ class ReportDefinitionSummaryMapperTest {
     )
     val mapper = ReportDefinitionSummaryMapper()
 
-    val result = mapper.map(productDefinition, HTML)
+    val result = mapper.map(productDefinition, HTML, executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.variants).hasSize(1)
@@ -228,6 +244,7 @@ class ReportDefinitionSummaryMapperTest {
           ),
         ),
       null,
+      executionContext,
     )
 
     assertThat(result.dashboards!![0]).isEqualTo(dashboardDefinition)

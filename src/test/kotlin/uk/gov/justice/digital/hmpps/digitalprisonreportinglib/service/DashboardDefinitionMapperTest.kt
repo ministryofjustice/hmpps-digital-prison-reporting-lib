@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
@@ -12,7 +11,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.set
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
@@ -44,7 +42,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Referen
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Schema
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -63,7 +60,6 @@ class DashboardDefinitionMapperTest {
   private val establishmentCodesToWingsCacheService: EstablishmentCodesToWingsCacheService = mock()
   private val alertCategoryCacheService: AlertCategoryCacheService = mock()
   private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
-  private val manageUsersClient: ManageUsersClient = org.mockito.kotlin.mock<ManageUsersClient>()
 
   private val dashboardDefinitionMapper = DashboardDefinitionMapper(
     syncDataApiService = syncDataApiService,
@@ -74,25 +70,20 @@ class DashboardDefinitionMapperTest {
     productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
   )
 
-  @BeforeEach
-  fun setup() {
-    ExecutionContext
-      .get()
-      .copy(
-        CaseloadResponse(
-          username = "request-user",
-          active = true,
-          accountType = "GENERAL",
-          caseloads = listOf(
-            Caseload("KMI", "KIRKHAM"),
-            Caseload("WWI", "WANDSWORTH (HMP)"),
-          ),
-          activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
-        ),
-        listOf("ROLE_PRISONS_REPORTING_USER"),
-        AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
-      ).set()
-  }
+  private val executionContext = ExecutionContext(
+    CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("KMI", "KIRKHAM"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+      activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    ),
+    listOf("ROLE_PRISONS_REPORTING_USER"),
+    AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
@@ -108,6 +99,7 @@ class DashboardDefinitionMapperTest {
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = productDefinition.dashboard,
       allDatasets = productDefinition.allDatasets,
+      executionContext = executionContext,
     )
     assertEquals(
       DashboardDefinition(
@@ -216,6 +208,7 @@ class DashboardDefinitionMapperTest {
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDatasets = listOf(dashboardDataset),
+      executionContext = executionContext,
     )
     val expected = DashboardDefinition(
       id,
@@ -299,6 +292,7 @@ class DashboardDefinitionMapperTest {
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDatasets = listOf(dashboardDataset),
+      executionContext = executionContext,
     )
     val expected = DashboardDefinition(
       id,
@@ -369,6 +363,7 @@ class DashboardDefinitionMapperTest {
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDatasets = listOf(dashboardDataset),
+      executionContext = executionContext,
     )
     val expected = DashboardDefinition(
       id,

@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.set
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
@@ -107,27 +106,26 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   )
   private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
 
+  private val executionContext = ExecutionContext(
+    CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+      activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    ),
+    listOf("ROLE_PRISONS_REPORTING_USER"),
+    AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
+
   @BeforeEach
   fun setup() {
-    ExecutionContext
-      .get()
-      .copy(
-        CaseloadResponse(
-          username = "request-user",
-          active = true,
-          accountType = "GENERAL",
-          caseloads = listOf(
-            Caseload("WWI", "WANDSWORTH (HMP)"),
-          ),
-          activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
-        ),
-        listOf("ROLE_PRISONS_REPORTING_USER"),
-        AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
-      ).set()
-
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
   }
@@ -159,7 +157,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -220,6 +218,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       filters,
       selectedPage,
       pageSize,
+      executionContext,
       sortColumn,
       sortedAsc,
       setOf(reportFieldId),
@@ -299,6 +298,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       sortColumn = "name",
       sortedAsc = sortedAsc,
+      executionContext = executionContext,
       reportFieldId = linkedSetOf(estNameSchemaFieldName, estCodeSchemaFieldName),
       datasetForFilter = filterDataset,
     )
@@ -338,7 +338,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(4)
 
-    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
@@ -378,7 +378,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -414,7 +414,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(4)
 
-    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
@@ -455,7 +455,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filtersExcludingRange, selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filtersExcludingRange, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       dataSet.query.first().query,
@@ -491,7 +491,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(4)
 
-    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
@@ -531,7 +531,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -555,21 +555,19 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       identifiedHelper,
     )
     val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
-    ExecutionContext
-      .get()
-      .copy(
-        CaseloadResponse(
-          username = "request-user",
-          active = true,
-          accountType = "GENERAL",
-          caseloads = listOf(
-            Caseload("WWI", "WANDSWORTH (HMP)"),
-          ),
-          activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = "request-user",
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(
+          Caseload("WWI", "WANDSWORTH (HMP)"),
         ),
-        listOf("USER-ROLE-1"),
-        AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
-      ).set()
+        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+      ),
+      listOf("USER-ROLE-1"),
+      AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    )
     val policyEngineResult = "TRUE"
     val reportId = "definition-policy-no-action"
     val filters = mapOf("direction" to "In", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
@@ -597,7 +595,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, context, sortColumn, sortedAsc)
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
       filters = repositoryFilters,
@@ -632,7 +630,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(4)
 
-    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
       filters = repositoryFilters,
@@ -674,7 +672,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     )
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -713,7 +711,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(4)
 
-    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, emptyMap())
+    val actual = configuredApiService.validateAndCount(reportId, reportVariantId, emptyMap(), executionContext)
 
     verify(configuredApiRepository, times(1)).count(
       filters = emptyList(),
@@ -737,7 +735,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_ID_MESSAGE} $reportId", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -762,7 +760,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+      configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_ID_MESSAGE} $reportId", e.message)
     verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
@@ -778,7 +776,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<java.lang.IllegalArgumentException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -802,7 +800,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val filters = mapOf("direction" to "in", "date$RANGE_FILTER_START_SUFFIX" to "2023-04-25", "date$RANGE_FILTER_END_SUFFIX" to "2023-09-10")
 
     val e = org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
-      configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+      configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
     verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
@@ -817,7 +815,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals("Invalid sortColumn provided: abc", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -844,7 +842,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -871,7 +869,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, setOf(fieldId), "ab")
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, executionContext, sortColumn, sortedAsc, setOf(fieldId), "ab")
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -898,7 +896,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val fieldId = "direction"
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc, setOf(fieldId), "ab")
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, executionContext, sortColumn, sortedAsc, setOf(fieldId), "ab")
     }
     assertEquals(SyncDataApiService.INVALID_DYNAMIC_FILTER_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -924,7 +922,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, "last-year", emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, "last-year", emptyMap(), selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
@@ -944,6 +942,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
+      executionContext = executionContext,
       reportFieldId = setOf("name"),
     )
 
@@ -961,7 +960,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       "origin" to "Invalid",
     )
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, "last-year", filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, "last-year", filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
   }
@@ -985,6 +984,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
+      executionContext = executionContext,
       reportFieldId = setOf("origin"),
     )
 
@@ -994,7 +994,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   @Test
   fun `validateAndCount should throw an exception for a mandatory filter with no value`() {
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, "last-year", emptyMap())
+      configuredApiService.validateAndCount(reportId, "last-year", emptyMap(), executionContext)
     }
     assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
@@ -1006,7 +1006,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       "origin" to "Invalid",
     )
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, "last-year", filters)
+      configuredApiService.validateAndCount(reportId, "last-year", filters, executionContext)
     }
     assertEquals(SyncDataApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
   }
@@ -1016,7 +1016,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val filters = mapOf("non existent filter" to "blah")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+      configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
@@ -1031,7 +1031,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -1054,7 +1054,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val filters = mapOf("non existent filter" to "blah", "date$RANGE_FILTER_START_SUFFIX" to "2023-01-01")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+      configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
@@ -1069,7 +1069,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -1092,7 +1092,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val filters = mapOf("direction" to "randomValue", "date$RANGE_FILTER_START_SUFFIX" to "2023-01-01")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+      configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
@@ -1107,7 +1107,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -1139,6 +1139,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         mapOf(),
         selectedPage,
         pageSize,
+        executionContext,
         sortColumn,
         sortedAsc,
         setOf("name"),
@@ -1166,7 +1167,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val filters = mapOf("direction" to "randomValue")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+      configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
     verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
@@ -1181,7 +1182,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val sortedAsc = true
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+      configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
     verify(configuredApiRepository, times(0)).executeQuery(
@@ -1204,7 +1205,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val filters = mapOf("date$RANGE_FILTER_START_SUFFIX" to "abc")
 
     val e = org.junit.jupiter.api.assertThrows<ValidationException> {
-      configuredApiService.validateAndCount(reportId, reportVariantId, filters)
+      configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
     verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
@@ -1237,7 +1238,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, null, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, null, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -1365,7 +1366,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, null, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, emptyMap(), selectedPage, pageSize, executionContext, null, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -1390,6 +1391,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         mapOf("is_closed" to "in"),
         1L,
         10L,
+        executionContext,
         "date",
         true,
       )
@@ -1425,7 +1427,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedRepositoryResult)
 
-    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchData(reportId, reportVariantId, filters, selectedPage, pageSize, executionContext, sortColumn, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -1469,21 +1471,19 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     val dataSourceName = singleReportProductDefinition.datasource.name
 
-    ExecutionContext
-      .get()
-      .copy(
-        CaseloadResponse(
-          username = "request-user",
-          active = true,
-          accountType = "GENERAL",
-          caseloads = listOf(
-            Caseload("WWI", "WANDSWORTH (HMP)"),
-          ),
-          activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = "request-user",
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(
+          Caseload("WWI", "WANDSWORTH (HMP)"),
         ),
-        emptyList(),
-        AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
-      ).set()
+        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+      ),
+      emptyList(),
+      AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    )
 
     whenever(
       configuredApiRepository.executeQuery(
@@ -1499,7 +1499,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     ).thenReturn(expectedDashboardResult)
 
-    val actual = configuredApiService.validateAndFetchDataForDashboard(dashboardId, dashboardReportId, emptyMap(), selectedPage, pageSize, sortColumn, sortedAsc)
+    val actual = configuredApiService.validateAndFetchDataForDashboard(dashboardId, dashboardReportId, emptyMap(), selectedPage, pageSize, context, sortColumn, sortedAsc)
 
     verify(configuredApiRepository, times(1)).executeQuery(
       query = dataSet.query.first().query,
@@ -1571,11 +1571,6 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       identifiedHelper = identifiedHelper,
       env = null,
     )
-    whenever(
-      productDefinitionTokenPolicyChecker.determineAuth(
-        withPolicy = any(),
-      ),
-    ).thenReturn(true)
     val downloadContext = syncDataApiService.prepareSyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
@@ -1584,6 +1579,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = listOf("col2", "col1"),
       sortColumn = sortColumn,
       sortedAsc = true,
+      executionContext = executionContext,
     )
 
     whenever(rs.metaData).thenReturn(meta)

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -17,6 +18,7 @@ class ReportDefinitionSummaryMapper {
   fun map(
     productDefinition: AnyProductDefinition,
     renderMethod: RenderMethod?,
+    executionContext: ExecutionContext,
   ): ReportDefinitionSummary = ReportDefinitionSummary(
     id = productDefinition.id,
     name = productDefinition.name,
@@ -25,12 +27,13 @@ class ReportDefinitionSummaryMapper {
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
       .map { map(it, productDefinition.path == DataDefinitionPath.MISSING) },
     dashboards = productDefinition.dashboard?.map { map(it) },
-    authorised = determineAuth(productDefinition),
+    authorised = determineAuth(productDefinition, executionContext),
   )
 
   private fun determineAuth(
     productDefinition: WithPolicy,
-  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition)
+    executionContext: ExecutionContext,
+  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, executionContext)
 
   private fun map(
     report: AnyReport,

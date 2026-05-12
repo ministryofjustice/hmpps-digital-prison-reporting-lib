@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.security.core.context.SecurityContext
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -173,6 +175,9 @@ abstract class IntegrationTestBase {
     whenever(authentication.getCaseLoadIds()).then { listOf("ABC", "DEF", "GHI", "LWSTMC", "WWI", "AKI") }
     whenever(authentication.getActiveCaseLoadId()).then { "LWSTMC" }
     authenticationHelper.authentication = authentication
+    val secContext = mock<SecurityContext>()
+    whenever(secContext.authentication).thenReturn(authentication)
+    SecurityContextHolder.setContext(secContext)
   }
 
   protected fun stubDefinitionsResponse() {

@@ -18,11 +18,13 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 import java.util.Collections.singletonList
@@ -34,6 +36,7 @@ class DataApiSyncController(
   val dataApiSyncService: SyncDataApiService,
   val filterHelper: FilterHelper,
   val csvStreamingSupport: CsvStreamingSupport,
+  val manageUsersClient: ManageUsersClient,
 ) {
 
   companion object {
@@ -94,6 +97,7 @@ class DataApiSyncController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -106,6 +110,7 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
+          executionContext = httpRequest.getUserContext(manageUsersClient),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -149,6 +154,7 @@ class DataApiSyncController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<Count> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -157,6 +163,7 @@ class DataApiSyncController(
           reportId = reportId,
           reportVariantId = reportVariantId,
           filters = filterHelper.filtersOnly(filters),
+          executionContext = httpRequest.getUserContext(manageUsersClient),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -208,6 +215,7 @@ class DataApiSyncController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -220,6 +228,7 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
+          executionContext = httpRequest.getUserContext(manageUsersClient),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -270,6 +279,7 @@ class DataApiSyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
+      executionContext = request.getUserContext(manageUsersClient),
     )
 
     csvStreamingSupport.streamCsv(

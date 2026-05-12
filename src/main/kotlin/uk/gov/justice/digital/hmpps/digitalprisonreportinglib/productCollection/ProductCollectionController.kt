@@ -4,22 +4,28 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 
 @Validated
 @RestController
 @Tag(name = "Product Collection API")
-class ProductCollectionController(val productCollectionService: ProductCollectionService) {
+class ProductCollectionController(
+  val productCollectionService: ProductCollectionService,
+  val manageUsersClient: ManageUsersClient,
+) {
 
   @GetMapping("/productCollections")
   @Operation(
     description = "Gets all product collections",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  fun getCollections(): Collection<ProductCollectionSummary> = productCollectionService.getProductCollections()
+  fun getCollections(httpRequest: HttpServletRequest): Collection<ProductCollectionSummary> = productCollectionService.getProductCollections(httpRequest.getUserContext(manageUsersClient))
 
   @GetMapping("/productCollections/{id}")
   @Operation(

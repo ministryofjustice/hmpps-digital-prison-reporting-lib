@@ -8,9 +8,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionC
 class ProductCollectionService(
   val productCollectionRepository: ProductCollectionRepository,
 ) {
-  fun getProductCollections(): Collection<ProductCollectionSummary> {
+  fun getProductCollections(executionContext: ExecutionContext): Collection<ProductCollectionSummary> {
     // Set this to "NULL" if theres no values, which will fail the check, if a collection has any caseloadId attributes linked to it
-    val caseloadIds = ExecutionContext.getCaseLoadIds().takeIf { it.isNotEmpty() } ?: listOf("NULL")
+    val caseloadIds = executionContext.getCaseLoadIds().takeIf { it.isNotEmpty() } ?: listOf("NULL")
     val groupBy = productCollectionRepository.findAll(caseloadIds)
       .groupBy { it.id }
       .values

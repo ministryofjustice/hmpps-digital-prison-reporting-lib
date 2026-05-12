@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -14,7 +13,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.set
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
@@ -266,26 +264,20 @@ class ReportDefinitionMapperTest {
   private val alertCategoryCacheService: AlertCategoryCacheService = mock()
   private val productDefinitionRepository: ProductDefinitionRepository = mock()
   private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
-
-  @BeforeEach
-  fun setup() {
-    ExecutionContext
-      .get()
-      .copy(
-        CaseloadResponse(
-          username = "request-user",
-          active = true,
-          accountType = "GENERAL",
-          caseloads = listOf(
-            Caseload("KMI", "KIRKHAM"),
-            Caseload("WWI", "WANDSWORTH (HMP)"),
-          ),
-          activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
-        ),
-        emptyList(),
-        AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
-      ).set()
-  }
+  private val executionContext = ExecutionContext(
+    CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("KMI", "KIRKHAM"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+      activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    ),
+    emptyList(),
+    AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
 
   val mapper = ReportDefinitionMapper(
     syncDataApiService = configuredApiService,
@@ -298,7 +290,7 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting report for user maps full data correctly`() {
-    val result = mapper.mapReport(definition = singleReportProductDefinition)
+    val result = mapper.mapReport(definition = singleReportProductDefinition, executionContext = executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(singleReportProductDefinition.id)
@@ -369,7 +361,7 @@ class ReportDefinitionMapperTest {
   @Test
   fun `Getting report for statically returned dynamic filter values on a number succeeds`() {
     whenever(
-      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()),
+      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
 
     val datasource = Datasource("datasourceId", "datasourceName")
@@ -428,7 +420,7 @@ class ReportDefinitionMapperTest {
       allDatasources = listOf(datasource),
     )
 
-    val result = mapper.mapReport(productDefinition)
+    val result = mapper.mapReport(productDefinition, executionContext)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.staticOptions).hasSize(2)
   }
@@ -448,7 +440,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today($offset, $magnitude)")
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = mapper.mapReport(definition = defaultValue)
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -460,7 +452,7 @@ class ReportDefinitionMapperTest {
     val defaultValue = createProductDefinition("today()")
     val expectedDate = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
 
-    val result = mapper.mapReport(definition = defaultValue)
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedDate)
 
@@ -475,7 +467,7 @@ class ReportDefinitionMapperTest {
     val expectedDate3 = getExpectedDate(7, ChronoUnit.DAYS)
     val expectedResult = "$expectedDate1, $expectedDate2, $expectedDate3"
 
-    val result = mapper.mapReport(definition = defaultValue)
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.defaultValue).isEqualTo(expectedResult)
 
@@ -501,7 +493,7 @@ class ReportDefinitionMapperTest {
     )
     val expectedDate = getExpectedDate(offset, magnitude)
 
-    val result = mapper.mapReport(definition = defaultValue)
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.specification!!.fields[0].filter!!.min).isEqualTo(expectedDate)
     assertThat(result.variant.specification!!.fields[0].filter!!.max).isEqualTo(expectedDate)
@@ -511,7 +503,7 @@ class ReportDefinitionMapperTest {
 
   @Test
   fun `Getting single report for user maps full data correctly`() {
-    val result = mapper.mapReport(fullSingleReportProductDefinition)
+    val result = mapper.mapReport(fullSingleReportProductDefinition, executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleReportProductDefinition.id)
@@ -571,13 +563,14 @@ class ReportDefinitionMapperTest {
         emptyMap(),
         1,
         DEFAULT_MAX_STATIC_OPTIONS,
+        executionContext,
         "13",
         true,
         setOf("13"),
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
-    val result = mapper.mapReport(fullSingleProductDefinition)
+    val result = mapper.mapReport(fullSingleProductDefinition, executionContext)
 
     assertResult(result, fullSingleProductDefinition)
     val field = result.variant.specification!!.fields.first()
@@ -627,7 +620,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.mapReport(fullSingleProductDefinition)
+    val result = mapper.mapReport(fullSingleProductDefinition, executionContext)
 
     assertResult(result, fullSingleProductDefinition)
     val field = result.variant.specification!!.fields.first()
@@ -706,6 +699,7 @@ class ReportDefinitionMapperTest {
     val result = mapper.mapReport(
       definition = fullSingleProductDefinition,
       filters = filters,
+      executionContext = executionContext,
     )
 
     assertResult(result, fullSingleProductDefinition, 2)
@@ -751,13 +745,14 @@ class ReportDefinitionMapperTest {
         emptyMap(),
         1,
         10,
+        executionContext = executionContext,
         "13",
         true,
         setOf("13"),
       ),
     ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
 
-    val result = mapper.mapReport(fullSingleProductDefinition)
+    val result = mapper.mapReport(fullSingleProductDefinition, executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
@@ -778,7 +773,7 @@ class ReportDefinitionMapperTest {
 
     val fullSingleProductDefinition = fullSingleReportProductDefinition.copy(report = reportWithMakeUrlFormula)
 
-    val result = mapper.mapReport(fullSingleProductDefinition)
+    val result = mapper.mapReport(fullSingleProductDefinition, executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
@@ -836,7 +831,7 @@ class ReportDefinitionMapperTest {
         ),
       )
 
-    val result = mapper.mapReport(fullSingleProductDefinition)
+    val result = mapper.mapReport(fullSingleProductDefinition, executionContext)
 
     assertThat(result).isNotNull
     assertThat(result.id).isEqualTo(fullSingleProductDefinition.id)
@@ -881,7 +876,7 @@ class ReportDefinitionMapperTest {
       visible = visibleDpd,
     )
 
-    val result: SingleVariantReportDefinition = mapper.mapReport(definition = defaultValue)
+    val result: SingleVariantReportDefinition = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.specification!!.fields[0].visible).isEqualTo(visibleControllerModel)
     assertThat(result.variant.specification!!.fields[0].mandatory).isEqualTo(mandatoryControllerModel)
@@ -904,7 +899,7 @@ class ReportDefinitionMapperTest {
       reportFieldDisplay = reportDisplay,
     )
 
-    val result = mapper.mapReport(definition = defaultValue)
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.specification!!.fields[0].display).isEqualTo(expectedDisplay)
 
@@ -925,7 +920,7 @@ class ReportDefinitionMapperTest {
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
 
-    val result = mapper.mapReport(productDefinition)
+    val result = mapper.mapReport(productDefinition, executionContext)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -984,7 +979,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.mapReport(productDefinition)
+    val result = mapper.mapReport(productDefinition, executionContext)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -1038,7 +1033,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.mapReport(productDefinition)
+    val result = mapper.mapReport(productDefinition, executionContext)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -1086,7 +1081,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.mapReport(productDefinition)
+    val result = mapper.mapReport(productDefinition, executionContext)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -1128,7 +1123,7 @@ class ReportDefinitionMapperTest {
     )
     val productDefinition = createProductDefinition("today()", multiphaseQueries = listOf(multiphaseQuery1, multiphaseQuery2))
 
-    val result = mapper.mapReport(productDefinition)
+    val result = mapper.mapReport(productDefinition, executionContext)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -1199,7 +1194,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.mapReport(productDefinition)
+    val result = mapper.mapReport(productDefinition, executionContext)
 
     val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
 
@@ -1218,7 +1213,7 @@ class ReportDefinitionMapperTest {
   fun `Interactive report metadata hint is mapped to the report correctly`() {
     val defaultValue = createProductDefinition("today(-2,DAYS)", interactive = true)
 
-    val result = mapper.mapReport(definition = defaultValue)
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.interactive).isEqualTo(true)
   }
@@ -1271,7 +1266,7 @@ class ReportDefinitionMapperTest {
       allDatasources = listOf(fullDatasource),
     )
 
-    val result = mapper.mapReport(definition = sourceDefinition)
+    val result = mapper.mapReport(definition = sourceDefinition, executionContext = executionContext)
 
     assertThat(result.variant.specification!!.fields[0].filter?.type.toString()).isEqualTo("Text")
     assertThat(result.variant.specification!!.fields[0].filter?.mandatory).isTrue()
@@ -1292,7 +1287,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val result = mapper.mapReport(definition = defaultValue)
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
 
     assertThat(result.variant.specification?.fields?.first()).isEqualTo(
       FieldDefinition(

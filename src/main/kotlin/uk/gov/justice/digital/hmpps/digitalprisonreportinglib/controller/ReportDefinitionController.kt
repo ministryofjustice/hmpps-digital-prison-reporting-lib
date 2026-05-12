@@ -4,16 +4,19 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefinitionService
 
 @Validated
@@ -22,6 +25,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.ReportDefi
 class ReportDefinitionController(
   val reportDefinitionService: ReportDefinitionService,
   val filterHelper: FilterHelper,
+  val manageUsersClient: ManageUsersClient,
 ) {
 
   companion object {
@@ -48,7 +52,9 @@ class ReportDefinitionController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    httpRequest: HttpServletRequest,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
+    httpRequest.getUserContext(manageUsersClient),
     renderMethod,
     dataProductDefinitionsPath,
   )
@@ -71,8 +77,10 @@ class ReportDefinitionController(
     )
     @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
     dataProductDefinitionsPath: String? = null,
+    httpRequest: HttpServletRequest,
   ): ReportDefinitionSummary = reportDefinitionService.getDefinitionSummary(
     reportId,
+    httpRequest.getUserContext(manageUsersClient),
     dataProductDefinitionsPath,
   )
 
@@ -106,9 +114,11 @@ class ReportDefinitionController(
     )
     @RequestParam
     filters: Map<String, String>,
+    httpRequest: HttpServletRequest,
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
     reportId = reportId,
     variantId = variantId,
+    executionContext = httpRequest.getUserContext(manageUsersClient),
     dataProductDefinitionsPath = dataProductDefinitionsPath,
     filters = filterHelper.filtersOnly(filters),
   )

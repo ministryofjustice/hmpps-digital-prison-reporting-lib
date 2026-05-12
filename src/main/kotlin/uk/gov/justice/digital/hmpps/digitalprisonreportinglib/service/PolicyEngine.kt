@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngi
 
 class PolicyEngine(
   val policy: List<Policy>,
+  val executionContext: ExecutionContext,
 ) {
 
   object VariableNames {
@@ -28,18 +29,18 @@ class PolicyEngine(
     policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables) }
   }
 
-  private fun isAnyPolicyDenied(policies: List<Policy>) = policies.map { it.execute(::interpolateVariables) }.any { it == POLICY_DENY }
+  private fun isAnyPolicyDenied(policies: List<Policy>) = policies.map { it.execute(executionContext, ::interpolateVariables) }.any { it == POLICY_DENY }
 
   private fun interpolateVariables(s: String): String {
-    if (!ExecutionContext.hasValidAuth()) return POLICY_DENY
+    if (!executionContext.hasValidAuth()) return POLICY_DENY
 
     return when {
       s.contains(CASELOAD) -> {
-        val activeCaseLoad = ExecutionContext.getActiveCaseLoadId()
+        val activeCaseLoad = executionContext.getActiveCaseLoadId()
         if (activeCaseLoad.isNullOrEmpty()) POLICY_DENY else s.replace(CASELOAD, activeCaseLoad)
       }
       s.contains(CASELOADS) -> {
-        val caseLoads = ExecutionContext.getCaseLoadIds()
+        val caseLoads = executionContext.getCaseLoadIds()
         if (caseLoads.isEmpty()) POLICY_DENY else s.replace(CASELOADS, caseLoads.joinToString { "\'${it}\'" })
       }
       else -> s

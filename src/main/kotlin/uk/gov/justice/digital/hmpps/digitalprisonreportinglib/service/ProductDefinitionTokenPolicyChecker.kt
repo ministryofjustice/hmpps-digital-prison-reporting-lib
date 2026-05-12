@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
@@ -9,8 +10,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 class ProductDefinitionTokenPolicyChecker {
   fun determineAuth(
     withPolicy: WithPolicy,
+    executionContext: ExecutionContext,
   ): Boolean {
-    val policyEngine = PolicyEngine(withPolicy.policy)
+    val policyEngine = PolicyEngine(withPolicy.policy, executionContext)
     val result = policyEngine.execute(PolicyType.ACCESS)
     return result == Policy.PolicyResult.POLICY_PERMIT
   }
