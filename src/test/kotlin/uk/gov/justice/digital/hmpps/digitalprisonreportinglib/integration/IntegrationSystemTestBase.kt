@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDO
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
+import org.springframework.security.core.context.SecurityContext
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -28,10 +30,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishment
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase.Companion.TEST_TOKEN
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
@@ -119,21 +119,10 @@ abstract class IntegrationSystemTestBase {
     val authentication = mock<DprSystemAuthAwareAuthenticationToken>()
     whenever(jwt.tokenValue).then { TEST_TOKEN }
     whenever(authentication.jwt).then { jwt }
-    authenticationHelper.authentication = authentication
     whenever(authentication.authSource).then { AuthSource.NOMIS }
-    whenever(authentication.getRoles()).thenReturn(listOf(authorisedRole))
-    whenever(authentication.getCaseLoads()).thenReturn(
-      CaseloadResponse(
-        username = "request-user",
-        active = true,
-        accountType = "GENERAL",
-        activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
-        caseloads = listOf(Caseload("WWI", "WANDSWORTH (HMP)")),
-      ),
-    )
-    whenever(authentication.getActiveCaseLoadId()).thenReturn("WWI")
-    whenever(authentication.getCaseLoadIds()).thenReturn(listOf("WWI"))
-    whenever(authentication.getUsername()).thenReturn("request-user")
+    whenever(authentication.name).then { "TESTUSER1" }
+    whenever(authentication.userName).then { "TESTUSER1" }
+    authenticationHelper.authentication = authentication
 
     hmppsAuthMockServer.stubGrantToken()
     manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
@@ -158,6 +147,9 @@ abstract class IntegrationSystemTestBase {
       """.trimIndent(),
     )
     manageUsersMockServer.stubGetUserInfo("request-user")
+    val secContext = mock<SecurityContext>()
+    whenever(secContext.authentication).thenReturn(authentication)
+    SecurityContextHolder.setContext(secContext)
   }
 
   protected fun setAuthorisation(

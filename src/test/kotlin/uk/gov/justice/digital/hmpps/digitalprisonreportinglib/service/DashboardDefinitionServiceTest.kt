@@ -8,12 +8,16 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
 class DashboardDefinitionServiceTest {
 
@@ -21,11 +25,24 @@ class DashboardDefinitionServiceTest {
   private val dashboardDefinitionMapper: DashboardDefinitionMapper = mock()
 
   private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository, dashboardDefinitionMapper)
+  private val executionContext = ExecutionContext(
+    CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("KMI", "KIRKHAM"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+      activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    ),
+    listOf("ROLE_PRISONS_REPORTING_USER"),
+    AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
     val dashboardDefinition: DashboardDefinition = mock()
-    val authToken = mock<DprAuthAwareAuthenticationToken>()
     val productDefinition: SingleDashboardProductDefinition = mock()
     val dashboard: Dashboard = mock()
     val allDatasets: List<Dataset> = listOf(mock())
@@ -40,12 +57,12 @@ class DashboardDefinitionServiceTest {
     val actual = dashboardDefinitionService.getDashboardDefinition(
       dataProductDefinitionId = definitionId,
       dashboardId = dashboardId,
-      authToken = authToken,
+      executionContext,
     )
 
     assertThat(actual).isEqualTo(dashboardDefinition)
 
     verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
-    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets, authToken)
+    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets, executionContext)
   }
 }

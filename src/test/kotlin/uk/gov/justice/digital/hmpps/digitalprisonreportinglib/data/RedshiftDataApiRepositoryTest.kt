@@ -21,6 +21,7 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
@@ -39,7 +40,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.time.LocalDateTime
 
 class RedshiftDataApiRepositoryTest {
@@ -87,6 +92,22 @@ class RedshiftDataApiRepositoryTest {
   private val identifiedHelper = IdentifiedHelper()
   private val redShiftSummaryTableHelper = mock<RedShiftSummaryTableHelper>()
   private val query = mock<MultiphaseQuery>()
+  private val testUsername = "aUser"
+  private val testCaseload = "aCaseload"
+  private val testAccountType = "GENERAL"
+  private val executionContext: ExecutionContext = ExecutionContext(
+    CaseloadResponse(
+      username = testUsername,
+      active = true,
+      accountType = testAccountType,
+      caseloads = listOf(
+        Caseload(testCaseload, testCaseload),
+      ),
+      activeCaseload = Caseload(testCaseload, testCaseload),
+    ),
+    emptyList(),
+    AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
 
   @BeforeEach
   fun setup() {
@@ -132,6 +153,7 @@ class RedshiftDataApiRepositoryTest {
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      executionContext = executionContext,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -201,6 +223,7 @@ SELECT *
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      executionContext = executionContext,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -359,6 +382,7 @@ SELECT *
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      executionContext = executionContext,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -422,6 +446,7 @@ SELECT *
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
+      executionContext = executionContext,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -468,6 +493,7 @@ SELECT *
       sortColumn = "date",
       sortedAsc = true,
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
+      executionContext = executionContext,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,
@@ -530,6 +556,7 @@ SELECT *
       sortColumn = "ABC",
       sortedAsc = true,
       policyEngineResult = PolicyResult.POLICY_PERMIT,
+      executionContext = executionContext,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
       datasource = productDefinition.datasource,

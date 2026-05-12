@@ -4,18 +4,19 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.security.core.Authentication
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.ReportDefinitionController.Companion.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardDefinitionService
 
 @Validated
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.DashboardD
 class DashboardDefinitionController(
   val dashboardDefinitionService: DashboardDefinitionService,
   val filterHelper: FilterHelper,
+  val manageUsersClient: ManageUsersClient,
 ) {
 
   @GetMapping("/definitions/{dataProductDefinitionId}/dashboards/{dashboardId}")
@@ -56,12 +58,12 @@ class DashboardDefinitionController(
     )
     @RequestParam
     filters: Map<String, String>,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): DashboardDefinition = dashboardDefinitionService.getDashboardDefinition(
     dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
     dataProductDefinitionsPath = dataProductDefinitionsPath,
-    authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+    executionContext = httpRequest.getUserContext(manageUsersClient),
     filters = filterHelper.filtersOnly(filters),
   )
 }

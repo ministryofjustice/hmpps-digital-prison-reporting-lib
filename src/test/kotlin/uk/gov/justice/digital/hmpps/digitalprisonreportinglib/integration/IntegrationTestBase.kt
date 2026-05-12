@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.security.core.context.SecurityContext
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -36,11 +38,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCa
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.UserPermissionProvider
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
@@ -75,7 +75,7 @@ abstract class IntegrationTestBase {
   lateinit var objectMapper: ObjectMapper
 
   @Autowired
-  lateinit var userPermissionProvider: UserPermissionProvider
+  lateinit var manageUsersClient: ManageUsersClient
 
   @MockitoBean
   lateinit var dynamoDbClient: DynamoDbClient
@@ -152,27 +152,11 @@ abstract class IntegrationTestBase {
     whenever(authentication.jwt).then { jwt }
     whenever(authentication.authSource).then { AuthSource.NONE }
     whenever(authentication.name).then { "TESTUSER1" }
-    whenever(authentication.getUsername()).then { "TESTUSER1" }
     whenever(authentication.userName).then { "TESTUSER1" }
-    whenever(authentication.getCaseLoads()).then {
-      CaseloadResponse(
-        username = "TESTUSER1",
-        active = true,
-        accountType = "GENERAL",
-        activeCaseload = Caseload(id = "LWSTMC", name = "Lowestoft (North East Suffolk) Magistrat"),
-        caseloads = listOf(
-          Caseload("ABC", "ABCPRISON (ABC)"),
-          Caseload("DEF", "DEFPRISON (DEF)"),
-          Caseload("GHI", "GHIPRISON (GHI)"),
-          Caseload("LWSTMC", "Lowestoft (North East Suffolk) Magistrat"),
-          Caseload("WWI", "WANDSWORTH (HMP)"),
-          Caseload("AKI", "Acklington (HMP)"),
-        ),
-      )
-    }
-    whenever(authentication.getCaseLoadIds()).then { listOf("ABC", "DEF", "GHI", "LWSTMC", "WWI", "AKI") }
-    whenever(authentication.getActiveCaseLoadId()).then { "LWSTMC" }
     authenticationHelper.authentication = authentication
+    val secContext = mock<SecurityContext>()
+    whenever(secContext.authentication).thenReturn(authentication)
+    SecurityContextHolder.setContext(secContext)
   }
 
   protected fun stubDefinitionsResponse() {

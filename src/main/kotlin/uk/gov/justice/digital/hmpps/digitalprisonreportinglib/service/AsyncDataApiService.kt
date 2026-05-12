@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
@@ -23,7 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.AsyncDownloadContext
 import java.io.Writer
 import java.util.Base64
@@ -66,9 +66,9 @@ class AsyncDataApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
+    executionContext: ExecutionContext,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
@@ -78,9 +78,9 @@ class AsyncDataApiService(
       reportVariantId,
       dataProductDefinitionsPath,
     )
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
-    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
+    val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(
       filters,
       extractParameters(productDefinition.reportDataset),
@@ -99,7 +99,7 @@ class AsyncDataApiService(
           promptsMap,
           productDefinition.reportDataset.parameters,
         ),
-        authToken = authToken,
+        executionContext = executionContext,
         query = productDefinition.reportDataset.query,
         reportFilter = productDefinition.report.filter,
         datasource = productDefinition.datasource,
@@ -117,17 +117,17 @@ class AsyncDataApiService(
   fun validateAndExecuteStatementAsync(
     reportId: String,
     dashboardId: String,
-    authToken: DprAuthAwareAuthenticationToken?,
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
+    executionContext: ExecutionContext,
   ): StatementExecutionResponse {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(
       definitionId = reportId,
       dashboardId = dashboardId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
-    checkAuth(productDefinition, authToken)
-    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
+    checkAuth(productDefinition, executionContext)
+    val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
     val (promptsMap, filtersOnly) = partitionToPromptsAndFilters(
       filters,
       extractParameters(productDefinition.dashboardDataset),
@@ -145,7 +145,7 @@ class AsyncDataApiService(
           promptsMap,
           productDefinition.dashboardDataset.parameters,
         ),
-        authToken = authToken,
+        executionContext = executionContext,
         query = productDefinition.dashboardDataset.query,
         reportFilter = productDefinition.dashboard.filter,
         datasource = productDefinition.datasource,
@@ -158,9 +158,9 @@ class AsyncDataApiService(
       )
   }
 
-  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, authToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
+  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     return getStatementExecutionStatus(
       productDefinition.reportDataset.query,
       productDefinition.datasource.name,
@@ -169,9 +169,9 @@ class AsyncDataApiService(
     )
   }
 
-  fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, authToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
+  fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     return getStatementExecutionStatus(
       productDefinition.dashboardDataset.query,
       productDefinition.datasource.name,
@@ -185,10 +185,10 @@ class AsyncDataApiService(
     reportVariantId: String,
     dataProductDefinitionsPath: String?,
     filters: Map<String, String>,
+    executionContext: ExecutionContext,
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): AsyncDownloadContext = AsyncDownloadContext(
     core = buildCoreDownloadContext(
       reportId = reportId,
@@ -198,7 +198,7 @@ class AsyncDataApiService(
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      authToken = authToken,
+      executionContext = executionContext,
     ).first,
   )
 
@@ -225,12 +225,12 @@ class AsyncDataApiService(
     selectedPage: Long,
     pageSize: Long,
     filters: Map<String, String>,
+    executionContext: ExecutionContext,
     sortedAsc: Boolean?,
     sortColumn: String? = null,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return formatColumnsAndApplyFormulas(
@@ -255,10 +255,10 @@ class AsyncDataApiService(
     selectedPage: Long,
     pageSize: Long? = null,
     filters: Map<String, String>,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
   ): List<List<Map<String, Any?>>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     val formulaEngine = FormulaEngine(datasetSchemaFields = productDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return listOf(
       redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
@@ -285,10 +285,10 @@ class AsyncDataApiService(
     reportVariantId: String,
     dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     val summary = productDefinition.report.summary?.find { it.id == summaryId }
       ?: throw ValidationException("Invalid summary ID: $summaryId")
 
@@ -334,27 +334,27 @@ class AsyncDataApiService(
     }
   }
 
-  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, authToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
+  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
-  fun cancelDashboardStatementExecution(statementId: String, definitionId: String, dashboardId: String, authToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
+  fun cancelDashboardStatementExecution(statementId: String, definitionId: String, dashboardId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
   fun count(tableId: String): Count = Count(redshiftDataApiRepository.count(tableId))
 
-  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, authToken: DprAuthAwareAuthenticationToken?, dataProductDefinitionsPath: String? = null): Count {
+  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,
       dataProductDefinitionsPath,
     )
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     return Count(redshiftDataApiRepository.count(tableId, validateAndMapFilters(productDefinition, filters, true)))
   }
 

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -10,7 +11,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProd
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyReport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 
 @Component
 class ReportDefinitionSummaryMapper {
@@ -18,7 +18,7 @@ class ReportDefinitionSummaryMapper {
   fun map(
     productDefinition: AnyProductDefinition,
     renderMethod: RenderMethod?,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
   ): ReportDefinitionSummary = ReportDefinitionSummary(
     id = productDefinition.id,
     name = productDefinition.name,
@@ -27,13 +27,13 @@ class ReportDefinitionSummaryMapper {
       .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
       .map { map(it, productDefinition.path == DataDefinitionPath.MISSING) },
     dashboards = productDefinition.dashboard?.map { map(it) },
-    authorised = determineAuth(productDefinition, authToken),
+    authorised = determineAuth(productDefinition, executionContext),
   )
 
   private fun determineAuth(
     productDefinition: WithPolicy,
-    authToken: DprAuthAwareAuthenticationToken?,
-  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, authToken)
+    executionContext: ExecutionContext,
+  ): Boolean = ProductDefinitionTokenPolicyChecker().determineAuth(productDefinition, executionContext)
 
   private fun map(
     report: AnyReport,

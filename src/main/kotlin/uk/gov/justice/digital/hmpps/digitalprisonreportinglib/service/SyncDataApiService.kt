@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -10,7 +11,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.SyncDownloadContext
 import java.io.Writer
@@ -46,9 +46,9 @@ class SyncDataApiService(
     filters: Map<String, String>,
     selectedPage: Long,
     pageSize: Long,
+    executionContext: ExecutionContext,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
@@ -56,9 +56,9 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository
       .getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
-    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
+    val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     return configuredApiRepository
@@ -116,7 +116,7 @@ class SyncDataApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
     dataProductDefinitionsPath: String? = null,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
@@ -124,8 +124,8 @@ class SyncDataApiService(
       reportVariantId,
       dataProductDefinitionsPath,
     )
-    checkAuth(productDefinition, authToken)
-    val policyEngine = PolicyEngine(productDefinition.policy, authToken)
+    checkAuth(productDefinition, executionContext)
+    val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
     return Count(
       configuredApiRepository.count(
         filters = validateAndMapFilters(productDefinition, filters, null),
@@ -144,9 +144,9 @@ class SyncDataApiService(
     filters: Map<String, String>,
     selectedPage: Long,
     pageSize: Long,
+    executionContext: ExecutionContext,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     dataProductDefinitionsPath: String? = null,
@@ -154,8 +154,8 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val dashboardDefinition = productDefinitionRepository
       .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
-    checkAuth(dashboardDefinition, authToken)
-    val policyEngine = PolicyEngine(dashboardDefinition.policy, authToken)
+    checkAuth(dashboardDefinition, executionContext)
+    val policyEngine = PolicyEngine(dashboardDefinition.policy, executionContext)
     val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return configuredApiRepository
       .executeQuery(
@@ -183,12 +183,12 @@ class SyncDataApiService(
   fun prepareSyncDownloadContext(
     reportId: String,
     reportVariantId: String,
+    executionContext: ExecutionContext,
     dataProductDefinitionsPath: String?,
     filters: Map<String, String>,
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
   ): SyncDownloadContext {
     val coreContext = buildCoreDownloadContext(
       reportId = reportId,
@@ -198,12 +198,12 @@ class SyncDataApiService(
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      authToken = authToken,
+      executionContext = executionContext,
     )
     return SyncDownloadContext(
       core = coreContext.first,
       query = coreContext.second.reportDataset.query.first().query,
-      policyEngineResult = PolicyEngine(coreContext.second.policy, authToken).execute(),
+      policyEngineResult = PolicyEngine(coreContext.second.policy, executionContext).execute(),
       reportFilter = coreContext.second.report.filter,
     )
   }

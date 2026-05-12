@@ -1,5 +1,12 @@
 Below you can find the changes included in each release.
 
+# 16.0.0
+- Extract all user-related data management into an execution context that is populated via an extension method
+- Removed old authentication_code (user token) related code
+- Stopped use of the token for user-related data
+- Updated docs
+- Create a scheduler interface
+
 # 15.5.1
 - Added `class="govuk-link"` to the produced HTML of the make_url formula and `rel="noreferrer noopener"` when the link opens in a new tab.
 - Removed unused getStatementStatus method from AsyncDataApiService.

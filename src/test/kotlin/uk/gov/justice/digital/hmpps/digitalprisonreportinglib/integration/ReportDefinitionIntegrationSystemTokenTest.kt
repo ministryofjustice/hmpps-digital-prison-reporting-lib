@@ -21,6 +21,7 @@ class ReportDefinitionIntegrationSystemTokenTest : IntegrationSystemTestBase() {
   fun setUp() {
     manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO"))
     manageUsersMockServer.stubLookupUserCaseload()
+    manageUsersMockServer.stubGetUserInfo()
   }
 
   @Test
@@ -52,9 +53,8 @@ class ReportDefinitionIntegrationSystemTokenTest : IntegrationSystemTestBase() {
       .uri("/definitions")
       .headers(setAuthorisation(user = null, roles = listOf(authorisedRole)))
       .exchange()
-      .expectStatus().isOk
-      .expectBody().jsonPath("$.length()").isEqualTo(1)
-      .jsonPath("$[0].authorised").isEqualTo("false")
+      .expectStatus()
+      .isForbidden
   }
 
   @Test

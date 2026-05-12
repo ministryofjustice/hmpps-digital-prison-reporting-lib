@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationSystemTestBase.Companion.manageUsersMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmission
 
 class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
@@ -24,7 +23,7 @@ class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
     webTestClient.post()
       .uri("/missingRequest/external-movements/last-month")
       .bodyValue("a reason")
-      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus().isEqualTo(404)
   }
@@ -66,13 +65,13 @@ class MissingReportIntegrationTest : IntegrationTestBase() {
     val result = webTestClient.post()
       .uri("/missingRequest/external-movements/last-month")
       .bodyValue("a reason")
-      .headers(setAuthorisation(roles = listOf(authorisedRole), user = "foo"))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus().isOk
       .expectBody<MissingReportSubmission>()
       .returnResult()
     assertThat(result.responseBody).isNotNull()
-    assertThat(result.responseBody!!.userId).isEqualTo("foo")
+    assertThat(result.responseBody!!.userId).isEqualTo("request-user")
     assertThat(result.responseBody!!.reportId).isEqualTo("external-movements")
     assertThat(result.responseBody!!.reportVariantId).isEqualTo("last-month")
     assertThat(result.responseBody!!.reason).isEqualTo("a reason")

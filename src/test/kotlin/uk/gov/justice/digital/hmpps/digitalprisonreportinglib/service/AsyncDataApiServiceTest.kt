@@ -22,6 +22,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
@@ -68,8 +69,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.io.StringWriter
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
@@ -114,20 +118,34 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       "reason" to "normal transfer",
     ),
   )
-  private val authToken = mock<DprAuthAwareAuthenticationToken>()
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
   private val reportVariantId = "last-month"
   private val policyEngineResult = "(origin_code='WWI' AND lower(direction)='out') OR (destination_code='WWI' AND lower(direction)='in')"
   private val policyEngineResultTrue = "TRUE AND $policyEngineResult"
+  private val testUsername = "request-user"
+  private val testCaseload = Caseload("WWI", "WANDSWORTH (HMP)")
   private val tableIdGenerator: TableIdGenerator = TableIdGenerator()
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
   private val productDefinitionTokenPolicyChecker = mock<ProductDefinitionTokenPolicyChecker>()
+
   private val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
+
+  private val executionContext = ExecutionContext(
+    CaseloadResponse(
+      username = testUsername,
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        testCaseload,
+      ),
+      activeCaseload = testCaseload,
+    ),
+    listOf("ROLE_PRISONS_REPORTING_USER"),
+    AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+  )
 
   @BeforeEach
   fun setup() {
-    whenever(authToken.getActiveCaseLoadId()).thenReturn("WWI")
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf("WWI"))
     whenever(
       redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
@@ -155,7 +173,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResultTrue,
         prompts = emptyList(),
-        authToken = authToken,
+        executionContext = executionContext,
         query = singleReportProductDefinition.reportDataset.query,
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -172,11 +190,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, sortColumn, sortedAsc, authToken)
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, executionContext, sortColumn, sortedAsc)
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
       filters = repositoryFilters,
@@ -184,7 +202,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResultTrue,
       prompts = emptyList(),
-      authToken = authToken,
+      executionContext = executionContext,
       query = singleReportProductDefinition.reportDataset.query,
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -213,17 +231,27 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val tableId = executionId.replace("-", "_")
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
     val caseload = "caseloadA"
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = "(establishment_id='$caseload')"
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(
+          Caseload(caseload, caseload),
+        ),
+        activeCaseload = Caseload(caseload, caseload),
+      ),
+      listOf("ROLE_PRISONS_REPORTING_USER"),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    )
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
         filters = emptyList(),
         sortedAsc = true,
         policyEngineResult = policyEngineResult,
         prompts = emptyList(),
-        authToken = authToken,
+        executionContext = context,
         query = singleDashboardProductDefinition.dashboardDataset.query,
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
@@ -239,15 +267,15 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = "missing-ethnicity-metrics",
       dashboardId = "age-breakdown-dashboard-1",
-      authToken = authToken,
       filters = emptyMap(),
+      executionContext = context,
     )
 
     verify(redshiftDataApiRepository, times(1)).executeQueryAsync(
@@ -255,7 +283,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
       prompts = emptyList(),
-      authToken = authToken,
+      executionContext = context,
       query = singleDashboardProductDefinition.dashboardDataset.query,
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
@@ -290,11 +318,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month", authToken)
+    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month", executionContext)
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementExecutionStatus, actual)
@@ -326,11 +354,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.getDashboardStatementStatus(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", authToken)
+    val actual = asyncDataApiService.getDashboardStatementStatus(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", executionContext)
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementExecutionStatus, actual)
@@ -350,11 +378,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", authToken)
+    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", executionContext)
     verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -379,11 +407,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", authToken)
+    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", executionContext)
     verify(redshiftDataApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(athenaApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -397,12 +425,12 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
     val e = assertThrows<ValidationException> {
-      asyncDataApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), sortColumn, sortedAsc, authToken)
+      asyncDataApiService.validateAndExecuteStatementAsync(reportId, "last-year", emptyMap(), executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.MISSING_MANDATORY_FILTER_MESSAGE + " date", e.message)
   }
@@ -419,12 +447,12 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
     val e = assertThrows<ValidationException> {
-      asyncDataApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, sortColumn, sortedAsc, authToken)
+      asyncDataApiService.validateAndExecuteStatementAsync(reportId, "last-year", filters, executionContext, sortColumn, sortedAsc)
     }
     assertEquals(SyncDataApiService.FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE + " Invalid [A-Z]{3,3}", e.message)
   }
@@ -458,7 +486,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResult,
         prompts = emptyList(),
-        authToken = authToken,
+        executionContext = executionContext,
         query = singleReportProductDefinition.reportDataset.query,
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -475,11 +503,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, sortColumn, sortedAsc, authToken)
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync(reportId, reportVariantId, filters, executionContext, sortColumn, sortedAsc)
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
       filters = repositoryFilters,
@@ -487,7 +515,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResult,
       prompts = emptyList(),
-      authToken = authToken,
+      executionContext = executionContext,
       query = singleReportProductDefinition.reportDataset.query,
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -521,7 +549,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val executionId = UUID.randomUUID().toString()
     val tableId = executionId.replace("-", "_")
     val statementExecutionResponse = StatementExecutionResponse(tableId, executionId)
-    val caseload = "caseloadA"
     whenever(
       productDefinitionRepository.getSingleDashboardProductDefinition(
         definitionId = reportId,
@@ -544,9 +571,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(singleDashboardProductDefinition.allDatasources).thenReturn(allDatasources)
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(
@@ -554,7 +578,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = true,
         policyEngineResult = policyEngineResult,
         prompts = emptyList(),
-        authToken = authToken,
+        executionContext = executionContext,
         query = singleDashboardProductDefinition.dashboardDataset.query,
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
@@ -570,15 +594,15 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = reportId,
       dashboardId = dashboardId,
-      authToken = authToken,
       filters = emptyMap(),
+      executionContext = executionContext,
     )
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
@@ -586,7 +610,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
       prompts = emptyList(),
-      authToken = authToken,
+      executionContext = executionContext,
       query = singleDashboardProductDefinition.dashboardDataset.query,
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
@@ -622,7 +646,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val parameter = Parameter(0, parameterName, ParameterType.String, FilterType.AutoComplete, "Estabishment Code", true, ReferenceType.ESTABLISHMENT)
     val multiphaseQuery1 = MultiphaseQuery(0, "datasource1", "SELECT * FROM a", listOf(parameter))
     val multiphaseQuery2 = MultiphaseQuery(1, "datasource2", "SELECT * FROM b", listOf(parameter))
-    val caseload = "caseloadA"
     val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
     whenever(
       productDefinitionRepository.getSingleDashboardProductDefinition(
@@ -645,9 +668,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(singleDashboardProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(singleDashboardProductDefinition.allDatasources).thenReturn(allDatasources)
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(
@@ -655,7 +675,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = true,
         policyEngineResult = policyEngineResult,
         prompts = listOf(prompt),
-        authToken = authToken,
+        executionContext = executionContext,
         query = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleDashboardProductDefinition.dashboard.filter,
         datasource = singleDashboardProductDefinition.datasource,
@@ -671,15 +691,15 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
     val actual = asyncDataApiService.validateAndExecuteStatementAsync(
       reportId = reportId,
       dashboardId = dashboardId,
-      authToken = authToken,
       filters = mapOf(parameterName to parameterValue),
+      executionContext = executionContext,
     )
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
@@ -687,7 +707,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
       prompts = listOf(prompt),
-      authToken = authToken,
+      executionContext = executionContext,
       query = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleDashboardProductDefinition.dashboard.filter,
       datasource = singleDashboardProductDefinition.datasource,
@@ -721,7 +741,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val parameter = Parameter(0, parameterName, ParameterType.String, FilterType.AutoComplete, "Estabishment Code", true, ReferenceType.ESTABLISHMENT)
     val multiphaseQuery1 = MultiphaseQuery(0, "datasource1", "SELECT * FROM a", listOf(parameter))
     val multiphaseQuery2 = MultiphaseQuery(1, "datasource2", "SELECT * FROM b", listOf(parameter))
-    val caseload = "caseloadA"
     val prompt = Prompt(parameterName, parameterValue, FilterType.AutoComplete)
     whenever(
       productDefinitionRepository.getSingleReportProductDefinition(
@@ -742,9 +761,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(singleReportProductDefinition.datasource).thenReturn(datasource)
     whenever(datasource.name).thenReturn("NOMIS")
     whenever(singleReportProductDefinition.allDatasources).thenReturn(allDatasources)
-    whenever(authToken.getActiveCaseLoadId()).thenReturn(caseload)
-    whenever(authToken.getCaseLoadIds()).thenReturn(listOf(caseload))
-    whenever(authToken.getRoles()).thenReturn(listOf("ROLE_PRISONS_REPORTING_USER"))
     val policyEngineResult = Policy.PolicyResult.POLICY_DENY
     whenever(
       athenaApiRepository.executeQueryAsync(
@@ -752,7 +768,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = false,
         policyEngineResult = policyEngineResult,
         prompts = listOf(prompt),
-        authToken = authToken,
+        executionContext = executionContext,
         query = listOf(multiphaseQuery1, multiphaseQuery2),
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -769,7 +785,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -777,9 +793,9 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportId = reportId,
       reportVariantId = reportVariantId,
       filters = mapOf(parameterName to parameterValue),
+      executionContext,
       sortColumn = null,
       sortedAsc = true,
-      authToken = authToken,
     )
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
@@ -787,7 +803,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = false,
       policyEngineResult = policyEngineResult,
       prompts = listOf(prompt),
-      authToken = authToken,
+      executionContext = executionContext,
       query = listOf(multiphaseQuery1, multiphaseQuery2),
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -829,11 +845,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month", authToken)
+    val actual = asyncDataApiService.getStatementStatus(statementId, "external-movements", "last-month", executionContext)
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionStatus, actual)
@@ -873,11 +889,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.getDashboardStatementStatus(statementId, definitionId, dashboardId, authToken)
+    val actual = asyncDataApiService.getDashboardStatementStatus(statementId, definitionId, dashboardId, executionContext)
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementExecutionStatus, actual)
@@ -905,7 +921,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -917,8 +933,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         statementId = statementId,
         reportId = "external-movements",
         reportVariantId = "last-month",
-        authToken = authToken,
         tableId = tableId,
+        executionContext = executionContext,
       )
     }
     assertThat(exception).message().isEqualTo("Table reports.$tableId not found.")
@@ -948,15 +964,15 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     val actual = asyncDataApiService.getStatementStatus(
       statementId = statementId,
       reportId = "external-movements",
       reportVariantId = "last-month",
-      authToken = authToken,
       tableId = tableId,
+      executionContext = executionContext,
     )
     assertEquals(statementExecutionStatus, actual)
     verify(redshiftDataApiRepository, times(0)).isTableMissing(any(), anyOrNull())
@@ -994,7 +1010,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1002,8 +1018,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       statementId = statementId,
       reportId = "external-movements",
       reportVariantId = "last-month",
-      authToken = authToken,
       tableId = tableId,
+      executionContext = executionContext,
     )
     verify(athenaApiRepository, times(1)).getStatementStatus(statementId)
     verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
@@ -1042,11 +1058,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", authToken)
+    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", executionContext)
     verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -1071,11 +1087,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", authToken)
+    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, "missing-ethnicity-metrics", "age-breakdown-dashboard-1", executionContext)
     verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -1105,7 +1121,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1119,8 +1135,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       statementId = statementId,
       reportId = "external-movements",
       reportVariantId = "last-month",
-      authToken = authToken,
       tableId = tableId,
+      executionContext = executionContext,
     )
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
@@ -1144,7 +1160,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1160,8 +1176,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         statementId = "statementId",
         reportId = "external-movements",
         reportVariantId = "last-month",
-        authToken = authToken,
         tableId = tableId,
+        executionContext = executionContext,
       )
     }
     assertThat(exception).message().isEqualTo("Table reports.$tableId not found.")
@@ -1187,7 +1203,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1199,8 +1215,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       statementId = statementId,
       reportId = "external-movements",
       reportVariantId = "last-month",
-      authToken = authToken,
       tableId = tableId,
+      executionContext = executionContext,
     )
     assertEquals(statementExecutionStatus, actual)
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
@@ -1238,7 +1254,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1246,8 +1262,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       statementId = statementId,
       reportId = "external-movements",
       reportVariantId = "last-month",
-      authToken = authToken,
       tableId = tableId,
+      executionContext = executionContext,
     )
     verify(redshiftDataApiRepository, times(1)).getStatementStatus(statementId)
     verify(redshiftDataApiRepository, times(1)).isTableMissing(eq(tableId), anyOrNull())
@@ -1272,11 +1288,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", authToken)
+    val actual = asyncDataApiService.cancelStatementExecution(statementId, "external-movements", "last-month", executionContext)
     verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -1305,11 +1321,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, definitionId, dashboardId, authToken)
+    val actual = asyncDataApiService.cancelDashboardStatementExecution(statementId, definitionId, dashboardId, executionContext)
     verify(athenaApiRepository, times(1)).cancelStatementExecution(statementId)
     verifyNoInteractions(redshiftDataApiRepository)
     assertEquals(statementCancellationResponse, actual)
@@ -1351,7 +1367,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         sortedAsc = sortedAsc,
         policyEngineResult = policyEngineResultTrue,
         prompts = prompts,
-        authToken = authToken,
+        executionContext = executionContext,
         query = singleReportProductDefinition.reportDataset.query,
         reportFilter = singleReportProductDefinition.report.filter,
         datasource = singleReportProductDefinition.datasource,
@@ -1368,11 +1384,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.validateAndExecuteStatementAsync("external-movements-with-parameters", reportVariantId, filters, sortColumn, sortedAsc, authToken)
+    val actual = asyncDataApiService.validateAndExecuteStatementAsync("external-movements-with-parameters", reportVariantId, filters, executionContext, sortColumn, sortedAsc)
 
     verify(athenaApiRepository, times(1)).executeQueryAsync(
       filters = repositoryFilters,
@@ -1380,7 +1396,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       sortedAsc = sortedAsc,
       policyEngineResult = policyEngineResultTrue,
       prompts = prompts,
-      authToken = authToken,
+      executionContext = executionContext,
       query = singleReportProductDefinition.reportDataset.query,
       reportFilter = singleReportProductDefinition.report.filter,
       datasource = singleReportProductDefinition.datasource,
@@ -1419,7 +1435,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1432,7 +1448,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       filters = mapOf("direction" to "in"),
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -1471,7 +1487,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1483,7 +1499,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       filters = emptyMap(),
       sortedAsc = false,
-      authToken = authToken,
+      executionContext = executionContext,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -1512,7 +1528,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1524,7 +1540,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       pageSize = pageSize,
       filters = emptyMap(),
       sortedAsc = false,
-      authToken = authToken,
+      executionContext = executionContext,
     )
     assertEquals(expectedServiceResult, actual)
   }
@@ -1564,7 +1580,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1575,7 +1591,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedPage = selectedPage,
       pageSize = pageSize,
       filters = emptyMap(),
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     assertEquals(expectedServiceResult, actual)
@@ -1607,7 +1623,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1619,7 +1635,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = emptyMap(),
-        authToken = authToken,
+        executionContext = executionContext,
       )
     }
     assertThat(exception).message().isEqualTo("The DPD is missing schema field: RANDOM_ROW.")
@@ -1636,7 +1652,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1646,7 +1662,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportId,
       reportVariantId,
       filters = emptyMap(),
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -1656,6 +1672,10 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should create and query summary table when it doesn't exist`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
+
+    whenever(
+      redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
+    ).thenReturn(true)
     whenever(
       redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
@@ -1663,7 +1683,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1676,7 +1696,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportId,
       reportVariantId,
       filters = emptyMap(),
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
@@ -1695,7 +1715,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1709,13 +1729,13 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     ).thenThrow(TableExpiredException("${tableId}_summaryId"))
 
     Assertions.assertThrows(TableExpiredException::class.java) {
-      val actual = asyncDataApiService.getSummaryResult(
+      asyncDataApiService.getSummaryResult(
         tableId,
         summaryId,
         reportId,
         reportVariantId,
         filters = emptyMap(),
-        authToken = authToken,
+        executionContext = executionContext,
       )
     }
     verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
@@ -1733,7 +1753,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     whenever(
@@ -1752,7 +1772,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         reportId,
         reportVariantId,
         filters = emptyMap(),
-        authToken = authToken,
+        executionContext = executionContext,
       )
     }
     verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
@@ -1784,11 +1804,11 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
-    val actual = asyncDataApiService.count(tableId, "external-movements", "last-month", filters, authToken)
+    val actual = asyncDataApiService.count(tableId, "external-movements", "last-month", filters, executionContext)
 
     assertEquals(Count(expectedRepositoryResult), actual)
   }
@@ -1841,7 +1861,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1853,7 +1873,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = true,
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     assertThat(actual.selectedAndValidatedColumns).containsExactly("name", "date", "origin", "destination")
@@ -1867,7 +1887,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1879,7 +1899,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = true,
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     assertEquals(
@@ -1903,7 +1923,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
 
@@ -1916,7 +1936,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         selectedColumns = selectedColumns,
         sortColumn = "name",
         sortedAsc = true,
-        authToken = authToken,
+        executionContext = executionContext,
       )
     }
     assertEquals("Invalid columns, not in $errorMessage: [$column]", e.message)
@@ -1970,7 +1990,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
@@ -1981,7 +2001,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = null,
       sortColumn = sortColumn,
       sortedAsc = true,
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     whenever(rs.metaData).thenReturn(meta)
@@ -2078,7 +2098,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
-        authToken = any(),
+        executionContext = any(),
       ),
     ).thenReturn(true)
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
@@ -2089,7 +2109,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
       sortedAsc = true,
-      authToken = authToken,
+      executionContext = executionContext,
     )
 
     whenever(rs.metaData).thenReturn(meta)

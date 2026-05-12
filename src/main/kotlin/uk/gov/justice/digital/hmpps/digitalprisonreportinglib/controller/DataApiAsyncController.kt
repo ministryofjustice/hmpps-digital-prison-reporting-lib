@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
@@ -34,7 +35,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import java.util.Collections.singletonList
@@ -47,6 +48,7 @@ class DataApiAsyncController(
   val asyncDataApiService: AsyncDataApiService,
   val filterHelper: FilterHelper,
   val csvStreamingSupport: CsvStreamingSupport,
+  val manageUsersClient: ManageUsersClient,
 ) {
 
   companion object {
@@ -91,7 +93,7 @@ class DataApiAsyncController(
       defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementExecutionResponse> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -102,8 +104,8 @@ class DataApiAsyncController(
           filters = filterHelper.filtersOnly(filters),
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
+          executionContext = httpRequest.getUserContext(manageUsersClient),
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -150,7 +152,7 @@ class DataApiAsyncController(
     )
     @RequestParam
     filters: Map<String, String>,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementExecutionResponse> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -158,9 +160,9 @@ class DataApiAsyncController(
         asyncDataApiService.validateAndExecuteStatementAsync(
           reportId = reportId,
           dashboardId = dashboardId,
-          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
+          executionContext = httpRequest.getUserContext(manageUsersClient),
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -214,7 +216,7 @@ class DataApiAsyncController(
       required = false,
     )
     tableId: String? = null,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementExecutionStatus> = ResponseEntity
     .status(HttpStatus.OK)
     .body(
@@ -222,7 +224,7 @@ class DataApiAsyncController(
         statementId = statementId,
         reportId = reportId,
         reportVariantId = reportVariantId,
-        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        executionContext = httpRequest.getUserContext(manageUsersClient),
         dataProductDefinitionsPath,
         tableId,
       ),
@@ -269,7 +271,7 @@ class DataApiAsyncController(
       required = false,
     )
     tableId: String? = null,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementExecutionStatus> = ResponseEntity
     .status(HttpStatus.OK)
     .body(
@@ -277,7 +279,7 @@ class DataApiAsyncController(
         statementId = statementId,
         productDefinitionId = reportId,
         dashboardId = dashboardId,
-        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        executionContext = httpRequest.getUserContext(manageUsersClient),
         dataProductDefinitionsPath,
         tableId,
       ),
@@ -313,7 +315,7 @@ class DataApiAsyncController(
       defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
     .status(HttpStatus.OK)
     .body(
@@ -321,7 +323,7 @@ class DataApiAsyncController(
         statementId,
         reportId,
         reportVariantId,
-        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        executionContext = httpRequest.getUserContext(manageUsersClient),
         dataProductDefinitionsPath,
       ),
     )
@@ -344,7 +346,7 @@ class DataApiAsyncController(
       defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
     .status(HttpStatus.OK)
     .body(
@@ -352,7 +354,7 @@ class DataApiAsyncController(
         statementId,
         definitionId,
         dashboardId,
-        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        executionContext = httpRequest.getUserContext(manageUsersClient),
         dataProductDefinitionsPath,
       ),
     )
@@ -418,7 +420,7 @@ class DataApiAsyncController(
       defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     dataProductDefinitionsPath: String? = null,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<Count> = try {
     ResponseEntity
       .status(HttpStatus.OK)
@@ -428,7 +430,7 @@ class DataApiAsyncController(
           reportId,
           reportVariantId,
           filterHelper.filtersOnly(filters),
-          authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+          executionContext = httpRequest.getUserContext(manageUsersClient),
           dataProductDefinitionsPath,
         ),
       )
@@ -471,7 +473,7 @@ class DataApiAsyncController(
     filters: Map<String, String>,
     @RequestParam sortColumn: String?,
     @RequestParam sortedAsc: Boolean?,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> = ResponseEntity
     .status(HttpStatus.OK)
     .body(
@@ -485,7 +487,7 @@ class DataApiAsyncController(
         filters = filterHelper.filtersOnly(filters),
         sortedAsc = sortedAsc,
         sortColumn = sortColumn,
-        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        executionContext = httpRequest.getUserContext(manageUsersClient),
       ),
     )
 
@@ -514,7 +516,7 @@ class DataApiAsyncController(
     )
     @RequestParam
     filters: Map<String, String>,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<List<List<Map<String, Any?>>>> = ResponseEntity
     .status(HttpStatus.OK)
     .body(
@@ -526,7 +528,7 @@ class DataApiAsyncController(
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = filterHelper.filtersOnly(filters),
-        authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+        executionContext = httpRequest.getUserContext(manageUsersClient),
       ),
     )
 
@@ -551,7 +553,7 @@ class DataApiAsyncController(
     )
     @RequestParam
     filters: Map<String, String>,
-    authentication: Authentication,
+    httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> {
     val summaryResult = asyncDataApiService.getSummaryResult(
       tableId = tableId,
@@ -560,7 +562,7 @@ class DataApiAsyncController(
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
-      authToken = authentication as? DprAuthAwareAuthenticationToken,
+      executionContext = httpRequest.getUserContext(manageUsersClient),
     )
     return ResponseEntity
       .status(HttpStatus.OK)
@@ -594,7 +596,6 @@ class DataApiAsyncController(
     columns: List<String>? = null,
     @RequestParam sortColumn: String?,
     @RequestParam sortedAsc: Boolean?,
-    authentication: Authentication,
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
@@ -606,7 +607,7 @@ class DataApiAsyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      authToken = if (authentication is DprAuthAwareAuthenticationToken) authentication else null,
+      executionContext = request.getUserContext(manageUsersClient),
     )
 
     csvStreamingSupport.streamCsv(
