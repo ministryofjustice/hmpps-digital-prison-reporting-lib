@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.1.1
+- Added support for autocompletemulti filter type
+
 # 16.1.0
 - The status endpoints no longer check if a table exists. Their responsibility is only to check the status. 
 - FE library minimum version required to call the tableExpiryState endpoint and not rely on the status endpoint for table cheks: `6.0.1`
