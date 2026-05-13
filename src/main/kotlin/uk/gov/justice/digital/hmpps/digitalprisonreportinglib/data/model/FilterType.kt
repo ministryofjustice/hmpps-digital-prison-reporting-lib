@@ -10,5 +10,5 @@ enum class FilterType {
   Text,
   Date,
   Granulardaterange,
-  AutoCompleteMulti
+  AutoCompleteMulti,
 }
