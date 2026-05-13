@@ -1,7 +1,8 @@
 Below you can find the changes included in each release.
 
 # 17.0.0
-- The status endpoints no longer check if a table exists. Their responsibility is only to check the status.
+- The status endpoints no longer check if a table exists. Their responsibility is only to check the status. 
+- FE library minimum version required: 6.0.1
 
 # 16.0.0
 - Extract all user-related data management into an execution context that is populated via an extension method
