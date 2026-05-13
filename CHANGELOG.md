@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.0.0
+- The status endpoints no longer check if a table exists. Their responsibility is only to check the status.
+
 # 16.0.0
 - Extract all user-related data management into an execution context that is populated via an extension method
 - Removed old authentication_code (user token) related code
@@ -15,9 +18,6 @@ Below you can find the changes included in each release.
 # 15.5.0
 - Add an optional `type` field to the DashboardVisualisationColumnDefinition and show this only for the measures.
 This is computed in DashboardDefinitionMapper in a similar way as the ReportDefinitionMapper and not part of the DPD.    
-
-# 16.0.0
-- The status endpoints no longer check if a table exists. Their responsibility is only to check the status. 
 
 # 15.4.1
 - Handle Redshift Data API error response when an execution statement is not found and return 400 instead of 500. 
