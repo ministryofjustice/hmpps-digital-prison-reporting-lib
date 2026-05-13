@@ -16,6 +16,9 @@ Below you can find the changes included in each release.
 - Add an optional `type` field to the DashboardVisualisationColumnDefinition and show this only for the measures.
 This is computed in DashboardDefinitionMapper in a similar way as the ReportDefinitionMapper and not part of the DPD.    
 
+# 16.0.0
+- The status endpoints no longer check if a table exists. Their responsibility is only to check the status. 
+
 # 15.4.1
 - Handle Redshift Data API error response when an execution statement is not found and return 400 instead of 500. 
 
