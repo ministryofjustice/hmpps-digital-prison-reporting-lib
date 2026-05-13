@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepo
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QUERY_FINISHED
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -22,7 +21,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.AsyncDownloadContext
 import java.io.Writer
@@ -158,25 +156,23 @@ class AsyncDataApiService(
       )
   }
 
-  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
+  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
     checkAuth(productDefinition, executionContext)
     return getStatementExecutionStatus(
       productDefinition.reportDataset.query,
       productDefinition.datasource.name,
       statementId,
-      tableId,
     )
   }
 
-  fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null, tableId: String? = null): StatementExecutionStatus {
+  fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
     checkAuth(productDefinition, executionContext)
     return getStatementExecutionStatus(
       productDefinition.dashboardDataset.query,
       productDefinition.datasource.name,
       statementId,
-      tableId,
     )
   }
 
@@ -387,8 +383,7 @@ class AsyncDataApiService(
     multiphaseQuery: List<MultiphaseQuery>,
     datasourceName: String,
     statementId: String,
-    tableId: String?,
-  ): StatementExecutionStatus = getStatusOrThrowIfTableIsMissing(tableId, calculateStatementStatus(multiphaseQuery, datasourceName, statementId))
+  ): StatementExecutionStatus = calculateStatementStatus(multiphaseQuery, datasourceName, statementId)
 
   private fun calculateStatementStatus(
     multiphaseQuery: List<MultiphaseQuery>,
@@ -397,18 +392,6 @@ class AsyncDataApiService(
   ): StatementExecutionStatus = multiphaseQuery.takeIf { it.size > 1 }?.let {
     redshiftDataApiRepository.getStatementStatusForMultiphaseQuery(statementId)
   } ?: getRepo(datasourceName).getStatementStatus(statementId)
-
-  private fun getStatusOrThrowIfTableIsMissing(
-    tableId: String?,
-    statementStatus: StatementExecutionStatus,
-  ): StatementExecutionStatus {
-    tableId?.takeIf { statementStatus.status == QUERY_FINISHED }?.let {
-      if (redshiftDataApiRepository.isTableMissing(tableId)) {
-        throw MissingTableException(tableId)
-      }
-    }
-    return statementStatus
-  }
 
   private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository = datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), athenaApiRepository)
 

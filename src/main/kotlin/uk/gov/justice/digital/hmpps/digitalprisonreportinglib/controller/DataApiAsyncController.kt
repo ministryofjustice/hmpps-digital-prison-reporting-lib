@@ -208,10 +208,10 @@ class DataApiAsyncController(
     )
     dataProductDefinitionsPath: String? = null,
     @Parameter(
+      deprecated = true,
       description = "External table ID.",
       example = "reports._6b3c6dfb_f601_4795_8ee5_2ad65b7fb283",
-    )
-    @RequestParam(
+    ) @RequestParam(
       "tableId",
       required = false,
     )
@@ -226,7 +226,6 @@ class DataApiAsyncController(
         reportVariantId = reportVariantId,
         executionContext = httpRequest.getUserContext(manageUsersClient),
         dataProductDefinitionsPath,
-        tableId,
       ),
     )
 
@@ -263,6 +262,7 @@ class DataApiAsyncController(
     )
     dataProductDefinitionsPath: String? = null,
     @Parameter(
+      deprecated = true,
       description = "External table ID.",
       example = "reports._6b3c6dfb_f601_4795_8ee5_2ad65b7fb283",
     )
@@ -281,7 +281,6 @@ class DataApiAsyncController(
         dashboardId = dashboardId,
         executionContext = httpRequest.getUserContext(manageUsersClient),
         dataProductDefinitionsPath,
-        tableId,
       ),
     )
 

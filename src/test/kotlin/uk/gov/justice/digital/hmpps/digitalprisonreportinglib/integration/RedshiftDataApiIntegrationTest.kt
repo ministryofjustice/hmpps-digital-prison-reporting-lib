@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 import com.google.gson.Gson
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
@@ -210,7 +209,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(reportVariantId),
         any<ExecutionContext>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        anyOrNull(),
       ),
     )
       .willReturn(statementExecutionStatus)
@@ -260,7 +258,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(dashboardId),
         any<ExecutionContext>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        anyOrNull(),
       ),
     )
       .willReturn(statementExecutionStatus)
