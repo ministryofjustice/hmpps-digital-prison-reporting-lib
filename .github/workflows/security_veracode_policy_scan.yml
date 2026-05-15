@@ -23,7 +23,7 @@ jobs:
       actions: read
       security-events: write
     name: Project security veracode policy scan
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_veracode_policy_scan.yml@e7db1568006ed68b8238ec1ded2a6c175d6b78a6
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_veracode_policy_scan.yml@c2a23fcb9a0ce8f98145230d4fe930bd9008d12b
     with:
       channel_id: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID || 'NO_SLACK' }}
       veracode_package_artifact_name: "build-results"
