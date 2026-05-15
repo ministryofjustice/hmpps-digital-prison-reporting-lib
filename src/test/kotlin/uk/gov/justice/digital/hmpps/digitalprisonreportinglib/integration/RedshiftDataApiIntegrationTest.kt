@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 import com.google.gson.Gson
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
@@ -16,6 +15,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import software.amazon.awssdk.services.redshiftdata.model.ValidationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import java.sql.SQLException
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -56,9 +55,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(mapOf(dateStartFilter to startDate, dateEndFilter to endDate)),
+        any<ExecutionContext>(),
         eq("date"),
         eq(false),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(null),
         eq(null),
         eq("definitions/prisons/orphanage"),
@@ -99,9 +98,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       asyncDataApiService.validateAndExecuteStatementAsync(
         reportId = eq("some-metrics-dpd"),
         dashboardId = eq("some-dashboard-id"),
-        authToken = any<DprAuthAwareAuthenticationToken>(),
         dataProductDefinitionsPath = eq("definitions/prisons/orphanage"),
         filters = eq(emptyMap()),
+        executionContext = any<ExecutionContext>(),
       ),
     )
       .willReturn(statementExecutionResponse)
@@ -133,9 +132,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(emptyMap()),
+        any<ExecutionContext>(),
         eq("date"),
         eq(false),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(null),
         eq(null),
         eq("definitions/prisons/orphanage"),
@@ -164,9 +163,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(emptyMap()),
+        any<ExecutionContext>(),
         eq("date"),
         eq(false),
-        any<DprAuthAwareAuthenticationToken>(),
         eq(null),
         eq(null),
         eq("definitions/prisons/orphanage"),
@@ -208,9 +207,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
-        any<DprAuthAwareAuthenticationToken>(),
+        any<ExecutionContext>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        anyOrNull(),
       ),
     )
       .willReturn(statementExecutionStatus)
@@ -258,9 +256,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(dashboardId),
-        any<DprAuthAwareAuthenticationToken>(),
+        any<ExecutionContext>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
-        anyOrNull(),
       ),
     )
       .willReturn(statementExecutionStatus)
@@ -301,7 +298,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(reportVariantId),
-        any<DprAuthAwareAuthenticationToken>(),
+        any<ExecutionContext>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
@@ -339,7 +336,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(queryExecutionId),
         eq(reportId),
         eq(dashboardId),
-        any<DprAuthAwareAuthenticationToken>(),
+        any<ExecutionContext>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
@@ -392,9 +389,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         selectedPage = eq(selectedPage),
         pageSize = eq(pageSize),
         filters = eq(emptyMap()),
+        executionContext = any<ExecutionContext>(),
         sortedAsc = eq(null),
         sortColumn = eq(null),
-        authToken = any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -465,9 +462,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(selectedPage),
         eq(pageSize),
         eq(mapOf("direction" to "out")),
+        any<ExecutionContext>(),
         eq(true),
         eq(sortColumn),
-        any<DprAuthAwareAuthenticationToken>(),
       )
   }
 
@@ -486,9 +483,9 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         selectedPage = eq(selectedPage),
         pageSize = eq(pageSize),
         filters = eq(emptyMap()),
+        any<ExecutionContext>(),
         sortedAsc = eq(null),
         sortColumn = eq(null),
-        authToken = any<DprAuthAwareAuthenticationToken>(),
       ),
     )
       .willThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
@@ -551,7 +548,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(emptyMap()),
-      any<DprAuthAwareAuthenticationToken>(),
+      any<ExecutionContext>(),
     )
   }
 
@@ -600,7 +597,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(mapOf("direction" to "out")),
-      any<DprAuthAwareAuthenticationToken>(),
+      any<ExecutionContext>(),
     )
   }
 
@@ -636,7 +633,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(selectedPage),
       eq(pageSize),
       eq(emptyMap()),
-      any<DprAuthAwareAuthenticationToken>(),
+      any<ExecutionContext>(),
     )
   }
 
@@ -659,7 +656,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("last-month"),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(emptyMap()),
-        any<DprAuthAwareAuthenticationToken>(),
+        any<ExecutionContext>(),
       ),
     )
       .willReturn(expectedServiceResult)
@@ -732,7 +729,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(mapOf("direction" to "out")),
-        any<DprAuthAwareAuthenticationToken>(),
+        any<ExecutionContext>(),
         eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       )
   }

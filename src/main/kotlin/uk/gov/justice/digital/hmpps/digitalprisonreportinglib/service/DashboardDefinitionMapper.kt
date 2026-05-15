@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AggregateTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardBucketDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
@@ -26,7 +27,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -55,7 +55,7 @@ class DashboardDefinitionMapper(
   fun toDashboardDefinition(
     dashboard: Dashboard,
     allDatasets: List<Dataset>,
-    authToken: DprAuthAwareAuthenticationToken? = null,
+    executionContext: ExecutionContext,
     filters: Map<String, String>? = null,
   ): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
@@ -86,7 +86,7 @@ class DashboardDefinitionMapper(
           },
         )
       },
-      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, authToken, filters),
+      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters),
     )
   }
 
@@ -104,19 +104,19 @@ class DashboardDefinitionMapper(
   private fun mapAndAggregateAllFilters(
     dataset: Dataset,
     allDatasets: List<Dataset>,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
     filters: Map<String, String>?,
-  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, authToken, filters) +
+  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, executionContext, filters) +
     maybeConvertParametersToReportFields(dataset.query, dataset.parameters)
 
   private fun convertDatasetFilterFieldsToReportFields(
     dataset: Dataset,
     allDatasets: List<Dataset>,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
     filters: Map<String, String>?,
   ) = dataset.schema.field
     .filter { it.filter != null }
-    .map { toFilterField(it, allDatasets, authToken, dataset, filters) }
+    .map { toFilterField(it, allDatasets, executionContext, dataset, filters) }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>, dataset: Dataset? = null) = dashboardVisualisationColumns.map {
     val schemaField = identifiedHelper.findOrNull(dataset?.schema?.field, it.id)
@@ -142,7 +142,7 @@ class DashboardDefinitionMapper(
   private fun toFilterField(
     schemaField: SchemaField,
     allDatasets: List<Dataset>,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
   ) = FieldDefinition(
@@ -155,10 +155,11 @@ class DashboardDefinitionMapper(
         staticOptions = populateStaticOptions(
           filterDefinition = schemaField.filter,
           allDatasets = allDatasets,
-          authToken = authToken,
+          executionContext = executionContext,
           dashboardDataset = dashboardDataset,
           filters = filters,
         ),
+        executionContext,
       )
     },
   )
@@ -166,12 +167,12 @@ class DashboardDefinitionMapper(
   private fun populateStaticOptions(
     filterDefinition: FilterDefinition,
     allDatasets: List<Dataset>,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
   ): List<FilterOption>? {
     if (filterDefinition.type == FilterType.Caseloads) {
-      return authToken?.getCaseLoads()?.caseloads?.map { FilterOption(it.id, it.name) }
+      return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions
       ?.takeIf { it.returnAsStaticOptions }

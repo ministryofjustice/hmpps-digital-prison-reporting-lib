@@ -1,5 +1,22 @@
 Below you can find the changes included in each release.
 
+# 16.1.2
+- Bugfix: When all the tables have expired returned expired: true for all of them  
+
+# 16.1.1
+- Added support for autocompletemulti filter type
+
+# 16.1.0
+- The status endpoints no longer check if a table exists. Their responsibility is only to check the status. 
+- FE library minimum version required to call the tableExpiryState endpoint and not rely on the status endpoint for table cheks: `6.0.1`
+
+# 16.0.0
+- Extract all user-related data management into an execution context that is populated via an extension method
+- Removed old authentication_code (user token) related code
+- Stopped use of the token for user-related data
+- Updated docs
+- Create a scheduler interface
+
 # 15.5.1
 - Added `class="govuk-link"` to the produced HTML of the make_url formula and `rel="noreferrer noopener"` when the link opens in a new tab.
 - Removed unused getStatementStatus method from AsyncDataApiService.

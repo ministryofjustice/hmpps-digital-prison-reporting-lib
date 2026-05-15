@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ResourceNotFoundException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -23,7 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 
@@ -47,7 +47,7 @@ class RedshiftDataApiRepository(
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
     prompts: List<Prompt>?,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
     query: List<MultiphaseQuery>,
     reportFilter: ReportFilter?,
     datasource: Datasource,

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -13,7 +14,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.ResultSet
 import java.util.Base64
@@ -31,7 +31,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
     prompts: List<Prompt>? = null,
-    authToken: DprAuthAwareAuthenticationToken? = null,
+    executionContext: ExecutionContext,
     query: List<MultiphaseQuery>,
     reportFilter: ReportFilter? = null,
     datasource: Datasource,

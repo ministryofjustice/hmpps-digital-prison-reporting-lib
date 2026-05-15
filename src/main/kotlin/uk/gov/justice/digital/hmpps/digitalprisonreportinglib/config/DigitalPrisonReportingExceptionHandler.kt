@@ -20,7 +20,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.MissingTableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 
@@ -119,20 +118,6 @@ class DigitalPrisonReportingExceptionHandler {
     } else {
       throw e
     }
-  }
-
-  @ExceptionHandler(MissingTableException::class)
-  fun handleMissingTableException(e: Exception): ResponseEntity<ErrorResponse> {
-    log.warn("Table not found exception: {}", e.message)
-    return ResponseEntity
-      .status(NOT_FOUND)
-      .body(
-        ErrorResponse(
-          status = NOT_FOUND,
-          userMessage = "The stored report or dashboard was not found.",
-          developerMessage = e.message,
-        ),
-      )
   }
 
   @ExceptionHandler(ExecutionStatementNotFound::class)

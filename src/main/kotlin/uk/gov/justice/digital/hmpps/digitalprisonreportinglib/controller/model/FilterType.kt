@@ -11,4 +11,5 @@ enum class FilterType(@JsonValue val type: String) {
   Text("text"),
   Date("date"),
   GranularDateRange("granulardaterange"),
+  AutoCompleteMulti("autocompletemulti"),
 }

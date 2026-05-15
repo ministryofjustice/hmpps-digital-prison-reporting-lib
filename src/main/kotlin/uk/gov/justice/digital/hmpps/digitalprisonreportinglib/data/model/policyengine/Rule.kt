@@ -1,16 +1,16 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 
 data class Rule(val effect: Effect, val condition: List<Condition>) {
-  fun execute(token: DprAuthAwareAuthenticationToken?, transformFun: (String) -> String): Effect? = if (areAllConditionsPermitted(token, transformFun)) {
+  fun execute(executionContext: ExecutionContext, transformFun: (String) -> String): Effect? = if (areAllConditionsPermitted(executionContext, transformFun)) {
     effect
   } else {
     null
   }
 
   private fun areAllConditionsPermitted(
-    token: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
     transformFun: (String) -> String,
-  ) = condition.all { it.execute(token, transformFun) }
+  ) = condition.all { it.execute(executionContext, transformFun) }
 }

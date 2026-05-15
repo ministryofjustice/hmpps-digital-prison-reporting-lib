@@ -10,8 +10,14 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 const val WARNING_NO_ACTIVE_CASELOAD = "User has not set an active caseload."
 const val WARNING_NO_CASELOADS = "User does not have any caseloads."
 
-class DefaultUserPermissionProvider(private val manageUsersWebClient: WebClient) : UserPermissionProvider {
-  override fun getCaseloads(username: String): CaseloadResponse {
+class ManageUsersClient(
+  private val manageUsersWebClient: WebClient,
+) {
+  /**
+   * @throws NoDataAvailableException if caseloads is empty and user is NOMIS user with [WARNING_NO_CASELOADS]
+   * @throws NoDataAvailableException if no active caseload and user is NOMIS user with [WARNING_NO_ACTIVE_CASELOAD]
+   */
+  fun getCaseloads(username: String): CaseloadResponse {
     val caseloadResponse = fetchCaseloadInfo(username)
 
     if (caseloadResponse.caseloads.isEmpty() || caseloadResponse.activeCaseload == null) {
@@ -29,14 +35,14 @@ class DefaultUserPermissionProvider(private val manageUsersWebClient: WebClient)
     return caseloadResponse
   }
 
-  override fun getUserInfo(username: String): AuthUser = manageUsersWebClient.get()
+  fun getUserInfo(username: String): AuthUser = manageUsersWebClient.get()
     .uri("/users/$username")
     .header("Content-Type", "application/json")
     .retrieve()
     .bodyToMono(AuthUser::class.java)
     .block()!!
 
-  override fun getUsersRoles(username: String): List<String> = manageUsersWebClient.get()
+  fun getUsersRoles(username: String): List<String> = manageUsersWebClient.get()
     .uri("/users/$username/roles")
     .header("Content-Type", "application/json")
     .retrieve()

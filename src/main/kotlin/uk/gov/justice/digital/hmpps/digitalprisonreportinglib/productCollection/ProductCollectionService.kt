@@ -2,15 +2,15 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection
 
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 
 @Service
 class ProductCollectionService(
   val productCollectionRepository: ProductCollectionRepository,
 ) {
-  fun getProductCollections(authToken: DprAuthAwareAuthenticationToken?): Collection<ProductCollectionSummary> {
+  fun getProductCollections(executionContext: ExecutionContext): Collection<ProductCollectionSummary> {
     // Set this to "NULL" if theres no values, which will fail the check, if a collection has any caseloadId attributes linked to it
-    val caseloadIds = authToken?.getCaseLoadIds()?.takeIf { it.isNotEmpty() } ?: listOf("NULL")
+    val caseloadIds = executionContext.getCaseLoadIds().takeIf { it.isNotEmpty() } ?: listOf("NULL")
     val groupBy = productCollectionRepository.findAll(caseloadIds)
       .groupBy { it.id }
       .values

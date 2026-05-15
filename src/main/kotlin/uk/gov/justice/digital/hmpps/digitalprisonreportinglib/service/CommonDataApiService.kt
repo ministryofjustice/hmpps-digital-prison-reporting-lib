@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import jakarta.validation.ValidationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -22,7 +23,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.FormulaExecutionMode
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.CoreDownloadContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.DownloadContext
@@ -212,9 +212,9 @@ abstract class CommonDataApiService(
 
   protected fun checkAuth(
     productDefinition: WithPolicy,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
   ): Boolean {
-    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, authToken)) {
+    if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, executionContext)) {
       throw UserAuthorisationException("User does not have correct authorisation")
     }
     return true
@@ -273,10 +273,10 @@ abstract class CommonDataApiService(
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-    authToken: DprAuthAwareAuthenticationToken?,
+    executionContext: ExecutionContext,
   ): Pair<CoreDownloadContext, SingleReportProductDefinition> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
-    checkAuth(productDefinition, authToken)
+    checkAuth(productDefinition, executionContext)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toHashSet().orEmpty()
     val defFieldNames = productDefinition.report.specification?.field.orEmpty().map { it.name }.map { it.removePrefix(REF_PREFIX) }
