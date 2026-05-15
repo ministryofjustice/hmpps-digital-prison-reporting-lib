@@ -408,7 +408,7 @@ class AsyncDataApiService(
   fun getResultTableExpiryState(tableIds: Set<String>): List<ResultTableExpiryState> {
     val existingTableIds = redshiftDataApiRepository.findExistingTables(tableIds).toHashSet()
     if (existingTableIds.isEmpty()) {
-      return tableIds.map { ResultTableExpiryState(it, false) }
+      return tableIds.map { ResultTableExpiryState(it, true) }
     }
     return tableIds.map { tableId -> ResultTableExpiryState(tableId = tableId, expired = tableId !in existingTableIds) }
   }

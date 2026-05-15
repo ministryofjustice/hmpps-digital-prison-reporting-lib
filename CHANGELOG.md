@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.1.2
+- Bugfix: When all the tables have expired returned expired: true for all of them  
+
 # 16.1.1
 - Added support for autocompletemulti filter type
 

@@ -915,6 +915,24 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   }
 
   @Test
+  fun `getResultTableExpiryState should return as expired state the state of table IDs which do not exist in Redshift in the case when none exists`() {
+    val tableIdsRequested = setOf("1", "2", "3")
+    val tableIdsThatExist = emptyList<String>()
+    val expectedResult = listOf(
+      ResultTableExpiryState("1", true),
+      ResultTableExpiryState("2", true),
+      ResultTableExpiryState("3", true),
+    )
+    whenever(
+      redshiftDataApiRepository.findExistingTables(any(), anyOrNull()),
+    ).thenReturn(tableIdsThatExist)
+
+    val actual = asyncDataApiService.getResultTableExpiryState(tableIdsRequested)
+    assertEquals(expectedResult, actual)
+    verify(redshiftDataApiRepository, times(1)).findExistingTables(eq(tableIdsRequested), anyOrNull())
+  }
+
+  @Test
   fun `should call the AthenaApiRepository for datamart with the statement execution ID when report cancelStatementExecution is called`() {
     val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
     val statementId = "statementId"
