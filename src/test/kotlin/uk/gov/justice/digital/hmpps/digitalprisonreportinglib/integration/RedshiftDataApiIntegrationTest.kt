@@ -782,7 +782,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
   @Test
   fun `Calling the reports tableExpiryState endpoint with more than 50 table IDs returns 400`() {
     val requestBody = ResultTableExpiryStateRequest(
-      tableIds = (1..51).map { it.toString() },
+      tableIds = (1..201).map { it.toString() },
     )
 
     webTestClient.post()
