@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.1.3
+- Increased limit of the POST tableExpiryState endpoint to accept up to 200 tableIds from 50.
+
 # 16.1.2
 - Bugfix: When all the tables have expired returned expired: true for all of them  
 
