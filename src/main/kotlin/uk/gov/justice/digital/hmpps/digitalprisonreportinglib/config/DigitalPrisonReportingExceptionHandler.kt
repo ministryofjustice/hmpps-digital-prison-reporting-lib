@@ -21,6 +21,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UnsupportedVersionException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 
 @RestControllerAdvice
@@ -28,6 +29,10 @@ class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(ValidationException::class)
   @ResponseStatus(BAD_REQUEST)
   fun handleValidationException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
+
+  @ExceptionHandler(UnsupportedVersionException::class)
+  @ResponseStatus(BAD_REQUEST)
+  fun handleUnsupportedVersionException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
   @ExceptionHandler(software.amazon.awssdk.services.redshiftdata.model.ValidationException::class)
   @ResponseStatus(BAD_REQUEST)
