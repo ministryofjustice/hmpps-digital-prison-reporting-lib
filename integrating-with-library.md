@@ -43,6 +43,15 @@ If more than one implementation is configured, they will take precedence in the 
 You can set `dpr.lib.dataProductDefinitions.cache.enabled` to `true` if you would like to cache the definitions in memory for a given duration which can be set with the `dpr.lib.dataProductDefinitions.durationMinutes` property.
 By default, caching is disabled.
 
+### Utilising different auth sources
+If you are using this library in anything other than a prisons context, you will need to set the `dpr.lib.user.requiredAuthSources` environment variable. This is a comma-delimited string of values that can be:
+- `NOMIS` (nomis based prisons backed accounts)
+- `DELIUS` (nDelius backed probation accounts)
+- `AUTH` (external users)
+- `NONE` (not really a proper auth source but technically valid)
+The library has a default of `NOMIS`.
+
+
 ### A Note Regarding The SQL Queries
 The SQL query is constructed from the query defined in the data product definition, the result of the policy engine execution which is a WHERE clause, 
 filters received from the client added to another WHERE clause and finally pagination.
