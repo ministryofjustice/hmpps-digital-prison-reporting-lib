@@ -1,19 +1,33 @@
 Below you can find the changes included in each release.
 
+# 16.2.0
+
+- Added `SchemaVersionTypeAdapterFactory.kt` to accept the `schemaversion` field on the dpds.
+    - It treats `v1.0.0`, `1.0.0`, `v1.0`, `1.0`, `v1`, `1` and empty schemaversion the same as version `1.0.0`
+    - It throws an exception like
+      `Validation failure: Unsupported schemaversion: v1.1.0: Only 1.0.0 is supported at this time` if the version is
+      not 1.0.0 (Temporarily until we are ready to start handling different versions)
+
 # 16.1.3
+
 - Increased limit of the POST tableExpiryState endpoint to accept up to 200 tableIds from 50.
 
 # 16.1.2
-- Bugfix: When all the tables have expired returned expired: true for all of them  
+
+- Bugfix: When all the tables have expired returned expired: true for all of them
 
 # 16.1.1
+
 - Added support for autocompletemulti filter type
 
 # 16.1.0
-- The status endpoints no longer check if a table exists. Their responsibility is only to check the status. 
-- FE library minimum version required to call the tableExpiryState endpoint and not rely on the status endpoint for table cheks: `6.0.1`
+
+- The status endpoints no longer check if a table exists. Their responsibility is only to check the status.
+- FE library minimum version required to call the tableExpiryState endpoint and not rely on the status endpoint for
+  table cheks: `6.0.1`
 
 # 16.0.0
+
 - Extract all user-related data management into an execution context that is populated via an extension method
 - Removed old authentication_code (user token) related code
 - Stopped use of the token for user-related data
@@ -21,37 +35,51 @@ Below you can find the changes included in each release.
 - Create a scheduler interface
 
 # 15.5.1
-- Added `class="govuk-link"` to the produced HTML of the make_url formula and `rel="noreferrer noopener"` when the link opens in a new tab.
+
+- Added `class="govuk-link"` to the produced HTML of the make_url formula and `rel="noreferrer noopener"` when the link
+  opens in a new tab.
 - Removed unused getStatementStatus method from AsyncDataApiService.
-- Handle Athena API error response from the status endpoint when an execution statement is not found and return 400 instead of 500.
+- Handle Athena API error response from the status endpoint when an execution statement is not found and return 400
+  instead of 500.
 
 # 15.5.0
+
 - Add an optional `type` field to the DashboardVisualisationColumnDefinition and show this only for the measures.
-This is computed in DashboardDefinitionMapper in a similar way as the ReportDefinitionMapper and not part of the DPD.    
+  This is computed in DashboardDefinitionMapper in a similar way as the ReportDefinitionMapper and not part of the DPD.
 
 # 15.4.1
-- Handle Redshift Data API error response when an execution statement is not found and return 400 instead of 500. 
+
+- Handle Redshift Data API error response when an execution statement is not found and return 400 instead of 500.
 
 # 15.4.0
+
 - Update various spring-related and hmpps-spring related libs and gradle plugins
 - Updated aws libs
 
 # 15.3.0
+
 - Added new endpoint to check for result table existence.
-- Reduced the 500 responses which were being thrown by the generic Exception which was being caught and returned as a 500 response. 
-- Spring will now handle the exceptions and return an appropriate status code which will convert many of the 500s to 4XX responses.
-- Added handlers for MethodArgumentNotValidException and HttpMessageNotReadableException to return a more detailed reason why the validation and the request failed.
+- Reduced the 500 responses which were being thrown by the generic Exception which was being caught and returned as a
+  500 response.
+- Spring will now handle the exceptions and return an appropriate status code which will convert many of the 500s to 4XX
+  responses.
+- Added handlers for MethodArgumentNotValidException and HttpMessageNotReadableException to return a more detailed
+  reason why the validation and the request failed.
 
 # 15.2.3
+
 - Rename all instances of `userToken` to `authToken` as we are no longer using user based tokens
 
 # 15.2.2
+
 - Add JacksonConfig config class to auto imports file
 
 # 15.2.1
+
 - Add new config class to auto imports file
 
 # 15.2.0
+
 - Change webflux dependency to webclient to get spring auto configured webclient
 - Create new deserializer for AuthSource as the api returns lowercase, and the enum is uppercase
 - Use the auto configured webclient instead of always building a new one
@@ -59,404 +87,562 @@ This is computed in DashboardDefinitionMapper in a similar way as the ReportDefi
 - Simplify test
 
 # 15.1.0
+
 - Dashboards to support formulas at the dataset schema field level.
 
 # 15.0.0
+
 - Don't try and get caseload details if user is not from a NOMIS AuthSource
 - Remove all deprecated auth token (user based) authorisation code
 
 # 14.3.1
+
 - Update 10.2.0 -> 10.2.1 for hmpps gradle spring boot plugin
 
 # 14.3.0
+
 - Update 10.1.2 -> 10.2.0 for hmpps gradle spring boot plugin
 
 # 14.2.0
-- Add a `fieldsource` attribute to `fielddefinition` to differentiate between returned fields in `specification` being from the original spec, or from parameters
+
+- Add a `fieldsource` attribute to `fielddefinition` to differentiate between returned fields in `specification` being
+  from the original spec, or from parameters
 
 # 14.1.0
+
 - Update to spring-boot 4.0.4 (hmpps starter libs) and kotlin 2.3.20
 - Update aws libs by minor versions
 - Harden GHA, update dependabot config
 
 # 14.0.1
+
 - Bug fix for java.sql.Date format
 
 # 14.0.0
-- Ended support of the `dataset.multiphaseQuery` DPD field. This is now handled by the `query` field which supports both a query `String` and a `List<MultiphaseQuery>`.
-- For `dataset.query` of String type the query execution functions seamlessly as it was previously. 
-- For `dataset.query` of type `List<MultiphaseQuery>`, each element has to have specified an index, a datasource and a string query field. For single list elements, the datasource is required for compatibility with how multiple multiphase queries run. But in practice for a single list element query the datasource used in the execution is the `dataset.datasource`.  
+
+- Ended support of the `dataset.multiphaseQuery` DPD field. This is now handled by the `query` field which supports both
+  a query `String` and a `List<MultiphaseQuery>`.
+- For `dataset.query` of String type the query execution functions seamlessly as it was previously.
+- For `dataset.query` of type `List<MultiphaseQuery>`, each element has to have specified an index, a datasource and a
+  string query field. For single list elements, the datasource is required for compatibility with how multiple
+  multiphase queries run. But in practice for a single list element query the datasource used in the execution is the
+  `dataset.datasource`.
 
 # 13.0.0
-- Updated to Spring Boot 4.X 
+
+- Updated to Spring Boot 4.X
 
 # 12.0.0
+
 - Removed `/reports/{reportId}/{reportVariantId}/{fieldId}` endpoint as it is no longer used.
 
 # 11.0.0
-- Changed the MutliphasQuery datasource field type from Datasource to String. This String datasource is now referencing an item from the top level DPD datasource array. 
+
+- Changed the MutliphasQuery datasource field type from Datasource to String. This String datasource is now referencing
+  an item from the top level DPD datasource array.
 
 # 10.0.7
-- Fix definitions caching. 
+
+- Fix definitions caching.
 - Changed scan operation to query in definitions retrieval from DDB.
 - Performed two queries on the category (index partition key) instead of a single combined scan on the entire table.
-- Used queryPaginator instead of manually paginating. 
+- Used queryPaginator instead of manually paginating.
 
 # 10.0.6
-- Added debug log to log caching behaviour. 
+
+- Added debug log to log caching behaviour.
 
 # 10.0.5
+
 - fix bug with manage users bean
 
 # 10.0.4
+
 - Updated manage-users env variable to from hmpps.manage-users.url to dpr.lib.manage-users.host.
 
 # 10.0.3
+
 - Provided support for system tokens based on the dpr.lib.system.token.enabled flag.
 
 # 10.0.2
-- Removed logging no longer required. This was logging the deserialisation of each individual DPD retrieved from Dynamo DB.
+
+- Removed logging no longer required. This was logging the deserialisation of each individual DPD retrieved from Dynamo
+  DB.
 
 # 10.0.1
+
 - Make download columns match order in DPD report specification
 
 # 10.0.0
+
 - Make DashboardSection and DashboardVisualisation display fields mandatory.
 
 # 9.12.3
-- Added new streaming CSV download endpoint for the sync journey.  
+
+- Added new streaming CSV download endpoint for the sync journey.
 
 # 9.12.2
+
 - Made MissingReportSubmissionsRepository conditional on MissingReportService bean.
 
 # 9.12.1
-- Fixed issue with missing report submissions erroring. 
+
+- Fixed issue with missing report submissions erroring.
 
 # 9.12.0
+
 - Formula engine does not produce HTML and returns the value as it is when the execution mode is CSV.
 
 # 9.11.21
+
 - Fix issue with checking if an S3 file is missing as part of the summary endpoint.
 
 # 9.11.20
-- Do not throw an error if a schema field does not have a matching report field during CSV download. 
+
+- Do not throw an error if a schema field does not have a matching report field during CSV download.
 
 # 9.11.19
-- CSV headers changed to be the same as the calculated report field/schema field display values from the schema field name values they were previously.
-- Order of the CSV columns changed to be based on the selected columns order if there are selected columns instead the original database table column order.
-- Added validation to the report definition endpoint so that if any report specification fields are not included in the dataset schema fields a 400 response is returned. 
+
+- CSV headers changed to be the same as the calculated report field/schema field display values from the schema field
+  name values they were previously.
+- Order of the CSV columns changed to be based on the selected columns order if there are selected columns instead the
+  original database table column order.
+- Added validation to the report definition endpoint so that if any report specification fields are not included in the
+  dataset schema fields a 400 response is returned.
 
 # 9.11.18
+
 - Update logback-core, logback-classic to 1.5.27
 - Update awsSdkVersion to 2.41.19
 
 # 9.11.17
-- Support env placeholder replacement for prod in make_url formula also when env is at the start of the host. e.g. https://${env}.abc.com
+
+- Support env placeholder replacement for prod in make_url formula also when env is at the start of the host. e.g.
+  https://${env}.abc.com
 
 # 9.11.16
+
 - Change LoadType on ReportLite to optional to represent the actual state of our stored DPDs.
 
 # 9.11.15
-- Create S3ApiService conditionally only if S3Client Bean exists. 
+
+- Create S3ApiService conditionally only if S3Client Bean exists.
 
 # 9.11.14
+
 - Fix loadType not being populated
 
 # 9.11.13
-- Fix S3 client permission issue. 
+
+- Fix S3 client permission issue.
 
 # 9.11.12
+
 - Updated various minor dependencies
 - Updated uk.gov.justice.hmpps.gradle-spring-boot to 9.3.0
 
 # 9.11.11
-- Removed validation of sort column against selected columns in the download endpoint. Sort column is already validated against schema fields and this is redundant as we select all columns in the SQL query.  
+
+- Removed validation of sort column against selected columns in the download endpoint. Sort column is already validated
+  against schema fields and this is redundant as we select all columns in the SQL query.
 
 # 9.11.10
+
 - Added 3 leading bytes at the front of the CSV file to be Excel friendly and mimic UTF-8-sig.
 
 # 9.11.9
-- Fixed issue with formulas not applying correctly when columns which were referenced by formulas were not part of the columns query param. 
+
+- Fixed issue with formulas not applying correctly when columns which were referenced by formulas were not part of the
+  columns query param.
 - Separate validation before starting to stream so that the 400 responses are not swallowed.
 
 # 9.11.8
+
 - Added columns query param to the CSV download endpoint to enable column selection and validation.
 
 # 9.11.7
+
 - Re-introduce changes which introduced S3 checks when trying to create summary table.
 
 # 9.11.6
-- Reverted changes which introduced S3 checks when trying to create summary table. 
+
+- Reverted changes which introduced S3 checks when trying to create summary table.
 
 # 9.11.5
-- Removed .gz suffix from Downloaded CSV file as browser automatically decompresses it. 
+
+- Removed .gz suffix from Downloaded CSV file as browser automatically decompresses it.
 
 # 9.11.4
+
 - Added new download endpoint to stream the CSV response.
 
 # 9.11.3
-- Added missing S3ApiService to the AutoConfiguration.imports which causes hosting apps which use the service to fail at startup.
+
+- Added missing S3ApiService to the AutoConfiguration.imports which causes hosting apps which use the service to fail at
+  startup.
 
 # 9.11.2
-- Change flyway migration path so that the library migration scripts do not automatically apply during migrations of hosting services.
+
+- Change flyway migration path so that the library migration scripts do not automatically apply during migrations of
+  hosting services.
 - Improve checks when trying to create summary table
 - bump io.jsonwebtoken:jjwt
 
 # 9.11.1
-- Include ValueVisualisationColumnDefinition "equals" field in the dashboard JSON definition response even if it has null value. 
+
+- Include ValueVisualisationColumnDefinition "equals" field in the dashboard JSON definition response even if it has
+  null value.
 - Bump guava
 - Bump testcontainers
 
 # 9.11.0
+
 - Updated core kotlin dependencies "jvm", "plugin.spring" and "plugin.jpa" to 2.3.0
 
 # 9.10.0
-- Updated uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter, which precipitated also updating uk.gov.justice.hmpps.gradle-spring-boot to keep spring-boot versions in line
+
+- Updated uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter, which precipitated also updating
+  uk.gov.justice.hmpps.gradle-spring-boot to keep spring-boot versions in line
 
 # 9.9.0
+
 - Updated various libraries for security purposes:
-  - com.google.code.gson:gson
-  - org.springdoc:springdoc-openapi-starter-webmvc-ui
-  - awsSdkVersion
-  - org.testcontainers:postgresql
+    - com.google.code.gson:gson
+    - org.springdoc:springdoc-openapi-starter-webmvc-ui
+    - awsSdkVersion
+    - org.testcontainers:postgresql
 
 # 9.8.7
+
 - Added missing with clause to dynamic filter prompt_ CTE.
 
 # 9.8.6
+
 - Added horizontal, xStacked, yStacked to DashboardOption and DashboardOptionDefinition.
 
 # 9.8.5
+
 - Support of the plus sign for concatenation in formulas.
 
 # 9.8.4
+
 - Added support in dashboards for filtering rows by null value.
 
 # 9.8.3
+
 - Added proper, wordcap, upper and lower formulas.
 
 # 9.8.2
+
 - Added default_value formula.
 
 # 9.8.1
-- The DynamoDbProductDefinitionRepository no longer stores all the fetched items in memory before processing them, but instead processes each results page as it is being fetched. 
- This aims to reduce the overall memory usage which causes an Out Of Memory error.  
+
+- The DynamoDbProductDefinitionRepository no longer stores all the fetched items in memory before processing them, but
+  instead processes each results page as it is being fetched.
+  This aims to reduce the overall memory usage which causes an Out Of Memory error.
 
 # 9.8.0
+
 - Added support for prompts on interactive dynamic filters.
 
 # 9.7.9
+
 - Updated definitions endpoint, to cache only summary product definitions.
 
 # 9.7.8
+
 - Dashboard definition update: Map options to dashboard definition only if they are present in the DPD.
 
 # 9.7.7
+
 - Fixed JPA configuration overwriting Spring autoconfig when using this library in apps that have JPA classes
 
 # 9.7.6
+
 - Added Dashboard sync functionality.
 
 # 9.7.5
+
 - Updated the display field of the DashboardVisualisationColumn and DashboardVisualisationColumnDefinition as optional.
 
 # 9.7.4
-- Updating JPA config so that we exclude the specific MissingReport stuff that uses a different datasource, and have normal Spring behaviour for the rest, which is to scan from the base package down
+
+- Updating JPA config so that we exclude the specific MissingReport stuff that uses a different datasource, and have
+  normal Spring behaviour for the rest, which is to scan from the base package down
 
 # 9.7.3
-- Added "optional" field to DashboardVisualisationColumnDefinition. 
+
+- Added "optional" field to DashboardVisualisationColumnDefinition.
 
 # 9.7.2
+
 - Added matrix-timeseries and line-timeseries to DashboardVisualisationType.
-- Do not throw NPE if no multiphase query executions are found when requesting the status. 
+- Do not throw NPE if no multiphase query executions are found when requesting the status.
 
 # 9.7.1
+
 - Updated dashboards to support heatmap functionality.
 
 # 9.7.0
+
 - Added endpoints to get product collections and get a single collection by id
 
 # 9.6.0
+
 - Filters support an index.
 
 # 9.5.8
+
 - Added more logging around retrieving the status of multiphase queries.
 
 # 9.5.7
+
 - IllegalArgumentException is mapped to a Bad Request response instead of throwing a 500 error.
 
 # 9.5.6
+
 - When a multiphase query references an invalid table index a validation error is thrown.
 
 # 9.5.5
-- Wrap in double quotes only federated passthrough multiphase queries. 
+
+- Wrap in double quotes only federated passthrough multiphase queries.
 - Only first query defaults to federated if no datasource connection is defined while the rest throw an error.
 
 # 9.5.4
+
 - Fixed ${table[n]} regex as the dollar sign prefix was missing.
 
 # 9.5.3
+
 - Fixed missing replacement of double quotes in certain phases of multiphase queries.
 
 # 9.5.2
-- Enabled cross join for multiphase queries. The following placeholder: {table[n]} will be replaced with the corresponding table ID of the n index multiphase query.
+
+- Enabled cross join for multiphase queries. The following placeholder: {table[n]} will be replaced with the
+  corresponding table ID of the n index multiphase query.
 
 # 9.5.1
-- Fixed small bug in caching for get all product definitions where if a a specific path was queried for after the cache was populated, it wouldn't search the cache for it properly
+
+- Fixed small bug in caching for get all product definitions where if a a specific path was queried for after the cache
+  was populated, it wouldn't search the cache for it properly
 
 # 9.5.0
+
 - Added endpoint to get a single report summary by definitionId
 
 # 9.4.9
+
 - Fixed issue in which when Athena would return "CANCELED" with single "L" the query would not be cancelled.
 
 # 9.4.8
-- Fixed the issue in getProductDefinition with assigning always the orphanage path regardless of which path was being passed.
+
+- Fixed the issue in getProductDefinition with assigning always the orphanage path regardless of which path was being
+  passed.
 
 # 9.4.7
-- Get single product definition uses DynamoDB with partition and sort keys instead of iterating over the entire list of definitions.
+
+- Get single product definition uses DynamoDB with partition and sort keys instead of iterating over the entire list of
+  definitions.
 
 # 9.4.6
+
 - Attempt to ensure getProductDefinitions retrieves from all paths necessary in cache.
 
 # 9.4.5
-- The endpoint to retrieve dashboard results now has no default if pageSize query is not provided and it returns all the results in one response.
+
+- The endpoint to retrieve dashboard results now has no default if pageSize query is not provided and it returns all the
+  results in one response.
 
 # 9.4.4
+
 - Added FlywayConfig to AutoConfiguration.imports.
 
-# 9.4.3 
-- Fixed the Hikari config of the missingReportDataSource. 
+# 9.4.3
+
+- Fixed the Hikari config of the missingReportDataSource.
 
 # 9.4.2
-- Removed DataSourceConfiguration as the creation of a main DataSource already takes place by defining the default datasource properties.
+
+- Removed DataSourceConfiguration as the creation of a main DataSource already takes place by defining the default
+  datasource properties.
 - Fixed selection of the main DataSource in RepositoryHelper.
-- Removed the missingReportDataSourceProperties bean creation as this conflicts with the default DataSourceProperties when Spring tries to create the main DataSource. Now the DataSourceProperties are created from the configuration properties using Binder.
+- Removed the missingReportDataSourceProperties bean creation as this conflicts with the default DataSourceProperties
+  when Spring tries to create the main DataSource. Now the DataSourceProperties are created from the configuration
+  properties using Binder.
 
 # 9.4.1
-- Use the default Spring DataSource by name in the RepositoryHelper when there is no specific one passed as a parameter. 
-This fixes an error where Spring fails to find the right DataSource bean.
+
+- Use the default Spring DataSource by name in the RepositoryHelper when there is no specific one passed as a parameter.
+  This fixes an error where Spring fails to find the right DataSource bean.
 
 # 9.4.0
+
 - Added support for missing report submissions
 
 # 9.3.1 - 9.3.3
+
 - Fixed Dynamo DB issue which was causing an error when trying to read from multiple definition categories (paths).
 
 # 9.3.0
+
 - Added optional loadType to variant summary and dashboard summary to define loadType in the data product definition.
 
 # 9.2.1
-- Reverted the removal of the Redshift async journey support as this is still being used by platform clients and the alternative
+
+- Reverted the removal of the Redshift async journey support as this is still being used by platform clients and the
+  alternative
   to run Athena federated queries to Redshift has not been implemented yet to migrate.
 
 # 9.2.0
+
 - Include missing reports in list of reports returned from /definitions endpoint
 
 # 9.1.0
-- Includes changes from `8.5.0` and `8.4.3` as these two versions were mistakenly published with more recent changes than `9.0.0` but with lower version numbers.
+
+- Includes changes from `8.5.0` and `8.4.3` as these two versions were mistakenly published with more recent changes
+  than `9.0.0` but with lower version numbers.
 
 # 8.4.3
-- Changed the sort direction field name in the DPD to be all lowercase for consistency with existing DPD field naming conventions.
+
+- Changed the sort direction field name in the DPD to be all lowercase for consistency with existing DPD field naming
+  conventions.
 
 # 8.5.0
+
 - Adds support for sortDirection in DPDs
 
 # 9.0.0
-- All async queries run via Athena. 
+
+- All async queries run via Athena.
 - Removed the Redshift data API status and cancel endpoints as they are not used.
 - Added `connection` and `dialect` fields to `Datasource`.
-- More information about their usage can be found in the [definitions schema](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema). 
+- More information about their usage can be found in
+  the [definitions schema](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema).
 
 # 8.4.2
+
 - Adds support for format_number formula
 
 # 8.4.1
+
 - Reports support multiphase queries, including parameters (prompts).
 - Unified status endpoint behaviour for both reports and dashboards to check for an existing table for completed queries
-before returning the "FINISHED" status.
+  before returning the "FINISHED" status.
 
 # 8.4.0
-- Changed table name from `execution_manager` to `multiphase_query_state` and column name of this table from `datasource` to `datasource_name`.
+
+- Changed table name from `execution_manager` to `multiphase_query_state` and column name of this table from
+  `datasource` to `datasource_name`.
 
 # 8.3.5
+
 - Fixed issue with multiphase queries throwing an error when the list of queries contained only a
-single query.
+  single query.
 
 # 8.3.4
+
 Added `row-section`and `row-section-child` as supported report template types.
 
 # 8.3.1-alpha.0, 8.3.2 and 8.3.3
-Added sequenceNumber to the multiphase query Redhisft table to address the race condition of an earlier state change overwriting a later one.
+
+Added sequenceNumber to the multiphase query Redhisft table to address the race condition of an earlier state change
+overwriting a later one.
 Added last_update to allow for cleaning up the table.
 
 # 8.2.0 - 8.3.1
+
 Added Alerts as referenceType 'alert' for the alert parameters.
 
 # 8.1.0
+
 Added `parent-child-section` report specification template.
 
 # 8.0.11
+
 Added debug logs to log the result query for the async journey.
 
 # 8.0.3 - 8.0.10
+
 Added support for multiphase queries for dashboards. This is an experimental feature at this point.
 
 # 8.0.2
-Renamed dashboard fields which were defining collections from plural to singular to comply with existing naming conventions in DPDs. 
+
+Renamed dashboard fields which were defining collections from plural to singular to comply with existing naming
+conventions in DPDs.
 
 # 8.0.1
-Fixed an issue in DprSystemAuthAwareAuthenticationToken due to which an error was thrown when the username was null. 
+
+Fixed an issue in DprSystemAuthAwareAuthenticationToken due to which an error was thrown when the username was null.
 
 # 8.0.0
-Provide a system credential mechanism to authenticate users interacting with the DPR library. Endpoints can new be secured with a
-system token and caseloads and roles are checked my callback to the manage user api service rather than token inspection.
+
+Provide a system credential mechanism to authenticate users interacting with the DPR library. Endpoints can new be
+secured with a
+system token and caseloads and roles are checked my callback to the manage user api service rather than token
+inspection.
 
 # 7.13.0
+
 Migrate to call manage-users-api instead of the nomis-user-roles-api to retrieve caseloads.
 
 # 7.10.8
+
 New dashboard execution cancellation endpoint to support running dashboards for legacy nomis/bodmis reports.
 
 # 7.10.7
-New dashboard status endpoint to support running dashboards for legacy nomis/bodmis reports. 
+
+New dashboard status endpoint to support running dashboards for legacy nomis/bodmis reports.
 
 # 7.10.6
-Fixed issue with more than one multiselect filters in which the same filter value was applied to different columns.   
+
+Fixed issue with more than one multiselect filters in which the same filter value was applied to different columns.
 
 # 7.10.5
+
 Fixed issue with DprResourceServerConfiguration.
-Renamed resourceServerCustomizer Bean to dprResourceServerCustomizer and added "paths" property to the securityMatcher. 
+Renamed resourceServerCustomizer Bean to dprResourceServerCustomizer and added "paths" property to the securityMatcher.
 
 # 7.10.4
+
 Secure only endpoints in this library with the roles provided. Removed the default role.
 
 # 7.10.3
+
 Update dashboard definition.
 
 # 7.10.2
+
 Support in dashboards for 'caseloads` and 'multiselect' filter types.
 
 # 7.10.0 - 7.10.1
-Integrate the library with the HMPPS Kotlin library and make use of the `AuthAwareAuthenticationToken` and Converter interface.
+
+Integrate the library with the HMPPS Kotlin library and make use of the `AuthAwareAuthenticationToken` and Converter
+interface.
 
 # 7.9.1
-Support for filters of type 'caseloads' and 'multiselect'. 
+
+Support for filters of type 'caseloads' and 'multiselect'.
 These are passed as one query parameter per filter with a comma separated list of values:
 `filters.someMultiselectFilter=a,b,c`
 
 # 7.9.0
+
 For scheduled datasets, use the generated dataset if it is available. Currently supports datamart datasources.
 
 # 7.8.2
+
 Changed the dashboard definition. The main changes are:
 Updated metric definition to section definition which contains a list of DashboardVisualisation definitions.
 
 # 7.8.1
+
 This fixes a bug with the caseload list generation. Was: `MDI,BXI,LEI`. It now is: `'MDI','BXI','LEI'`.
 
 # 7.7.0 - 7.8.0
+
 Support policy checks a list of available caseloads a user is allowed to access. For example:
+
 ```json
 {
   "policy": [
@@ -484,256 +670,344 @@ Support policy checks a list of available caseloads a user is allowed to access.
 ```
 
 # 7.6.0
+
 Dashboard definition response converts dataset parameters to filters.
 
 # 7.5.1
+
 Dashboards support also Athena queries based on the datasource defined in the DPD.
 
 # 7.5.0
-Add Parent-Child template: https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema?tab=readme-ov-file#parent-child-template
+
+Add Parent-Child
+template: https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema?tab=readme-ov-file#parent-child-template
 
 # 7.4.0
-The dashboard result endpoint now returns a ResponseEntity<List<List<Map<String, Any?>>>> instead a ResponseEntity<List<Map<String, Any?>>> which was previously returned.
+
+The dashboard result endpoint now returns a ResponseEntity<List<List<Map<String, Any?>>>> instead a ResponseEntity<List<
+Map<String, Any?>>> which was previously returned.
 
 # 7.3.21
+
 The status endpoints check if a table is missing only if the status is 'FINISHED' and there is a table ID provided.
 
 # 7.3.20
+
 The status endpoints accept an optional tableId to check for table existence before returning the status.
 
 # 7.3.19
-Changes to return a 404 instead of 500 when the results endpoints are called and the relevant Redshift table has been removed.
+
+Changes to return a 404 instead of 500 when the results endpoints are called and the relevant Redshift table has been
+removed.
 
 # 7.3.18
-Changed numeric quick filter values to whole words. 
+
+Changed numeric quick filter values to whole words.
 
 # 7.3.17
+
 Fix date formatting issue.
 Added defaultGranularity and defaultQuickFilterValue to filters.
 
 # 7.3.16
+
 More information on formula failure.
 
 # 7.3.15
-These changes remove the stack trace from the userMessage of the 500 responses and replace it with a generic error message.
+
+These changes remove the stack trace from the userMessage of the 500 responses and replace it with a generic error
+message.
 
 # 7.3.14
+
 The creation of DataApiAsyncController is now conditional on dpr.lib.aws.sts.enabled being true.
 The NPE try/catch blocks have been removed from the Controller.
 
 # 7.3.13
+
 Change specialType to referenceType for the establishment and wing parameters.
 Included RefreshCacheSchedulingService in the AutoConfiguration.imports.
 
 # 7.3.12
-Return only the establishment description as the FilterOption display value. 
+
+Return only the establishment description as the FilterOption display value.
 
 # 7.3.11
+
 Fix for DDB paging.
 
 # 7.3.10
+
 Fix for STS config.
 
 # 7.3.9
+
 Fix issue with retrieving list of establishments and wings when there is more than one page of results in Athena.
 
 # 7.3.8
+
 Fix issue with calculated properties initialising too soon.
 
 # 7.3.7
+
 Fixed issue with Stopwatch.duration call throwing an exception.
 
 # 7.3.6
+
 Add caching to DDB DPD repo.
 
 # 7.3.3 - 7.3.5
+
 Fix for DynamoDB config.
 
 # 7.3.2
-Fix for unnecessary DynamoDB config and dependency issue. 
+
+Fix for unnecessary DynamoDB config and dependency issue.
 
 # 7.3.1
-Returning the list of wings as static options. Also added the establishment code suffixed 
+
+Returning the list of wings as static options. Also added the establishment code suffixed
 with a dash before the description in the list of establishments returned as static options.
 
 # 7.3.0
+
 Added support for DynamoDB storage of DPDs.
 
 ## 7.2.9
-Added user authorisation check against report policy for sync report definition endpoints. 
+
+Added user authorisation check against report policy for sync report definition endpoints.
 Refactored policy engine, so that authorisation check only executes access level PolicyType.
 
 ## 7.2.8
+
 Fixed issue with ProductDefinitionTokenPolicyChecker not visible for automatic DI in hosts of the library.
 
 ## 7.2.7
+
 Fixed issue with Stopwatch.duration call throwing an exception.
 
 ## 7.2.6
+
 Added user authorisation check against report policy for async report definition endpoints.
 
 ## 7.2.5
+
 Fixed issue with application startup due to AthenaApiRepository bean ambiguity on autowiring.
 
 ## 7.2.4
+
 Caching the list of establishments and wings and returning the establishments as static options.
 
 ## 7.2.3
+
 Added authorised flag to Report Summary Definition to determine if a user has access to a report definition.
 
 ## 7.2.2
+
 Added sortColumn and sortAsc query parameter to the async results endpoint to support the interactive journey.
 
 ## 7.2.1
+
 Added report metadata with support for the interactive hint.
 
 ## 7.2.0
+
 Added interactive count endpoint.
 
 ## 7.1.1
+
 Fix issue with dashboard query execution.
 
 ## 7.1.0
+
 Added filters to getStatementResults endpoint and dashboard definition.
 
 ## 7.0.5
+
 Added endpoint to cancel running dashboard queries.
 
 ## 7.0.4
+
 Added get dashboard results endpoint.
 
 ## 7.0.3
+
 Added statement execution status endpoint.
 
 ## 7.0.2
+
 Added async dashboard execution endpoint.
 
 ## 7.0.1
+
 Removed unused property
 
-## 7.0.0 
+## 7.0.0
+
 Removed the metrics definition and metrics data endpoints.
 Updated the DPD with regard to dashboards and metrics.
 Updated the dashboard definition response.
 
 ## 6.3.2
+
 Add Crosstab supporting properties
 
 ## 6.3.1
+
 Add ContextAuthenticationHelper implementation to autoconfig.
 
 ## 6.3.0
+
 Added JWT authentication to Definitions API call.
 
 ## 6.2.0
+
 Added new metrics data API.
 
 ## 6.1.2
-Amended the dashboard and metric definitions by removing visualisationType from the dashboard. Added the optional boolean 'group' and list 'chart' fields to metrics.
+
+Amended the dashboard and metric definitions by removing visualisationType from the dashboard. Added the optional
+boolean 'group' and list 'chart' fields to metrics.
 
 ## 6.1.1
+
 Removed the /definitions/dashboards endpoint and added the dashboard definitions to the ReportDefinitionSummary.
 
 ## 6.1.0
+
 Added three new APIs to retrieve Dashboard and metric definitions.
 
 ## 6.0.4
+
 Support for section header summaries.
 
 ## 6.0.3
+
 Refactor ConfiguredApiService and split into SyncDataApiService and AsyncDataApiService.
 
 ## 6.0.2
+
 Support for Sectioned Summary reports.
 
 ## 6.0.1
+
 Added some logging when there are no matching schema fields for the projected columns of the query.
 
 ## 6.0.0
-Update to: 
+
+Update to:
+
 - Java 21 (from 19)
 - HMPPS Kotlin plugin version 6 (from 5)
 - Gradle 8.10 (from 8.1)
 
 ## 5.1.5
+
 Amended swagger documentation regarding the use of filters deriving from prompts in the async API.
 
 ## 5.1.4
+
 Wrapped date prompts in toDate function while constructing the prompt_ CTE and defaulted the format to yyyy-mm-dd.
 
 ## 5.1.3
+
 Defaulted mandatory to false for the report fields generated from DPD parameters (prompts).
 
 ## 5.1.2
+
 Defaulted visible to false for the report fields generated from DPD parameters (prompts).
 
 ## 5.1.1
+
 Fixed wrong Athena workgroup property value.
 
 ## 5.1.0
+
 Athena queries use a workgroup.
 
 ## 5.0.3
+
 Added comment with DPD and report details to the Athena query.
 
 ## 5.0.2
-Fixed issue with format_date formula when the date columns had names other than 'date'. 
+
+Fixed issue with format_date formula when the date columns had names other than 'date'.
 
 ## 5.0.1
+
 Renamed prefilter_ CTE to report_ CTE.
 
 ## 5.0.0
+
 Added prefilter_ CTE to Redshift synchronous and asynchronous queries.
 
 ## 4.12.2
+
 Create summary table synchronously via normal datasource.
 
 ## 4.12.1
+
 Add summary table creation logging and fix issue with quotes in query.
 
 ## 4.12.0
+
 Addition of a prefilter_ CTE to the Athena queries.
 
 ## 4.11.3
+
 Fix summary table check exception handling.
 
 ## 4.11.2
+
 Lazy loading of summary data to fix Athena restriction on statements.
 
 ## 4.11.1
+
 Changed prompts_ to prompt_ CTE.
 
 ## 4.11.0
-Prepended context_ CTE to the Athena queries. 
+
+Prepended context_ CTE to the Athena queries.
 
 ## 4.10.1
-Fixed issue with reports that do not have summaries failing. 
+
+Fixed issue with reports that do not have summaries failing.
 
 ## 4.10.0
-If the main dataset query has a dataset_ CTE embedded, then the query is used as is, without recreating the dataset_ CTE in the Athena queries.
+
+If the main dataset query has a dataset_ CTE embedded, then the query is used as is, without recreating the dataset_ CTE
+in the Athena queries.
 
 ## 4.9.1
+
 Added debug logs for the async queries.
 
 ## 4.9.0
+
 Create the prompts_ CTE from the filters which originated from the DPD parameters and embed it into the Athena query.
 
 ## 4.8.0
+
 Support for Report Summary/Aggregate templates.
 
 ## 4.7.0
+
 Filters converted from parameters are validated based on whether they have matching parameter names.
 
 ## 4.6.0
+
 Support parameters in the DPD dataset and return them as filters in the report definition response.
 
 ## 4.5.3
-Fix issue with dynamic filter options based on validated filter values. 
+
+Fix issue with dynamic filter options based on validated filter values.
 
 ## 4.5.2
+
 Fix issue with empty section properties.
 
 ## 4.5.1
+
 Added `section` property for `list-section` report templates
 
 ## 4.5.0
@@ -744,96 +1018,127 @@ Added `section` property for `list-section` report templates
 - Added an endpoint to stop asynchronous statements which are still running.
 
 ## 4.4.0
+
 Added ability to have filters which reference different datasets other than the main report dataset.
 
 ## 4.3.1
+
 Allow dates (as well as datetimes) to be used as a source for format_date.
 
 ## 4.3.0
-Change the way we resolve Filters and Policy CTEs from WHERE TRUE and WHERE FALSE clauses to WHERE 1=1 and 0=1 respectively  
+
+Change the way we resolve Filters and Policy CTEs from WHERE TRUE and WHERE FALSE clauses to WHERE 1=1 and 0=1
+respectively  
 in the SQL queries in order to provide support also for Oracle.
 
 ## 4.2.3
+
 Case-insensitive comparison of Datasource name to determine whether to use the Athena or Redshift API.
 
 ## 4.2.2
-Fixes the issue in which the Redshift async query was failing when the parameters' values were passed using the ExecuteStatementRequest.Builder.parameters method of the Redshift Data Api.
+
+Fixes the issue in which the Redshift async query was failing when the parameters' values were passed using the
+ExecuteStatementRequest.Builder.parameters method of the Redshift Data Api.
 
 ## 4.2.1
+
 Fixes the issue in which when a request was made with filters then all subsequent requests without filters would fail.
 
 ## 4.2.0
+
 New AthenaAPIRepository which queries Athena.\
 Datasource supports two new optional fields: database and catalog.\
-Added functionality to call the Athena API to start the query execution and retrieve the execution status for nomis and bodmis reports based on the datasource name.
+Added functionality to call the Athena API to start the query execution and retrieve the execution status for nomis and
+bodmis reports based on the datasource name.
 Existing datamart reports will run against the Redshift Data API.
 Filters are not supported yet for nomis and bodmis reports as part of this release.\
 The `/report/statements/{statementId}/status` endpoint has changed to
 `/reports/{reportId}/{reportVariantId}/statements/{statementId}/status`
 
 ## 4.1.0
+
 Added count endpoint for the created external tables.
 
 ## 4.0.0
+
 The asynchronous Redshift endpoint executes the DPD query and the results are stored into an external table.
 The endpoint to retrieve the results queries that table and allows for pagination.
 The path of this endpoint has also changed to `/reports/{reportId}/{reportVariantId}/tables/{tableId}/result`
 
 ## 3.7.11
-Added nextToken query parameter to the getQueryExecutionResult endpoint and 
+
+Added nextToken query parameter to the getQueryExecutionResult endpoint and
 changed the response of the endpoint to contain the nextToken if it exists to support
 pagination.
 Added resultSize to the StatementExecutionStatus response.
 
 ## 3.7.10
-Bug fix of the error thrown when the filters in the request contained dots. 
+
+Bug fix of the error thrown when the filters in the request contained dots.
 
 ## 3.7.9
+
 Introduction of the API to get statement result.
 
 ## 3.7.8
+
 Bug fix of the asynchronous query execution which was throwing an error when no filters were provided.
 
 ## 3.7.7
-Report execution status API to get the execution status of queries which were ran asynchronously.  
+
+Report execution status API to get the execution status of queries which were ran asynchronously.
 
 ## 3.7.6
-Added dpr.lib prefix to the redshiftdataapi properties. 
+
+Added dpr.lib prefix to the redshiftdataapi properties.
 
 ## 3.7.5
-Introduction of the asynchronous API to execute SQL statements to generate reports and return the execution ID. This is not stable yet.
+
+Introduction of the asynchronous API to execute SQL statements to generate reports and return the execution ID. This is
+not stable yet.
 
 ## 3.7.4
+
 Fixed insecure dependency versions.
 
 ## 3.7.2
+
 Fixed the issue in which filtering by Boolean fields would throw an error.
 
 ## 3.7.1
-Fixed the issue in which null dates would throw an error when the `format_date` function was applied to them. 
+
+Fixed the issue in which null dates would throw an error when the `format_date` function was applied to them.
 
 ## 3.7.0
+
 The JSON schema has been reconciled to the library functionality:
 
 - Changed report-specification.template from a string to an enum with currently just the possible value of `list`.
 - Changed report-field.wordwrap enum values from `[ "on", "off", "none" ]`  to `[ "none", "normal", "break-words" ]` .
-  - `none` prevents wrapping.
-  - `normal`  is normal wrapping behaviour - adding line breaks at the ends of words where necessary.
-  - `break-words` allows the text to wrap, breaking words if it has to.
+    - `none` prevents wrapping.
+    - `normal`  is normal wrapping behaviour - adding line breaks at the ends of words where necessary.
+    - `break-words` allows the text to wrap, breaking words if it has to.
 - Removed report-field.type enum values: `null`, `bytes`.
-- Added support for the remaining field types. 
+- Added support for the remaining field types.
 
 ## v3.6.0
+
 The library is autoconfigured and there is no longer need of a `@ComponentScan` annotation in the hosting application.
 
 ## v3.5.2
+
 Add a 'calculated' property to the controller definition, to show whether a field value is calculated using a formula.
 
 ## v3.5.1
-Make the report variant display field optional as there is already a fallback to the dataset display field. 
 
-## v3.5.0 
-Support for `format_date` formula. Please refer to the [integrating-with-library](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-lib/blob/main/integrating-with-library.md) README file for more details.
+Make the report variant display field optional as there is already a fallback to the dataset display field.
+
+## v3.5.0
+
+Support for `format_date` formula. Please refer to
+the [integrating-with-library](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-lib/blob/main/integrating-with-library.md)
+README file for more details.
 
 ## v3.4.0
+
 Added changelog.
