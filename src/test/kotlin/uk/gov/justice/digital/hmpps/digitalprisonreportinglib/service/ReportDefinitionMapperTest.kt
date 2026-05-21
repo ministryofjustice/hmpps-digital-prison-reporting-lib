@@ -1468,7 +1468,7 @@ class ReportDefinitionMapperTest {
         min = min,
         max = max,
         minSelected = minSelected,
-        maxSelected = maxSelected
+        maxSelected = maxSelected,
       ),
       formula = formula,
       visible = visible,
