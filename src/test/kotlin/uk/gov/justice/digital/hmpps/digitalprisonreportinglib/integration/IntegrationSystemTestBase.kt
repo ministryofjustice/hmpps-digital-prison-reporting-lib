@@ -156,7 +156,7 @@ abstract class IntegrationSystemTestBase {
     user: String? = "request-user",
     roles: List<String> = emptyList(),
     scopes: List<String> = emptyList(),
-    authSource: AuthSource = AuthSource.NOMIS
+    authSource: AuthSource = AuthSource.NOMIS,
   ): (HttpHeaders) -> Unit = jwtAuthorisationHelper.setAuthorisationHeader(
     clientId = "hmpps-digital-prison-reporting-api",
     username = user,

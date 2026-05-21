@@ -8,7 +8,7 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareTokenConverter
 import uk.gov.justice.hmpps.kotlin.auth.extractAuthorities
 
 class DprSystemAuthAwareTokenConverter(
-  private val requiredAuthSources: List<String>
+  private val requiredAuthSources: List<String>,
 ) : AuthAwareTokenConverter() {
 
   override fun convert(jwt: Jwt): AuthAwareAuthenticationToken {

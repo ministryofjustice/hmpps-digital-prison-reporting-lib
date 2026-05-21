@@ -6,8 +6,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
-
-class AuthSourceIntegrationTest: IntegrationTestBase() {
+class AuthSourceIntegrationTest : IntegrationTestBase() {
   companion object {
     @JvmStatic
     @DynamicPropertySource
@@ -15,6 +14,7 @@ class AuthSourceIntegrationTest: IntegrationTestBase() {
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
     }
   }
+
   @Test
   fun `check endpoints reject user when authsource does not match`() {
     webTestClient.get()
@@ -36,7 +36,7 @@ class EmptyAuthSourceEnvVarAuthSourceIntegrationTest : IntegrationTestBase() {
     @DynamicPropertySource
     fun setupClass(registry: DynamicPropertyRegistry) {
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
-      registry.add("dpr.lib.user.requiredAuthSources"){""}
+      registry.add("dpr.lib.user.requiredAuthSources") { "" }
     }
   }
 
