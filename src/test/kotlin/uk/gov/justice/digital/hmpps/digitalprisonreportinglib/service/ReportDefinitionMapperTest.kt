@@ -1307,6 +1307,22 @@ class ReportDefinitionMapperTest {
     )
   }
 
+  @Test
+  fun `MinSelected and MaxSelect value are mapped correctly`() {
+    val defaultValue = createProductDefinition(
+      defaultFilterValue = "today()",
+      minSelected = 1,
+      maxSelected = 6,
+    )
+
+    val result = mapper.mapReport(definition = defaultValue, executionContext = executionContext)
+
+    assertThat(result.variant.specification!!.fields[0].filter!!.minSelected).isEqualTo(1)
+    assertThat(result.variant.specification!!.fields[0].filter!!.maxSelected).isEqualTo(6)
+
+    verifyNoInteractions(configuredApiService)
+  }
+
   private fun createReportFieldDefinition(
     parameter: Parameter,
     expectedStaticOptions: List<FilterOption>?,
@@ -1435,6 +1451,8 @@ class ReportDefinitionMapperTest {
     defaultFilterValue: String,
     min: String? = null,
     max: String? = null,
+    minSelected: Int? = null,
+    maxSelected: Int? = null,
     visible: Visible? = Visible.TRUE,
     datasetDisplay: String = "",
     reportFieldDisplay: String? = "20",
@@ -1449,6 +1467,8 @@ class ReportDefinitionMapperTest {
         default = defaultFilterValue,
         min = min,
         max = max,
+        minSelected = minSelected,
+        maxSelected = maxSelected
       ),
       formula = formula,
       visible = visible,

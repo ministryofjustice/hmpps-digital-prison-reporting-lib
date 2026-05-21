@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.2.1
+- Added minSelected / maxSelected to be use for mutliselect and autocompletemulti filter types
+
 # 16.2.0
 
 - Added `SchemaVersionTypeAdapterFactory.kt` to accept the `schemaversion` field on the dpds.
