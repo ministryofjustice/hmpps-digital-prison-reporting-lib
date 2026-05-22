@@ -150,7 +150,7 @@ abstract class IntegrationTestBase {
     val authentication = mock<DprSystemAuthAwareAuthenticationToken>()
     whenever(jwt.tokenValue).then { TEST_TOKEN }
     whenever(authentication.jwt).then { jwt }
-    whenever(authentication.authSource).then { AuthSource.NONE }
+    whenever(authentication.authSource).then { AuthSource.NOMIS }
     whenever(authentication.name).then { "TESTUSER1" }
     whenever(authentication.userName).then { "TESTUSER1" }
     authenticationHelper.authentication = authentication
@@ -205,11 +205,13 @@ abstract class IntegrationTestBase {
     user: String = "request-user",
     roles: List<String> = emptyList(),
     scopes: List<String> = emptyList(),
+    authSource: AuthSource = AuthSource.NOMIS,
   ): (HttpHeaders) -> Unit = jwtAuthorisationHelper.setAuthorisationHeader(
     clientId = "hmpps-digital-prison-reporting-api",
     username = user,
     scope = scopes,
     roles = roles,
+    authSource = authSource,
   )
 }
 
@@ -218,9 +220,11 @@ fun setAuthorisation(
   roles: List<String> = emptyList(),
   scopes: List<String> = emptyList(),
   jwtAuthorisationHelper: JwtAuthorisationHelper,
+  authSource: AuthSource = AuthSource.NOMIS,
 ): (HttpHeaders) -> Unit = jwtAuthorisationHelper.setAuthorisationHeader(
   clientId = "hmpps-digital-prison-reporting-api",
   username = user,
   scope = scopes,
   roles = roles,
+  authSource = authSource,
 )

@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.3.0
+- Check authSource of user against given env var `dpr.lib.user.requiredAuthSources` for allowed auth sources
+
 # 16.2.1
 - Added minSelected / maxSelected to be used for `multiselect` and `autocompletemulti` filter types.
 

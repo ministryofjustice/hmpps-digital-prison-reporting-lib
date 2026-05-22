@@ -45,6 +45,7 @@ dpr:
       host: http://localhost:8082
     user:
       role: ROLE_PRISONS_REPORTING_USER
+      requiredAuthSources: NOMIS
     api:
       client:
         id: dpr-api-client-id
