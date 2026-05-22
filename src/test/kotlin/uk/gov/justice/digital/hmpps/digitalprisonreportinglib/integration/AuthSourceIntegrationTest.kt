@@ -26,7 +26,7 @@ class AuthSourceIntegrationTest : IntegrationTestBase() {
       .headers(setAuthorisation(roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
       .exchange()
       .expectStatus()
-      .isUnauthorized
+      .isForbidden
   }
 }
 
@@ -51,7 +51,7 @@ class EmptyAuthSourceEnvVarAuthSourceIntegrationTest : IntegrationTestBase() {
       .headers(setAuthorisation(roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
       .exchange()
       .expectStatus()
-      .isUnauthorized
+      .isForbidden
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->

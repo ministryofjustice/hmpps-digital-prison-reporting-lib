@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
-import org.springframework.security.authentication.InsufficientAuthenticationException
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
@@ -24,7 +23,14 @@ class DprSystemAuthAwareTokenConverter(
       }
 
     if (!requiredAuthSources.map { it.lowercase() }.contains(token.authSource.name.lowercase())) {
-      throw InsufficientAuthenticationException("You are not authorised to view this application.")
+      // Return a token with no authorities which will then be rejected
+      return DprSystemAuthAwareAuthenticationToken(
+        jwt,
+        token.clientId,
+        token.userName,
+        token.authSource,
+        emptyList()
+      )
     }
 
     return token
