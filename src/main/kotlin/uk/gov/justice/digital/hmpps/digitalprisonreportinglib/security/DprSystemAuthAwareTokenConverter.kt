@@ -29,7 +29,7 @@ class DprSystemAuthAwareTokenConverter(
         token.clientId,
         token.userName,
         token.authSource,
-        emptyList()
+        emptyList(),
       )
     }
 
