@@ -84,6 +84,8 @@ abstract class DefinitionMapper(
     defaultGranularity = filterDefinition.defaultGranularity?.let { GranularityDefinition.valueOf(it.toString()) },
     defaultQuickFilterValue = filterDefinition.defaultQuickFilterValue?.let { QuickFilterDefinition.valueOf(it.toString()) },
     index = filterDefinition.index,
+    minSelected = filterDefinition.minSelected,
+    maxSelected = filterDefinition.maxSelected,
   )
 
   protected fun populateStaticOptions(

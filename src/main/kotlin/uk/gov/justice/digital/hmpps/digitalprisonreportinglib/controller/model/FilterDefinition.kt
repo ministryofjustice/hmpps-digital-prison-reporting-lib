@@ -16,4 +16,6 @@ data class FilterDefinition(
   val defaultGranularity: GranularityDefinition? = null,
   val defaultQuickFilterValue: QuickFilterDefinition? = null,
   val index: Int? = null,
+  val minSelected: Int? = null,
+  val maxSelected: Int? = null,
 )
