@@ -135,6 +135,7 @@ abstract class IntegrationTestBase {
   @BeforeEach
   fun setup() {
     wireMockServer.resetAll()
+    manageUsersMockServer.resetAll()
     stubDefinitionsResponse()
     hmppsAuthMockServer.stubGrantToken()
     manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))

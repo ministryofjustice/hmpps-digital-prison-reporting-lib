@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.3.1
+- Added retry logic with exponential backoff and jitter when calling manage users API.
+
 # 16.3.0
 - Check authSource of user against given env var `dpr.lib.user.requiredAuthSources` for allowed auth sources
 

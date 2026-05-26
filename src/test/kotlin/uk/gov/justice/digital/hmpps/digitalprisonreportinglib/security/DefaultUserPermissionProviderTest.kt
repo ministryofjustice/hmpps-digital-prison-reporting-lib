@@ -75,6 +75,34 @@ class DefaultUserPermissionProviderTest : IntegrationTestBase() {
     assertEquals(info.activeCaseload, null)
   }
 
+  @Test
+  fun `should retry calling manage-users to retrieve caseloads twice and succeed after temporary 500 errors`() {
+    val username = "request-user"
+    val url = "prisonusers/$username/caseloads"
+    manageUsersMockServer.stub500ResponseInitial(url)
+    manageUsersMockServer.stub500ResponseSecondRequest(url)
+    manageUsersMockServer.stubSuccessInThirdRequest(url)
+    manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.DELIUS)
+    val info = manageUsersClient.getCaseloads("request-user")
+
+    assertEquals(info.username, "request-user")
+    manageUsersMockServer.verifyTimesCalled("/prisonusers/request-user/caseloads", 3)
+  }
+
+  @Test
+  fun `should retry twice calling manage-users to get user info and succeed after temporary 500 errors`() {
+    val username = "request-user"
+    val url = "users/$username"
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stub500ResponseInitial(url)
+    manageUsersMockServer.stub500ResponseSecondRequest(url)
+    manageUsersMockServer.stubGetUserInfoSuccessAfterRetry(authSource = AuthSource.DELIUS)
+    val info = manageUsersClient.getCaseloads("request-user")
+
+    assertEquals(info.username, "request-user")
+    manageUsersMockServer.verifyTimesCalled("/users/request-user", 3)
+  }
+
   private fun mockWebClientCall(expectedCaseloadResponse: CaseloadResponse) {
     val requestHeadersUriSpec = mock<RequestHeadersUriSpec<*>>()
     whenever(webClient.get()).thenReturn(requestHeadersUriSpec)
