@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.3.2
+- Fix to check authSource from user info gotten from manage-users, not from token 
+
 # 16.3.1
 - Added retry logic with exponential backoff and jitter when calling manage users API.
 
