@@ -21,6 +21,8 @@ class UserPermissionProviderAutoConfig(
   private val manageUsersApiUri: String,
   @Value("\${api.timeout:20s}")
   private val healthTimeout: Duration,
+  @Value("#{'\${dpr.lib.user.requiredAuthSources:nomis}'.empty ? 'nomis' : '\${dpr.lib.user.requiredAuthSources:nomis}' }")
+  private val requiredAuthSources: String,
 ) {
 
   @Bean
@@ -56,5 +58,6 @@ class UserPermissionProviderAutoConfig(
     manageUsersWebClient: WebClient,
   ): ManageUsersClient = ManageUsersClient(
     manageUsersWebClient,
+    requiredAuthSources.split(',').filter { it.isNotBlank() },
   )
 }

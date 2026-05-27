@@ -12,18 +12,20 @@ class AuthSourceIntegrationTest : IntegrationTestBase() {
     @DynamicPropertySource
     fun setupClass(registry: DynamicPropertyRegistry) {
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+      registry.add("dpr.lib.user.requiredAuthSources") { "NOMIS" }
     }
   }
 
   @Test
   fun `check endpoints reject user when authsource does not match`() {
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/definitions")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isForbidden
@@ -48,10 +50,12 @@ class EmptyAuthSourceEnvVarAuthSourceIntegrationTest : IntegrationTestBase() {
           .path("/definitions")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
-      .isForbidden
+      .isOk
+
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -59,9 +63,10 @@ class EmptyAuthSourceEnvVarAuthSourceIntegrationTest : IntegrationTestBase() {
           .path("/definitions")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole), authSource = AuthSource.NOMIS))
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
-      .isOk
+      .isForbidden
+
   }
 }

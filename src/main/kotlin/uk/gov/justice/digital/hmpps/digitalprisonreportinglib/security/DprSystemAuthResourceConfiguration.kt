@@ -17,7 +17,6 @@ import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomize
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
 class DprSystemAuthResourceConfiguration(
   @Value("\${dpr.lib.system.role}") private val systemRole: String,
-  @Value("#{'\${dpr.lib.user.requiredAuthSources:nomis}'.empty ? 'nomis' : '\${dpr.lib.user.requiredAuthSources:nomis}' }") private val requiredAuthSources: String,
 ) {
 
   @Order(1)
@@ -29,7 +28,7 @@ class DprSystemAuthResourceConfiguration(
 
   @Bean
   fun dprResourceServerCustomizer() = ResourceServerConfigurationCustomizer {
-    oauth2 { tokenConverter = DprSystemAuthAwareTokenConverter(requiredAuthSources.split(',').filter { it.isNotBlank() }) }
+    oauth2 { tokenConverter = DprSystemAuthAwareTokenConverter() }
     securityMatcher { paths = listOf("/report/**", "/reports/**", "/definitions/**", "/statements/**", "/async/**", "/missingRequest/**", "/productCollections/**") }
     anyRequestRole { defaultRole = systemRole.removePrefix("ROLE_") }
   }

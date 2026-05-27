@@ -10,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
@@ -21,6 +22,7 @@ const val WARNING_NO_CASELOADS = "User does not have any caseloads."
 
 class ManageUsersClient(
   private val manageUsersWebClient: WebClient,
+  private val requiredAuthSources: List<String>,
 ) {
   /**
    * @throws NoDataAvailableException if caseloads is empty and user is NOMIS user with [WARNING_NO_CASELOADS]
@@ -44,13 +46,19 @@ class ManageUsersClient(
     return caseloadResponse
   }
 
-  fun getUserInfo(username: String): AuthUser = manageUsersWebClient.get()
-    .uri("/users/$username")
-    .header("Content-Type", "application/json")
-    .retrieve()
-    .bodyToMono(AuthUser::class.java)
-    .retryWhen(retryWithExponentialBackOffAndJitter)
-    .block()!!
+  fun getUserInfo(username: String): AuthUser {
+    val userInfo = manageUsersWebClient.get()
+      .uri("/users/$username")
+      .header("Content-Type", "application/json")
+      .retrieve()
+      .bodyToMono(AuthUser::class.java)
+      .retryWhen(retryWithExponentialBackOffAndJitter)
+      .block()!!
+    if (!requiredAuthSources.map { it.lowercase() }.contains(userInfo.authSource.name.lowercase())) {
+      throw UserAuthorisationException("User attempted to access service with the wrong auth source")
+    }
+    return userInfo
+  }
 
   fun getUsersRoles(username: String): List<String> = manageUsersWebClient.get()
     .uri("/users/$username/roles")
