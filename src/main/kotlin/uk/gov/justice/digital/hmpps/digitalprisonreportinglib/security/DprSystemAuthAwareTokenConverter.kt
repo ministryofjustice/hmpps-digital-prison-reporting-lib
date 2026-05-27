@@ -6,7 +6,7 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthAwareAuthenticationToken
 import uk.gov.justice.hmpps.kotlin.auth.AuthAwareTokenConverter
 import uk.gov.justice.hmpps.kotlin.auth.extractAuthorities
 
-class DprSystemAuthAwareTokenConverter() : AuthAwareTokenConverter() {
+class DprSystemAuthAwareTokenConverter : AuthAwareTokenConverter() {
 
   override fun convert(jwt: Jwt): AuthAwareAuthenticationToken = super.convert(jwt)
     .let { authAwareAuthenticationToken ->

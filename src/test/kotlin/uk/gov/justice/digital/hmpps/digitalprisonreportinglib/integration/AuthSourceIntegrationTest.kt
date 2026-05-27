@@ -67,6 +67,5 @@ class EmptyAuthSourceEnvVarAuthSourceIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isForbidden
-
   }
 }
