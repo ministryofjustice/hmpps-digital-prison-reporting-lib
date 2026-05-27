@@ -51,7 +51,7 @@ dpr:
       host: http://localhost:8082
     user:
       role: ROLE_PRISONS_REPORTING_USER
-      requiredAuthSources: NOMIS
+      requiredAuthSources: NOMIS,DELIUS
     system:
       role: PRISONS_REPORTING_USER
       token:
