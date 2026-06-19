@@ -76,7 +76,7 @@ class DashboardDefinitionMapper(
               display = visualisation.display,
               description = visualisation.description,
               columns = DashboardVisualisationColumnsDefinition(
-                keys = visualisation.column.key?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.column.key) },
+                keys = visualisation.column.key?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.column.key, dataset) },
                 measures = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure, dataset),
                 filters = visualisation.column.filter?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
                 expectNulls = visualisation.column.expectNull,
