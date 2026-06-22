@@ -117,7 +117,7 @@ class DashboardDefinitionMapperTest {
                 display = "Total prisoners by wing",
                 columns = DashboardVisualisationColumnsDefinition(
                   keys = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID"),
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                   ),
                   measures = listOf(

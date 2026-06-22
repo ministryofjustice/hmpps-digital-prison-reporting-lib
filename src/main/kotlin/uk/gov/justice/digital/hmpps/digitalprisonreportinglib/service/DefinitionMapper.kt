@@ -54,7 +54,7 @@ abstract class DefinitionMapper(
     ParameterType.Boolean -> FieldType.Boolean
     ParameterType.Date -> FieldType.Date
     ParameterType.DateTime -> FieldType.Date
-    ParameterType.Timestamp -> FieldType.Date
+    ParameterType.Timestamp -> FieldType.Timestamp
     ParameterType.Time -> FieldType.Time
     ParameterType.Double -> FieldType.Double
     ParameterType.Float -> FieldType.Double
