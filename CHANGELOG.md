@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.3.3
+Update dashboard visualisation column definition to include new type
+
 # 16.3.2
 - Fix to check authSource from user info gotten from manage-users, not from token 
 
