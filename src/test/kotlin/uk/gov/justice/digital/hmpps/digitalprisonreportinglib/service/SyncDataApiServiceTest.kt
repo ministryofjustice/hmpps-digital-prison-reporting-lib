@@ -118,6 +118,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     ),
     listOf("ROLE_PRISONS_REPORTING_USER"),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    false,
   )
 
   @BeforeEach
@@ -567,6 +568,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
       listOf("USER-ROLE-1"),
       AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policyEngineResult = "TRUE"
     val reportId = "definition-policy-no-action"
@@ -1483,6 +1485,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
       emptyList(),
       AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
 
     whenever(

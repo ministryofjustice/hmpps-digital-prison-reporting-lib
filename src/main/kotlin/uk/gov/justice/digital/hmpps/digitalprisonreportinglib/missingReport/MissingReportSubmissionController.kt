@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.validation.annotation.Validated
@@ -23,6 +24,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUse
 class MissingReportSubmissionController(
   val missingReportService: MissingReportService,
   val manageUsersClient: ManageUsersClient,
+  @Value("\${dpr.lib.hasProbationDatasources}")
+  val hasProbationDatasources: Boolean
 ) {
 
   @ConditionalOnBean(MissingReportService::class)
@@ -44,7 +47,7 @@ class MissingReportSubmissionController(
     httpRequest: HttpServletRequest,
   ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
     MissingReportSubmissionRequest(
-      httpRequest.getUserContext(manageUsersClient).userInfo.username,
+      httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
       reportId,
       variantId,
       body,

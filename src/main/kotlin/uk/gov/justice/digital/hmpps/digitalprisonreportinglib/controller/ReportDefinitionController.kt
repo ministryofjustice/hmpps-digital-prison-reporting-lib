@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -26,6 +27,8 @@ class ReportDefinitionController(
   val reportDefinitionService: ReportDefinitionService,
   val filterHelper: FilterHelper,
   val manageUsersClient: ManageUsersClient,
+  @Value("\${dpr.lib.hasProbationDatasources}")
+  val hasProbationDatasources: Boolean
 ) {
 
   companion object {
@@ -54,7 +57,7 @@ class ReportDefinitionController(
     dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
-    httpRequest.getUserContext(manageUsersClient),
+    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
     renderMethod,
     dataProductDefinitionsPath,
   )
@@ -80,7 +83,7 @@ class ReportDefinitionController(
     httpRequest: HttpServletRequest,
   ): ReportDefinitionSummary = reportDefinitionService.getDefinitionSummary(
     reportId,
-    httpRequest.getUserContext(manageUsersClient),
+    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
     dataProductDefinitionsPath,
   )
 
@@ -118,7 +121,7 @@ class ReportDefinitionController(
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
     reportId = reportId,
     variantId = variantId,
-    executionContext = httpRequest.getUserContext(manageUsersClient),
+    executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
     dataProductDefinitionsPath = dataProductDefinitionsPath,
     filters = filterHelper.filtersOnly(filters),
   )
