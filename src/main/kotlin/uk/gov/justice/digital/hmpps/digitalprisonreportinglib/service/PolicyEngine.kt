@@ -23,9 +23,7 @@ class PolicyEngine(
 
   fun execute(): String = doExecute(policy.sortedByDescending { it.type })
 
-  fun checkLaoPolicyExists(policies: List<Policy>): Boolean {
-    return !executionContext.hasProbationDatasources || policies.any { it.type == PolicyType.LAO }
-  }
+  fun checkLaoPolicyExists(policies: List<Policy>): Boolean = !executionContext.hasProbationDatasources || policies.any { it.type == PolicyType.LAO }
 
   private fun doExecute(policiesToCheck: List<Policy>): String = if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck) || !checkLaoPolicyExists(policiesToCheck)) {
     POLICY_DENY

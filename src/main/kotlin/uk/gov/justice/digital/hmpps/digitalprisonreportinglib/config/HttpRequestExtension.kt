@@ -23,7 +23,7 @@ fun HttpServletRequest.getUserContext(
         manageUsersClient.getCaseloads(it),
         manageUsersClient.getUsersRoles(it),
         manageUsersClient.getUserInfo(it),
-        hasProbationDatasources
+        hasProbationDatasources,
       )
     } ?: throw UserAuthorisationException("userName on auth token was blank or did not exist")
 }

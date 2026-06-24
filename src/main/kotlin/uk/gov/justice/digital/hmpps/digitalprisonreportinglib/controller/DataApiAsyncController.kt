@@ -51,7 +51,7 @@ class DataApiAsyncController(
   val csvStreamingSupport: CsvStreamingSupport,
   val manageUsersClient: ManageUsersClient,
   @Value("\${dpr.lib.hasProbationDatasources}")
-  val hasProbationDatasources: Boolean
+  val hasProbationDatasources: Boolean,
 ) {
 
   companion object {

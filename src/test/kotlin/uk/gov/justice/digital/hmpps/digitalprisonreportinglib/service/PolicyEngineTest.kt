@@ -498,7 +498,7 @@ class PolicyEngineTest {
   }
 
   @Test
-  fun   `policy engine throws for an lao policy has no rules`() {
+  fun `policy engine throws for an lao policy has no rules`() {
     val context = ExecutionContext(
       CaseloadResponse(
         username = testUsername,
@@ -584,10 +584,11 @@ class PolicyEngineTest {
       id = "lao",
       type = PolicyType.LAO,
       rule = listOf(Rule(Effect.DENY, emptyList())),
-      _action = listOf("a_crn_col")
+      _action = listOf("a_crn_col"),
     )
     val policyEngine = PolicyEngine(listOf(policy), context)
-    assertThat(policyEngine.execute()).isEqualTo("""
+    assertThat(policyEngine.execute()).isEqualTo(
+      """
         exclusions_cte as (
           select crn from product_.lao_exclusions e where e.user_id = $testUsername AND e.since >= NOW() AND e.until <= NOW()  
         ),
@@ -597,6 +598,7 @@ class PolicyEngineTest {
         disallowed_crns as (select crn from exclusions_cte union restrictions_cte)
             
         a_crn_col not in (select * from disallowed_crns)
-      """.trimIndent())
+      """.trimIndent(),
+    )
   }
 }

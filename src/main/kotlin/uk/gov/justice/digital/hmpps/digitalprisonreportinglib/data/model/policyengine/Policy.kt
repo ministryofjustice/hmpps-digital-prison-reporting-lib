@@ -16,9 +16,6 @@ data class Policy(val id: String, val type: PolicyType, @SerializedName("action"
   }
 
   fun execute(executionContext: ExecutionContext, transformFun: (String) -> String): String {
-    if (type == PolicyType.LAO && rule.size != 1) {
-      throw IllegalStateException("LAO policy without rule")
-    }
     var effect = Effect.PERMIT
     for (r in rule) {
       if (r.execute(executionContext, transformFun) != Effect.PERMIT) {
@@ -27,44 +24,40 @@ data class Policy(val id: String, val type: PolicyType, @SerializedName("action"
       break
     }
 
+    if (type == PolicyType.LAO) {
+      if (rule.size != 1) {
+        throw IllegalStateException("LAO policy without rule")
+      }
+      if (rule.first().effect != Effect.PERMIT && (_action == null || _action.size != 1)) {
+        throw IllegalStateException("LAO policy provided without accompanying CRN column")
+      }
+      effect = Effect.PERMIT
+    }
+
     return if (effect == Effect.PERMIT) {
       apply(transformFun, executionContext)
     } else {
-      if (type == PolicyType.LAO) {
-        if (rule.size != 1) {
-          throw IllegalStateException("LAO policy without rule")
-        }
-        if (rule.first().effect == Effect.PERMIT) {
-          return POLICY_PERMIT
-        }
-        if (_action == null || _action.size != 1) {
-          throw IllegalStateException("LAO policy provided without accompanying CRN column")
-        }
-        return POLICY_PERMIT
-      }
-
       POLICY_DENY
     }
   }
-  fun apply(transformFunction: (String) -> String, executionContext: ExecutionContext): String = if (action.isEmpty()) {
-    POLICY_PERMIT
-  } else {
-    if (type == PolicyType.LAO) {
-      if (rule.first().effect == Effect.PERMIT) {
-        return POLICY_PERMIT
+  fun apply(transformFunction: (String) -> String, executionContext: ExecutionContext): String {
+    if (action.isEmpty()) {
+      return POLICY_PERMIT
+    } else {
+      if (type == PolicyType.LAO) {
+        return """
+          exclusions_cte as (
+            select crn from product_.lao_exclusions e where e.user_id = ${executionContext.userInfo.username} AND e.since >= NOW() AND e.until <= NOW()  
+          ),
+          restrictions_cte as (
+            select crn from restrictions r where r.user_id != ${executionContext.userInfo.username} AND r.since >= NOW() AND r.until <= NOW()
+          ),  
+          disallowed_crns as (select crn from exclusions_cte union restrictions_cte)
+              
+          ${_action!!.first()} not in (select * from disallowed_crns)
+        """.trimIndent()
       }
-      return """
-        exclusions_cte as (
-          select crn from product_.lao_exclusions e where e.user_id = ${executionContext.userInfo.username} AND e.since >= NOW() AND e.until <= NOW()  
-        ),
-        restrictions_cte as (
-          select crn from restrictions r where r.user_id != ${executionContext.userInfo.username} AND r.since >= NOW() AND r.until <= NOW()
-        ),  
-        disallowed_crns as (select crn from exclusions_cte union restrictions_cte)
-            
-        ${_action!!.first()} not in (select * from disallowed_crns)
-      """.trimIndent()
+      return action.joinToString(" AND ", transform = transformFunction)
     }
-    action.joinToString(" AND ", transform = transformFunction)
   }
 }

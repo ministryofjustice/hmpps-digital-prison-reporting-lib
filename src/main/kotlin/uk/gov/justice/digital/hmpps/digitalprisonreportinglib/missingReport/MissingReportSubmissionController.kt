@@ -25,7 +25,7 @@ class MissingReportSubmissionController(
   val missingReportService: MissingReportService,
   val manageUsersClient: ManageUsersClient,
   @Value("\${dpr.lib.hasProbationDatasources}")
-  val hasProbationDatasources: Boolean
+  val hasProbationDatasources: Boolean,
 ) {
 
   @ConditionalOnBean(MissingReportService::class)
