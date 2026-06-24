@@ -23,10 +23,14 @@ class PolicyEngine(
 
   fun execute(): String = doExecute(policy.sortedByDescending { it.type })
 
-  private fun doExecute(policiesToCheck: List<Policy>): String = if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck)) {
+  fun checkLaoPolicyExists(policies: List<Policy>): Boolean {
+    return !executionContext.hasProbationDatasources || policies.any { it.type == PolicyType.LAO }
+  }
+
+  private fun doExecute(policiesToCheck: List<Policy>): String = if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck) || !checkLaoPolicyExists(policiesToCheck)) {
     POLICY_DENY
   } else {
-    policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables) }
+    policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables, executionContext) }
   }
 
   private fun isAnyPolicyDenied(policies: List<Policy>) = policies.map { it.execute(executionContext, ::interpolateVariables) }.any { it == POLICY_DENY }

@@ -496,4 +496,107 @@ class PolicyEngineTest {
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
   }
+
+  @Test
+  fun   `policy engine throws for an lao policy has no rules`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = emptyList(),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThrows<IllegalStateException> { policyEngine.execute() }
+  }
+
+  @Test
+  fun `policy engine throws for an lao policy with effect deny and no action indicating a crn column`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = listOf(Rule(Effect.DENY, emptyList())),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThrows<IllegalStateException> { policyEngine.execute() }
+  }
+
+  @Test
+  fun `policy engine returns permit for an lao policy with effect permit`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = listOf(Rule(Effect.PERMIT, emptyList())),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThat(policyEngine.execute()).isEqualTo(POLICY_PERMIT)
+  }
+
+  @Test
+  fun `policy engine returns sql for an lao policy with effect deny and an action indicating a crn column`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = listOf(Rule(Effect.DENY, emptyList())),
+      _action = listOf("a_crn_col")
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThat(policyEngine.execute()).isEqualTo("""
+        exclusions_cte as (
+          select crn from product_.lao_exclusions e where e.user_id = $testUsername AND e.since >= NOW() AND e.until <= NOW()  
+        ),
+        restrictions_cte as (
+          select crn from restrictions r where r.user_id != $testUsername AND r.since >= NOW() AND r.until <= NOW()
+        ),  
+        disallowed_crns as (select crn from exclusions_cte union restrictions_cte)
+            
+        a_crn_col not in (select * from disallowed_crns)
+      """.trimIndent())
+  }
 }
