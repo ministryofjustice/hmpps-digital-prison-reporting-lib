@@ -589,15 +589,18 @@ class PolicyEngineTest {
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(
       """
-        exclusions_cte as (
-          select crn from product_.lao_exclusions e where e.user_id = $testUsername AND e.since >= NOW() AND e.until <= NOW()  
-        ),
-        restrictions_cte as (
-          select crn from restrictions r where r.user_id != $testUsername AND r.since >= NOW() AND r.until <= NOW()
-        ),  
-        disallowed_crns as (select crn from exclusions_cte union restrictions_cte)
-            
-        a_crn_col not in (select * from disallowed_crns)
+        a_crn_col NOT IN (
+            WITH exclusions_cte as (
+              SELECT crn FROM product_.lao_exclusions e WHERE e.user_id = 'request-user' AND e.since <= NOW() AND e.until >= NOW()
+            ),
+            restrictions_cte as (
+              SELECT crn FROM product_.lao_restrictions r 
+              WHERE r.since <= NOW() AND r.until >= NOW()
+              GROUP BY crn
+              HAVING NOT BOOL_OR(user_id = 'request-user')
+            )
+            SELECT crn FROM exclusions_cte UNION SELECT crn FROM restrictions_cte
+        )
       """.trimIndent(),
     )
   }

@@ -115,6 +115,16 @@
   ],
   "policy": [
     {
+      "id": "lao",
+      "type": "lao",
+      "action": ["prisonNumber"],
+      "rule": [
+        {
+          "effect": "deny"
+        }
+      ]
+    },
+    {
       "id": "role-based-policy",
       "type": "access",
       "rule": [
