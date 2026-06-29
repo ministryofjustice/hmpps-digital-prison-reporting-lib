@@ -1,6 +1,6 @@
 Below you can find the changes included in each release.
 
-# 16.4.1
+# 16.4.2
 - Add prompt default value to filters
 
 # 16.4.0
