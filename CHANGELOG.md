@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 16.3.4
+Add prompt default value to filters
+
 # 16.3.3
 Update dashboard visualisation column definition to include new type
 
