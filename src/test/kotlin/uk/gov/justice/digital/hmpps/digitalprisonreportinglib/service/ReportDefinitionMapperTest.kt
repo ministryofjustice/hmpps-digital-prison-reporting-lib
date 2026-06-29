@@ -1547,8 +1547,8 @@ class ReportDefinitionMapperTest {
       "Hello | Radio | Hello",
       "Hello | Select | Hello",
       "Hello1,Hello2 | Multiselect | Hello1,Hello2",
-      "Hello1,Hello2 | AutoCompleteMulti | Hello1,Hello2"
-    ]
+      "Hello1,Hello2 | AutoCompleteMulti | Hello1,Hello2",
+    ],
   )
   fun `getting single report with parameters maps full data correctly and converts the parameters to filters with default values`(default: String, filterType: String, resultDefault: String) {
     val parameterName = "paramName"
@@ -1560,7 +1560,7 @@ class ReportDefinitionMapperTest {
       filterType = FilterType.valueOf(filterType.replaceFirstChar { it.titlecase() }),
       display = parameterDisplay,
       mandatory = true,
-      default = default
+      default = default,
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
 
@@ -1605,7 +1605,7 @@ class ReportDefinitionMapperTest {
       filterType = FilterType.DateRange,
       display = parameterDisplay,
       mandatory = true,
-      default = default
+      default = default,
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
 
@@ -1647,7 +1647,7 @@ class ReportDefinitionMapperTest {
       filterType = FilterType.Date,
       display = parameterDisplay,
       mandatory = true,
-      default = default
+      default = default,
     )
     val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
 
@@ -1655,5 +1655,4 @@ class ReportDefinitionMapperTest {
       mapper.mapReport(productDefinition, executionContext)
     }
   }
-
 }
