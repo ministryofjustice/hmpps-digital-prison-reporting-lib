@@ -1,10 +1,8 @@
 Below you can find the changes included in each release.
 
-# 16.4.1
-- Add prompt default value to filters
-
-# 16.4.0
+# 16.3.4, 16.3.5, 16.4.0, 16.4.1
 - Add new LAO policy type and alter PolicyEngine related code to handle it
+- Add prompt default value to filters
 
 # 16.3.3
 - Update dashboard visualisation column definition to include new type
