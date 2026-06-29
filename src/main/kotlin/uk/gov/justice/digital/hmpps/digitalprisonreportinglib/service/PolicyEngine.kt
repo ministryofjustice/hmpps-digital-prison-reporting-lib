@@ -23,9 +23,9 @@ class PolicyEngine(
 
   fun execute(): String = doExecute(policy.sortedByDescending { it.type })
 
-  fun checkLaoPolicyExists(policies: List<Policy>): Boolean = !executionContext.hasProbationDatasources || policies.any { it.type == PolicyType.LAO }
+  fun laoPolicyExists(policies: List<Policy>): Boolean = !executionContext.hasProbationDatasources || policies.any { it.type == PolicyType.LAO }
 
-  private fun doExecute(policiesToCheck: List<Policy>): String = if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck) || !checkLaoPolicyExists(policy)) {
+  private fun doExecute(policiesToCheck: List<Policy>): String = if (policiesToCheck.isEmpty() || isAnyPolicyDenied(policiesToCheck) || !laoPolicyExists(policy)) {
     POLICY_DENY
   } else {
     policiesToCheck.joinToString(" AND ") { it.apply(this::interpolateVariables, executionContext) }

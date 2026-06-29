@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.InvalidDpdException
 
 data class Policy(val id: String, val type: PolicyType, @SerializedName("action") private val _action: List<String>? = null, val rule: List<Rule>) {
 
@@ -25,11 +26,11 @@ data class Policy(val id: String, val type: PolicyType, @SerializedName("action"
     }
 
     if (type == PolicyType.LAO) {
-      if (rule.size != 1) {
-        throw IllegalStateException("LAO policy without rule")
+      if (rule.isEmpty()) {
+        throw InvalidDpdException("LAO policy without rule")
       }
       if (rule.first().effect != Effect.PERMIT && (_action == null || _action.size != 1)) {
-        throw IllegalStateException("LAO policy provided without accompanying CRN column")
+        throw InvalidDpdException("LAO policy provided without accompanying CRN column")
       }
       effect = Effect.PERMIT
     }
