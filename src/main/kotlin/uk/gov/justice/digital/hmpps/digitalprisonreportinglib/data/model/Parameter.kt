@@ -8,4 +8,5 @@ data class Parameter(
   val display: String,
   val mandatory: Boolean,
   val referenceType: ReferenceType? = null,
+  val default: String? = null,
 )
