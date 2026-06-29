@@ -2,11 +2,14 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ACCESS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ROW_LEVEL
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
@@ -32,6 +35,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       "caseload",
@@ -56,6 +60,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser("", false, "", AuthSource.NONE, "", ""),
+      false,
     )
     val policyEngine = PolicyEngine(emptyList(), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -79,6 +84,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -102,6 +108,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -119,6 +126,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       "caseload",
@@ -142,6 +150,7 @@ class PolicyEngineTest {
       ),
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       "caseload",
@@ -165,6 +174,7 @@ class PolicyEngineTest {
       ),
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       "caseload",
@@ -188,6 +198,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       "caseload",
@@ -211,6 +222,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser("", false, "", AuthSource.NONE, "", ""),
+      false,
     )
     val policy = Policy(
       "caseload",
@@ -235,6 +247,7 @@ class PolicyEngineTest {
       ),
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
 
     val policy = Policy(
@@ -259,6 +272,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       "caseload",
@@ -282,6 +296,7 @@ class PolicyEngineTest {
       ),
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy1 = Policy(
       "caseload",
@@ -335,6 +350,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policyEngine = PolicyEngine(listOf(policy1, policy2, policy3), context)
     val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in') AND ${PolicyResult.POLICY_PERMIT} AND origin_code in ('ABC', 'BBC', 'HEI', 'MDI')"
@@ -353,6 +369,7 @@ class PolicyEngineTest {
       ),
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       id = "caseload",
@@ -375,6 +392,7 @@ class PolicyEngineTest {
       ),
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       id = "caseload",
@@ -397,6 +415,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       id = "caseload",
@@ -420,6 +439,7 @@ class PolicyEngineTest {
       ),
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       id = "caseload",
@@ -443,6 +463,7 @@ class PolicyEngineTest {
       ),
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       id = "caseload",
@@ -465,6 +486,7 @@ class PolicyEngineTest {
       ),
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     val policy = Policy(
       id = "caseload",
@@ -473,5 +495,113 @@ class PolicyEngineTest {
     )
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+  }
+
+  @Test
+  fun `policy engine throws for an lao policy has no rules`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = emptyList(),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThrows<IllegalStateException> { policyEngine.execute() }
+  }
+
+  @Test
+  fun `policy engine throws for an lao policy with effect deny and no action indicating a crn column`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = listOf(Rule(Effect.DENY, emptyList())),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThrows<IllegalStateException> { policyEngine.execute() }
+  }
+
+  @Test
+  fun `policy engine returns permit for an lao policy with effect permit`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = listOf(Rule(Effect.PERMIT, emptyList())),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThat(policyEngine.execute()).isEqualTo(POLICY_PERMIT)
+  }
+
+  @Test
+  fun `policy engine returns sql for an lao policy with effect deny and an action indicating a crn column`() {
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = testCaseload,
+      ),
+      emptyList(),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "lao",
+      type = PolicyType.LAO,
+      rule = listOf(Rule(Effect.DENY, emptyList())),
+      _action = listOf("a_crn_col"),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThat(policyEngine.execute()).isEqualTo(
+      """
+        a_crn_col NOT IN (
+            WITH exclusions_cte as (
+              SELECT crn FROM product_.lao_exclusions e WHERE e.user_id = 'request-user' AND e.since <= NOW() AND e.until >= NOW()
+            ),
+            restrictions_cte as (
+              SELECT crn FROM product_.lao_restrictions r 
+              WHERE r.since <= NOW() AND r.until >= NOW()
+              GROUP BY crn
+              HAVING NOT BOOL_OR(user_id = 'request-user')
+            )
+            SELECT crn FROM exclusions_cte UNION SELECT crn FROM restrictions_cte
+        )
+      """.trimIndent(),
+    )
   }
 }
