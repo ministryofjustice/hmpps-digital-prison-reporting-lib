@@ -125,12 +125,17 @@ abstract class DefinitionMapper(
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
 
-  protected fun maybeConvertParametersToReportFields(multiphaseQueries: List<MultiphaseQuery>, parameters: List<Parameter>?) = maybeConvertMultiphaseQueryParameters(multiphaseQueries)
+  protected fun maybeConvertParametersToReportFields(
+    multiphaseQueries: List<MultiphaseQuery>,
+    parameters: List<Parameter>?
+  ) = maybeConvertMultiphaseQueryParameters(multiphaseQueries)
     ?: maybeConvertToReportFields(parameters)
 
-  private fun maybeConvertToReportFields(parameters: List<Parameter>?) = parameters?.map { mapParameterToField(it) } ?: emptyList()
+  private fun maybeConvertToReportFields(parameters: List<Parameter>?) =
+    parameters?.map { mapParameterToField(it) } ?: emptyList()
 
-  private fun maybeConvertMultiphaseQueryParameters(multiphaseQuery: List<MultiphaseQuery>) = multiphaseQuery.takeIf { it.size > 1 }?.let { collectAllParametersAndMapToDistinctReportFields(it) }
+  private fun maybeConvertMultiphaseQueryParameters(multiphaseQuery: List<MultiphaseQuery>) =
+    multiphaseQuery.takeIf { it.size > 1 }?.let { collectAllParametersAndMapToDistinctReportFields(it) }
 
   private fun collectAllParametersAndMapToDistinctReportFields(queries: List<MultiphaseQuery>): List<FieldDefinition> {
     val distinctParameters =
@@ -150,7 +155,8 @@ abstract class DefinitionMapper(
     val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
     val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
     val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
-    val displaySchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
+    val displaySchemaField =
+      identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.display)
     val prompts: List<Prompt>? = filters?.takeIf { it.isNotEmpty() }?.let {
       buildPrompts(
         query = reportDataset.query,
@@ -194,9 +200,22 @@ abstract class DefinitionMapper(
       interactive = false,
       staticOptions = populateStaticOptionsForParameter(parameter),
       index = parameter.index,
+      defaultValue = populateParameterDefaultValue(
+        FilterType.valueOf(parameter.filterType.toString()),
+        parameter.default
+      ),
     ),
     fieldSource = FieldSource.ParamField,
   )
+
+  private fun populateParameterDefaultValue(filterType: FilterType, default: String?) =
+    when (filterType) {
+      FilterType.DateRange -> replaceTokens(default)
+      FilterType.Date -> validateAndConvertStrDate(default)
+      else -> {
+        default
+      }
+    }
 
   private fun populateStaticOptionsForParameter(parameter: Parameter): List<FilterOption>? = parameter.referenceType
     ?.let {
@@ -249,7 +268,8 @@ abstract class DefinitionMapper(
     .flatMap { it.entries }
     .map { FilterOption(it.value.toString(), it.value.toString()) }
 
-  private fun populateFilterType(filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition) = if (filterDefinition.type == Caseloads) FilterType.Multiselect else FilterType.valueOf(filterDefinition.type.toString())
+  private fun populateFilterType(filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition) =
+    if (filterDefinition.type == Caseloads) FilterType.Multiselect else FilterType.valueOf(filterDefinition.type.toString())
 
   private fun populateDefaultValue(
     filterDefinition: uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition,
@@ -278,4 +298,9 @@ abstract class DefinitionMapper(
 
     return result
   }
+
+  private fun validateAndConvertStrDate(defaultValue: String?): String? =
+    defaultValue?.let {
+      LocalDate.parse(it, ISO_LOCAL_DATE).format(ISO_LOCAL_DATE)
+    }
 }

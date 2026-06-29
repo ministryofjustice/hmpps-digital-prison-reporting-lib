@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.ArgumentMatchers.anyLong
@@ -74,6 +75,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import java.util.Collections.singletonMap
 
@@ -714,7 +716,7 @@ class ReportDefinitionMapperTest {
       ),
     )
 
-    val fieldFromParameter = result.variant.specification.fields[1]
+    val fieldFromParameter = result.variant.specification!!.fields[1]
     val sourceParameterField = fullSingleProductDefinition.reportDataset.parameters!!.first()
 
     assertThat(fieldFromParameter.name).isEqualTo(sourceParameterField.name)
@@ -1533,4 +1535,125 @@ class ReportDefinitionMapperTest {
       allDatasources = listOf(datasource),
     )
   }
+
+  @ParameterizedTest
+  @CsvSource(
+    useHeadersInDisplayName = false,
+    delimiter = '|',
+    value = [
+      "2026-02-02 | Date | 2026-02-02",
+      "Hello | Text | Hello",
+      "Hello | AutoComplete | Hello",
+      "Hello | Radio | Hello",
+      "Hello | Select | Hello",
+      "Hello1,Hello2 | Multiselect | Hello1,Hello2",
+      "Hello1,Hello2 | AutoCompleteMulti | Hello1,Hello2"
+    ]
+  )
+  fun `getting single report with parameters maps full data correctly and converts the parameters to filters with default values`(default: String, filterType: String, resultDefault: String) {
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.valueOf(filterType.replaceFirstChar { it.titlecase() }),
+      display = parameterDisplay,
+      mandatory = true,
+      default = default
+    )
+    val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
+
+    val result = mapper.mapReport(productDefinition, executionContext)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedReportField = FieldDefinition(
+      fieldSource = FieldSource.ParamField,
+      type = FieldType.String,
+      name = parameterName,
+      display = parameterDisplay,
+      mandatory = false,
+      defaultsort = false,
+      sortable = false,
+      calculated = false,
+      filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
+        type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.valueOf(filterType),
+        mandatory = true,
+        index = 0,
+        defaultValue = resultDefault,
+      ),
+      visible = false,
+    )
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
+  fun `getting single report with parameters maps daterange and converts the parameters to filters with default values`() {
+    val default = "today(-1,weeks) - today()"
+    val today = LocalDate.now()
+    val oneWeekAgo = today.minusWeeks(1)
+    val resultDefault = "$oneWeekAgo - $today"
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.DateRange,
+      display = parameterDisplay,
+      mandatory = true,
+      default = default
+    )
+    val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
+
+    val result = mapper.mapReport(productDefinition, executionContext)
+
+    val matchingField = result.variant.specification!!.fields.filter { it.name == parameterName }
+
+    val expectedReportField = FieldDefinition(
+      fieldSource = FieldSource.ParamField,
+      type = FieldType.String,
+      name = parameterName,
+      display = parameterDisplay,
+      mandatory = false,
+      defaultsort = false,
+      sortable = false,
+      calculated = false,
+      filter = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition(
+        type = uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.DateRange,
+        mandatory = true,
+        index = 0,
+        defaultValue = resultDefault,
+      ),
+      visible = false,
+    )
+    assertThat(result.variant.specification!!.fields.size).isEqualTo(2)
+    assertThat(matchingField.size).isEqualTo(1)
+    assertThat(matchingField[0]).isEqualTo(expectedReportField)
+  }
+
+  @Test
+  fun `parameters maps date with wrong ISO Dateformat with exception`() {
+    val default = "02/02/2026"
+    val parameterName = "paramName"
+    val parameterDisplay = "paramDisplay"
+    val parameter = Parameter(
+      index = 0,
+      name = parameterName,
+      reportFieldType = ParameterType.String,
+      filterType = FilterType.Date,
+      display = parameterDisplay,
+      mandatory = true,
+      default = default
+    )
+    val productDefinition = createProductDefinition("today()", parameters = listOf(parameter))
+
+    assertThrows<DateTimeParseException> {
+      mapper.mapReport(productDefinition, executionContext)
+    }
+  }
+
 }
