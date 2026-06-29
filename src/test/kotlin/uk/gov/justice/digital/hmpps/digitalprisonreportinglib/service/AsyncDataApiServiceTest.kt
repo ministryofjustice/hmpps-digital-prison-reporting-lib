@@ -139,6 +139,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     ),
     listOf("ROLE_PRISONS_REPORTING_USER"),
     AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    false,
   )
 
   @BeforeEach
@@ -241,6 +242,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
       listOf("ROLE_PRISONS_REPORTING_USER"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
     )
     whenever(
       redshiftDataApiRepository.executeQueryAsync(

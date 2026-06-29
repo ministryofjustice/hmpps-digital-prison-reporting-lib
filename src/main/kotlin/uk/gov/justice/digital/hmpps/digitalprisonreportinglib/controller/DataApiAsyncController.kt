@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -49,6 +50,8 @@ class DataApiAsyncController(
   val filterHelper: FilterHelper,
   val csvStreamingSupport: CsvStreamingSupport,
   val manageUsersClient: ManageUsersClient,
+  @Value("\${dpr.lib.hasProbationDatasources}")
+  val hasProbationDatasources: Boolean,
 ) {
 
   companion object {
@@ -105,7 +108,7 @@ class DataApiAsyncController(
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
-          executionContext = httpRequest.getUserContext(manageUsersClient),
+          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -162,7 +165,7 @@ class DataApiAsyncController(
           dashboardId = dashboardId,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(manageUsersClient),
+          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -224,7 +227,7 @@ class DataApiAsyncController(
         statementId = statementId,
         reportId = reportId,
         reportVariantId = reportVariantId,
-        executionContext = httpRequest.getUserContext(manageUsersClient),
+        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
         dataProductDefinitionsPath,
       ),
     )
@@ -279,7 +282,7 @@ class DataApiAsyncController(
         statementId = statementId,
         productDefinitionId = reportId,
         dashboardId = dashboardId,
-        executionContext = httpRequest.getUserContext(manageUsersClient),
+        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
         dataProductDefinitionsPath,
       ),
     )
@@ -322,7 +325,7 @@ class DataApiAsyncController(
         statementId,
         reportId,
         reportVariantId,
-        executionContext = httpRequest.getUserContext(manageUsersClient),
+        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
         dataProductDefinitionsPath,
       ),
     )
@@ -353,7 +356,7 @@ class DataApiAsyncController(
         statementId,
         definitionId,
         dashboardId,
-        executionContext = httpRequest.getUserContext(manageUsersClient),
+        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
         dataProductDefinitionsPath,
       ),
     )
@@ -429,7 +432,7 @@ class DataApiAsyncController(
           reportId,
           reportVariantId,
           filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(manageUsersClient),
+          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
           dataProductDefinitionsPath,
         ),
       )
@@ -486,7 +489,7 @@ class DataApiAsyncController(
         filters = filterHelper.filtersOnly(filters),
         sortedAsc = sortedAsc,
         sortColumn = sortColumn,
-        executionContext = httpRequest.getUserContext(manageUsersClient),
+        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
       ),
     )
 
@@ -527,7 +530,7 @@ class DataApiAsyncController(
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = filterHelper.filtersOnly(filters),
-        executionContext = httpRequest.getUserContext(manageUsersClient),
+        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
       ),
     )
 
@@ -561,7 +564,7 @@ class DataApiAsyncController(
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
-      executionContext = httpRequest.getUserContext(manageUsersClient),
+      executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
     )
     return ResponseEntity
       .status(HttpStatus.OK)
@@ -606,7 +609,7 @@ class DataApiAsyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      executionContext = request.getUserContext(manageUsersClient),
+      executionContext = request.getUserContext(manageUsersClient, hasProbationDatasources),
     )
 
     csvStreamingSupport.streamCsv(

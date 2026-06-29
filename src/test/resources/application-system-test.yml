@@ -41,6 +41,7 @@ management.endpoint:
 
 dpr:
   lib:
+    hasProbationDatasources: false
     manage-users:
       host: http://localhost:8082
     user:
