@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.missingReport.MissingReportSubmission
 
 class MissingReportNoDatasourceIntegrationTest : IntegrationTestBase() {
@@ -35,14 +36,12 @@ class MissingReportIntegrationTest : IntegrationTestBase() {
     @JvmStatic
     @DynamicPropertySource
     fun setupClass(registry: DynamicPropertyRegistry) {
-      pgContainer?.run {
-        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource.username", pgContainer::getUsername)
-        registry.add("spring.datasource.password", pgContainer::getPassword)
-        registry.add("spring.datasource.missingreport.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource.missingreport.username", pgContainer::getUsername)
-        registry.add("spring.datasource.missingreport.password", pgContainer::getPassword)
-      }
+      registry.add("spring.datasource.url") { PostgresContainer.jdbcUrl }
+      registry.add("spring.datasource.username") { PostgresContainer.username }
+      registry.add("spring.datasource.password") { PostgresContainer.password }
+      registry.add("spring.datasource.missingreport.url") { PostgresContainer.jdbcUrl }
+      registry.add("spring.datasource.missingreport.username") { PostgresContainer.username }
+      registry.add("spring.datasource.missingreport.password") { PostgresContainer.password }
     }
 
     @JvmStatic

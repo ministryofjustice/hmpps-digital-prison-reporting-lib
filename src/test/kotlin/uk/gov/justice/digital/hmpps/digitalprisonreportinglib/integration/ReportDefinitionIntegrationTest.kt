@@ -847,6 +847,48 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .isBadRequest()
   }
 
+  class ReportDefinitionLaoChecksNoPolicyTest : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+        registry.add("dpr.lib.hasProbationDatasources") { true }
+      }
+    }
+
+    @Test fun `dpd without lao policy should come back as unauthorised`() {
+      webTestClient.get()
+        .uri("/definitions")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("$.length()").isEqualTo(1)
+        .jsonPath("$[0].authorised").isEqualTo("false")
+    }
+  }
+
+  class ReportDefinitionLaoChecksTest : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPolicy.json" }
+        registry.add("dpr.lib.hasProbationDatasources") { true }
+      }
+    }
+
+    @Test fun `dpd with lao policy should come back as authorised`() {
+      webTestClient.get()
+        .uri("/definitions")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("$.length()").isEqualTo(1)
+        .jsonPath("$[0].authorised").isEqualTo("true")
+    }
+  }
+
   class ReportDefinitionParametersListTest : IntegrationTestBase() {
 
     companion object {

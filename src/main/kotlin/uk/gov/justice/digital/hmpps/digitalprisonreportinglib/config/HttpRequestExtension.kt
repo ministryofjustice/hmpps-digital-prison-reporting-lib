@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUse
 
 fun HttpServletRequest.getUserContext(
   manageUsersClient: ManageUsersClient,
+  hasProbationDatasources: Boolean,
 ): ExecutionContext {
   val authToken = SecurityContextHolder.getContext().authentication?.let {
     it as? DprSystemAuthAwareAuthenticationToken
@@ -22,6 +23,7 @@ fun HttpServletRequest.getUserContext(
         manageUsersClient.getCaseloads(it),
         manageUsersClient.getUsersRoles(it),
         manageUsersClient.getUserInfo(it),
+        hasProbationDatasources,
       )
     } ?: throw UserAuthorisationException("userName on auth token was blank or did not exist")
 }

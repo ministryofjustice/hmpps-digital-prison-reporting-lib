@@ -145,6 +145,7 @@ SELECT * FROM dataset_'
     ),
     emptyList(),
     AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    false,
   )
   private val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
   private val dataset = mock<Dataset>()

@@ -75,16 +75,13 @@ abstract class IntegrationSystemTestBase {
 
     @JvmField
     val manageUsersMockServer = ManageUsersMockServer()
-    val postgresContainer = PostgresContainer.instance
 
     @JvmStatic
     @DynamicPropertySource
     fun setupClass(registry: DynamicPropertyRegistry) {
-      postgresContainer?.run {
-        registry.add("spring.datasource.url", postgresContainer::getJdbcUrl)
-        registry.add("spring.datasource.username", postgresContainer::getUsername)
-        registry.add("spring.datasource.password", postgresContainer::getPassword)
-      }
+      registry.add("spring.datasource.url") { PostgresContainer.jdbcUrl }
+      registry.add("spring.datasource.username") { PostgresContainer.username }
+      registry.add("spring.datasource.password") { PostgresContainer.password }
     }
 
     @BeforeAll
