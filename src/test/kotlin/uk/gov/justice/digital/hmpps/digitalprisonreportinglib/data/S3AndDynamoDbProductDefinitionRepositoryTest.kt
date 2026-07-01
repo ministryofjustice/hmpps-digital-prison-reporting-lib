@@ -490,7 +490,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     return jsonObject.toString()
   }
 
-  private fun definitionJsonWithNullField(id: String, fieldName: String, ): String {
+  private fun definitionJsonWithNullField(id: String, fieldName: String): String {
     val resource = this::class.java.classLoader.getResource("productDefinition.json")
 
     val jsonObject = JsonParser.parseString(resource!!.readText()).asJsonObject

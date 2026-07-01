@@ -12,9 +12,9 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadedDefinitions
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadedDefinitions
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
 
 class S3AndDynamoDbProductDefinitionRepository(
@@ -58,10 +58,9 @@ class S3AndDynamoDbProductDefinitionRepository(
     return definition
   }
 
-  private fun loadDefinitionsFromCache(): LoadedDefinitions =
-    s3AndDdbDefinitionsCache?.get(CACHE_KEY) {
-      loadProductDefinitionsWithSummaries()
-    } ?: loadProductDefinitionsWithSummaries()
+  private fun loadDefinitionsFromCache(): LoadedDefinitions = s3AndDdbDefinitionsCache?.get(CACHE_KEY) {
+    loadProductDefinitionsWithSummaries()
+  } ?: loadProductDefinitionsWithSummaries()
 
   private fun loadProductDefinitionsWithSummaries(): LoadedDefinitions {
     log.debug("Loading product definitions from DynamoDB orphanage and S3")
@@ -92,11 +91,11 @@ class S3AndDynamoDbProductDefinitionRepository(
             id = globalId,
             // path is not set in any of our DPDs but making sure here even if it was set that
             // it will be null so we can remove it from our model later
-            path = null
+            path = null,
           ),
           definition = originalDefinition.copy(
             id = globalId,
-            path = null
+            path = null,
           ),
         )
       } catch (ex: Exception) {
@@ -129,7 +128,6 @@ class S3AndDynamoDbProductDefinitionRepository(
       .toList()
   }
 
-
   private fun loadS3DefinitionsForTeam(teamPrefix: String): List<LoadedDefinitionWithSummary> {
     val keys = listJsonKeysForTeam(teamPrefix)
 
@@ -147,12 +145,12 @@ class S3AndDynamoDbProductDefinitionRepository(
             id = globalId,
             // this is not set in any of our DPDs but making sure here even if it was set that
             // it will be null so we can remove it from our model later
-            path = null
+            path = null,
           ),
           definition = originalDefinition.copy(
             id = globalId,
-            path = null
-          )
+            path = null,
+          ),
         )
       } catch (ex: Exception) {
         log.warn(

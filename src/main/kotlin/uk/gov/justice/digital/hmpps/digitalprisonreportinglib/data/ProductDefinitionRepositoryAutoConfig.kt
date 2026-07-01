@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Configuration
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.s3.S3Client
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadedDefinitions
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import java.util.concurrent.TimeUnit
 
 @Configuration
@@ -71,11 +71,10 @@ class ProductDefinitionRepositoryAutoConfig(
     value = ["dpr.lib.dataProductDefinitions.cache.enabled", "dpr.lib.dataProductDefinitions.s3.enabled"],
     havingValue = "true",
   )
-  fun s3AndDdbDefinitionsCache(): Cache<String, LoadedDefinitions> =
-    CacheBuilder.newBuilder()
-      .expireAfterWrite(cacheDurationMinutes, TimeUnit.MINUTES)
-      .concurrencyLevel(Runtime.getRuntime().availableProcessors())
-      .build()
+  fun s3AndDdbDefinitionsCache(): Cache<String, LoadedDefinitions> = CacheBuilder.newBuilder()
+    .expireAfterWrite(cacheDurationMinutes, TimeUnit.MINUTES)
+    .concurrencyLevel(Runtime.getRuntime().availableProcessors())
+    .build()
 
   @Bean
   @ConditionalOnMissingBean(ProductDefinitionRepository::class)
