@@ -44,10 +44,7 @@ class S3AndDynamoDbProductDefinitionRepository(
     return loadedDefinitions.summaries
   }
 
-  override fun getProductDefinition(
-    definitionId: String,
-    dataProductDefinitionsPath: String?,
-  ): ProductDefinition {
+  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
     val stopwatch = StopWatch.createStarted()
 
     val loadedDefinitions = loadDefinitionsFromCache()
@@ -198,9 +195,7 @@ class S3AndDynamoDbProductDefinitionRepository(
     return responseBytes.asUtf8String()
   }
 
-  private fun buildCombinedDefinitions(
-    loadedDefinitionWithSummaries: List<LoadedDefinitionWithSummary>,
-  ): LoadedDefinitions {
+  private fun buildCombinedDefinitions(loadedDefinitionWithSummaries: List<LoadedDefinitionWithSummary>): LoadedDefinitions {
     val definitionsById = linkedMapOf<String, ProductDefinition>()
     val summaries = mutableListOf<ProductDefinitionSummary>()
 

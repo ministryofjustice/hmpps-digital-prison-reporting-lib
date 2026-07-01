@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.CacheBuilder
+import com.google.gson.JsonNull
 import com.google.gson.JsonParser
 import jakarta.validation.ValidationException
 import org.assertj.core.api.Assertions.assertThat
@@ -317,6 +318,56 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     )
   }
 
+  @Test
+  fun `skips DDB and S3 definitions when required fields are null and returns only valid definitions`() {
+    givenDynamoDbOrphanageDefinitions(
+      listOf(
+        definitionJson("valid-ddb-report", "Valid DDB Report"),
+        definitionJsonWithNullField("invalid-ddb-report", "name"),
+      ),
+    )
+
+    givenS3BucketContents(
+      teamPrefixes = listOf("activities"),
+      teamPrefixToS3Keys = mapOf(
+        "activities" to listOf(
+          "activities/valid-s3-report.json",
+          "activities/invalid-s3-report.json",
+        ),
+      ),
+    )
+
+    givenS3Objects(
+      mapOf(
+        "activities/valid-s3-report.json" to definitionJson("valid-s3-report", "Valid S3 Report"),
+        "activities/invalid-s3-report.json" to definitionJsonWithNullField("invalid-s3-report", "name"),
+      ),
+    )
+
+    val productDefinitions = repo.getProductDefinitions()
+
+    assertThat(productDefinitions).hasSize(2)
+
+    assertThat(productDefinitions.map { it.id }).containsExactlyInAnyOrder(
+      "dpr_valid-ddb-report",
+      "activities_valid-s3-report",
+    )
+
+    assertThat(productDefinitions).allSatisfy {
+      assertThat(it.path).isNull()
+    }
+
+    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+
+    then(s3Client).should(times(2)).listObjectsV2Paginator(any<ListObjectsV2Request>())
+
+    // both valid and invalid S3 objects are fetched but one is skipped after deserialisation failure (during copy call)
+    then(s3Client).should(times(2)).getObject(
+      any<GetObjectRequest>(),
+      any<ResponseTransformer<GetObjectResponse, ResponseBytes<GetObjectResponse>>>(),
+    )
+  }
+
   private fun givenDynamoDbOrphanageDefinitions(jsonDefinitions: List<String>) {
     val items = jsonDefinitions.map { json ->
       mapOf(
@@ -345,10 +396,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     }
   }
 
-  private fun givenS3BucketContents(
-    teamPrefixes: List<String>,
-    teamPrefixToS3Keys: Map<String, List<String>>,
-  ) {
+  private fun givenS3BucketContents(teamPrefixes: List<String>, teamPrefixToS3Keys: Map<String, List<String>>) {
     val commonPrefixes = teamPrefixes.map {
       CommonPrefix.builder()
         .prefix("$it/")
@@ -432,15 +480,22 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     }
   }
 
-  private fun definitionJson(
-    id: String,
-    name: String = id,
-  ): String {
+  private fun definitionJson(id: String, name: String = id): String {
     val resource = this::class.java.classLoader.getResource("productDefinition.json")
 
     val jsonObject = JsonParser.parseString(resource!!.readText()).asJsonObject
     jsonObject.addProperty("id", id)
     jsonObject.addProperty("name", name)
+
+    return jsonObject.toString()
+  }
+
+  private fun definitionJsonWithNullField(id: String, fieldName: String, ): String {
+    val resource = this::class.java.classLoader.getResource("productDefinition.json")
+
+    val jsonObject = JsonParser.parseString(resource!!.readText()).asJsonObject
+    jsonObject.addProperty("id", id)
+    jsonObject.add(fieldName, JsonNull.INSTANCE)
 
     return jsonObject.toString()
   }
