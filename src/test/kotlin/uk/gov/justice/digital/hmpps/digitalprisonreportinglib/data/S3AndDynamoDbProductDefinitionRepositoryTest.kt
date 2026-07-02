@@ -207,7 +207,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
     then(s3Client).should(times(2)).listObjectsV2Paginator(any<ListObjectsV2Request>())
 
-    // Both objects are fetched; one is skipped after JSON parsing fails.
+    // Both objects are fetched. One is skipped after JSON parsing fails.
     then(s3Client).should(times(2)).getObject(
       any<GetObjectRequest>(),
       any<ResponseTransformer<GetObjectResponse, ResponseBytes<GetObjectResponse>>>(),
