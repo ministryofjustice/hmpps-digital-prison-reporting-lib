@@ -318,6 +318,9 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     )
   }
 
+  // Note: The copy method throws a NPE for top level missing/null fields which are mandatory but copies nested missing/null fields.
+  // If we want to make this check robust for nested fields in the future we will need to explore either replacing GSON for deserialisation or
+  // performing manual recursive validation for every field.
   @Test
   fun `skips DDB and S3 definitions when required fields are null and returns only valid definitions`() {
     givenDynamoDbOrphanageDefinitions(
@@ -428,13 +431,11 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
         request.prefix() != null -> {
           val teamPrefix = request.prefix().removeSuffix("/")
-
           paginatorOf(
             teamPrefixToKeyResponses[teamPrefix]
               ?: throw IllegalArgumentException("Unexpected S3 team prefix: ${request.prefix()}"),
           )
         }
-
         else -> throw IllegalArgumentException("Unexpected S3 list request: $request")
       }
     }
