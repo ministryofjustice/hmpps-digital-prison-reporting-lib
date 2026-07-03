@@ -410,7 +410,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
     then(s3Client).should(times(2)).listObjectsV2Paginator(any<ListObjectsV2Request>())
 
-    // all valid and invalid S3 objects are fetched but the 2 invalid are skipped after requireNotNull check and deserialisation failure (during copy call)
+    // all valid and invalid S3 objects are fetched but the 2 invalid are skipped deserialisation failure (during requireNotNull check and copy call)
     then(s3Client).should(times(3)).getObject(
       any<GetObjectRequest>(),
       any<ResponseTransformer<GetObjectResponse, ResponseBytes<GetObjectResponse>>>(),
