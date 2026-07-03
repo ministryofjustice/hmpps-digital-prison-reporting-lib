@@ -57,10 +57,15 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
   )
 
   @Test
-  fun `returns combined DDB orphanage and S3 product definitions with prefixed IDs`() {
-    givenDynamoDbOrphanageDefinitions(
-      listOf(
-        definitionJson("legacy-report", "Legacy Report"),
+  fun `returns combined DDB (orphanage, probation) and S3 product definitions with prefixed IDs`() {
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to listOf(
+          definitionJson("legacy-report", "Legacy Report"),
+        ),
+        DataDefinitionPath.PROBATION.value to listOf(
+          definitionJson("probation-report", "Probation Report"),
+        ),
       ),
     )
 
@@ -87,10 +92,11 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
     val productDefinitions = repo.getProductDefinitions()
 
-    assertThat(productDefinitions).hasSize(4)
+    assertThat(productDefinitions).hasSize(5)
 
     assertThat(productDefinitions.map { it.id }).containsExactlyInAnyOrder(
       "dpr_legacy-report",
+      "dpr_probation-report",
       "activities_activity-report",
       "activities_nested-activity-report",
       "incidents_incident-report",
@@ -99,7 +105,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinitions).allSatisfy {
       assertThat(it.path).isNull()
     }
-    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
 
     // One call to list top-level team prefixes and one list call per team
     then(s3Client).should(times(3)).listObjectsV2Paginator(any<ListObjectsV2Request>())
@@ -112,7 +118,12 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
   @Test
   fun `returns full S3 product definition by prefixed ID`() {
-    givenDynamoDbOrphanageDefinitions(emptyList())
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to emptyList(),
+        DataDefinitionPath.PROBATION.value to emptyList(),
+      ),
+    )
 
     givenS3BucketContents(
       teamPrefixes = listOf("activities"),
@@ -134,7 +145,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinition.name).isEqualTo("Activity Report")
     assertThat(productDefinition.path).isNull()
 
-    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
     then(s3Client).should(times(2)).listObjectsV2Paginator(any<ListObjectsV2Request>())
     then(s3Client).should(times(1)).getObject(
       any<GetObjectRequest>(),
@@ -144,9 +155,14 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
   @Test
   fun `returns full DDB product definition by dpr prefixed ID`() {
-    givenDynamoDbOrphanageDefinitions(
-      listOf(
-        definitionJson("legacy-report", "Legacy Report"),
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to listOf(
+          definitionJson("legacy-report", "Legacy Report"),
+        ),
+        DataDefinitionPath.PROBATION.value to listOf(
+          definitionJson("probation-report", "Probation Report"),
+        ),
       ),
     )
 
@@ -162,7 +178,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     assertThat(productDefinition.name).isEqualTo("Legacy Report")
     assertThat(productDefinition.path).isNull()
 
-    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
     then(s3Client).should(times(1)).listObjectsV2Paginator(any<ListObjectsV2Request>())
     then(s3Client).should(times(0)).getObject(
       any<GetObjectRequest>(),
@@ -172,9 +188,14 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
   @Test
   fun `skips invalid S3 JSON files and returns valid definitions`() {
-    givenDynamoDbOrphanageDefinitions(
-      listOf(
-        definitionJson("legacy-report", "Legacy Report"),
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to listOf(
+          definitionJson("legacy-report", "Legacy Report"),
+        ),
+        DataDefinitionPath.PROBATION.value to listOf(
+          definitionJson("probation-report", "Probation Report"),
+        ),
       ),
     )
 
@@ -197,14 +218,15 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
     val productDefinitions = repo.getProductDefinitions()
 
-    assertThat(productDefinitions).hasSize(2)
+    assertThat(productDefinitions).hasSize(3)
 
     assertThat(productDefinitions.map { it.id }).containsExactlyInAnyOrder(
       "dpr_legacy-report",
       "activities_valid-report",
+      "dpr_probation-report",
     )
 
-    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
     then(s3Client).should(times(2)).listObjectsV2Paginator(any<ListObjectsV2Request>())
 
     // Both objects are fetched. One is skipped after JSON parsing fails.
@@ -216,7 +238,12 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
   @Test
   fun `throws ValidationException when product definition ID does not exist`() {
-    givenDynamoDbOrphanageDefinitions(emptyList())
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to emptyList(),
+        DataDefinitionPath.PROBATION.value to emptyList(),
+      ),
+    )
 
     givenS3BucketContents(
       teamPrefixes = emptyList(),
@@ -229,15 +256,20 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
       .isInstanceOf(ValidationException::class.java)
       .hasMessageContaining("unknown-report")
 
-    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
     then(s3Client).should(times(1)).listObjectsV2Paginator(any<ListObjectsV2Request>())
   }
 
   @Test
   fun `uses cache for repeated calls`() {
-    givenDynamoDbOrphanageDefinitions(
-      listOf(
-        definitionJson("legacy-report", "Legacy Report"),
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to listOf(
+          definitionJson("legacy-report", "Legacy Report"),
+        ),
+        DataDefinitionPath.PROBATION.value to listOf(
+          definitionJson("probation-report", "Probation Report"),
+        ),
       ),
     )
 
@@ -257,20 +289,23 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     val firstCall = repo.getProductDefinitions()
     val secondCall = repo.getProductDefinitions()
 
-    assertThat(firstCall).hasSize(2)
-    assertThat(secondCall).hasSize(2)
+    assertThat(firstCall).hasSize(3)
+    assertThat(secondCall).hasSize(3)
 
     assertThat(firstCall.map { it.id }).containsExactlyInAnyOrder(
       "dpr_legacy-report",
       "activities_activity-report",
+      "dpr_probation-report",
     )
 
     assertThat(secondCall.map { it.id }).containsExactlyInAnyOrder(
       "dpr_legacy-report",
       "activities_activity-report",
+      "dpr_probation-report",
     )
 
-    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+    // one call for orphanage and one for probation
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
 
     // one call to list team prefixes and one call to list keys for activities.
     then(s3Client).should(times(2)).listObjectsV2Paginator(any<ListObjectsV2Request>())
@@ -283,7 +318,12 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
 
   @Test
   fun `reads json files in nested S3 folders under team prefix`() {
-    givenDynamoDbOrphanageDefinitions(emptyList())
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to emptyList(),
+        DataDefinitionPath.PROBATION.value to emptyList(),
+      ),
+    )
 
     givenS3BucketContents(
       teamPrefixes = listOf("activities"),
@@ -323,10 +363,15 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
   // performing manual recursive validation for every field.
   @Test
   fun `skips DDB and S3 definitions when required fields are null and returns only valid definitions`() {
-    givenDynamoDbOrphanageDefinitions(
-      listOf(
-        definitionJson("valid-ddb-report", "Valid DDB Report"),
-        definitionJsonWithNullField("invalid-ddb-report", "name"),
+    givenDynamoDbDefinitionsByPath(
+      mapOf(
+        DataDefinitionPath.ORPHANAGE.value to listOf(
+          definitionJson("valid-ddb-report", "Valid DDB Report"),
+          definitionJsonWithNullField("invalid-ddb-report", "name"),
+        ),
+        DataDefinitionPath.PROBATION.value to listOf(
+          definitionJsonWithNullField("invalid-probation-ddb-report", "id"),
+        ),
       ),
     )
 
@@ -335,7 +380,8 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
       teamPrefixToS3Keys = mapOf(
         "activities" to listOf(
           "activities/valid-s3-report.json",
-          "activities/invalid-s3-report.json",
+          "activities/invalid-s3-report-name-null.json",
+          "activities/invalid-s3-report-id-null.json",
         ),
       ),
     )
@@ -343,7 +389,8 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
     givenS3Objects(
       mapOf(
         "activities/valid-s3-report.json" to definitionJson("valid-s3-report", "Valid S3 Report"),
-        "activities/invalid-s3-report.json" to definitionJsonWithNullField("invalid-s3-report", "name"),
+        "activities/invalid-s3-report.json" to definitionJsonWithNullField("invalid-s3-report-name-null", "name"),
+        "activities/invalid-s3-report.json" to definitionJsonWithNullField("invalid-s3-report-id-null", "id"),
       ),
     )
 
@@ -360,42 +407,41 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
       assertThat(it.path).isNull()
     }
 
-    then(dynamoDbClient).should(times(1)).queryPaginator(any<QueryRequest>())
+    then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
 
     then(s3Client).should(times(2)).listObjectsV2Paginator(any<ListObjectsV2Request>())
 
-    // both valid and invalid S3 objects are fetched but one is skipped after deserialisation failure (during copy call)
-    then(s3Client).should(times(2)).getObject(
+    // all valid and invalid S3 objects are fetched but the 2 invalid are skipped after requireNotNull check and deserialisation failure (during copy call)
+    then(s3Client).should(times(3)).getObject(
       any<GetObjectRequest>(),
       any<ResponseTransformer<GetObjectResponse, ResponseBytes<GetObjectResponse>>>(),
     )
   }
 
-  private fun givenDynamoDbOrphanageDefinitions(jsonDefinitions: List<String>) {
-    val items = jsonDefinitions.map { json ->
-      mapOf(
-        properties.dynamoDb.definitionFieldName to AttributeValue.fromS(json),
-        properties.dynamoDb.categoryFieldName to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value),
-      )
-    }
-
-    val paginator = mock<QueryIterable>()
-
-    given(paginator.items()).willReturn(
-      SdkIterable {
-        items.toMutableList().iterator()
-      },
-    )
-
+  private fun givenDynamoDbDefinitionsByPath(pathToJsonDefinitions: Map<String, List<String>>) {
     given(dynamoDbClient.queryPaginator(any<QueryRequest>())).willAnswer { invocation ->
       val request = invocation.getArgument<QueryRequest>(0)
       val category = request.expressionAttributeValues()[":category"]?.s()
 
-      if (category == DataDefinitionPath.ORPHANAGE.value) {
-        paginator
-      } else {
-        throw IllegalArgumentException("Unexpected category: $category")
+      val jsonDefinitions = pathToJsonDefinitions[category]
+        ?: throw IllegalArgumentException("Unexpected category: $category")
+
+      val items = jsonDefinitions.map { json ->
+        mapOf(
+          properties.dynamoDb.definitionFieldName to AttributeValue.fromS(json),
+          properties.dynamoDb.categoryFieldName to AttributeValue.fromS(category),
+        )
       }
+
+      val paginator = mock<QueryIterable>()
+
+      given(paginator.items()).willReturn(
+        SdkIterable {
+          items.toMutableList().iterator()
+        },
+      )
+
+      paginator
     }
   }
 
