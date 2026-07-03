@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.0.1
+- The S3AndDynamoDbProductDefinitionRepository now loads definitions also from the DDB `definitions/probation` category.
+
 # 17.0.0
 - Added S3AndDynamoDbProductDefinitionRepository which can be optionally enabled via config.
 - When S3AndDynamoDbProductDefinitionRepository is enabled, the existing DynamoDbProductDefinitionsRepository will be disabled as they are mutually exclusive. 

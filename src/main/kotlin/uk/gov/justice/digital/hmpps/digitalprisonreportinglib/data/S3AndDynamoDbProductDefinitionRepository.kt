@@ -63,17 +63,22 @@ class S3AndDynamoDbProductDefinitionRepository(
   } ?: loadProductDefinitionsWithSummaries()
 
   private fun loadProductDefinitionsWithSummaries(): LoadedDefinitions {
-    log.debug("Loading product definitions from DynamoDB orphanage and S3")
+    log.debug("Loading product definitions from DynamoDB (orphanage, probation) and S3")
 
-    val ddbDefinitions = loadDynamoDbOrphanageDefinitions()
+    val ddbDefinitions = loadDynamoDbDefinitions()
     val s3Definitions = loadAllS3Definitions()
 
     return buildCombinedDefinitions(ddbDefinitions + s3Definitions)
   }
 
-  private fun loadDynamoDbOrphanageDefinitions(): List<LoadedDefinitionWithSummary> {
-    val path = DataDefinitionPath.ORPHANAGE.value
+  private fun loadDynamoDbDefinitions(): List<LoadedDefinitionWithSummary> = listOf(
+    DataDefinitionPath.ORPHANAGE.value,
+    DataDefinitionPath.PROBATION.value,
+  ).flatMap { path ->
+    loadDynamoDbDefinitions(path)
+  }
 
+  private fun loadDynamoDbDefinitions(path: String): List<LoadedDefinitionWithSummary> {
     log.debug("Loading DynamoDB definitions for path: {}", path)
 
     val request = DynamoDbProductDefinitionRepository.getQueryRequest(properties, path)
@@ -84,6 +89,7 @@ class S3AndDynamoDbProductDefinitionRepository(
         val json = item[properties.dynamoDb.definitionFieldName]!!.s()
         val originalSummary = gson.fromJson(json, ProductDefinitionSummary::class.java)
         val originalDefinition = gson.fromJson(json, ProductDefinition::class.java)
+        requireNotNull(originalSummary.id) { "The ID of the DPD stored in DDB was null." }
         val globalId = "$DDB_ID_PREFIX${originalSummary.id}"
 
         LoadedDefinitionWithSummary(
@@ -138,6 +144,7 @@ class S3AndDynamoDbProductDefinitionRepository(
         val originalSummary = gson.fromJson(json, ProductDefinitionSummary::class.java)
         val originalDefinition = gson.fromJson(json, ProductDefinition::class.java)
 
+        requireNotNull(originalSummary.id) { "The ID of the DPD stored in S3 was null." }
         val globalId = "${teamPrefix}_${originalSummary.id}"
 
         LoadedDefinitionWithSummary(
