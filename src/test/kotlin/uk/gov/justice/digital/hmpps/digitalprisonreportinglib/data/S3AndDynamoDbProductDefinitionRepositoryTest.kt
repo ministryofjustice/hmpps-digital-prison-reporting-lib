@@ -304,7 +304,6 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
       "dpr_probation-report",
     )
 
-    // one call for orphanage and one for probation
     then(dynamoDbClient).should(times(2)).queryPaginator(any<QueryRequest>())
 
     // one call to list team prefixes and one call to list keys for activities.
