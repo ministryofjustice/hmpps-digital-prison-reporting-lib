@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.1.0
+- Add a temporary workaround to block access to probation data from non probation context
+
 # 17.0.1
 - The S3AndDynamoDbProductDefinitionRepository now loads definitions also from the DDB `definitions/probation` category.
 
