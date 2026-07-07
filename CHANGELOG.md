@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.1.1
+- Add authorised check when getting single dashboard variant definition
+
 # 17.1.0
 - Add a temporary workaround to block access to probation data from non probation context
 
