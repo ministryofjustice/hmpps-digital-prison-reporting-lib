@@ -548,7 +548,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .jsonPath("count").isEqualTo("0")
   }
 
-  class SentencePlanFederatedDatasourceTest: IntegrationTestBase() {
+  class SentencePlanFederatedDatasourceTest : IntegrationTestBase() {
     companion object {
       @JvmStatic
       @DynamicPropertySource
@@ -572,7 +572,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class SentencePlanTablesDatasourceQueryTest: IntegrationTestBase() {
+  class SentencePlanTablesDatasourceQueryTest : IntegrationTestBase() {
     companion object {
       @JvmStatic
       @DynamicPropertySource

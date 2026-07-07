@@ -240,11 +240,9 @@ abstract class CommonDataApiService(
     parameters: List<Parameter>?,
   ) = filters.asIterable().partition { e -> isPrompt(e, parameters) }
 
-  private fun hasSentencePlanFederatedDatasource(datasources: List<Datasource>) =
-    datasources.find { it.connection == DatasourceConnection.FEDERATED && it.catalog?.lowercase() == "pr_assess_view" } != null
+  private fun hasSentencePlanFederatedDatasource(datasources: List<Datasource>) = datasources.find { it.connection == DatasourceConnection.FEDERATED && it.catalog?.lowercase() == "pr_assess_view" } != null
 
-  private fun hasSentencePlanTableInQueries(datasets: List<Dataset>) =
-    datasets.find { ds -> ds.query.find { it.query.contains("sentenceplanassessmentview_") } != null } != null
+  private fun hasSentencePlanTableInQueries(datasets: List<Dataset>) = datasets.find { ds -> ds.query.find { it.query.contains("sentenceplanassessmentview_") } != null } != null
 
   private fun isPrompt(
     e: Map.Entry<String, String>,
