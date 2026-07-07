@@ -395,7 +395,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class ReportDefinitionPolicyCheckFail: IntegrationTestBase() {
+  class ReportDefinitionPolicyCheckFail : IntegrationTestBase() {
     companion object {
       @JvmStatic
       @DynamicPropertySource
@@ -419,7 +419,6 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .isForbidden
     }
   }
-
 
   @Test
   fun `Single definition is returned in expected format`() {
