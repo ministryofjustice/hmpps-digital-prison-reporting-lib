@@ -23,8 +23,9 @@ class DashboardDefinitionServiceTest {
 
   private val productDefinitionRepository: ProductDefinitionRepository = mock()
   private val dashboardDefinitionMapper: DashboardDefinitionMapper = mock()
+  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
 
-  private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository, dashboardDefinitionMapper)
+  private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository, dashboardDefinitionMapper, productDefinitionTokenPolicyChecker)
   private val executionContext = ExecutionContext(
     CaseloadResponse(
       username = "request-user",
