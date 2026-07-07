@@ -39,7 +39,6 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
-
   @Test
   fun `Dashboard definition is returned as expected`() {
     webTestClient.get()
