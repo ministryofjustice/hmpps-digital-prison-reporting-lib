@@ -548,6 +548,54 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .jsonPath("count").isEqualTo("0")
   }
 
+  class SentencePlanFederatedDatasourceTest: IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithSentencePlanFederatedDatasource.json" }
+      }
+    }
+
+    @Test
+    fun `Data API count returns forbidden if using sentence plan federated datasource`() {
+      manageUsersMockServer.stubLookupUserCaseload("request-user")
+      manageUsersMockServer.stubGetUserInfo("request-user")
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isForbidden()
+    }
+  }
+
+  class SentencePlanTablesDatasourceQueryTest: IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithSentencePlanTablesInQuery.json" }
+      }
+    }
+
+    @Test
+    fun `Data API count returns forbidden if using sentence plan tables in normal datasource`() {
+      manageUsersMockServer.stubLookupUserCaseload("request-user")
+      manageUsersMockServer.stubGetUserInfo("request-user")
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isForbidden()
+    }
+  }
+
   class LaoDataApiIntegrationTestPermitPolicy : IntegrationTestBase() {
     companion object {
       @JvmStatic

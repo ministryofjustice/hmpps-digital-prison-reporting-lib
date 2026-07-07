@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHel
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DatasourceConnection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
@@ -214,6 +216,19 @@ abstract class CommonDataApiService(
     productDefinition: WithPolicy,
     executionContext: ExecutionContext,
   ): Boolean {
+    when (productDefinition) {
+      is SingleDashboardProductDefinition -> {
+        if (!executionContext.hasProbationDatasources && (hasSentencePlanFederatedDatasource(productDefinition.allDatasources) || hasSentencePlanTableInQueries(productDefinition.allDatasets))) {
+          throw UserAuthorisationException("User does not have correct authorisation")
+        }
+      }
+      is SingleReportProductDefinition -> {
+        if (!executionContext.hasProbationDatasources && (hasSentencePlanFederatedDatasource(productDefinition.allDatasources) || hasSentencePlanTableInQueries(productDefinition.allDatasets))) {
+          throw UserAuthorisationException("User does not have correct authorisation")
+        }
+      }
+      else -> throw UserAuthorisationException("User does not have correct authorisation")
+    }
     if (!productDefinitionTokenPolicyChecker.determineAuth(productDefinition, executionContext)) {
       throw UserAuthorisationException("User does not have correct authorisation")
     }
@@ -224,6 +239,12 @@ abstract class CommonDataApiService(
     filters: Map<String, String>,
     parameters: List<Parameter>?,
   ) = filters.asIterable().partition { e -> isPrompt(e, parameters) }
+
+  private fun hasSentencePlanFederatedDatasource(datasources: List<Datasource>) =
+    datasources.find { it.connection == DatasourceConnection.FEDERATED && it.catalog?.lowercase() == "pr_assess_view" } != null
+
+  private fun hasSentencePlanTableInQueries(datasets: List<Dataset>) =
+    datasets.find { ds -> ds.query.find { it.query.contains("sentenceplanassessmentview_") } != null } != null
 
   private fun isPrompt(
     e: Map.Entry<String, String>,
