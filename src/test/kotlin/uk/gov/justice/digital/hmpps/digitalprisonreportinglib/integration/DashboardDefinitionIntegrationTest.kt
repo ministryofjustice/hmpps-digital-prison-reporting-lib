@@ -14,33 +14,23 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class DashboardDefinitionIntegrationTestNoAuth : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinitionWithDashboard.json" }
+  @Test
+  fun `Dashboard definition is not returned and is forbidden`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/missing-ethnicity-metrics/dashboards/age-breakdown-dashboard-1")
+          .build()
       }
-    }
-
-    @Test
-    fun `Dashboard definition is not returned and is forbidden`() {
-      manageUsersMockServer.stubLookupUserCaseload("request-user", "ABC123")
-      webTestClient.get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path("/definitions/missing-ethnicity-metrics/dashboards/age-breakdown-dashboard-1")
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isForbidden
   }
 
   @Test
   fun `Dashboard definition is returned as expected`() {
+    manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("USER-ROLE-1", "PRISONS_REPORTING_USER"))
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
