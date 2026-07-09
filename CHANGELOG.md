@@ -1,7 +1,7 @@
 Below you can find the changes included in each release.
 
 # 17.2.0
-- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.0 to fix security issues.
+- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.0 version to fix security issues.
 
 # 17.1.1
 - Add authorised check when getting single dashboard variant definition
