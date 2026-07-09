@@ -15,7 +15,22 @@ class DashboardDefinitionIntegrationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Dashboard definition is not returned and is forbidden`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/definitions/missing-ethnicity-metrics/dashboards/age-breakdown-dashboard-1")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
   fun `Dashboard definition is returned as expected`() {
+    manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("USER-ROLE-1", "PRISONS_REPORTING_USER"))
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder

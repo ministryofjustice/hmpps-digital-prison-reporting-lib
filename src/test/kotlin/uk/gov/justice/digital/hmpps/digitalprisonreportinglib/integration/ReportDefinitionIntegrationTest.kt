@@ -395,6 +395,31 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
+  class ReportDefinitionPolicyCheckFail : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithRolePolicy.json" }
+      }
+    }
+
+    @Test
+    fun `Single definition is not returned and is forbidden`() {
+      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("PRISONS_REPORTING_USER"))
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements/last-month")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
   @Test
   fun `Single definition is returned in expected format`() {
     try {

@@ -13,6 +13,8 @@ interface AnyProductDefinition : WithPolicy {
 
   val datasource: List<Datasource> get() = emptyList()
   val dataset: List<Dataset> get() = emptyList()
+
+  // path is deprecated - to be removed
   var path: DataDefinitionPath?
   val report: List<AnyReport> get() = emptyList()
   override val policy: List<Policy> get() = emptyList()
@@ -25,6 +27,7 @@ data class ProductDefinition(
   override val description: String? = null,
   override val scheduled: Boolean? = false,
   override val metadata: MetaData,
+  // path is deprecated - to be removed
   override var path: DataDefinitionPath? = DataDefinitionPath.ORPHANAGE,
   override val datasource: List<Datasource> = emptyList(),
   override val dataset: List<Dataset> = emptyList(),
@@ -38,6 +41,7 @@ data class ProductDefinitionSummary(
   override val name: String,
   override val description: String? = null,
   override val metadata: MetaData,
+  // path is deprecated - to be removed
   override var path: DataDefinitionPath? = DataDefinitionPath.ORPHANAGE,
   override val dataset: List<Dataset> = emptyList(),
   override val report: List<ReportLite> = emptyList(),
