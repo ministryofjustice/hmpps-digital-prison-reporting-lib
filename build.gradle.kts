@@ -75,6 +75,11 @@ tasks.jacocoTestReport {
   dependsOn(tasks.test)
 }
 
+// Safely wire the dependency whenever 'sourcesJar' gets created
+tasks.matching { it.name == "sourcesJar" }.configureEach {
+  dependsOn(tasks.named("generateGitProperties"))
+}
+
 publishing {
   repositories {
     mavenLocal()
