@@ -75,6 +75,10 @@ tasks.jacocoTestReport {
   dependsOn(tasks.test)
 }
 
+tasks.named<Jar>("sourcesJar") {
+  dependsOn(tasks.named("generateGitProperties"))
+}
+
 publishing {
   repositories {
     mavenLocal()
