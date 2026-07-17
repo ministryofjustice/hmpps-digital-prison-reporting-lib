@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.3.0
+- Add basic support for external users
+
 # 17.2.0
 - Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.0-beta version to fix security issues.
 

@@ -162,6 +162,35 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     }
   }
 
+  class RolePolicyTestExternalUser : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithRoleAndLaoPolicy.json" }
+        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
+        registry.add("dpr.lib.hasProbationDatasources") { true }
+      }
+    }
+
+    @Test
+    fun `Data API returns value when an external user has the correct roles`() {
+      manageUsersMockServer.stubLookupUserCaseload(activeCaseloadId = "LWSTMC")
+      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH)
+      manageUsersMockServer.stubLookupUsersRoles(roles = listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("count").isEqualTo("5")
+    }
+  }
+
   @Test
   fun `Data API returns value from the repository`() {
     webTestClient.get()
@@ -596,6 +625,58 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     }
   }
 
+  class ProbationDataSourcesAuthSourceCaseloadPolicyTest : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicy.json" }
+        registry.add("dpr.lib.hasProbationDatasources") { true }
+        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
+      }
+    }
+
+    @BeforeEach
+    fun laoSetup() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+    }
+
+    @Test
+    fun `should execute a report with a row level caseload policy as a probation user but return nothing`() {
+      manageUsersMockServer.stubLookupUserCaseload404("request-user")
+      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.DELIUS)
+      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf(authorisedRole))
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(authSource = AuthSource.DELIUS, roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("count").isEqualTo("0")
+    }
+
+    @Test
+    fun `should execute a report with a row level caseload policy as an external user but return nothing`() {
+      manageUsersMockServer.stubLookupUserCaseload404("request-user")
+      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH)
+      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf(authorisedRole))
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(authSource = AuthSource.AUTH, roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("count").isEqualTo("0")
+    }
+  }
+
   class LaoDataApiIntegrationTestPermitPolicy : IntegrationTestBase() {
     companion object {
       @JvmStatic
@@ -603,6 +684,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicy.json" }
         registry.add("dpr.lib.hasProbationDatasources") { true }
+        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
       }
     }
 
@@ -619,7 +701,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -640,7 +722,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -662,6 +744,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicyAndAction.json" }
         registry.add("dpr.lib.hasProbationDatasources") { true }
+        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
       }
     }
 
@@ -681,7 +764,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
         .execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -735,6 +818,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPolicy.json" }
         registry.add("dpr.lib.hasProbationDatasources") { true }
+        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
       }
     }
 
@@ -751,7 +835,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -774,7 +858,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -795,7 +879,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -818,7 +902,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -839,7 +923,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -862,7 +946,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111113', 'G3411VR', 'P111113', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -886,7 +970,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -910,7 +994,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -922,6 +1006,73 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .isOk()
         .expectBody()
         .jsonPath("count").isEqualTo("1")
+    }
+
+    @Test
+    fun `Data API count returns data if requesting user is not excluded from the LAO and is an external user`() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
+      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
+      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("count").isEqualTo("1")
+    }
+
+    @Test
+    fun `Data API count returns data if data does not contain any LAOs and is an external user`() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())").execute()
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
+      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
+      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("count").isEqualTo("1")
+    }
+
+    @Test
+    fun `Data API count returns zero if LAO is restricted to someone who isnt the requesting user and the user is an external user`() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
+      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
+      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
+      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+      stubDefinitionsResponse()
+
+      webTestClient.get()
+        .uri("/reports/external-movements/last-month/count")
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectBody()
+        .jsonPath("count").isEqualTo("0")
     }
   }
 
