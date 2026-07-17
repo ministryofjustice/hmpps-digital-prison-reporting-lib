@@ -175,7 +175,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `Data API returns value when an external user has the correct roles`() {
-      manageUsersMockServer.stubLookupUserCaseload( activeCaseloadId = "LWSTMC")
+      manageUsersMockServer.stubLookupUserCaseload(activeCaseloadId = "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH)
       manageUsersMockServer.stubLookupUsersRoles(roles = listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
       stubDefinitionsResponse()
@@ -625,7 +625,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class ProbationDataSourcesAuthSourceCaseloadPolicyTest: IntegrationTestBase() {
+  class ProbationDataSourcesAuthSourceCaseloadPolicyTest : IntegrationTestBase() {
     companion object {
       @JvmStatic
       @DynamicPropertySource
