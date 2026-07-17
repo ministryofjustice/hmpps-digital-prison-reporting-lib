@@ -10,4 +10,5 @@ data class Dashboard(
   val section: List<DashboardSection>,
   val filter: ReportFilter? = null,
   val loadType: LoadType? = null,
+  val child: List<DashboardChild>? = null,
 )

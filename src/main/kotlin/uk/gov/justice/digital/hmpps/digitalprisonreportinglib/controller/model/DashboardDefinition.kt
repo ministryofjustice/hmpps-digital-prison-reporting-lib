@@ -6,4 +6,5 @@ data class DashboardDefinition(
   val description: String?,
   val sections: List<DashboardSectionDefinition>,
   val filterFields: List<FieldDefinition>?,
+  val childVariants: List<DashboardDefinition>? = null,
 )
