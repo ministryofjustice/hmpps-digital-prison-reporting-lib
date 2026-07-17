@@ -684,6 +684,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicy.json" }
         registry.add("dpr.lib.hasProbationDatasources") { true }
+        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
       }
     }
 
@@ -700,7 +701,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -721,7 +722,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -743,6 +744,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicyAndAction.json" }
         registry.add("dpr.lib.hasProbationDatasources") { true }
+        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
       }
     }
 
@@ -762,7 +764,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
         .execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -833,7 +835,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -856,7 +858,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -877,7 +879,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -900,7 +902,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -921,7 +923,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -944,7 +946,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111113', 'G3411VR', 'P111113', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -968,7 +970,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
@@ -992,7 +994,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
+      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
