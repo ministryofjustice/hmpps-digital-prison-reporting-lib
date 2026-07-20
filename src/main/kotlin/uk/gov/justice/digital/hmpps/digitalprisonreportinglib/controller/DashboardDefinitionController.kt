@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -26,6 +27,8 @@ class DashboardDefinitionController(
   val dashboardDefinitionService: DashboardDefinitionService,
   val filterHelper: FilterHelper,
   val manageUsersClient: ManageUsersClient,
+  @Value("\${dpr.lib.hasProbationDatasources}")
+  val hasProbationDatasources: Boolean,
 ) {
 
   @GetMapping("/definitions/{dataProductDefinitionId}/dashboards/{dashboardId}")
@@ -63,7 +66,7 @@ class DashboardDefinitionController(
     dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
     dataProductDefinitionsPath = dataProductDefinitionsPath,
-    executionContext = httpRequest.getUserContext(manageUsersClient),
+    executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
     filters = filterHelper.filtersOnly(filters),
   )
 }

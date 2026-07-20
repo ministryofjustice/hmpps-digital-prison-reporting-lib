@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -18,6 +19,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUse
 class ProductCollectionController(
   val productCollectionService: ProductCollectionService,
   val manageUsersClient: ManageUsersClient,
+  @Value("\${dpr.lib.hasProbationDatasources}")
+  val hasProbationDatasources: Boolean,
 ) {
 
   @GetMapping("/productCollections")
@@ -25,7 +28,7 @@ class ProductCollectionController(
     description = "Gets all product collections",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  fun getCollections(httpRequest: HttpServletRequest): Collection<ProductCollectionSummary> = productCollectionService.getProductCollections(httpRequest.getUserContext(manageUsersClient))
+  fun getCollections(httpRequest: HttpServletRequest): Collection<ProductCollectionSummary> = productCollectionService.getProductCollections(httpRequest.getUserContext(manageUsersClient, hasProbationDatasources))
 
   @GetMapping("/productCollections/{id}")
   @Operation(

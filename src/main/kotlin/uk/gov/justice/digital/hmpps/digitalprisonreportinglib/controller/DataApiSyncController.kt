@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -37,6 +38,8 @@ class DataApiSyncController(
   val filterHelper: FilterHelper,
   val csvStreamingSupport: CsvStreamingSupport,
   val manageUsersClient: ManageUsersClient,
+  @Value("\${dpr.lib.hasProbationDatasources}")
+  val hasProbationDatasources: Boolean,
 ) {
 
   companion object {
@@ -110,7 +113,7 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          executionContext = httpRequest.getUserContext(manageUsersClient),
+          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -163,7 +166,7 @@ class DataApiSyncController(
           reportId = reportId,
           reportVariantId = reportVariantId,
           filters = filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(manageUsersClient),
+          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -228,7 +231,7 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          executionContext = httpRequest.getUserContext(manageUsersClient),
+          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -279,7 +282,7 @@ class DataApiSyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      executionContext = request.getUserContext(manageUsersClient),
+      executionContext = request.getUserContext(manageUsersClient, hasProbationDatasources),
     )
 
     csvStreamingSupport.streamCsv(

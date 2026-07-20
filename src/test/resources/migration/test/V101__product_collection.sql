@@ -1,4 +1,4 @@
-CREATE SCHEMA product_;
+CREATE SCHEMA IF NOT EXISTS product_;
 CREATE TABLE product_.product_collection (
   id VARCHAR NOT NULL,
   name VARCHAR NOT NULL,

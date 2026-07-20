@@ -107,6 +107,7 @@ class ReportDefinitionServiceTest {
     ),
     emptyList(),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    false,
   )
 
   @BeforeEach

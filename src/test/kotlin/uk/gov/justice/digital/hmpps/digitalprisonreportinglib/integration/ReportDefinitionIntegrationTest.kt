@@ -395,6 +395,31 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     }
   }
 
+  class ReportDefinitionPolicyCheckFail : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithRolePolicy.json" }
+      }
+    }
+
+    @Test
+    fun `Single definition is not returned and is forbidden`() {
+      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf("PRISONS_REPORTING_USER"))
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements/last-month")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
   @Test
   fun `Single definition is returned in expected format`() {
     try {
@@ -845,6 +870,48 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isBadRequest()
+  }
+
+  class ReportDefinitionLaoChecksNoPolicyTest : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+        registry.add("dpr.lib.hasProbationDatasources") { true }
+      }
+    }
+
+    @Test fun `dpd without lao policy should come back as unauthorised`() {
+      webTestClient.get()
+        .uri("/definitions")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("$.length()").isEqualTo(1)
+        .jsonPath("$[0].authorised").isEqualTo("false")
+    }
+  }
+
+  class ReportDefinitionLaoChecksTest : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPolicy.json" }
+        registry.add("dpr.lib.hasProbationDatasources") { true }
+      }
+    }
+
+    @Test fun `dpd with lao policy should come back as authorised`() {
+      webTestClient.get()
+        .uri("/definitions")
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus().isOk
+        .expectBody().jsonPath("$.length()").isEqualTo(1)
+        .jsonPath("$[0].authorised").isEqualTo("true")
+    }
   }
 
   class ReportDefinitionParametersListTest : IntegrationTestBase() {

@@ -1,10 +1,10 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
-  kotlin("jvm") version "2.3.21"
-  kotlin("plugin.spring") version "2.3.21"
-  kotlin("plugin.jpa") version "2.3.21"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.0-beta"
+  kotlin("jvm") version "2.4.0"
+  kotlin("plugin.spring") version "2.4.0"
+  kotlin("plugin.jpa") version "2.4.0"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "4.0.2"
   id("maven-publish")
@@ -20,7 +20,7 @@ val awsSdkVersion = "2.45.1"
 val testContainersVersion = "1.21.4"
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.5.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.0-beta")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -43,7 +43,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.11")
 
   // Testing
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.5.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.0-beta")
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.13.0")
@@ -73,6 +73,11 @@ tasks.test {
 
 tasks.jacocoTestReport {
   dependsOn(tasks.test)
+}
+
+// Safely wire the dependency whenever 'sourcesJar' gets created
+tasks.matching { it.name == "sourcesJar" }.configureEach {
+  dependsOn(tasks.named("generateGitProperties"))
 }
 
 publishing {

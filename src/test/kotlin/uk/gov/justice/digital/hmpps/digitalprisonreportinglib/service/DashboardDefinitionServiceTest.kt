@@ -23,8 +23,9 @@ class DashboardDefinitionServiceTest {
 
   private val productDefinitionRepository: ProductDefinitionRepository = mock()
   private val dashboardDefinitionMapper: DashboardDefinitionMapper = mock()
+  private val productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker = mock()
 
-  private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository, dashboardDefinitionMapper)
+  private val dashboardDefinitionService = DashboardDefinitionService(productDefinitionRepository, dashboardDefinitionMapper, productDefinitionTokenPolicyChecker)
   private val executionContext = ExecutionContext(
     CaseloadResponse(
       username = "request-user",
@@ -38,6 +39,7 @@ class DashboardDefinitionServiceTest {
     ),
     listOf("ROLE_PRISONS_REPORTING_USER"),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    false,
   )
 
   @Test
@@ -50,6 +52,7 @@ class DashboardDefinitionServiceTest {
     val dashboardId = "age-breakdown-dashboard-1"
 
     whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), any(), anyOrNull())).doReturn(dashboardDefinition)
+    whenever(productDefinitionTokenPolicyChecker.determineAuth(any(), any())).doReturn(true)
     whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any(), anyOrNull())).doReturn(productDefinition)
     whenever(productDefinition.dashboard).doReturn(dashboard)
     whenever(productDefinition.allDatasets).doReturn(allDatasets)

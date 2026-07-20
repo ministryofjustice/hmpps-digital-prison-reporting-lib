@@ -45,6 +45,7 @@ management.endpoint:
 
 dpr:
   lib:
+    hasProbationDatasources: false
     caseloads:
       host: http://localhost:9999
     manage-users:

@@ -20,6 +20,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.InvalidDpdException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UnsupportedVersionException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
@@ -41,6 +42,10 @@ class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(IllegalArgumentException::class)
   @ResponseStatus(BAD_REQUEST)
   fun handleIllegalArgumentExceptionException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
+
+  @ExceptionHandler(InvalidDpdException::class)
+  @ResponseStatus(BAD_REQUEST)
+  fun handleInvalidDpdException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
   @ResponseStatus(BAD_REQUEST)

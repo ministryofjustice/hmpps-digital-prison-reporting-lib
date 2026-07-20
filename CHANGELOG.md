@@ -1,7 +1,34 @@
 Below you can find the changes included in each release.
 
+# 17.3.0
+- Add basic support for external users
+
+# 17.2.0
+- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.0-beta version to fix security issues.
+
+# 17.1.1
+- Add authorised check when getting single dashboard variant definition
+
+# 17.1.0
+- Add a temporary workaround to block access to probation data from non probation context
+
+# 17.0.1
+- The S3AndDynamoDbProductDefinitionRepository now loads definitions also from the DDB `definitions/probation` category.
+
+# 17.0.0
+- Added S3AndDynamoDbProductDefinitionRepository which can be optionally enabled via config.
+- When S3AndDynamoDbProductDefinitionRepository is enabled, the existing DynamoDbProductDefinitionsRepository will be disabled as they are mutually exclusive. 
+- The new repository does not load any missing reports. The only reports loaded from DDB are the ones with the `definitions/prisons/orphanage` category.
+- The `path` DPD field is no longer used.
+- The `dataProductDefinitionsPath` is no longer used.
+- The reports loaded from Dynamo DB, including DPDs from other teams which are in our DDB (orphanage), are all prefixed with `dpr_`.
+
+# 16.3.4, 16.3.5, 16.4.0, 16.4.1
+- Add new LAO policy type and alter PolicyEngine related code to handle it
+- Add prompt default value to filters
+
 # 16.3.3
-Update dashboard visualisation column definition to include new type
+- Update dashboard visualisation column definition to include new type
 
 # 16.3.2
 - Fix to check authSource from user info gotten from manage-users, not from token 
