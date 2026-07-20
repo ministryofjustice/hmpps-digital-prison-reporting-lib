@@ -55,8 +55,8 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test") // webclient-test does not autoconfig a webtestclient, so we need to use webflux-test
 
   // Fix for security issue in transient dependency
-  implementation("ch.qos.logback:logback-classic:1.5.33")
-  implementation("ch.qos.logback:logback-core:1.5.33")
+  implementation("ch.qos.logback:logback-classic:1.5.34")
+  implementation("ch.qos.logback:logback-core:1.5.34")
 }
 
 java {
