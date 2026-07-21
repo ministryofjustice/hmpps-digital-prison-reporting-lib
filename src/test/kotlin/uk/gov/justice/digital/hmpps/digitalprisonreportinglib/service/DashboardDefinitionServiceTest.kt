@@ -66,6 +66,6 @@ class DashboardDefinitionServiceTest {
     assertThat(actual).isEqualTo(dashboardDefinition)
 
     verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
-    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, allDatasets, executionContext)
+    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, listOf(dashboard), allDatasets, executionContext)
   }
 }

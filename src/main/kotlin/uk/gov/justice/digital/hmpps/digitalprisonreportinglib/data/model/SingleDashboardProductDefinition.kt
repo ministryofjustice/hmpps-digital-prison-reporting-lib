@@ -12,6 +12,7 @@ data class SingleDashboardProductDefinition(
   override val policy: List<Policy>,
   val dashboardDataset: Dataset,
   val dashboard: Dashboard,
+  val allDashboards: List<Dashboard>,
   val allDatasets: List<Dataset>,
   val allDatasources: List<Datasource>,
 ) : WithPolicy
