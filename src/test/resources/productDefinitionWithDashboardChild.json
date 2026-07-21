@@ -24,10 +24,22 @@
       "query": "SELECT 'AAA' AS establishment_id, 'Aardvark' AS establishment_name UNION SELECT 'BBB' AS establishment_id, 'Bumblebee' AS establishment_name",
       "schema": {
         "field": [
-          {
-            "name": "establishment_id",
-            "type": "string",
-            "display": "Establishment ID"
+        {
+          "name": "establishment_id",
+          "type": "string",
+          "display": "Establishment ID",
+          "filter": {
+            "type": "select",
+            "dynamicoptions": {
+              "returnAsStaticOptions": true,
+              "dataset": "establishments",
+              "name": "establishment_id",
+              "display": "establishment_name",
+              "maximumOptions": 123
+            },
+            "interactive": true
+          },
+            "formula": "make_url('https://prisoner-${env}.digital.prison.service.justice.gov.uk/prison/${establishment_id}',${establishment_id},TRUE)"
           },
           {
             "name": "establishment_name",
@@ -99,7 +111,7 @@
                 "key": [
                   {
                     "id": "establishment_id",
-                    "display": "Establishmnent ID"
+                    "display": "Establishment ID"
                   },
                   {
                     "id": "wing",
@@ -109,7 +121,7 @@
                 "measure": [
                   {
                     "id": "establishment_id",
-                    "display": "Establishmnent ID"
+                    "display": "Establishment ID"
                   },
                   {
                     "id": "wing",
@@ -151,7 +163,7 @@
                 "key": [
                   {
                     "id": "establishment_id",
-                    "display": "Establishmnent ID"
+                    "display": "Establishment ID"
                   },
                   {
                     "id": "wing",
@@ -161,7 +173,7 @@
                 "measure": [
                   {
                     "id": "establishment_id",
-                    "display": "Establishmnent ID"
+                    "display": "Establishment ID"
                   },
                   {
                     "id": "wing",

@@ -118,11 +118,11 @@ class DashboardDefinitionMapperTest {
                 display = "Total prisoners by wing",
                 columns = DashboardVisualisationColumnsDefinition(
                   keys = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishment ID", type = FieldType.HTML),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                   ),
                   measures = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishment ID", type = FieldType.HTML),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
                   ),
@@ -437,71 +437,89 @@ class DashboardDefinitionMapperTest {
       executionContext = executionContext,
     )
 
-  println(productDefinitionWithChild.allDatasets[0])
-    println(productDefinitionWithChild.allDatasets[1])
-    assertEquals(1, actual.childVariants?.count())
-    // TODO: also test that dashboard 2 exists as expected
+    val expectedSections = listOf(
+      DashboardSectionDefinition(
+        id = "totals-breakdown",
+        display = "Totals breakdown",
+        visualisations = listOf(
+          DashboardVisualisationDefinition(
+            id = "total-prisoners",
+            type = DashboardVisualisationTypeDefinition.LIST,
+            display = "Total prisoners by wing",
+            columns = DashboardVisualisationColumnsDefinition(
+              keys = listOf(
+                DashboardVisualisationColumnDefinition(
+                  id = "establishment_id",
+                  display = "Establishment ID",
+                  type = FieldType.HTML,
+                ),
+                DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
+              ),
+              measures = listOf(
+                DashboardVisualisationColumnDefinition(
+                  id = "establishment_id",
+                  display = "Establishment ID",
+                  type = FieldType.HTML,
+                ),
+                DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
+                DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
+              ),
+              filters = listOf(
+                ValueVisualisationColumnDefinition(id = "establishment_id", equals = null),
+              ),
+              expectNulls = true,
+            ),
+          ),
+        ),
+      ),
+    )
+    val expectedFilterFields = listOf(
+      FieldDefinition(
+        name = "establishment_id",
+        display = "Establishment ID",
+        filter = FilterDefinition(
+          type = FilterType.Select,
+          mandatory = false,
+          staticOptions = listOf(
+            FilterOption(name = "AAA", display = "Aardvark"),
+            FilterOption(name = "BBB", display = "Bumblebee"),
+          ),
+          dynamicOptions = DynamicFilterOption(minimumLength = null),
+          interactive = true,
+        ),
+        sortable = true,
+        defaultsort = false,
+        type = FieldType.String,
+        mandatory = false,
+        visible = true,
+        calculated = false,
+        header = false,
+      ),
+    )
+    val expectedChildVariants = listOf(
+      DashboardDefinition(
+        id = "establishment-dashboard",
+        name = "Establishment Dashboard",
+        description = "Establishment Dashboard Description",
+        sections = expectedSections,
+        filterFields = expectedFilterFields,
+        childVariants = null,
+      ),
+    )
+
     assertEquals(
       DashboardDefinition(
         id = "age-breakdown-dashboard-with-child",
         name = "Age Breakdown Dashboard",
         description = "Age Breakdown Dashboard Description",
-        sections = listOf(
-          DashboardSectionDefinition(
-            id = "totals-breakdown",
-            display = "Totals breakdown",
-            visualisations = listOf(
-              DashboardVisualisationDefinition(
-                id = "total-prisoners",
-                type = DashboardVisualisationTypeDefinition.LIST,
-                display = "Total prisoners by wing",
-                columns = DashboardVisualisationColumnsDefinition(
-                  keys = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
-                    DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
-                  ),
-                  measures = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
-                    DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
-                    DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
-                  ),
-                  filters = listOf(
-                    ValueVisualisationColumnDefinition(id = "establishment_id", equals = null),
-                  ),
-                  expectNulls = true,
-                ),
-              ),
-            ),
-          ),
-        ),
-        filterFields = listOf(
-          FieldDefinition(
-            name = "establishment_id",
-            display = "Establishment ID",
-            filter = FilterDefinition(
-              type = FilterType.Select,
-              mandatory = false,
-              staticOptions = listOf(
-                FilterOption(name = "AAA", display = "Aardvark"),
-                FilterOption(name = "BBB", display = "Bumblebee"),
-              ),
-              dynamicOptions = DynamicFilterOption(minimumLength = null),
-              interactive = true,
-            ),
-            sortable = true,
-            defaultsort = false,
-            type = FieldType.String,
-            mandatory = false,
-            visible = true,
-            calculated = false,
-            header = false,
-          ),
-        ),
+        sections = expectedSections,
+        filterFields = expectedFilterFields,
+        childVariants = expectedChildVariants,
       ),
       actual,
     )
 
-    verify(syncDataApiService).validateAndFetchDataForFilterWithDataset(
+    verify(syncDataApiService, times(2)).validateAndFetchDataForFilterWithDataset(
       pageSize = eq(123L),
       sortColumn = eq("establishment_id"),
       dataset = any(),

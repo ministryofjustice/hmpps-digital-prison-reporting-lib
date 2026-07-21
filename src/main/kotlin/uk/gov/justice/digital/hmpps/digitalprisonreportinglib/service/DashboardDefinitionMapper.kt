@@ -3,13 +3,30 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AggregateTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardBucketDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardOptionDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationColumnsDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardVisualisationTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UnitTypeDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.*
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisation
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisationColumn
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.estcodesandwings.EstablishmentCodesToWingsCacheService
@@ -60,24 +77,19 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
-  ): List<DashboardDefinition>? {
+  ): List<DashboardDefinition>? = dashboard.child?.map { child ->
+    val dashboard = identifiedHelper.findOrFail<Dashboard>(
+      all = allDashboards,
+      id = child.dashboardId,
+    )
 
-    println(dashboard.child)
-    
-    return dashboard.child?.map { child ->
-      val dashboard = identifiedHelper.findOrFail<Dashboard>(
-        all = allDashboards,
-        id = child.dashboardId
-      )
-
-      toDashboardDefinition(
-        dashboard = dashboard,
-        allDashboards = allDashboards,
-        allDatasets = allDatasets,
-        executionContext = executionContext,
-        filters = filters,
-      )
-    }
+    toDashboardDefinition(
+      dashboard = dashboard,
+      allDashboards = allDashboards,
+      allDatasets = allDatasets,
+      executionContext = executionContext,
+      filters = filters,
+    )
   }
 
   private fun mapSections(
