@@ -81,6 +81,11 @@
       "name": "Age Breakdown Dashboard",
       "description": "Age Breakdown Dashboard Description",
       "dataset": "missing-ethnicity-dataset",
+      "child": [
+        {
+          "dashboardId": "establishment-dashboard"
+        }
+      ],
       "section": [
         {
           "id": "totals-breakdown",
@@ -179,11 +184,6 @@
           ]
         }
       ]
-    }
-  ],
-  "child": [
-    {
-      "dashboardId": "establishment-dashboard"
     }
   ],
   "policy": [
