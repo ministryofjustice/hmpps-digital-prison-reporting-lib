@@ -94,7 +94,7 @@
                 "key": [
                   {
                     "id": "establishment_id",
-                    "display": "Establishmnent ID"
+                    "display": "Establishment ID"
                   },
                   {
                     "id": "wing",
@@ -104,7 +104,7 @@
                 "measure": [
                   {
                     "id": "establishment_id",
-                    "display": "Establishmnent ID"
+                    "display": "Establishment ID"
                   },
                   {
                     "id": "wing",

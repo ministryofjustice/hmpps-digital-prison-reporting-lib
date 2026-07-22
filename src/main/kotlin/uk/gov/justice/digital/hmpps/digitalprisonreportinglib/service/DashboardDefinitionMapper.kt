@@ -54,6 +54,7 @@ class DashboardDefinitionMapper(
 
   fun toDashboardDefinition(
     dashboard: Dashboard,
+    allDashboards: List<Dashboard>,
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>? = null,
@@ -64,29 +65,68 @@ class DashboardDefinitionMapper(
       id = dashboard.id,
       name = dashboard.name,
       description = dashboard.description,
-      sections = dashboard.section.map { section ->
-        DashboardSectionDefinition(
-          id = section.id,
-          display = section.display,
-          description = section.description,
-          visualisations = section.visualisation.map { visualisation ->
-            DashboardVisualisationDefinition(
-              id = visualisation.id,
-              type = DashboardVisualisationTypeDefinition.valueOf(visualisation.type.toString()),
-              display = visualisation.display,
-              description = visualisation.description,
-              columns = DashboardVisualisationColumnsDefinition(
-                keys = visualisation.column.key?.let { mapToDashboardVisualisationColumnDefinitions(visualisation.column.key, dataset) },
-                measures = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure, dataset),
-                filters = visualisation.column.filter?.map { ValueVisualisationColumnDefinition(it.id.removePrefix(REF_PREFIX), it.equals) },
-                expectNulls = visualisation.column.expectNull,
-              ),
-              options = visualisation.option?.let { mapToDashboardOptionDefinition(visualisation) },
-            )
-          },
+      sections = mapSections(dashboard, dataset),
+      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters),
+      childVariants = mapChildVariants(dashboard, allDashboards, allDatasets, executionContext, filters),
+    )
+  }
+
+  private fun mapChildVariants(
+    dashboard: Dashboard,
+    allDashboards: List<Dashboard>,
+    allDatasets: List<Dataset>,
+    executionContext: ExecutionContext,
+    filters: Map<String, String>?,
+  ): List<DashboardDefinition>? = dashboard.child?.map { child ->
+    val dashboard = identifiedHelper.findOrFail<Dashboard>(
+      all = allDashboards,
+      id = child.dashboardId,
+    )
+
+    toDashboardDefinition(
+      dashboard = dashboard,
+      allDashboards = allDashboards,
+      allDatasets = allDatasets,
+      executionContext = executionContext,
+      filters = filters,
+    )
+  }
+
+  private fun mapSections(
+    dashboard: Dashboard,
+    dataset: Dataset,
+  ): List<DashboardSectionDefinition> = dashboard.section.map { section ->
+    DashboardSectionDefinition(
+      id = section.id,
+      display = section.display,
+      description = section.description,
+      visualisations = section.visualisation.map { visualisation ->
+        DashboardVisualisationDefinition(
+          id = visualisation.id,
+          type = DashboardVisualisationTypeDefinition.valueOf(visualisation.type.toString()),
+          display = visualisation.display,
+          description = visualisation.description,
+          columns = DashboardVisualisationColumnsDefinition(
+            keys = visualisation.column.key?.let {
+              mapToDashboardVisualisationColumnDefinitions(
+                visualisation.column.key,
+                dataset,
+              )
+            },
+            measures = mapToDashboardVisualisationColumnDefinitions(visualisation.column.measure, dataset),
+            filters = visualisation.column.filter?.map {
+              ValueVisualisationColumnDefinition(
+                it.id.removePrefix(
+                  REF_PREFIX,
+                ),
+                it.equals,
+              )
+            },
+            expectNulls = visualisation.column.expectNull,
+          ),
+          options = visualisation.option?.let { mapToDashboardOptionDefinition(visualisation) },
         )
       },
-      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters),
     )
   }
 

@@ -29,6 +29,7 @@ class DashboardDefinitionService(
 
     return dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = productDefinition.dashboard,
+      allDashboards = productDefinition.allDashboards,
       allDatasets = productDefinition.allDatasets,
       executionContext = executionContext,
       filters = filters,
