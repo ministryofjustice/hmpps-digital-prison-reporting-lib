@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.4.0
+- Added support for parent-child dashboards
+
 # 17.3.0
 - Add basic support for external users
 
