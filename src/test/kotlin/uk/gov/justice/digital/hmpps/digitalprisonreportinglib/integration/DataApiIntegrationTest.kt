@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -33,7 +34,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.XlsxStreamingSupport
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
+import java.io.ByteArrayInputStream
 import java.sql.DriverManager
 import java.time.LocalDateTime
 
@@ -218,6 +221,43 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         """.trimIndent()
         assertThat(body?.startsWith("\uFEFF")).isTrue()
         assertThat(body?.trim()?.replace("\uFEFF", "")).isEqualTo(expected)
+      }
+  }
+
+  @Test
+  fun `Data API is streaming results to the downloaded xlsx file`() {
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month/download/xlsx")
+          .queryParam("columns", "prisonNumber")
+          .queryParam("columns", "name")
+          .queryParam("columns", "origin")
+          .queryParam("columns", "destination")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+      .expectHeader().contentType(XlsxStreamingSupport.XLSX_CONTENT_TYPE)
+      .expectHeader().valueEquals(
+        "Content-Disposition",
+        "attachment; filename=external-movements-last-month.xlsx",
+      )
+      .expectBody(ByteArray::class.java)
+      .value { body ->
+        val sheet = XSSFWorkbook(ByteArrayInputStream(body)).getSheetAt(0)
+
+        assertThat(sheet.getRow(0).map { it.stringCellValue })
+          .containsExactly("Prison Number", "Name", "From", "To")
+        // Every value carries its type, so Excel has nothing left to guess at on open.
+        assertThat(sheet.getRow(1).map { it.stringCellValue }).containsExactly(
+          movementPrisoner4[PRISON_NUMBER].toString(),
+          movementPrisoner4[NAME].toString(),
+          movementPrisoner4[ORIGIN].toString(),
+          movementPrisoner4[DESTINATION].toString(),
+        )
       }
   }
 
