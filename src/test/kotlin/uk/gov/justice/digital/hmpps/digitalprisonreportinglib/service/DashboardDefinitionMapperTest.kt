@@ -96,9 +96,9 @@ class DashboardDefinitionMapperTest {
     }
 
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition("missing-ethnicity-metrics", "age-breakdown-dashboard-1")
-
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = productDefinition.dashboard,
+      allDashboards = productDefinition.allDashboards,
       allDatasets = productDefinition.allDatasets,
       executionContext = executionContext,
     )
@@ -118,11 +118,11 @@ class DashboardDefinitionMapperTest {
                 display = "Total prisoners by wing",
                 columns = DashboardVisualisationColumnsDefinition(
                   keys = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishment ID", type = FieldType.HTML),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                   ),
                   measures = listOf(
-                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishmnent ID", type = FieldType.HTML),
+                    DashboardVisualisationColumnDefinition(id = "establishment_id", display = "Establishment ID", type = FieldType.HTML),
                     DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
                     DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
                   ),
@@ -208,6 +208,7 @@ class DashboardDefinitionMapperTest {
     )
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
+      allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
     )
@@ -292,6 +293,7 @@ class DashboardDefinitionMapperTest {
     )
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
+      allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
     )
@@ -363,6 +365,7 @@ class DashboardDefinitionMapperTest {
     )
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
+      allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
     )
@@ -400,5 +403,127 @@ class DashboardDefinitionMapperTest {
       ),
     )
     assertEquals(expected, actual)
+  }
+
+  @Test
+  fun `getDashboardDefinition returns the dashboard definition for parent-child dashboards`() {
+    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull())).then {
+      listOf(
+        mapOf("establishment_id" to "AAA", "establishment_name" to "Aardvark"),
+        mapOf("establishment_id" to "BBB", "establishment_name" to "Bumblebee"),
+      )
+    }
+
+    val productDefinitionRepositoryWithChild: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
+      listOf("productDefinitionWithDashboardChild.json"),
+      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      identifiedHelper = IdentifiedHelper(),
+    )
+
+    val dashboardDefinitionMapperWithChild = DashboardDefinitionMapper(
+      syncDataApiService = syncDataApiService,
+      identifiedHelper = IdentifiedHelper(),
+      establishmentCodesToWingsCacheService = establishmentCodesToWingsCacheService,
+      alertCategoryCacheService = alertCategoryCacheService,
+      productDefinitionRepository = productDefinitionRepositoryWithChild,
+      productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
+    )
+
+    val productDefinitionWithChild = productDefinitionRepositoryWithChild.getSingleDashboardProductDefinition("missing-ethnicity-metrics", "age-breakdown-dashboard-with-child")
+    val actual = dashboardDefinitionMapperWithChild.toDashboardDefinition(
+      dashboard = productDefinitionWithChild.dashboard,
+      allDashboards = productDefinitionWithChild.allDashboards,
+      allDatasets = productDefinitionWithChild.allDatasets,
+      executionContext = executionContext,
+    )
+
+    val expectedSections = listOf(
+      DashboardSectionDefinition(
+        id = "totals-breakdown",
+        display = "Totals breakdown",
+        visualisations = listOf(
+          DashboardVisualisationDefinition(
+            id = "total-prisoners",
+            type = DashboardVisualisationTypeDefinition.LIST,
+            display = "Total prisoners by wing",
+            columns = DashboardVisualisationColumnsDefinition(
+              keys = listOf(
+                DashboardVisualisationColumnDefinition(
+                  id = "establishment_id",
+                  display = "Establishment ID",
+                  type = FieldType.HTML,
+                ),
+                DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
+              ),
+              measures = listOf(
+                DashboardVisualisationColumnDefinition(
+                  id = "establishment_id",
+                  display = "Establishment ID",
+                  type = FieldType.HTML,
+                ),
+                DashboardVisualisationColumnDefinition(id = "wing", display = "Wing"),
+                DashboardVisualisationColumnDefinition(id = "total_prisoners", display = "Total prisoners"),
+              ),
+              filters = listOf(
+                ValueVisualisationColumnDefinition(id = "establishment_id", equals = null),
+              ),
+              expectNulls = true,
+            ),
+          ),
+        ),
+      ),
+    )
+    val expectedFilterFields = listOf(
+      FieldDefinition(
+        name = "establishment_id",
+        display = "Establishment ID",
+        filter = FilterDefinition(
+          type = FilterType.Select,
+          mandatory = false,
+          staticOptions = listOf(
+            FilterOption(name = "AAA", display = "Aardvark"),
+            FilterOption(name = "BBB", display = "Bumblebee"),
+          ),
+          dynamicOptions = DynamicFilterOption(minimumLength = null),
+          interactive = true,
+        ),
+        sortable = true,
+        defaultsort = false,
+        type = FieldType.String,
+        mandatory = false,
+        visible = true,
+        calculated = false,
+        header = false,
+      ),
+    )
+    val expectedChildVariants = listOf(
+      DashboardDefinition(
+        id = "establishment-dashboard",
+        name = "Establishment Dashboard",
+        description = "Establishment Dashboard Description",
+        sections = expectedSections,
+        filterFields = expectedFilterFields,
+        childVariants = null,
+      ),
+    )
+
+    assertEquals(
+      DashboardDefinition(
+        id = "age-breakdown-dashboard-with-child",
+        name = "Age Breakdown Dashboard",
+        description = "Age Breakdown Dashboard Description",
+        sections = expectedSections,
+        filterFields = expectedFilterFields,
+        childVariants = expectedChildVariants,
+      ),
+      actual,
+    )
+
+    verify(syncDataApiService, times(2)).validateAndFetchDataForFilterWithDataset(
+      pageSize = eq(123L),
+      sortColumn = eq("establishment_id"),
+      dataset = any(),
+      prompts = anyOrNull(),
+    )
   }
 }

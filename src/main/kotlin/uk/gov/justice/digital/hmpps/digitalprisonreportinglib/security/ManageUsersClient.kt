@@ -34,7 +34,13 @@ class ManageUsersClient(
     if (caseloadResponse.caseloads.isEmpty() || caseloadResponse.activeCaseload == null) {
       val userInfo = getUserInfo(username)
       if (userInfo.authSource != AuthSource.NOMIS) {
-        return caseloadResponse
+        return CaseloadResponse(
+          username = caseloadResponse.username,
+          active = true,
+          accountType = caseloadResponse.accountType,
+          caseloads = caseloadResponse.caseloads,
+          activeCaseload = caseloadResponse.activeCaseload,
+        )
       }
       if (caseloadResponse.caseloads.isEmpty()) {
         throw NoDataAvailableException(WARNING_NO_CASELOADS)

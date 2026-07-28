@@ -56,11 +56,11 @@ abstract class AbstractProductDefinitionRepository(
       policy = productDefinition.policy,
       dashboardDataset = dataSet,
       dashboard = dashboard,
+      allDashboards = productDefinition.dashboard!!,
       allDatasets = productDefinition.dataset,
       allDatasources = productDefinition.datasource,
     )
   }
-
   private fun findDatasource(
     productDefinition: AnyProductDefinition,
     dataSet: Dataset,
