@@ -208,8 +208,8 @@ class SyncDataApiService(
     )
   }
 
-  fun downloadCsv(
-    writer: Writer,
+  fun download(
+    rowWriter: ReportRowWriter,
     downloadContext: SyncDownloadContext,
   ) {
     configuredApiRepository.streamTableResult(
@@ -219,8 +219,19 @@ class SyncDataApiService(
       sortedAsc = downloadContext.sortedAsc,
       sortColumn = downloadContext.sortColumn,
       reportFilter = downloadContext.reportFilter,
-      rowConsumer = populateRowConsumer(downloadContext, writer),
+      rowConsumer = populateRowConsumer(downloadContext, rowWriter),
     )
+  }
+
+  @Deprecated(
+    "Use download() with an explicit ReportRowWriter so the caller chooses the format.",
+    ReplaceWith("download(CsvRowWriter(writer), downloadContext)"),
+  )
+  fun downloadCsv(
+    writer: Writer,
+    downloadContext: SyncDownloadContext,
+  ) {
+    download(CsvRowWriter(writer), downloadContext)
     writer.flush()
   }
 

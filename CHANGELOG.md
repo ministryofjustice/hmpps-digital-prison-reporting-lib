@@ -1,5 +1,13 @@
 Below you can find the changes included in each release.
 
+# 17.5.0
+- Added an Excel (xlsx) download format for reports, alongside the existing csv download:
+  - sync: `GET /reports/{reportId}/{reportVariantId}/download/xlsx`
+  - async: `GET /reports/{reportId}/{reportVariantId}/tables/{tableId}/download/xlsx`
+- Excel type-guesses every value in a csv when the file is opened, so values such as a room number `1.5.2` become dates and `007` loses its leading zeros. Quoting csv fields does not prevent this. In xlsx each cell carries its type explicitly, so text stays text. Columns declared in the schema as dates or numbers are still written as real dates and numbers, so sorting and filtering behave as expected.
+- Report row writing now sits behind a `ReportRowWriter` interface (`CsvRowWriter`, `XlsxRowWriter`). csv output is unchanged.
+- `SyncDataApiService.downloadCsv` and `AsyncDataApiService.downloadCsv` are deprecated in favour of `download(rowWriter, ...)`. The existing methods still work and still produce csv.
+
 # 17.4.1
 - Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.0 
 - Upgraded `uk.gov.justice.hmpps.gradle-spring-boot` plugin to 11.0.2

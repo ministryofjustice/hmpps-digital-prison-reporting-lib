@@ -37,6 +37,10 @@ dependencies {
   // Swagger
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 
+  // Excel (xlsx) report downloads. Kept out of the public API surface, so `implementation`
+  // is enough - consumers get it transitively at runtime.
+  implementation("org.apache.poi:poi-ooxml:5.5.1")
+
   // Postgres dependencies
   implementation("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
