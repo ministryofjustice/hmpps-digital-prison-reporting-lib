@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.5.1
+- Registered `XlsxStreamingSupport` in `AutoConfiguration.imports`. It was added as a `@Component` in 17.5.0 and injected into `DataApiSyncController` and `DataApiAsyncController`, but never listed, so consuming applications failed to start with `No qualifying bean of type ... XlsxStreamingSupport`. 17.5.0 cannot be used and should be skipped.
+
 # 17.5.0
 - Added an Excel (xlsx) download format for reports, alongside the existing csv download:
   - sync: `GET /reports/{reportId}/{reportVariantId}/download/xlsx`
