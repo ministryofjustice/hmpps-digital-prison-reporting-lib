@@ -14,6 +14,9 @@ plugins {
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
+  all {
+    exclude(group = "org.springframework.boot", module = "spring-boot-starter-tomcat")
+  }
 }
 
 val awsSdkVersion = "2.45.1"
