@@ -8,6 +8,10 @@ Below you can find the changes included in each release.
 - Report row writing now sits behind a `ReportRowWriter` interface (`CsvRowWriter`, `XlsxRowWriter`). csv output is unchanged.
 - `SyncDataApiService.downloadCsv` and `AsyncDataApiService.downloadCsv` are deprecated in favour of `download(rowWriter, ...)`. The existing methods still work and still produce csv.
 
+# 17.4.1
+- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.0 
+- Upgraded `uk.gov.justice.hmpps.gradle-spring-boot` plugin to 11.0.2
+
 # 17.4.0
 - Added support for parent-child dashboards
 
