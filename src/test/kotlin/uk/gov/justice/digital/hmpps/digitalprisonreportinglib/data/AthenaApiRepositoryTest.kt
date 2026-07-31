@@ -1,8 +1,11 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
+import org.aspectj.lang.annotation.Before
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -89,7 +92,7 @@ class AthenaApiRepositoryTest {
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
     prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
-  ) = """          /* QUERY_INFO|||dpdId|||dpdName|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||reportId|||reportName|||${executionContext.hasProbationDatasources}|||END */
+  ) = """          /* QUERY_INFO|||dpdId|||dpdName|||testdatasource|||testdb|||testcatalog|||reportId|||reportName|||false|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -103,7 +106,7 @@ SELECT *
           );
   """.trimIndent()
 
-  private fun multiphaseSqlNonLastQuery() = """          /* QUERY_INFO|||dpdId|||dpdName|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||reportId|||reportName|||${executionContext.hasProbationDatasources}|||END */
+  private fun multiphaseSqlNonLastQuery() = """          /* QUERY_INFO|||dpdId|||dpdName|||testdatasource|||testdb|||testcatalog|||reportId|||reportName|||false|||END */
           CREATE TABLE AwsDataCatalog.reports._a6227417_bdac_40bb_bc81_49c750daacd7 
           WITH (
             format = 'PARQUET'
@@ -151,6 +154,14 @@ SELECT * FROM dataset_'
   private val dataset = mock<Dataset>()
   private val datasource = mock<Datasource>()
   private val report = mock<Report>()
+
+  @BeforeEach
+  fun beforeEach() {
+//    whenever(datasource.name).thenReturn("testdatasource")
+//    whenever(datasource.database).thenReturn("testdb")
+//    whenever(datasource.catalog).thenReturn("testcatalog")
+//    whenever(productDefinition.datasource).thenReturn(datasource)
+  }
 
   @ParameterizedTest
   @CsvSource(
