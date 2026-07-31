@@ -89,7 +89,7 @@ class AthenaApiRepositoryTest {
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
     prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
-  ) = """          /* dpdId dpdName reportId reportName */
+  ) = """          /* QUERY_INFO|||dpdId|||dpdName|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||reportId|||reportName|||${executionContext.hasProbationDatasources}|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -103,7 +103,7 @@ SELECT *
           );
   """.trimIndent()
 
-  private fun multiphaseSqlNonLastQuery() = """          /* dpdId dpdName reportId reportName */
+  private fun multiphaseSqlNonLastQuery() = """          /* QUERY_INFO|||dpdId|||dpdName|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||reportId|||reportName|||${executionContext.hasProbationDatasources}|||END */
           CREATE TABLE AwsDataCatalog.reports._a6227417_bdac_40bb_bc81_49c750daacd7 
           WITH (
             format = 'PARQUET'
