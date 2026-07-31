@@ -198,8 +198,8 @@ class AsyncDataApiService(
     ).first,
   )
 
-  fun downloadCsv(
-    writer: Writer,
+  fun download(
+    rowWriter: ReportRowWriter,
     tableId: String,
     asyncDownloadContext: AsyncDownloadContext,
   ) {
@@ -208,8 +208,20 @@ class AsyncDataApiService(
       filters = asyncDownloadContext.validatedFilters,
       sortedAsc = asyncDownloadContext.sortedAsc,
       sortColumn = asyncDownloadContext.sortColumn,
-      rowConsumer = populateRowConsumer(asyncDownloadContext, writer),
+      rowConsumer = populateRowConsumer(asyncDownloadContext, rowWriter),
     )
+  }
+
+  @Deprecated(
+    "Use download() with an explicit ReportRowWriter so the caller chooses the format.",
+    ReplaceWith("download(CsvRowWriter(writer), tableId, asyncDownloadContext)"),
+  )
+  fun downloadCsv(
+    writer: Writer,
+    tableId: String,
+    asyncDownloadContext: AsyncDownloadContext,
+  ) {
+    download(CsvRowWriter(writer), tableId, asyncDownloadContext)
     writer.flush()
   }
 
