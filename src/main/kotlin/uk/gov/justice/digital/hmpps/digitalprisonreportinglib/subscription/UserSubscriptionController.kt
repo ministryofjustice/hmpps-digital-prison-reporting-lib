@@ -1,14 +1,12 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -21,7 +19,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUse
 @ConditionalOnProperty("spring.datasource.usersubscription.url")
 @RestController
 @Tag(name = "User Subscription API")
-class UserSubscriptionController (
+class UserSubscriptionController(
   val userSubscriptionService: UserSubscriptionService,
   val manageUsersClient: ManageUsersClient,
 ) {
@@ -35,13 +33,14 @@ class UserSubscriptionController (
     @RequestBody body: AnySubscribableRequest,
     httpRequest: HttpServletRequest,
   ) {
-    userSubscriptionService.subscribe(UserSubscriptionRequest(
-      httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
-      reportId = body.reportId,
-      reportVariantId = body.reportVariantId
+    userSubscriptionService.subscribe(
+      UserSubscriptionRequest(
+        httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
+        reportId = body.reportId,
+        reportVariantId = body.reportVariantId,
+      ),
     )
-    )
-}
+  }
 
   @ConditionalOnBean(UserSubscriptionService::class)
   @PostMapping("/user/unsubscribe")
@@ -53,11 +52,12 @@ class UserSubscriptionController (
     @RequestBody body: AnySubscribableRequest,
     httpRequest: HttpServletRequest,
   ) {
-    userSubscriptionService.unsubscribe(UserSubscriptionRequest(
-      httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
-      reportId = body.reportId,
-      reportVariantId = body.reportVariantId
-    )
+    userSubscriptionService.unsubscribe(
+      UserSubscriptionRequest(
+        httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
+        reportId = body.reportId,
+        reportVariantId = body.reportVariantId,
+        ),
     )
   }
 }

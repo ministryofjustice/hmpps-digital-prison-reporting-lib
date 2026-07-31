@@ -1,35 +1,27 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Table
 import java.time.LocalDateTime
 
-enum class UserSubscriptionStatus{
+enum class UserSubscriptionStatus {
   SUBSCRIBED,
-  UNSUBSCRIBED;
+  UNSUBSCRIBED,
 }
 
-@Entity
-@Table(schema = "usersubscription", name = "user_subscription")
-class UserSubscription {
-  @Column(nullable = false, name = "userid")
+data class UserSubscription(
+  val id: String,
   val userId: String,
-  @Column(nullable = false, name = "reportid")
   val reportId: String,
-  @Column(nullable = false, name = "reportvariantid")
   val reportVariantId: String,
-  @Column(nullable = false, name = "createdAt")
   val status: String,
-  @Column(nullable = false, name = "status")
-  val createdAt: LocalDateTime,
-  @Column(nullable = true, name = "updatedAt")
-  val updatedAt: LocalDateTime,
-} {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  var id: Int? = null
-}
+  val createdTime: LocalDateTime,
+  val updatedTime: LocalDateTime? = null,
+)
+
+data class UserReportSubscription(
+  val userId: String,
+  val reportId: String,
+  val reportVariantId: String,
+  val tableId: String,
+  val reportStatus: String,
+  val reportUpdatedTime: LocalDateTime,
+)

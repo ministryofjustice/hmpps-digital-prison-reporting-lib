@@ -1,27 +1,37 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UserSubscriptionRequest
+import java.time.LocalDateTime
+import java.util.UUID
 
-class UserSubscriptionService (
-  private val userSubscriptionRepository: UserSubscriptionRepository
+class UserSubscriptionService(
+  private val userSubscriptionRepository: UserSubscriptionRepository,
 ) {
 
-  fun subscribe(request: UserSubscriptionRequest) {
-    //TODO CHECK IF IT EXISTS FIRST ?
+  fun subscribe(request: UserSubscriptionRequest): UserSubscription? {
     val userSubscription = UserSubscription(
+      id = UUID.randomUUID().toString(),
       userId = request.userId,
       reportId = request.reportId,
       reportVariantId = request.reportVariantId,
-      status = UserSubscriptionStatus.SUBSCRIBED
+      status = UserSubscriptionStatus.SUBSCRIBED.name,
+      createdTime = LocalDateTime.now(),
     )
-    userSubscriptionRepository.save(userSubscription)
-    return userSubscription
-  }: UserSubscription?
-
-  fun unsubscribe(request: UserSubscriptionRequest) {
-
-    userSubscriptionRepository.findByUserIdAndReport(request.userId, request.reportId, request.reportVariantId)
-
-    }
+    return userSubscriptionRepository.create(userSubscription)
   }
+
+  fun unsubscribe(request: UserSubscriptionRequest): UserSubscription? = userSubscriptionRepository.findByUserIdAndReport(
+    request.userId,
+    request.reportId,
+    request.reportVariantId
+  )?.let {
+    userSubscriptionRepository.updateSubscription(
+      it.copy(
+        status = UserSubscriptionStatus.UNSUBSCRIBED.name,
+        updatedTime = LocalDateTime.now()
+      ),
+      )
+  }
+
+  fun findByUserId(userId: String): List<UserReportSubscription> = emptyList()
 }
