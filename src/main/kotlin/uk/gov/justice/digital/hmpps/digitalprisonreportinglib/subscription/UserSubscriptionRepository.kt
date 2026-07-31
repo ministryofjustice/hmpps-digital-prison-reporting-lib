@@ -48,14 +48,14 @@ class UserSubscriptionRepository : RepositoryHelper() {
       FIND_BY_ID,
       mapOf("id" to id),
       RowMapperResultSetExtractor(UserSubscriptionRowMapper()),
-      ).firstOrNull()
+    ).firstOrNull()
 
   open fun findByUserId(userId: String): List<UserSubscription> = populateNamedParameterJdbcTemplate()
     .query(
       FIND_BY_USER_ID,
       mapOf("user_id" to userId),
       RowMapperResultSetExtractor(UserSubscriptionRowMapper()),
-      )
+    )
 
   open fun findByUserIdAndReport(userId: String, reportId: String, reportVariantId: String): UserSubscription? {
     val results = populateNamedParameterJdbcTemplate().query(

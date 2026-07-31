@@ -5,7 +5,7 @@ data class AnySubscribableRequest(
   val reportVariantId: String,
 )
 
-data class UserSubscriptionRequest (
+data class UserSubscriptionRequest(
   val userId: String,
   val reportId: String,
   val reportVariantId: String,

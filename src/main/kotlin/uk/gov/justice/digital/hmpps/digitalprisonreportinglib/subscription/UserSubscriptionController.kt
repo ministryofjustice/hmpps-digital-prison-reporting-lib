@@ -57,7 +57,7 @@ class UserSubscriptionController(
         httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
         reportId = body.reportId,
         reportVariantId = body.reportVariantId,
-        ),
+      ),
     )
   }
 }

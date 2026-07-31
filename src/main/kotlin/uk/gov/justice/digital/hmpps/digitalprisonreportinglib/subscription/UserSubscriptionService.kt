@@ -23,14 +23,14 @@ class UserSubscriptionService(
   fun unsubscribe(request: UserSubscriptionRequest): UserSubscription? = userSubscriptionRepository.findByUserIdAndReport(
     request.userId,
     request.reportId,
-    request.reportVariantId
+    request.reportVariantId,
   )?.let {
     userSubscriptionRepository.updateSubscription(
       it.copy(
         status = UserSubscriptionStatus.UNSUBSCRIBED.name,
-        updatedTime = LocalDateTime.now()
+        updatedTime = LocalDateTime.now(),
       ),
-      )
+    )
   }
 
   fun findByUserId(userId: String): List<UserReportSubscription> = emptyList()
