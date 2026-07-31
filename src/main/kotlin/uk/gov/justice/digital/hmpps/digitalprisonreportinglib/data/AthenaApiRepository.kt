@@ -209,6 +209,8 @@ class AthenaApiRepository(
       "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
       buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
     ),
+    executionContext,
+    datasource,
   )
 
   private fun buildContextQuery(executionContext: ExecutionContext, dialect: SqlDialect? = null): String = """WITH $CONTEXT AS (
@@ -355,6 +357,8 @@ class AthenaApiRepository(
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(sortColumn = sortColumn, sortedAsc = sortedAsc),
       ),
+      executionContext,
+      datasource,
     )
     log.debug("Last multiphase query: {}", lastQuery)
     val lastInsertStatement = buildInsertStatement(
@@ -408,6 +412,8 @@ class AthenaApiRepository(
             .joinToString(",") +
             "\nSELECT * FROM $DATASET_"
           ),
+        executionContext,
+        datasource,
       )
       log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)
       val insertQuery = buildInsertStatement(
@@ -461,6 +467,8 @@ class AthenaApiRepository(
           .joinToString(",") +
           "\nSELECT * FROM $DATASET_"
         ),
+      executionContext,
+      datasource,
     )
 
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
@@ -607,12 +615,14 @@ class AthenaApiRepository(
     tableId: String,
     connection: DatasourceConnection,
     innerQuery: String,
+    executionContext: ExecutionContext,
+    datasource: Datasource,
   ): String {
     val fullQuery =
       when (connection) {
         DatasourceConnection.FEDERATED ->
           """
-          /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+          /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -626,7 +636,7 @@ class AthenaApiRepository(
 
         DatasourceConnection.AWS_DATA_CATALOG ->
           """
-            /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+              /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||END */
                 CREATE TABLE AwsDataCatalog.reports.$tableId
                 WITH (
                   format = 'PARQUET'

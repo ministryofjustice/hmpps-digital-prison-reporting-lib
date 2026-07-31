@@ -287,6 +287,7 @@ SELECT *
       productDefinition = productDefinition,
       policyEngineResult = policyEngineResult,
       filters = emptyList(),
+      executionContext
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
