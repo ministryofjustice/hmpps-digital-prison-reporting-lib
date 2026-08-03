@@ -194,7 +194,7 @@ class RedshiftDataApiRepository(
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
-          /* QUERY_INFO|||${productDefinition.id}|||${productDefinition.name}|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||${productDefinition.dashboard.id}|||$${productDefinition.dashboard.name}|||${executionContext.hasProbationDatasources}|||END */
+          /* QUERY_INFO|||${productDefinition.id}|||${productDefinition.name}|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||${productDefinition.dashboard.id}|||${productDefinition.dashboard.name}|||${executionContext.hasProbationDatasources}|||END */
           CREATE EXTERNAL TABLE reports.$tableId 
           STORED AS parquet 
           LOCATION 's3://$s3location/$tableId/' 
