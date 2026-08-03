@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.5.2
+- Added extra information in the query comments we generate for Redshift and Athena queries
+
 # 17.5.1
 - Registered `XlsxStreamingSupport` in `AutoConfiguration.imports`. It was added as a `@Component` in 17.5.0 and injected into `DataApiSyncController` and `DataApiAsyncController`, but never listed, so consuming applications failed to start with `No qualifying bean of type ... XlsxStreamingSupport`. 17.5.0 cannot be used and should be skipped.
 
