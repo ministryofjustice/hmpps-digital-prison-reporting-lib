@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOADS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.ROLE
@@ -44,7 +45,9 @@ data class Condition(
     interpolateVariables: (String) -> String,
   ): Boolean {
     if (matchList.size < 2) return false
-    return matchList.drop(1).contains(interpolateVariables(matchList.first()))
+    val interpolatedPlaceholder = interpolateVariables(matchList.first())
+    if (interpolatedPlaceholder == POLICY_DENY) return false
+    return matchList.drop(1).contains(interpolatedPlaceholder)
   }
 
   private fun isNotNull(

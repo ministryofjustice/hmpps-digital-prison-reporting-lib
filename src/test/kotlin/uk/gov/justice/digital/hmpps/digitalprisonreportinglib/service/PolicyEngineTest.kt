@@ -516,7 +516,31 @@ class PolicyEngineTest {
     val policy = Policy(
       id = "caseload",
       type = ACCESS,
-      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${caseload}"))))),
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = emptyList())))),
+    )
+    val policyEngine = PolicyEngine(listOf(policy), context)
+    assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
+  }
+
+  @Test
+  fun `policy engine returns FALSE for an access policy with a permit rule with a caseload match condition which has no active caseload`() {
+    val userRole = "DPR-USER"
+    val context = ExecutionContext(
+      CaseloadResponse(
+        username = testUsername,
+        active = true,
+        accountType = "GENERAL",
+        caseloads = listOf(testCaseload),
+        activeCaseload = null,
+      ),
+      listOf(userRole),
+      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+      false,
+    )
+    val policy = Policy(
+      id = "caseload",
+      type = ACCESS,
+      rule = listOf(Rule(Effect.PERMIT, listOf(Condition(match = listOf("\${caseload}", "FALSE"))))),
     )
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
