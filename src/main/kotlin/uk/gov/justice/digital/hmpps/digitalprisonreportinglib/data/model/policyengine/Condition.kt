@@ -42,9 +42,10 @@ data class Condition(
   private fun isTheInterpolatedVarInTheList(
     matchList: List<String>,
     interpolateVariables: (String) -> String,
-  ) = matchList.map {
-    interpolateVariables(it)
-  }.toSet().count() == 1
+  ): Boolean {
+    if (matchList.size < 2) return false
+    return matchList.drop(1).contains(interpolateVariables(matchList.first()))
+  }
 
   private fun isNotNull(
     varPlaceholder: String,
