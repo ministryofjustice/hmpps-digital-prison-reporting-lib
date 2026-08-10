@@ -5,21 +5,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.context.SecurityContextHolderStrategy
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserReportSubscription
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserSubscription
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserSubscriptionRepository
@@ -54,28 +44,19 @@ class SubscriptionIntegrationTest : IntegrationTestBase() {
     manageUsersMockServer.stubLookupUsersRoles(userId, listOf("PRISONS_REPORTING_USER"))
     manageUsersMockServer.stubLookupUserCaseload()
 
-
     transactionTemplate.executeWithoutResult {
       entityManager.createNativeQuery("TRUNCATE subscription_.user_subscription CASCADE").executeUpdate()
     }
-
-    //SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
-    //SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_GLOBAL);
-
-    //manageUsersMockServer.stubLookupUsersRoles(userId, listOf("PRISONS_REPORTING_USER"))
-    //manageUsersMockServer.stubLookupUserCaseload()
   }
 
   @Test
   fun `Subscribe to a report for user`() {
-
     val payload = """
       {
       "reportId":"report1234",
       "reportVariantId":"reportVariant1234"
       }
     """.trimIndent()
-
 
     val userSubscriptions = webTestClient.post()
       .uri("/user/subscribe")
@@ -84,13 +65,7 @@ class SubscriptionIntegrationTest : IntegrationTestBase() {
       .headers(setAuthorisation(roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus().isOk
-      //.expectBody<Collection<UserReportSubscription>>()
-      //.returnResult()
-      //.responseBody
-
-    //assertThat(userSubscriptions).size().isEqualTo(1)
   }
-
 
   @Test
   fun `Getting User Subscriptions for given user`() {

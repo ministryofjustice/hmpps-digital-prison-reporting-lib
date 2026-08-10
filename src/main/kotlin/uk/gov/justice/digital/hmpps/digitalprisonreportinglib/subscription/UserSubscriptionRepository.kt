@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.RowMapperResultSetExtractor
 import org.springframework.stereotype.Repository

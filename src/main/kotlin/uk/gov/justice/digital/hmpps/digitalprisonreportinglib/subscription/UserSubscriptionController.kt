@@ -6,9 +6,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -37,14 +34,13 @@ class UserSubscriptionController(
   fun subscribe(
     @RequestBody body: AnySubscribableRequest,
     httpRequest: HttpServletRequest,
+  ) = userSubscriptionService.subscribe(
+    UserSubscriptionRequest(
+      httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+      reportId = body.reportId,
+      reportVariantId = body.reportVariantId,
+    ),
   )
-    = userSubscriptionService.subscribe(
-      UserSubscriptionRequest(
-        httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
-        reportId = body.reportId,
-        reportVariantId = body.reportVariantId,
-      ),
-    )
 
   @ConditionalOnBean(UserSubscriptionService::class)
   @PostMapping("/user/unsubscribe")
@@ -73,8 +69,7 @@ class UserSubscriptionController(
   )
   fun subscriptions(
     httpRequest: HttpServletRequest,
-  ) =
-    userSubscriptionService.findByUserId(
-        httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
-      )
+  ) = userSubscriptionService.findByUserId(
+    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+  )
 }

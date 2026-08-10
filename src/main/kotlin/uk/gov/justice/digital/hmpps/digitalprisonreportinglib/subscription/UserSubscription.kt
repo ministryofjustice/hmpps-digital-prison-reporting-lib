@@ -23,5 +23,5 @@ data class UserReportSubscription(
   val reportVariantId: String,
   val tableId: String,
   val reportStatus: String,
-  val reportUpdatedTime: LocalDateTime?=null,
+  val reportUpdatedTime: LocalDateTime? = null,
 )

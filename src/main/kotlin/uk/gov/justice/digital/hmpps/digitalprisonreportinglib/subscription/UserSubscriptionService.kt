@@ -33,13 +33,13 @@ class UserSubscriptionService(
     )
   }
 
-  fun findByUserId(userId: String): List<UserReportSubscription> = userSubscriptionRepository.findByUserId(userId).map{userSubscription ->
-      UserReportSubscription(
-        userId = userSubscription.userId,
-        reportId = userSubscription.reportId,
-        reportVariantId = userSubscription.reportVariantId,
-        tableId = "",
-        reportStatus = userSubscription.status,
-      )
+  fun findByUserId(userId: String): List<UserReportSubscription> = userSubscriptionRepository.findByUserId(userId).map { userSubscription ->
+    UserReportSubscription(
+      userId = userSubscription.userId,
+      reportId = userSubscription.reportId,
+      reportVariantId = userSubscription.reportVariantId,
+      tableId = "",
+      reportStatus = userSubscription.status,
+    )
   }
 }
