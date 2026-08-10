@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHel
 import java.sql.ResultSet
 
 @Repository
-@ConditionalOnBean(UserSubscriptionService::class)
 class UserSubscriptionRepository : RepositoryHelper() {
 
   companion object {
@@ -30,7 +29,7 @@ class UserSubscriptionRepository : RepositoryHelper() {
     const val INSERT_USER_SUBSCRIPTION = """
       INSERT INTO subscription_.user_subscription
       (id, user_id, report_id, report_variant_id, status, created_time)
-      VALUES ;;insertAttrValues;;;
+      VALUES (:id, :user_id, :report_id, :report_variant_id, :status, :created_time)
     """
     const val MERGE_USER_SUBSCRIPTION = """
       MERGE INTO subscription_.user_subscription
@@ -84,9 +83,7 @@ class UserSubscriptionRepository : RepositoryHelper() {
 
     template.update(
       """
-      BEGIN READ WRITE;
         $INSERT_USER_SUBSCRIPTION
-      COMMIT TRANSACTION
       """.trimIndent(),
       namedParameters,
     )
@@ -126,6 +123,6 @@ class UserSubscriptionRowMapper : RowMapper<UserSubscription> {
     val status = rs.getString("status")
     val createdAt = rs.getTimestamp("created_time")
     val updatedAt = rs.getTimestamp("updated_time")
-    return UserSubscription(id, userId, reportId, reportVariantId, status, createdAt.toLocalDateTime(), updatedAt.toLocalDateTime())
+    return UserSubscription(id, userId, reportId, reportVariantId, status, createdAt.toLocalDateTime(), updatedAt?.toLocalDateTime())
   }
 }

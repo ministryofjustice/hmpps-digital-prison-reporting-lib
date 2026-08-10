@@ -4,9 +4,13 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -16,12 +20,13 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.U
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 
 @Validated
-@ConditionalOnProperty("spring.datasource.usersubscription.url")
 @RestController
 @Tag(name = "User Subscription API")
 class UserSubscriptionController(
   val userSubscriptionService: UserSubscriptionService,
   val manageUsersClient: ManageUsersClient,
+  @Value("\${dpr.lib.hasProbationDatasources}")
+  val hasProbationDatasources: Boolean,
 ) {
   @ConditionalOnBean(UserSubscriptionService::class)
   @PostMapping("/user/subscribe")
@@ -32,15 +37,14 @@ class UserSubscriptionController(
   fun subscribe(
     @RequestBody body: AnySubscribableRequest,
     httpRequest: HttpServletRequest,
-  ) {
-    userSubscriptionService.subscribe(
+  )
+    = userSubscriptionService.subscribe(
       UserSubscriptionRequest(
-        httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
+        httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
         reportId = body.reportId,
         reportVariantId = body.reportVariantId,
       ),
     )
-  }
 
   @ConditionalOnBean(UserSubscriptionService::class)
   @PostMapping("/user/unsubscribe")
@@ -54,10 +58,23 @@ class UserSubscriptionController(
   ) {
     userSubscriptionService.unsubscribe(
       UserSubscriptionRequest(
-        httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
+        httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
         reportId = body.reportId,
         reportVariantId = body.reportVariantId,
       ),
     )
   }
+
+  @ConditionalOnBean(UserSubscriptionService::class)
+  @GetMapping("/user/subscriptions")
+  @Operation(
+    description = "User Subscriptions",
+    security = [ SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun subscriptions(
+    httpRequest: HttpServletRequest,
+  ) =
+    userSubscriptionService.findByUserId(
+        httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+      )
 }

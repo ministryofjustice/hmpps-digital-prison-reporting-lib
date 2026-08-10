@@ -8,7 +8,7 @@ class UserSubscriptionService(
   private val userSubscriptionRepository: UserSubscriptionRepository,
 ) {
 
-  fun subscribe(request: UserSubscriptionRequest): UserSubscription? {
+  fun subscribe(request: UserSubscriptionRequest): UserSubscription {
     val userSubscription = UserSubscription(
       id = UUID.randomUUID().toString(),
       userId = request.userId,
@@ -17,7 +17,7 @@ class UserSubscriptionService(
       status = UserSubscriptionStatus.SUBSCRIBED.name,
       createdTime = LocalDateTime.now(),
     )
-    return userSubscriptionRepository.create(userSubscription)
+    return userSubscriptionRepository.create(userSubscription)!!
   }
 
   fun unsubscribe(request: UserSubscriptionRequest): UserSubscription? = userSubscriptionRepository.findByUserIdAndReport(
@@ -33,5 +33,13 @@ class UserSubscriptionService(
     )
   }
 
-  fun findByUserId(userId: String): List<UserReportSubscription> = emptyList()
+  fun findByUserId(userId: String): List<UserReportSubscription> = userSubscriptionRepository.findByUserId(userId).map{userSubscription ->
+      UserReportSubscription(
+        userId = userSubscription.userId,
+        reportId = userSubscription.reportId,
+        reportVariantId = userSubscription.reportVariantId,
+        tableId = "",
+        reportStatus = userSubscription.status,
+      )
+  }
 }
