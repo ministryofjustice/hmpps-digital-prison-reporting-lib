@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 import jakarta.validation.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -89,7 +90,7 @@ class AthenaApiRepositoryTest {
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
     prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
-  ) = """          /* dpdId dpdName reportId reportName */
+  ) = """          /* QUERY_INFO|||dpdId|||dpdName|||testdatasource|||testdb|||testcatalog|||reportId|||reportName|||false|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -103,7 +104,7 @@ SELECT *
           );
   """.trimIndent()
 
-  private fun multiphaseSqlNonLastQuery() = """          /* dpdId dpdName reportId reportName */
+  private fun multiphaseSqlNonLastQuery() = """          /* QUERY_INFO|||dpdId|||dpdName|||testdatasource|||testdb|||testcatalog|||reportId|||reportName|||false|||END */
           CREATE TABLE AwsDataCatalog.reports._a6227417_bdac_40bb_bc81_49c750daacd7 
           WITH (
             format = 'PARQUET'
@@ -151,6 +152,14 @@ SELECT * FROM dataset_'
   private val dataset = mock<Dataset>()
   private val datasource = mock<Datasource>()
   private val report = mock<Report>()
+
+  @BeforeEach
+  fun beforeEach() {
+    whenever(datasource.name).thenReturn("testdatasource")
+    whenever(datasource.database).thenReturn("testdb")
+    whenever(datasource.catalog).thenReturn("testcatalog")
+    whenever(productDefinition.datasource).thenReturn(datasource)
+  }
 
   @ParameterizedTest
   @CsvSource(
@@ -495,15 +504,15 @@ SELECT * FROM dataset_'
 
   @Test
   fun `executeQueryAsync should run a multiphase query when there are two multiphase queries defined`() {
-    val database = "db"
-    val catalog = "catalog"
+    val database = "testdb"
+    val catalog = "testcatalog"
     val startQueryExecutionRequest = setupBasicMocks(
       database = database,
       catalog = catalog,
       query = multiphaseSqlNonLastQuery(),
     )
-    val datasource1 = Datasource("id", "name", database, catalog)
-    val datasource2 = Datasource("id2", "name2", database, catalog, DatasourceConnection.AWS_DATA_CATALOG)
+    val datasource1 = Datasource("id", "testdatasource", database, catalog)
+    val datasource2 = Datasource("id2", "testdatasource", database, catalog, DatasourceConnection.AWS_DATA_CATALOG)
     val allDatasources = listOf(datasource1, datasource2)
     val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
@@ -551,11 +560,11 @@ SELECT * FROM dataset_'
           values (
             'someId',
             'someId',
-            'name',
-            'catalog',
-            'db',
+            'testdatasource',
+            'testcatalog',
+            'testdb',
             0,
-            'ICAgICAgICAgIC8qIGRwZElkIGRwZE5hbWUgcmVwb3J0SWQgcmVwb3J0TmFtZSAqLwogICAgICAgICAgQ1JFQVRFIFRBQkxFIEF3c0RhdGFDYXRhbG9nLnJlcG9ydHMuX2E2MjI3NDE3X2JkYWNfNDBiYl9iYzgxXzQ5Yzc1MGRhYWNkNyAKICAgICAgICAgIFdJVEggKAogICAgICAgICAgICBmb3JtYXQgPSAnUEFSUVVFVCcKICAgICAgICAgICkgCiAgICAgICAgICBBUyAoCiAgICAgICAgICBTRUxFQ1QgKiBGUk9NIFRBQkxFKHN5c3RlbS5xdWVyeShxdWVyeSA9PgogICAgICAgICAgICdXSVRIIGNvbnRleHRfIEFTICgKICAgICAgU0VMRUNUIAogICAgICAnJ2FVc2VyJycgQVMgdXNlcm5hbWUsIAogICAgICAnJ2FDYXNlbG9hZCcnIEFTIGNhc2Vsb2FkLCAKICAgICAgJydHRU5FUkFMJycgQVMgYWNjb3VudF90eXBlIAogICAgICBGUk9NIERVQUwKICAgICAgKSxwcm9tcHRfIEFTIChTRUxFQ1QgJycnJyBGUk9NIERVQUwpLGRhdGFzZXRfIEFTIChTRUxFQ1QgY29sdW1uX2EsY29sdW1uX2IgRlJPTSBzY2hlbWFfYS50YWJsZV9hKQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfJwogICAgICAgICAgICkpIAogICAgICAgICAgKTs=',
+            'ICAgICAgICAgIC8qIFFVRVJZX0lORk98fHxkcGRJZHx8fGRwZE5hbWV8fHx0ZXN0ZGF0YXNvdXJjZXx8fHRlc3RkYnx8fHRlc3RjYXRhbG9nfHx8cmVwb3J0SWR8fHxyZXBvcnROYW1lfHx8ZmFsc2V8fHxFTkQgKi8KICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgZm9ybWF0ID0gJ1BBUlFVRVQnCiAgICAgICAgICApIAogICAgICAgICAgQVMgKAogICAgICAgICAgU0VMRUNUICogRlJPTSBUQUJMRShzeXN0ZW0ucXVlcnkocXVlcnkgPT4KICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICApKSAKICAgICAgICAgICk7',
             0,
             SYSDATE
           )"""
@@ -574,11 +583,11 @@ SELECT * FROM dataset_'
           values (
             'someId',
             
-            'name2',
-            'catalog',
-            'db',
+            'testdatasource',
+            'testcatalog',
+            'testdb',
             1,
-            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KSxyZXBvcnRfIEFTIChTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfKSxwb2xpY3lfIEFTIChTRUxFQ1QgKiBGUk9NIHJlcG9ydF8gV0hFUkUgMT0xKSxmaWx0ZXJfIEFTIChTRUxFQ1QgKiBGUk9NIHBvbGljeV8gV0hFUkUgMT0xKQpTRUxFQ1QgKgogICAgICAgICAgRlJPTSBmaWx0ZXJfIE9SREVSIEJZIGNvbHVtbl9hIGFzYwogICAgICAgICAgICAgICAgKQ==',
+            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KSxyZXBvcnRfIEFTIChTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfKSxwb2xpY3lfIEFTIChTRUxFQ1QgKiBGUk9NIHJlcG9ydF8gV0hFUkUgMT0xKSxmaWx0ZXJfIEFTIChTRUxFQ1QgKiBGUk9NIHBvbGljeV8gV0hFUkUgMT0xKQpTRUxFQ1QgKgogICAgICAgICAgRlJPTSBmaWx0ZXJfIE9SREVSIEJZIGNvbHVtbl9hIGFzYwogICAgICAgICAgICAgICAgKQ==',
             0,
             SYSDATE
           )"""
@@ -594,16 +603,16 @@ SELECT * FROM dataset_'
 
   @Test
   fun `executeQueryAsync should run a multiphase query when there are three multiphase queries defined`() {
-    val database = "db"
-    val catalog = "catalog"
+    val database = "testdb"
+    val catalog = "testcatalog"
     val startQueryExecutionRequest = setupBasicMocks(
       database = database,
       catalog = catalog,
       query = multiphaseSqlNonLastQuery(),
     )
-    val datasource = Datasource("id", "name", database, catalog, DatasourceConnection.FEDERATED, dialect = SqlDialect.ORACLE11g)
-    val datasource2 = Datasource("id2", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
-    val datasource3 = Datasource("id3", "name", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
+    val datasource = Datasource("id", "testdatasource", database, catalog, DatasourceConnection.FEDERATED, dialect = SqlDialect.ORACLE11g)
+    val datasource2 = Datasource("id2", "testdatasource", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
+    val datasource3 = Datasource("id3", "testdatasource", database, catalog, DatasourceConnection.AWS_DATA_CATALOG, dialect = SqlDialect.ATHENA3)
     val allDatasources = listOf(datasource, datasource2, datasource3)
     val tableId2 = "tableId2"
     val tableId3 = "tableId3"
@@ -654,11 +663,11 @@ SELECT * FROM dataset_'
           values (
             'someId',
             'someId',
-            'name',
-            'catalog',
-            'db',
+            'testdatasource',
+            'testcatalog',
+            'testdb',
             0,
-            'ICAgICAgICAgIC8qIGRwZElkIGRwZE5hbWUgcmVwb3J0SWQgcmVwb3J0TmFtZSAqLwogICAgICAgICAgQ1JFQVRFIFRBQkxFIEF3c0RhdGFDYXRhbG9nLnJlcG9ydHMuX2E2MjI3NDE3X2JkYWNfNDBiYl9iYzgxXzQ5Yzc1MGRhYWNkNyAKICAgICAgICAgIFdJVEggKAogICAgICAgICAgICBmb3JtYXQgPSAnUEFSUVVFVCcKICAgICAgICAgICkgCiAgICAgICAgICBBUyAoCiAgICAgICAgICBTRUxFQ1QgKiBGUk9NIFRBQkxFKHN5c3RlbS5xdWVyeShxdWVyeSA9PgogICAgICAgICAgICdXSVRIIGNvbnRleHRfIEFTICgKICAgICAgU0VMRUNUIAogICAgICAnJ2FVc2VyJycgQVMgdXNlcm5hbWUsIAogICAgICAnJ2FDYXNlbG9hZCcnIEFTIGNhc2Vsb2FkLCAKICAgICAgJydHRU5FUkFMJycgQVMgYWNjb3VudF90eXBlIAogICAgICBGUk9NIERVQUwKICAgICAgKSxwcm9tcHRfIEFTIChTRUxFQ1QgJycnJyBGUk9NIERVQUwpLGRhdGFzZXRfIEFTIChTRUxFQ1QgY29sdW1uX2EsY29sdW1uX2IgRlJPTSBzY2hlbWFfYS50YWJsZV9hKQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfJwogICAgICAgICAgICkpIAogICAgICAgICAgKTs=',
+            'ICAgICAgICAgIC8qIFFVRVJZX0lORk98fHxkcGRJZHx8fGRwZE5hbWV8fHx0ZXN0ZGF0YXNvdXJjZXx8fHRlc3RkYnx8fHRlc3RjYXRhbG9nfHx8cmVwb3J0SWR8fHxyZXBvcnROYW1lfHx8ZmFsc2V8fHxFTkQgKi8KICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgZm9ybWF0ID0gJ1BBUlFVRVQnCiAgICAgICAgICApIAogICAgICAgICAgQVMgKAogICAgICAgICAgU0VMRUNUICogRlJPTSBUQUJMRShzeXN0ZW0ucXVlcnkocXVlcnkgPT4KICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICApKSAKICAgICAgICAgICk7',
             0,
             SYSDATE
           )"""
@@ -677,11 +686,11 @@ SELECT * FROM dataset_'
           values (
             'someId',
             
-            'name',
-            'catalog',
-            'db',
+            'testdatasource',
+            'testcatalog',
+            'testdb',
             1,
-            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfCiAgICAgICAgICAgICAgICAp',
+            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfCiAgICAgICAgICAgICAgICAp',
             0,
             SYSDATE
           )"""
@@ -700,11 +709,11 @@ SELECT * FROM dataset_'
           values (
             'someId',
             
-            'name',
-            'catalog',
-            'db',
+            'testdatasource',
+            'testcatalog',
+            'testdb',
             2,
-            'ICAgICAgICAgICAgLyogZHBkSWQgZHBkTmFtZSByZXBvcnRJZCByZXBvcnROYW1lICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMwogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgKyAxIGFzIHRvdGFsX3BsdXNfb25lIGZyb20gdGFibGVJZDIpLHJlcG9ydF8gQVMgKFNFTEVDVCAqIEZST00gZGF0YXNldF8pLHBvbGljeV8gQVMgKFNFTEVDVCAqIEZST00gcmVwb3J0XyBXSEVSRSAxPTEpLGZpbHRlcl8gQVMgKFNFTEVDVCAqIEZST00gcG9saWN5XyBXSEVSRSAxPTEpClNFTEVDVCAqCiAgICAgICAgICBGUk9NIGZpbHRlcl8gT1JERVIgQlkgY29sdW1uX2EgYXNjCiAgICAgICAgICAgICAgICAp',
+            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMwogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgKyAxIGFzIHRvdGFsX3BsdXNfb25lIGZyb20gdGFibGVJZDIpLHJlcG9ydF8gQVMgKFNFTEVDVCAqIEZST00gZGF0YXNldF8pLHBvbGljeV8gQVMgKFNFTEVDVCAqIEZST00gcmVwb3J0XyBXSEVSRSAxPTEpLGZpbHRlcl8gQVMgKFNFTEVDVCAqIEZST00gcG9saWN5XyBXSEVSRSAxPTEpClNFTEVDVCAqCiAgICAgICAgICBGUk9NIGZpbHRlcl8gT1JERVIgQlkgY29sdW1uX2EgYXNjCiAgICAgICAgICAgICAgICAp',
             0,
             SYSDATE
           )"""
@@ -721,15 +730,15 @@ SELECT * FROM dataset_'
 
   @Test
   fun `executeQueryAsync should throw an error when a subsequent multiphase query does not define a datasource connection`() {
-    val database = "db"
-    val catalog = "catalog"
+    val database = "testdb"
+    val catalog = "testcatalog"
     setupBasicMocks(
       database = database,
       catalog = catalog,
       query = multiphaseSqlNonLastQuery(),
     )
-    val datasource1 = Datasource("id", "name", database, catalog)
-    val datasource2 = Datasource("id2", "name2", database, catalog)
+    val datasource1 = Datasource("id", "testdatasource", database, catalog)
+    val datasource2 = Datasource("id2", "testdatasource", database, catalog)
     val allDatasources = listOf(datasource1, datasource2)
     val query2 = "SELECT count(*) as total from \${table[0]}"
     val multiphaseQuery = listOf(
@@ -769,15 +778,15 @@ SELECT * FROM dataset_'
 
   @Test
   fun `executeQueryAsync should throw an error when a multiphase query references an invalid table index`() {
-    val database = "db"
-    val catalog = "catalog"
+    val database = "testdb"
+    val catalog = "testcatalog"
     setupBasicMocks(
       database = database,
       catalog = catalog,
       query = multiphaseSqlNonLastQuery(),
     )
-    val datasource1 = Datasource("id", "name", database, catalog)
-    val datasource2 = Datasource("id2", "name2", database, catalog, DatasourceConnection.FEDERATED)
+    val datasource1 = Datasource("id", "testdatasource", database, catalog)
+    val datasource2 = Datasource("id2", "testdatasource", database, catalog, DatasourceConnection.FEDERATED)
     val allDatasources = listOf(datasource1, datasource2)
     val query2 = "SELECT count(*) as total from \${table[5]}"
     val multiphaseQuery = listOf(
