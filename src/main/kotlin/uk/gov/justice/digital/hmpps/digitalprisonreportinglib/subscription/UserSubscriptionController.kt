@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -25,7 +24,7 @@ class UserSubscriptionController(
   @Value("\${dpr.lib.hasProbationDatasources}")
   val hasProbationDatasources: Boolean,
 ) {
-  @ConditionalOnBean(UserSubscriptionService::class)
+
   @PostMapping("/user/subscribe")
   @Operation(
     description = "Subscribe user to report",
@@ -42,7 +41,6 @@ class UserSubscriptionController(
     ),
   )
 
-  @ConditionalOnBean(UserSubscriptionService::class)
   @PostMapping("/user/unsubscribe")
   @Operation(
     description = "Unsubscribe user to report",
@@ -61,7 +59,6 @@ class UserSubscriptionController(
     )
   }
 
-  @ConditionalOnBean(UserSubscriptionService::class)
   @GetMapping("/user/subscriptions")
   @Operation(
     description = "User Subscriptions",
@@ -70,6 +67,6 @@ class UserSubscriptionController(
   fun subscriptions(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.findByUserId(
-    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+    httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
   )
 }
