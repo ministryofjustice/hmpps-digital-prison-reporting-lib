@@ -49,15 +49,13 @@ class UserSubscriptionController(
   fun unsubscribe(
     @RequestBody body: AnySubscribableRequest,
     httpRequest: HttpServletRequest,
-  ) {
-    userSubscriptionService.unsubscribe(
-      UserSubscriptionRequest(
-        httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
-        reportId = body.reportId,
-        reportVariantId = body.reportVariantId,
-      ),
-    )
-  }
+  ) = userSubscriptionService.unsubscribe(
+    UserSubscriptionRequest(
+      httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+      reportId = body.reportId,
+      reportVariantId = body.reportVariantId,
+    ),
+  )
 
   @GetMapping("/user/subscriptions")
   @Operation(

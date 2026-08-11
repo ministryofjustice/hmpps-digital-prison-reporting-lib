@@ -43,6 +43,12 @@ class SubscriptionIntegrationTest : IntegrationSystemTestBase() {
   }
 
   val userId = "request-user"
+  val payload = """
+      {
+      "reportId":"report1234",
+      "reportVariantId":"reportVariant1234"
+      }
+  """.trimIndent()
 
   @BeforeEach
   override fun setup() {
@@ -64,13 +70,6 @@ class SubscriptionIntegrationTest : IntegrationSystemTestBase() {
 
   @Test
   fun `Subscribe to a report for user`() {
-    val payload = """
-      {
-      "reportId":"report1234",
-      "reportVariantId":"reportVariant1234"
-      }
-    """.trimIndent()
-
     val result = webTestClient.post()
       .uri("/user/subscribe")
       .contentType(MediaType.APPLICATION_JSON)
@@ -82,6 +81,34 @@ class SubscriptionIntegrationTest : IntegrationSystemTestBase() {
       .returnResult()
     assertThat(result.responseBody).isNotNull()
     assertThat(result.responseBody!!.userId).isEqualTo("request-user")
+    assertThat(result.responseBody!!.status).isEqualTo("SUBSCRIBED")
+  }
+
+  @Test
+  fun `Unsubscribe to a report for user`() {
+    val us = userSubscriptionRepository.create(
+      UserSubscription(
+        id = "1234",
+        userId = userId,
+        reportId = "report1234",
+        reportVariantId = "reportVariant1234",
+        status = UserSubscriptionStatus.SUBSCRIBED.name,
+        createdTime = LocalDateTime.now(),
+      ),
+    )
+
+    val result = webTestClient.post()
+      .uri("/user/unsubscribe")
+      .contentType(MediaType.APPLICATION_JSON)
+      .bodyValue(payload)
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus().isOk
+      .expectBody<UserSubscription>()
+      .returnResult()
+    assertThat(result.responseBody).isNotNull()
+    assertThat(result.responseBody!!.userId).isEqualTo("request-user")
+    assertThat(result.responseBody!!.status).isEqualTo("UNSUBSCRIBED")
   }
 
   @Test
