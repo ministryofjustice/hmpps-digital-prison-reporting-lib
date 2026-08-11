@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.6.0
+- Added User Subscription Endpoints
+
 # 17.5.3
 - Fixed issue with match condition behaving inconsistently for roles versus any other cases.  
 
