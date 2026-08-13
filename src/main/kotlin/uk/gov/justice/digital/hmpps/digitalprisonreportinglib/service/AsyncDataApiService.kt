@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.AsyncDownloadContext
 import java.io.Writer
-import java.util.Base64
 
 @Service
 @ConditionalOnBean(value = [RedshiftDataApiRepository::class, AthenaApiRepository::class])
@@ -369,7 +368,7 @@ class AsyncDataApiService(
   fun checkForScheduledDataset(
     productDefinition: SingleReportProductDefinition,
   ): String? {
-    val generatedTableId = generateScheduledDatasetId(productDefinition)
+    val generatedTableId = tableIdGenerator.generateScheduledDatasetId(productDefinition)
     // check if dataset configured for scheduling and table exists
     return if (productDefinition.hasDatasetScheduled() && !redshiftDataApiRepository.isTableMissing(generatedTableId.lowercase())) {
       // generate external table id
@@ -382,13 +381,6 @@ class AsyncDataApiService(
   fun SingleReportProductDefinition.hasDatasetScheduled(): Boolean {
     val reportScheduled = this.scheduled ?: false
     return reportScheduled && this.reportDataset.schedule != null
-  }
-
-  fun generateScheduledDatasetId(definition: SingleReportProductDefinition): String {
-    val id = "${definition.id}:${definition.reportDataset.id}"
-    val encodedId = Base64.getEncoder().encodeToString(id.toByteArray())
-    val updatedId = encodedId.replace("=", "_")
-    return "_$updatedId"
   }
 
   private fun getStatementExecutionStatus(
