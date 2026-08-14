@@ -13,6 +13,7 @@ data class UserSubscription(
   val reportId: String,
   val reportVariantId: String,
   val status: String,
+  val tableId: String,
   val createdTime: LocalDateTime,
   val updatedTime: LocalDateTime? = null,
 )

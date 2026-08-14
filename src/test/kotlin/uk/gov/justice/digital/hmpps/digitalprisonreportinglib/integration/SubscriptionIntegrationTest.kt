@@ -38,15 +38,17 @@ class SubscriptionIntegrationTest : IntegrationSystemTestBase() {
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
       registry.add("dpr.lib.aws.accountId") { "1" }
-      registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+      registry.add("dpr.lib.definition.locations") { "productDefinitionDatamart.json" }
     }
   }
 
   val userId = "request-user"
+  val reportId = "external-movements"
+  val reportVariantId = "last-month"
   val payload = """
       {
-      "reportId":"report1234",
-      "reportVariantId":"reportVariant1234"
+      "reportId":"$reportId",
+      "reportVariantId":"$reportVariantId"
       }
   """.trimIndent()
 
@@ -90,8 +92,9 @@ class SubscriptionIntegrationTest : IntegrationSystemTestBase() {
       UserSubscription(
         id = "1234",
         userId = userId,
-        reportId = "report1234",
-        reportVariantId = "reportVariant1234",
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        tableId = "tableId",
         status = UserSubscriptionStatus.SUBSCRIBED.name,
         createdTime = LocalDateTime.now(),
       ),
@@ -117,8 +120,9 @@ class SubscriptionIntegrationTest : IntegrationSystemTestBase() {
       UserSubscription(
         id = "1234",
         userId = userId,
-        reportId = "report1234",
-        reportVariantId = "reportVariant1234",
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        tableId = "tableId",
         status = UserSubscriptionStatus.SUBSCRIBED.name,
         createdTime = LocalDateTime.now(),
       ),
@@ -135,7 +139,7 @@ class SubscriptionIntegrationTest : IntegrationSystemTestBase() {
 
     assertThat(userSubscriptions).size().isEqualTo(1)
     assertThat(userSubscriptions!!.first().userId).isEqualTo("request-user")
-    assertThat(userSubscriptions!!.first().reportId).isEqualTo("report1234")
-    assertThat(userSubscriptions!!.first().reportVariantId).isEqualTo("reportVariant1234")
+    assertThat(userSubscriptions!!.first().reportId).isEqualTo(reportId)
+    assertThat(userSubscriptions!!.first().reportVariantId).isEqualTo(reportVariantId)
   }
 }

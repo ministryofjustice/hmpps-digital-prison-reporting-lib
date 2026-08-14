@@ -65,6 +65,6 @@ class UserSubscriptionController(
   fun subscriptions(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.findByUserId(
-    httpRequest.getUserContext(manageUsersClient, false).userInfo.username,
+    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
   )
 }

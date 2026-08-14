@@ -1537,7 +1537,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       dataset = dataset(),
     )
 
-    val actual = asyncDataApiService.generateScheduledDatasetId(definition)
+    val actual = asyncDataApiService.tableIdGenerator.generateScheduledDatasetId(definition)
     assertEquals("_MToxMA__", actual)
   }
 
