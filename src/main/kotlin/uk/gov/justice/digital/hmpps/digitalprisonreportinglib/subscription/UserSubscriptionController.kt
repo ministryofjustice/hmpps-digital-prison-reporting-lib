@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AnySubscribableRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UserSubscriptionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
@@ -35,7 +36,14 @@ class UserSubscriptionController(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.subscribe(
     UserSubscriptionRequest(
-      httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+      httpRequest.getUserContext(
+        manageUsersClient,
+        hasProbationDatasources,
+        DataProductReportableInformation(
+          id = body.reportId,
+          variantId = body.reportVariantId,
+        ),
+      ).userInfo.username,
       reportId = body.reportId,
       reportVariantId = body.reportVariantId,
     ),
@@ -51,7 +59,14 @@ class UserSubscriptionController(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.unsubscribe(
     UserSubscriptionRequest(
-      httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+      httpRequest.getUserContext(
+        manageUsersClient,
+        hasProbationDatasources,
+        DataProductReportableInformation(
+          id = body.reportId,
+          variantId = body.reportVariantId,
+        ),
+      ).userInfo.username,
       reportId = body.reportId,
       reportVariantId = body.reportVariantId,
     ),
@@ -65,6 +80,13 @@ class UserSubscriptionController(
   fun subscriptions(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.findByUserId(
-    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources).userInfo.username,
+    httpRequest.getUserContext(
+      manageUsersClient,
+      hasProbationDatasources,
+      DataProductReportableInformation(
+        id = "",
+        variantId = "",
+      ),
+    ).userInfo.username,
   )
 }

@@ -9,6 +9,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.then
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -108,6 +109,7 @@ class ReportDefinitionServiceTest {
     emptyList(),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation("", "", mock(), "", ""),
   )
 
   @BeforeEach

@@ -10,6 +10,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardSectionDefinition
@@ -84,6 +85,7 @@ class DashboardDefinitionMapperTest {
     listOf("ROLE_PRISONS_REPORTING_USER"),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation("", "", mock(), "", ""),
   )
 
   @Test

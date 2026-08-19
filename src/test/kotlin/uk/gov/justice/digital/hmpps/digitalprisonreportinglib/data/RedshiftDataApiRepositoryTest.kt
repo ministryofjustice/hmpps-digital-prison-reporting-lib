@@ -21,6 +21,7 @@ import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementReque
 import software.amazon.awssdk.services.redshiftdata.model.DescribeStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementRequest
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_POLICY_ENGINE_RESULT
@@ -56,7 +57,7 @@ class RedshiftDataApiRepositoryTest {
       prefilter: ReportFilter? =
         ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
     ) = """
-                  /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||END */
+                  /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||NORMAL|||END */
                   CREATE EXTERNAL TABLE reports.$tableId 
                   STORED AS parquet 
                   LOCATION 's3://dpr-working-development/reports/$tableId/' 
@@ -110,6 +111,13 @@ class RedshiftDataApiRepositoryTest {
     emptyList(),
     AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation(
+      productDefinitionId,
+      productDefinitionName,
+      datasource,
+      reportId,
+      reportName,
+    ),
   )
 
   @BeforeEach
@@ -184,7 +192,7 @@ class RedshiftDataApiRepositoryTest {
     val nameDynamicFilter = Filter("name", "LastNa", FilterType.DYNAMIC)
     val executionId = "someId"
     val sqlStatement =
-      """          /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||END */
+      """          /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||NORMAL|||END */
           CREATE EXTERNAL TABLE reports.$TABLE_ID 
           STORED AS parquet 
           LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
@@ -263,7 +271,7 @@ SELECT *
     val policyEngineResult = "(establishment_id='ABC')"
     val executionId = "someId"
     val sqlStatement =
-      """          /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||dashboardId|||dashboardName|||false|||END */
+      """          /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||dashboardId|||dashboardName|||false|||NORMAL|||END */
           CREATE EXTERNAL TABLE reports.$TABLE_ID 
           STORED AS parquet 
           LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
@@ -363,7 +371,7 @@ SELECT *
       REDSHIFT_DATA_API_SECRET_ARN,
     )
     val finalQuery =
-      """                  /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||END */
+      """                  /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||NORMAL|||END */
                   CREATE EXTERNAL TABLE reports.$TABLE_ID 
                   STORED AS parquet 
                   LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
@@ -427,7 +435,7 @@ SELECT *
       REDSHIFT_DATA_API_SECRET_ARN,
     )
     val finalQuery =
-      """                  /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||END */
+      """                  /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||NORMAL|||END */
                   CREATE EXTERNAL TABLE reports.$TABLE_ID 
                   STORED AS parquet 
                   LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
@@ -530,7 +538,7 @@ SELECT *
     val standardFilter = Filter("DEF", "r", FilterType.STANDARD)
     val executionId = "someId"
     val sqlStatement =
-      """          /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||END */
+      """          /* QUERY_INFO|||dpdId|||dpdName|||datasource1|||database1|||catalog1|||reportId|||reportName|||false|||NORMAL|||END */
           CREATE EXTERNAL TABLE reports.$TABLE_ID 
           STORED AS parquet 
           LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 

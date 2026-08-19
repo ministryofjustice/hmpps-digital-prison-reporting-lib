@@ -20,6 +20,7 @@ import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -119,6 +120,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     listOf("ROLE_PRISONS_REPORTING_USER"),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation(reportId, "", mock(), reportVariantId, ""),
   )
 
   @BeforeEach
@@ -569,6 +571,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       listOf("USER-ROLE-1"),
       AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policyEngineResult = "TRUE"
     val reportId = "definition-policy-no-action"
@@ -1486,6 +1489,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       emptyList(),
       AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation(dashboardId, "", singleReportProductDefinition.datasource, dashboardReportId, ""),
     )
 
     whenever(

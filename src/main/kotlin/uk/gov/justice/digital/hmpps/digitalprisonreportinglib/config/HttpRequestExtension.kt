@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config
 
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.security.core.context.SecurityContextHolder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUse
 fun HttpServletRequest.getUserContext(
   manageUsersClient: ManageUsersClient,
   hasProbationDatasources: Boolean,
+  dataProductReportableInformation: DataProductReportableInformation,
 ): ExecutionContext {
   val authToken = SecurityContextHolder.getContext().authentication?.let {
     it as? DprSystemAuthAwareAuthenticationToken
@@ -24,6 +26,7 @@ fun HttpServletRequest.getUserContext(
         manageUsersClient.getUsersRoles(it),
         manageUsersClient.getUserInfo(it),
         hasProbationDatasources,
+        dataProductReportableInformation,
       )
     } ?: throw UserAuthorisationException("userName on auth token was blank or did not exist")
 }
