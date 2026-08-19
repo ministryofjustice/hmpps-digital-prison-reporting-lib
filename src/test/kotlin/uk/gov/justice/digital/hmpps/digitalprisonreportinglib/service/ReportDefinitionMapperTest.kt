@@ -13,6 +13,7 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
@@ -280,6 +281,7 @@ class ReportDefinitionMapperTest {
     emptyList(),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation(singleReportProductDefinition.id, singleReportProductDefinition.name, singleReportProductDefinition.datasource, singleReportProductDefinition.report.id, singleReportProductDefinition.report.name),
   )
 
   val mapper = ReportDefinitionMapper(

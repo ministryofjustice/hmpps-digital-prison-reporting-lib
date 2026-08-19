@@ -22,6 +22,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
@@ -127,6 +128,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
   private val asyncDataApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService)
 
+  private val datasource: Datasource = mock<Datasource>()
   private val executionContext = ExecutionContext(
     CaseloadResponse(
       username = testUsername,
@@ -140,6 +142,13 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     listOf("ROLE_PRISONS_REPORTING_USER"),
     AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation(
+      reportId,
+      "",
+      datasource,
+      reportVariantId,
+      "",
+    ),
   )
 
   @BeforeEach
@@ -243,6 +252,13 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       listOf("ROLE_PRISONS_REPORTING_USER"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation(
+        reportId,
+        "",
+        datasource,
+        reportVariantId,
+        "",
+      ),
     )
     whenever(
       redshiftDataApiRepository.executeQueryAsync(
@@ -1418,7 +1434,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
     verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
-    verify(configuredApiRepository).createSummaryTable(any(), any(), any(), any())
+    verify(configuredApiRepository).createSummaryTable(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1456,7 +1472,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       )
     }
     verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
-    verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1493,7 +1509,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       )
     }
     verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
-    verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any(), any())
   }
 
   @Test

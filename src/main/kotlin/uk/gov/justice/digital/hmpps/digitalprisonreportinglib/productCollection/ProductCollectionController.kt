@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 
 @Validated
@@ -28,7 +29,16 @@ class ProductCollectionController(
     description = "Gets all product collections",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  fun getCollections(httpRequest: HttpServletRequest): Collection<ProductCollectionSummary> = productCollectionService.getProductCollections(httpRequest.getUserContext(manageUsersClient, hasProbationDatasources))
+  fun getCollections(httpRequest: HttpServletRequest): Collection<ProductCollectionSummary> = productCollectionService.getProductCollections(
+    httpRequest.getUserContext(
+      manageUsersClient,
+      hasProbationDatasources,
+      DataProductReportableInformation(
+        id = "",
+        variantId = "",
+      ),
+    ),
+  )
 
   @GetMapping("/productCollections/{id}")
   @Operation(

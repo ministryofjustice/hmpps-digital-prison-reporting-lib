@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
@@ -116,7 +117,14 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+          executionContext = httpRequest.getUserContext(
+            manageUsersClient,
+            hasProbationDatasources,
+            DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
+          ),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -169,7 +177,14 @@ class DataApiSyncController(
           reportId = reportId,
           reportVariantId = reportVariantId,
           filters = filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+          executionContext = httpRequest.getUserContext(
+            manageUsersClient,
+            hasProbationDatasources,
+            DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
+          ),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -234,7 +249,14 @@ class DataApiSyncController(
           pageSize = pageSize,
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+          executionContext = httpRequest.getUserContext(
+            manageUsersClient,
+            hasProbationDatasources,
+            DataProductReportableInformation(
+              id = reportId,
+              variantId = dashboardId,
+            ),
+          ),
           dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
@@ -285,7 +307,14 @@ class DataApiSyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      executionContext = request.getUserContext(manageUsersClient, hasProbationDatasources),
+      executionContext = request.getUserContext(
+        manageUsersClient,
+        hasProbationDatasources,
+        DataProductReportableInformation(
+          id = reportId,
+          variantId = reportVariantId,
+        ),
+      ),
     )
 
     csvStreamingSupport.streamCsv(
@@ -345,7 +374,14 @@ class DataApiSyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      executionContext = request.getUserContext(manageUsersClient, hasProbationDatasources),
+      executionContext = request.getUserContext(
+        manageUsersClient,
+        hasProbationDatasources,
+        DataProductReportableInformation(
+          id = reportId,
+          variantId = reportVariantId,
+        ),
+      ),
     )
 
     xlsxStreamingSupport.streamXlsx(

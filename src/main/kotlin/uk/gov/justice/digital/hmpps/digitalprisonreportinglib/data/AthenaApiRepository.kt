@@ -622,7 +622,7 @@ class AthenaApiRepository(
       when (connection) {
         DatasourceConnection.FEDERATED ->
           """
-          /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||END */
+          /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -636,7 +636,7 @@ class AthenaApiRepository(
 
         DatasourceConnection.AWS_DATA_CATALOG ->
           """
-              /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||END */
+              /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
                 CREATE TABLE AwsDataCatalog.reports.$tableId
                 WITH (
                   format = 'PARQUET'

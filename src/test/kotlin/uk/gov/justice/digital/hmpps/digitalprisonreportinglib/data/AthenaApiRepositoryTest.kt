@@ -29,6 +29,7 @@ import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_REPORT_CTE
@@ -73,6 +74,10 @@ class AthenaApiRepositoryTest {
     val dpdQuery = "SELECT column_a,column_b FROM schema_a.table_a"
     val defaultDatasetCte = "dataset_ AS (SELECT column_a,column_b FROM schema_a.table_a)"
     val emptyPromptsCte = "$PROMPT AS (SELECT '''' FROM DUAL)"
+    val definitionId = "dpdId"
+    val definitionName = "dpdName"
+    val variantId = "reportId"
+    val variantName = "reportName"
     private val testUsername = "aUser"
     private val testCaseload = "aCaseload"
     private val testAccountType = "GENERAL"
@@ -90,7 +95,7 @@ class AthenaApiRepositoryTest {
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
     prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
-  ) = """          /* QUERY_INFO|||dpdId|||dpdName|||testdatasource|||testdb|||testcatalog|||reportId|||reportName|||false|||END */
+  ) = """          /* QUERY_INFO|||$definitionId|||$definitionName|||testdatasource|||testdb|||testcatalog|||$variantId|||$variantName|||false|||NORMAL|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -104,7 +109,7 @@ SELECT *
           );
   """.trimIndent()
 
-  private fun multiphaseSqlNonLastQuery() = """          /* QUERY_INFO|||dpdId|||dpdName|||testdatasource|||testdb|||testcatalog|||reportId|||reportName|||false|||END */
+  private fun multiphaseSqlNonLastQuery() = """          /* QUERY_INFO|||$definitionId|||$definitionName|||testdatasource|||testdb|||testcatalog|||$variantId|||$variantName|||false|||NORMAL|||END */
           CREATE TABLE AwsDataCatalog.reports._a6227417_bdac_40bb_bc81_49c750daacd7 
           WITH (
             format = 'PARQUET'
@@ -134,6 +139,12 @@ SELECT * FROM dataset_'
     jdbcTemplate = jdbcTemplate,
     identifiedHelper = IdentifiedHelper(),
   )
+
+  private val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
+  private val dataset = mock<Dataset>()
+  private val datasource = mock<Datasource>()
+  private val report = mock<Report>()
+
   private val executionContext: ExecutionContext = ExecutionContext(
     CaseloadResponse(
       username = testUsername,
@@ -147,11 +158,14 @@ SELECT * FROM dataset_'
     emptyList(),
     AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation(
+      definitionId,
+      definitionName,
+      datasource,
+      variantId,
+      variantName,
+    ),
   )
-  private val startQueryExecutionResponse = mock<StartQueryExecutionResponse>()
-  private val dataset = mock<Dataset>()
-  private val datasource = mock<Datasource>()
-  private val report = mock<Report>()
 
   @BeforeEach
   fun beforeEach() {
@@ -564,7 +578,7 @@ SELECT * FROM dataset_'
             'testcatalog',
             'testdb',
             0,
-            'ICAgICAgICAgIC8qIFFVRVJZX0lORk98fHxkcGRJZHx8fGRwZE5hbWV8fHx0ZXN0ZGF0YXNvdXJjZXx8fHRlc3RkYnx8fHRlc3RjYXRhbG9nfHx8cmVwb3J0SWR8fHxyZXBvcnROYW1lfHx8ZmFsc2V8fHxFTkQgKi8KICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgZm9ybWF0ID0gJ1BBUlFVRVQnCiAgICAgICAgICApIAogICAgICAgICAgQVMgKAogICAgICAgICAgU0VMRUNUICogRlJPTSBUQUJMRShzeXN0ZW0ucXVlcnkocXVlcnkgPT4KICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICApKSAKICAgICAgICAgICk7',
+            'ICAgICAgICAgIC8qIFFVRVJZX0lORk98fHxkcGRJZHx8fGRwZE5hbWV8fHx0ZXN0ZGF0YXNvdXJjZXx8fHRlc3RkYnx8fHRlc3RjYXRhbG9nfHx8cmVwb3J0SWR8fHxyZXBvcnROYW1lfHx8ZmFsc2V8fHxOT1JNQUx8fHxFTkQgKi8KICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgZm9ybWF0ID0gJ1BBUlFVRVQnCiAgICAgICAgICApIAogICAgICAgICAgQVMgKAogICAgICAgICAgU0VMRUNUICogRlJPTSBUQUJMRShzeXN0ZW0ucXVlcnkocXVlcnkgPT4KICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICApKSAKICAgICAgICAgICk7',
             0,
             SYSDATE
           )"""
@@ -587,7 +601,7 @@ SELECT * FROM dataset_'
             'testcatalog',
             'testdb',
             1,
-            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KSxyZXBvcnRfIEFTIChTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfKSxwb2xpY3lfIEFTIChTRUxFQ1QgKiBGUk9NIHJlcG9ydF8gV0hFUkUgMT0xKSxmaWx0ZXJfIEFTIChTRUxFQ1QgKiBGUk9NIHBvbGljeV8gV0hFUkUgMT0xKQpTRUxFQ1QgKgogICAgICAgICAgRlJPTSBmaWx0ZXJfIE9SREVSIEJZIGNvbHVtbl9hIGFzYwogICAgICAgICAgICAgICAgKQ==',
+            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8Tk9STUFMfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KSxyZXBvcnRfIEFTIChTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfKSxwb2xpY3lfIEFTIChTRUxFQ1QgKiBGUk9NIHJlcG9ydF8gV0hFUkUgMT0xKSxmaWx0ZXJfIEFTIChTRUxFQ1QgKiBGUk9NIHBvbGljeV8gV0hFUkUgMT0xKQpTRUxFQ1QgKgogICAgICAgICAgRlJPTSBmaWx0ZXJfIE9SREVSIEJZIGNvbHVtbl9hIGFzYwogICAgICAgICAgICAgICAgKQ==',
             0,
             SYSDATE
           )"""
@@ -667,7 +681,7 @@ SELECT * FROM dataset_'
             'testcatalog',
             'testdb',
             0,
-            'ICAgICAgICAgIC8qIFFVRVJZX0lORk98fHxkcGRJZHx8fGRwZE5hbWV8fHx0ZXN0ZGF0YXNvdXJjZXx8fHRlc3RkYnx8fHRlc3RjYXRhbG9nfHx8cmVwb3J0SWR8fHxyZXBvcnROYW1lfHx8ZmFsc2V8fHxFTkQgKi8KICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgZm9ybWF0ID0gJ1BBUlFVRVQnCiAgICAgICAgICApIAogICAgICAgICAgQVMgKAogICAgICAgICAgU0VMRUNUICogRlJPTSBUQUJMRShzeXN0ZW0ucXVlcnkocXVlcnkgPT4KICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICApKSAKICAgICAgICAgICk7',
+            'ICAgICAgICAgIC8qIFFVRVJZX0lORk98fHxkcGRJZHx8fGRwZE5hbWV8fHx0ZXN0ZGF0YXNvdXJjZXx8fHRlc3RkYnx8fHRlc3RjYXRhbG9nfHx8cmVwb3J0SWR8fHxyZXBvcnROYW1lfHx8ZmFsc2V8fHxOT1JNQUx8fHxFTkQgKi8KICAgICAgICAgIENSRUFURSBUQUJMRSBBd3NEYXRhQ2F0YWxvZy5yZXBvcnRzLl9hNjIyNzQxN19iZGFjXzQwYmJfYmM4MV80OWM3NTBkYWFjZDcgCiAgICAgICAgICBXSVRIICgKICAgICAgICAgICAgZm9ybWF0ID0gJ1BBUlFVRVQnCiAgICAgICAgICApIAogICAgICAgICAgQVMgKAogICAgICAgICAgU0VMRUNUICogRlJPTSBUQUJMRShzeXN0ZW0ucXVlcnkocXVlcnkgPT4KICAgICAgICAgICAnV0lUSCBjb250ZXh0XyBBUyAoCiAgICAgIFNFTEVDVCAKICAgICAgJydhVXNlcicnIEFTIHVzZXJuYW1lLCAKICAgICAgJydhQ2FzZWxvYWQnJyBBUyBjYXNlbG9hZCwgCiAgICAgICcnR0VORVJBTCcnIEFTIGFjY291bnRfdHlwZSAKICAgICAgRlJPTSBEVUFMCiAgICAgICkscHJvbXB0XyBBUyAoU0VMRUNUICcnJycgRlJPTSBEVUFMKSxkYXRhc2V0XyBBUyAoU0VMRUNUIGNvbHVtbl9hLGNvbHVtbl9iIEZST00gc2NoZW1hX2EudGFibGVfYSkKU0VMRUNUICogRlJPTSBkYXRhc2V0XycKICAgICAgICAgICApKSAKICAgICAgICAgICk7',
             0,
             SYSDATE
           )"""
@@ -690,7 +704,7 @@ SELECT * FROM dataset_'
             'testcatalog',
             'testdb',
             1,
-            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfCiAgICAgICAgICAgICAgICAp',
+            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8Tk9STUFMfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMgogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgYXMgdG90YWwgZnJvbSBfYTYyMjc0MTdfYmRhY180MGJiX2JjODFfNDljNzUwZGFhY2Q3KQpTRUxFQ1QgKiBGUk9NIGRhdGFzZXRfCiAgICAgICAgICAgICAgICAp',
             0,
             SYSDATE
           )"""
@@ -713,7 +727,7 @@ SELECT * FROM dataset_'
             'testcatalog',
             'testdb',
             2,
-            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMwogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgKyAxIGFzIHRvdGFsX3BsdXNfb25lIGZyb20gdGFibGVJZDIpLHJlcG9ydF8gQVMgKFNFTEVDVCAqIEZST00gZGF0YXNldF8pLHBvbGljeV8gQVMgKFNFTEVDVCAqIEZST00gcmVwb3J0XyBXSEVSRSAxPTEpLGZpbHRlcl8gQVMgKFNFTEVDVCAqIEZST00gcG9saWN5XyBXSEVSRSAxPTEpClNFTEVDVCAqCiAgICAgICAgICBGUk9NIGZpbHRlcl8gT1JERVIgQlkgY29sdW1uX2EgYXNjCiAgICAgICAgICAgICAgICAp',
+            'ICAgICAgICAgICAgICAvKiBRVUVSWV9JTkZPfHx8ZHBkSWR8fHxkcGROYW1lfHx8dGVzdGRhdGFzb3VyY2V8fHx0ZXN0ZGJ8fHx0ZXN0Y2F0YWxvZ3x8fHJlcG9ydElkfHx8cmVwb3J0TmFtZXx8fGZhbHNlfHx8Tk9STUFMfHx8RU5EICovCiAgICAgICAgICAgICAgICBDUkVBVEUgVEFCTEUgQXdzRGF0YUNhdGFsb2cucmVwb3J0cy50YWJsZUlkMwogICAgICAgICAgICAgICAgV0lUSCAoCiAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICdQQVJRVUVUJwogICAgICAgICAgICAgICAgKSAKICAgICAgICAgICAgICAgIEFTICgKICAgICAgICAgIFdJVEggY29udGV4dF8gQVMgKAogICAgICBTRUxFQ1QgCiAgICAgICdhVXNlcicgQVMgdXNlcm5hbWUsIAogICAgICAnYUNhc2Vsb2FkJyBBUyBjYXNlbG9hZCwgCiAgICAgICdHRU5FUkFMJyBBUyBhY2NvdW50X3R5cGUgCiAgICAgIAogICAgICApLHByb21wdF8gQVMgKFNFTEVDVCAnJyApLGRhdGFzZXRfIEFTIChTRUxFQ1QgY291bnQoKikgKyAxIGFzIHRvdGFsX3BsdXNfb25lIGZyb20gdGFibGVJZDIpLHJlcG9ydF8gQVMgKFNFTEVDVCAqIEZST00gZGF0YXNldF8pLHBvbGljeV8gQVMgKFNFTEVDVCAqIEZST00gcmVwb3J0XyBXSEVSRSAxPTEpLGZpbHRlcl8gQVMgKFNFTEVDVCAqIEZST00gcG9saWN5XyBXSEVSRSAxPTEpClNFTEVDVCAqCiAgICAgICAgICBGUk9NIGZpbHRlcl8gT1JERVIgQlkgY29sdW1uX2EgYXNjCiAgICAgICAgICAgICAgICAp',
             0,
             SYSDATE
           )"""
@@ -856,13 +870,13 @@ SELECT * FROM dataset_'
     ).thenReturn(
       cachedTableId,
     )
-    whenever(productDefinition.id).thenReturn("dpdId")
-    whenever(productDefinition.name).thenReturn("dpdName")
+    whenever(productDefinition.id).thenReturn(definitionId)
+    whenever(productDefinition.name).thenReturn(definitionName)
     whenever(productDefinition.reportDataset).thenReturn(dataset)
     whenever(productDefinition.datasource).thenReturn(datasource)
     whenever(productDefinition.report).thenReturn(report)
-    whenever(productDefinition.report.id).thenReturn("reportId")
-    whenever(productDefinition.report.name).thenReturn("reportName")
+    whenever(productDefinition.report.id).thenReturn(variantId)
+    whenever(productDefinition.report.name).thenReturn(variantName)
     whenever(productDefinition.report.filter).thenReturn(reportFilter)
     whenever(datasource.database).thenReturn(testDb)
     whenever(datasource.catalog).thenReturn(testCatalog)

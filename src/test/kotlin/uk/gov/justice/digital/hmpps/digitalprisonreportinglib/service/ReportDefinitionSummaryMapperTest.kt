@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
@@ -127,6 +128,7 @@ class ReportDefinitionSummaryMapperTest {
     emptyList(),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation(fullProductDefinition.id, fullProductDefinition.name, fullDatasource, fullReport.id, fullReport.name),
   )
 
   @Test

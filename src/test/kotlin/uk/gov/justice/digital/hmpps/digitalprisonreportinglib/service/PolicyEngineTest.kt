@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.Mockito.mock
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
@@ -36,6 +38,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       "caseload",
@@ -61,6 +64,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser("", false, "", AuthSource.NONE, "", ""),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policyEngine = PolicyEngine(emptyList(), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -85,6 +89,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -109,6 +114,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(PolicyResult.POLICY_DENY)
@@ -127,6 +133,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       "caseload",
@@ -151,6 +158,7 @@ class PolicyEngineTest {
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       "caseload",
@@ -175,6 +183,7 @@ class PolicyEngineTest {
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       "caseload",
@@ -199,6 +208,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       "caseload",
@@ -223,6 +233,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser("", false, "", AuthSource.NONE, "", ""),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       "caseload",
@@ -248,6 +259,7 @@ class PolicyEngineTest {
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
 
     val policy = Policy(
@@ -273,6 +285,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       "caseload",
@@ -297,6 +310,7 @@ class PolicyEngineTest {
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy1 = Policy(
       "caseload",
@@ -351,6 +365,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policyEngine = PolicyEngine(listOf(policy1, policy2, policy3), context)
     val expected = "(origin_code='ABC' AND lower(direction)='out') OR (destination_code='ABC' AND lower(direction)='in') AND ${PolicyResult.POLICY_PERMIT} AND origin_code in ('ABC', 'BBC', 'HEI', 'MDI')"
@@ -370,6 +385,7 @@ class PolicyEngineTest {
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -393,6 +409,7 @@ class PolicyEngineTest {
       listOf("A_ROLE"),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -416,6 +433,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -440,6 +458,7 @@ class PolicyEngineTest {
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -464,6 +483,7 @@ class PolicyEngineTest {
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -488,6 +508,7 @@ class PolicyEngineTest {
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -512,6 +533,7 @@ class PolicyEngineTest {
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -536,6 +558,7 @@ class PolicyEngineTest {
       listOf(userRole),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -559,6 +582,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "caseload",
@@ -582,6 +606,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "lao",
@@ -605,6 +630,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "lao",
@@ -628,6 +654,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "lao",
@@ -651,6 +678,7 @@ class PolicyEngineTest {
       emptyList(),
       AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
       false,
+      DataProductReportableInformation("", "", mock(), "", ""),
     )
     val policy = Policy(
       id = "lao",

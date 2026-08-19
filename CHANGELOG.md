@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.6.1
+- Add query metrics to summary query, differentiate between different query types (summary/normal), put reportable info into ExecutionContext
+
 # 17.6.0
 - Added User Subscription Endpoints
 

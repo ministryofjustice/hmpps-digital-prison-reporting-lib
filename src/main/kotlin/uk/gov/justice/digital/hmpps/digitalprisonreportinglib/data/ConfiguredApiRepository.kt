@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterUtils
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
@@ -222,9 +223,9 @@ class ConfiguredApiRepository(
       }
   }
 
-  fun createSummaryTable(tableId: String, summaryId: String, query: String, dataSourceName: String) {
+  fun createSummaryTable(tableId: String, summaryId: String, query: String, dataSourceName: String, executionContext: ExecutionContext) {
     val jdbcTemplate = populateJdbcTemplate(dataSourceName)
-    val createTableQuery = redShiftSummaryTableHelper.buildSummaryQuery(query, tableId, summaryId)
+    val createTableQuery = redShiftSummaryTableHelper.buildSummaryQuery(query, tableId, summaryId, executionContext)
     jdbcTemplate.execute(createTableQuery)
   }
 
