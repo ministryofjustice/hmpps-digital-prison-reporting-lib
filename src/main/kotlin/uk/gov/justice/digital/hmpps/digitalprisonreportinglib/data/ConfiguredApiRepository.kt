@@ -223,8 +223,8 @@ class ConfiguredApiRepository(
       }
   }
 
-  fun createSummaryTable(tableId: String, summaryId: String, query: String, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext) {
-    val jdbcTemplate = populateJdbcTemplate(productDefinition.datasource.name)
+  fun createSummaryTable(tableId: String, summaryId: String, query: String, dataSourceName: String, executionContext: ExecutionContext) {
+    val jdbcTemplate = populateJdbcTemplate(dataSourceName)
     val createTableQuery = redShiftSummaryTableHelper.buildSummaryQuery(query, tableId, summaryId, executionContext)
     jdbcTemplate.execute(createTableQuery)
   }

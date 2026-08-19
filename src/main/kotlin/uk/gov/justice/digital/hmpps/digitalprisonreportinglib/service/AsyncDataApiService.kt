@@ -320,7 +320,7 @@ class AsyncDataApiService(
     if (tableExists && s3DataExists) {
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } else if (!tableExists && !s3DataExists) {
-      configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition, executionContext)
+      configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition.datasource.name, executionContext)
       // Might need a small delay here as reading straight after creation might fail
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } else {
