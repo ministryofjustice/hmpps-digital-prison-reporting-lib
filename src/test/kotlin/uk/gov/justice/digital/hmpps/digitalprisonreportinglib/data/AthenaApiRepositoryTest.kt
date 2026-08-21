@@ -90,7 +90,7 @@ class AthenaApiRepositoryTest {
       FROM DUAL
       )"""
   }
-  
+
   fun sqlStatement(
     tableId: String,
     whereClauseCondition: String? = TRUE_WHERE_CLAUSE,
@@ -127,7 +127,7 @@ SELECT *
       promptsCte = promptsCte,
       datasetCte = datasetCte,
       prefilter = reportFilter,
-      filtersWhereClauseCondition = filtersWhereClauseCondition
+      filtersWhereClauseCondition = filtersWhereClauseCondition,
     ),
   ): StartQueryExecutionRequest {
     val queryExecutionContext = QueryExecutionContext.builder()
@@ -275,7 +275,7 @@ SELECT * FROM dataset_'
     whenever(dataset.query.first().query).thenReturn(dpdQuery)
     val filters = listOf(
       Filter("filterName1", "filterValue1"),
-      Filter("filterName2", "filterValue2")
+      Filter("filterName2", "filterValue2"),
     )
     val actual = athenaApiRepository.executeQueryAsync(
       filters = filters,
