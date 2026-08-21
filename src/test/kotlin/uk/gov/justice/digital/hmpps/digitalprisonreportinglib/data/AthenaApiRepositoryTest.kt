@@ -31,6 +31,7 @@ import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_REPORT_CTE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
@@ -89,12 +90,14 @@ class AthenaApiRepositoryTest {
       FROM DUAL
       )"""
   }
+
   fun sqlStatement(
     tableId: String,
     whereClauseCondition: String? = TRUE_WHERE_CLAUSE,
     promptsCte: String? = emptyPromptsCte,
     datasetCte: String? = defaultDatasetCte,
     prefilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
+    filtersWhereClauseCondition: String? = TRUE_WHERE_CLAUSE,
   ) = """          /* QUERY_INFO|||$definitionId|||$definitionName|||testdatasource|||testdb|||testcatalog|||$variantId|||$variantName|||false|||NORMAL|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
@@ -102,12 +105,70 @@ class AthenaApiRepositoryTest {
           ) 
           AS (
           SELECT * FROM TABLE(system.query(query =>
-           '$contextCte,$promptsCte,$datasetCte,${prefilter?.query},policy_ AS (SELECT * FROM ${prefilter?.name} WHERE $whereClauseCondition),$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)
+           '$contextCte,$promptsCte,$datasetCte,${prefilter?.query},policy_ AS (SELECT * FROM ${prefilter?.name} WHERE $whereClauseCondition),$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $filtersWhereClauseCondition)
 SELECT *
           FROM $FILTER_ ORDER BY column_a asc'
            )) 
           );
   """.trimIndent()
+
+  private fun setupBasicMocks(
+    whereClause: String? = TRUE_WHERE_CLAUSE,
+    promptsCte: String? = emptyPromptsCte,
+    datasetCte: String? = defaultDatasetCte,
+    reportFilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
+    filtersWhereClauseCondition: String? = TRUE_WHERE_CLAUSE,
+    database: String? = testDb,
+    catalog: String? = testCatalog,
+    cachedTableId: String? = tableId,
+    query: String? = sqlStatement(
+      tableId = cachedTableId!!,
+      whereClauseCondition = whereClause,
+      promptsCte = promptsCte,
+      datasetCte = datasetCte,
+      prefilter = reportFilter,
+      filtersWhereClauseCondition = filtersWhereClauseCondition,
+    ),
+  ): StartQueryExecutionRequest {
+    val queryExecutionContext = QueryExecutionContext.builder()
+      .database(database)
+      .catalog(catalog)
+      .build()
+    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
+      .queryString(
+        query,
+      )
+      .queryExecutionContext(queryExecutionContext)
+      .workGroup(athenaWorkgroup)
+      .build()
+    whenever(
+      tableIdGenerator.generateNewExternalTableId(),
+    ).thenReturn(
+      cachedTableId,
+    )
+    whenever(productDefinition.id).thenReturn(definitionId)
+    whenever(productDefinition.name).thenReturn(definitionName)
+    whenever(productDefinition.reportDataset).thenReturn(dataset)
+    whenever(productDefinition.datasource).thenReturn(datasource)
+    whenever(productDefinition.report).thenReturn(report)
+    whenever(productDefinition.report.id).thenReturn(variantId)
+    whenever(productDefinition.report.name).thenReturn(variantName)
+    whenever(productDefinition.report.filter).thenReturn(reportFilter)
+    whenever(datasource.database).thenReturn(testDb)
+    whenever(datasource.catalog).thenReturn(testCatalog)
+
+    whenever(
+      athenaClient.startQueryExecution(
+        ArgumentMatchers.any(StartQueryExecutionRequest::class.java),
+      ),
+    ).thenReturn(startQueryExecutionResponse)
+
+    whenever(
+      startQueryExecutionResponse.queryExecutionId(),
+    ).thenReturn(executionId)
+
+    return startQueryExecutionRequest
+  }
 
   private fun multiphaseSqlNonLastQuery() = """          /* QUERY_INFO|||$definitionId|||$definitionName|||testdatasource|||testdb|||testcatalog|||$variantId|||$variantName|||false|||NORMAL|||END */
           CREATE TABLE AwsDataCatalog.reports._a6227417_bdac_40bb_bc81_49c750daacd7 
@@ -190,6 +251,37 @@ SELECT * FROM dataset_'
       sortColumn = "column_a",
       sortedAsc = true,
       policyEngineResult = policyEngineResult,
+      executionContext = executionContext,
+      query = productDefinition.reportDataset.query,
+      reportFilter = productDefinition.report.filter,
+      datasource = productDefinition.datasource,
+      reportSummaries = productDefinition.report.summary,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.report.id,
+      reportOrDashboardName = productDefinition.report.name,
+    )
+
+    assertEquals(StatementExecutionResponse(tableId, executionId), actual)
+    verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
+  }
+
+  @Test
+  fun `executeQueryAsync should call the athena data api with the correct query which includes the athena prefilters`() {
+    val startQueryExecutionRequest = setupBasicMocks(filtersWhereClauseCondition = "lower(filterName1) = :filtername1 AND lower(filterName2) = :filtername2")
+    val query = mock<MultiphaseQuery>()
+    whenever(dataset.query).thenReturn(listOf(query))
+    whenever(dataset.query.first().query).thenReturn(dpdQuery)
+    val filters = listOf(
+      Filter("filterName1", "filterValue1"),
+      Filter("filterName2", "filterValue2"),
+    )
+    val actual = athenaApiRepository.executeQueryAsync(
+      filters = filters,
+      sortColumn = "column_a",
+      sortedAsc = true,
+      policyEngineResult = POLICY_PERMIT,
       executionContext = executionContext,
       query = productDefinition.reportDataset.query,
       reportFilter = productDefinition.report.filter,
@@ -836,61 +928,5 @@ SELECT * FROM dataset_'
       )
     }
     assertEquals(exception.message, "Invalid index. There is no table at index 5.")
-  }
-
-  private fun setupBasicMocks(
-    whereClause: String? = TRUE_WHERE_CLAUSE,
-    promptsCte: String? = emptyPromptsCte,
-    datasetCte: String? = defaultDatasetCte,
-    reportFilter: ReportFilter? = ReportFilter(name = REPORT_, query = DEFAULT_REPORT_CTE),
-    database: String? = testDb,
-    catalog: String? = testCatalog,
-    cachedTableId: String? = tableId,
-    query: String? = sqlStatement(
-      tableId = cachedTableId!!,
-      whereClauseCondition = whereClause,
-      promptsCte = promptsCte,
-      datasetCte = datasetCte,
-      prefilter = reportFilter,
-    ),
-  ): StartQueryExecutionRequest {
-    val queryExecutionContext = QueryExecutionContext.builder()
-      .database(database)
-      .catalog(catalog)
-      .build()
-    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
-      .queryString(
-        query,
-      )
-      .queryExecutionContext(queryExecutionContext)
-      .workGroup(athenaWorkgroup)
-      .build()
-    whenever(
-      tableIdGenerator.generateNewExternalTableId(),
-    ).thenReturn(
-      cachedTableId,
-    )
-    whenever(productDefinition.id).thenReturn(definitionId)
-    whenever(productDefinition.name).thenReturn(definitionName)
-    whenever(productDefinition.reportDataset).thenReturn(dataset)
-    whenever(productDefinition.datasource).thenReturn(datasource)
-    whenever(productDefinition.report).thenReturn(report)
-    whenever(productDefinition.report.id).thenReturn(variantId)
-    whenever(productDefinition.report.name).thenReturn(variantName)
-    whenever(productDefinition.report.filter).thenReturn(reportFilter)
-    whenever(datasource.database).thenReturn(testDb)
-    whenever(datasource.catalog).thenReturn(testCatalog)
-
-    whenever(
-      athenaClient.startQueryExecution(
-        ArgumentMatchers.any(StartQueryExecutionRequest::class.java),
-      ),
-    ).thenReturn(startQueryExecutionResponse)
-
-    whenever(
-      startQueryExecutionResponse.queryExecutionId(),
-    ).thenReturn(executionId)
-
-    return startQueryExecutionRequest
   }
 }
