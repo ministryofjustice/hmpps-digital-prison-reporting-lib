@@ -6,8 +6,8 @@ CREATE TABLE subscription_.user_subscription (
   report_variant_id VARCHAR NOT NULL,
   table_id VARCHAR NOT NULL,
   status VARCHAR NOT NULL,
-  created_time VARCHAR NOT NULL,
-  updated_time VARCHAR,
+  created_time TIMESTAMP NOT NULL,
+  updated_time TIMESTAMP,
   PRIMARY KEY(id)
 );
 CREATE SCHEMA IF NOT EXISTS admin;
@@ -17,7 +17,7 @@ CREATE TABLE admin.statement_execution_status (
   table_id VARCHAR NOT NULL,
   execution_id VARCHAR NOT NULL,
   error_message VARCHAR NOT NULL,
-  created_at VARCHAR NOT NULL,
-  updated_at VARCHAR NOT NULL,
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL,
   PRIMARY KEY(id)
 );

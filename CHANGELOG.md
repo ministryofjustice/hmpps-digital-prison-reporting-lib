@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.7.1
+- Update timestamp handling for User Subscription
+
 # 17.7.0
  - Add support for Athena prefilter queries
 
