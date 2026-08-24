@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.7.2
+- User Subscription add filter for subscribed. 
+- 
 # 17.7.1
 - Update timestamp handling for User Subscription
 

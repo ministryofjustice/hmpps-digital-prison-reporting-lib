@@ -38,7 +38,7 @@ class UserSubscriptionRepository : RepositoryHelper() {
       SELECT us.id, us.user_id, us.report_id, us.report_variant_id, us.table_id, us.status, us.created_time, us.updated_time, ses.status as report_status, ses.created_at as report_updated_time
       FROM subscription_.user_subscription us
       LEFT JOIN latest_report ses ON us.table_id = ses.table_id and ses.rn = 1
-      WHERE us.user_id = :user_id
+      WHERE us.user_id = :user_id AND us.status = 'SUBSCRIBED'
     """
     const val FIND_BY_USER_ID_AND_REPORT = """
       SELECT id, user_id, report_id, report_variant_id, table_id, status, created_time, updated_time
