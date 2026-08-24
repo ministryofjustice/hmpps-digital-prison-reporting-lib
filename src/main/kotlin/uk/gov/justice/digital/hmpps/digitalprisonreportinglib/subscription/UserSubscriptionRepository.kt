@@ -2,9 +2,13 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription
 
 import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.RowMapperResultSetExtractor
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper
 import java.sql.ResultSet
+import java.sql.Timestamp
+import java.sql.Types
+
 
 @Repository
 class UserSubscriptionRepository : RepositoryHelper() {
@@ -52,7 +56,7 @@ class UserSubscriptionRepository : RepositoryHelper() {
       USING (SELECT :id as id, :status as status, :updated_time as updated_time) as source
       on subscription_.user_subscription.id = source.id 
       WHEN MATCHED THEN
-      UPDATE SET id = source.id, status = source.status, updated_time = source.updated_time
+      UPDATE SET id = source.id, status = source.status, updated_time = source.updated_time::timestamp
       WHEN NOT MATCHED 
       THEN INSERT VALUES (source.id, source.status, source.updated_time);
     """
@@ -102,14 +106,17 @@ class UserSubscriptionRepository : RepositoryHelper() {
       "report_variant_id" to userSubscription.reportVariantId,
       "table_id" to userSubscription.tableId,
       "status" to userSubscription.status,
-      "created_time" to userSubscription.createdTime,
+      "created_time" to Timestamp.valueOf(userSubscription.createdTime),
     )
+
+    val parameters = MapSqlParameterSource(namedParameters)
+    parameters.addValue("created_time", Timestamp.valueOf(userSubscription.createdTime), Types.TIMESTAMP)
 
     template.update(
       """
         $INSERT_USER_SUBSCRIPTION
       """.trimIndent(),
-      namedParameters,
+      parameters,
     )
     return findById(userSubscription.id)
   }
@@ -120,8 +127,11 @@ class UserSubscriptionRepository : RepositoryHelper() {
     val namedParameters = mutableMapOf<String, Any>(
       "id" to userSubscription.id,
       "status" to userSubscription.status,
-      "updated_time" to userSubscription.updatedTime!!,
+      "updated_time" to Timestamp.valueOf(userSubscription.updatedTime!!),
     )
+
+    val parameters = MapSqlParameterSource(namedParameters)
+    parameters.addValue("updated_time", Timestamp.valueOf(userSubscription.updatedTime), Types.TIMESTAMP)
 
     template.update(
       """
@@ -129,7 +139,7 @@ class UserSubscriptionRepository : RepositoryHelper() {
         $MERGE_USER_SUBSCRIPTION 
       COMMIT TRANSACTION
       """.trimIndent(),
-      namedParameters,
+      parameters,
     )
     return findById(userSubscription.id)
   }
