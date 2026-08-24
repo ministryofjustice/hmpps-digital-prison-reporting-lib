@@ -9,7 +9,6 @@ import java.sql.ResultSet
 import java.sql.Timestamp
 import java.sql.Types
 
-
 @Repository
 class UserSubscriptionRepository : RepositoryHelper() {
 
