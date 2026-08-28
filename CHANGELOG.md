@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.8.1
+- Changed content type of csv download from `unicode (utf-8) BOM` to `unicode (utf-8)`
+
 # 17.8.0
 - Add kotlinx.serialization support to our main DPD related entities
 

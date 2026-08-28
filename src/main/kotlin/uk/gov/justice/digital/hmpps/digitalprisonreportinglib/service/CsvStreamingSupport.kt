@@ -44,8 +44,7 @@ class CsvStreamingSupport {
 
     outputStream.use { out ->
       OutputStreamWriter(out, Charsets.UTF_8).use { writer ->
-        // Writes 0xEF 0xBB 0xBF to the start of the file so that it's recognised as UTF-8 with BOM so that Excel opens it properly.
-        writer.write("\ufeff")
+        // BOM line removed
         streamFun(writer)
         log.debug(
           "Successfully wrote the entire ${if (acceptsGzip) "gzip" else "csv"} data.",
