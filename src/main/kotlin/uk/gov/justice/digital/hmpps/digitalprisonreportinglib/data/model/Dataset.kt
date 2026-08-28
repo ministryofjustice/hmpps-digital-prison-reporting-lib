@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 import com.google.gson.annotations.JsonAdapter
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer
 
+@Serializable
 data class Dataset(
   val id: String,
   val name: String,

@@ -27,7 +27,6 @@ open class CommonDataApiServiceTestBase {
       ),
       section = null,
     ),
-    created = null,
   )
 
   protected fun dataset(schedule: String? = null, fields: List<SchemaField>? = null): Dataset = Dataset(

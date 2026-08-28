@@ -10,6 +10,7 @@ plugins {
   id("maven-publish")
   id("signing")
   id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+  kotlin("plugin.serialization") version "2.4.0"
 }
 
 configurations {
@@ -26,6 +27,7 @@ dependencies {
 
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.guava:guava:33.6.0-jre")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 
   // AWS
   implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")

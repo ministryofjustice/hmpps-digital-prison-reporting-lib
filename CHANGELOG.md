@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.8.0
+- Add kotlinx.serialization support to our main DPD related entities
+
 # 17.7.2
 - User Subscription add filter for subscribed. 
 - 
