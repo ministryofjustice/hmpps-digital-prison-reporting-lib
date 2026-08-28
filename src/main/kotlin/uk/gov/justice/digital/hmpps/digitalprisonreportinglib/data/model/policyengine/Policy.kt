@@ -1,12 +1,22 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_PERMIT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.InvalidDpdException
 
-data class Policy(val id: String, val type: PolicyType, @SerializedName("action") private val _action: List<String>? = null, val rule: List<Rule>) {
+@Serializable
+data class Policy(
+  val id: String,
+  val type: PolicyType,
+  @SerializedName("action")
+  @SerialName("action")
+  private val _action: List<String>? = null,
+  val rule: List<Rule>,
+) {
 
   val action
     get() = _action ?: emptyList()

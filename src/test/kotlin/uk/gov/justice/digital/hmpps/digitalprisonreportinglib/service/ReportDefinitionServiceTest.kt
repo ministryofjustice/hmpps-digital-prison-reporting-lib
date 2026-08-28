@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
-import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
 
@@ -75,7 +74,6 @@ class ReportDefinitionServiceTest {
     report = Report(
       id = "3",
       name = "4",
-      created = LocalDateTime.now(),
       version = "5",
       dataset = "\$ref:10",
       render = HTML,

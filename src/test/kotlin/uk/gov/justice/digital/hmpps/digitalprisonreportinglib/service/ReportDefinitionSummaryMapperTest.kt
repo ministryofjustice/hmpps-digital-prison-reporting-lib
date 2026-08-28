@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
-import java.time.LocalDateTime
 import java.util.Collections.singletonMap
 
 class ReportDefinitionSummaryMapperTest {
@@ -63,7 +62,6 @@ class ReportDefinitionSummaryMapperTest {
     id = "21",
     name = "22",
     description = "23",
-    created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
     render = RenderMethod.PDF,
@@ -196,7 +194,6 @@ class ReportDefinitionSummaryMapperTest {
         Report(
           id = "13",
           name = "14",
-          created = LocalDateTime.MAX,
           version = "15",
           dataset = "\$ref:10",
           render = RenderMethod.SVG,
@@ -205,7 +202,6 @@ class ReportDefinitionSummaryMapperTest {
         Report(
           id = "16",
           name = "17",
-          created = LocalDateTime.MAX,
           version = "18",
           dataset = "\$ref:10",
           render = RenderMethod.HTML,

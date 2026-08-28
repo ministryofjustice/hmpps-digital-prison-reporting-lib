@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 
+@Serializable
 data class Dashboard(
   val id: String,
   val name: String,
