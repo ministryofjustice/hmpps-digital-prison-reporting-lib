@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class SchemaField(
   val name: String,
   val type: ParameterType,

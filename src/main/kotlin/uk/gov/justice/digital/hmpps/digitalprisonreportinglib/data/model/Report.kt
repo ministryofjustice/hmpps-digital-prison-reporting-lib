@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
-import java.time.LocalDateTime
 
 interface AnyReport : Identified {
   val id: String
@@ -22,11 +22,12 @@ data class ReportLite(
   override val loadType: LoadType? = null,
 ) : AnyReport
 
+@Serializable
 data class Report(
   override val id: String,
   override val name: String,
   override val description: String? = null,
-  val created: LocalDateTime?,
+
   val version: String,
   override val dataset: String,
   override val render: RenderMethod,
