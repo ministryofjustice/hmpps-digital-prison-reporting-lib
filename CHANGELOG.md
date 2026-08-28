@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.8.0
+- Add kotlinx.serialization support to our main DPD related entities
+
 # 17.7.2
 - User Subscription add filter for subscribed. 
 - 
@@ -8,9 +11,6 @@ Below you can find the changes included in each release.
 
 # 17.7.0
  - Add support for Athena prefilter queries
-
-# 17.7.0
-- Add kotlinx.serialization support to our main DPD related entities
 
 # 17.6.1
 - Add query metrics to summary query, differentiate between different query types (summary/normal), put reportable info into ExecutionContext
