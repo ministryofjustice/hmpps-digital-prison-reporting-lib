@@ -44,7 +44,7 @@ class CsvStreamingSupport {
 
     outputStream.use { out ->
       OutputStreamWriter(out, Charsets.UTF_8).use { writer ->
-        //BOM line removed
+        // BOM line removed
         streamFun(writer)
         log.debug(
           "Successfully wrote the entire ${if (acceptsGzip) "gzip" else "csv"} data.",
