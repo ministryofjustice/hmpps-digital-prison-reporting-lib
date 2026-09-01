@@ -32,7 +32,7 @@ class LegacySpecificationSerializerDeserializer : KSerializer<Specification> {
     val field = decoder.json.decodeFromJsonElement(ListSerializer(ReportField.serializer()), el.jsonObject["field"]!!)
 
     val sectionJson = el.jsonObject["section"]
-    val section = if (sectionJson != null) decoder.json.decodeFromJsonElement(ListSerializer(String.serializer()), el.jsonObject["field"]!!) else null
+    val section = if (sectionJson != null) decoder.json.decodeFromJsonElement(ListSerializer(String.serializer()), sectionJson) else null
 
     return Specification(template, field, section)
   }
