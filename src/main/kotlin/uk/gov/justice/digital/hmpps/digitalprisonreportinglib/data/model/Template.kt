@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class Template {
   @SerializedName("list")
   List,

@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class ParameterType {
   @SerializedName("boolean")
   Boolean,
@@ -18,6 +21,7 @@ enum class ParameterType {
   @SerializedName("float")
   Float,
 
+  @SerialName("int")
   @SerializedName("int")
   Integer,
 
