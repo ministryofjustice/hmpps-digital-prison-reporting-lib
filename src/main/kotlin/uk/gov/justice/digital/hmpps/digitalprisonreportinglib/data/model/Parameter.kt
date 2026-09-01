@@ -9,7 +9,7 @@ data class Parameter(
   val reportFieldType: ParameterType,
   val filterType: FilterType,
   val display: String,
-  val mandatory: Boolean,
+  val mandatory: Boolean = false,
   val referenceType: ReferenceType? = null,
   val default: String? = null,
 )
