@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.V
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyReport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 
 @Component
@@ -19,16 +20,21 @@ class ReportDefinitionSummaryMapper {
     productDefinition: AnyProductDefinition,
     renderMethod: RenderMethod?,
     executionContext: ExecutionContext,
-  ): ReportDefinitionSummary = ReportDefinitionSummary(
-    id = productDefinition.id,
-    name = productDefinition.name,
-    description = productDefinition.description,
-    variants = productDefinition.report
-      .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-      .map { map(it, productDefinition.path == DataDefinitionPath.MISSING) },
-    dashboards = productDefinition.dashboard?.map { map(it) },
-    authorised = determineAuth(productDefinition, executionContext),
-  )
+  ): ReportDefinitionSummary {
+    val datasetsById = productDefinition.dataset.associateBy { it.id }
+    return ReportDefinitionSummary(
+      id = productDefinition.id,
+      name = productDefinition.name,
+      description = productDefinition.description,
+      variants = productDefinition.report
+        .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
+        .map { map(it, productDefinition.path == DataDefinitionPath.MISSING, findDataset(it.dataset, datasetsById)?.schedule) },
+      dashboards = productDefinition.dashboard?.map { map(it) },
+      authorised = determineAuth(productDefinition, executionContext),
+    )
+  }
+
+  private fun findDataset(dataSetRefId: String, datasetsById: Map<String, Dataset>) = datasetsById.filterKeys { dataSetId -> dataSetRefId.contains(dataSetId) }.values.firstOrNull()
 
   private fun determineAuth(
     productDefinition: WithPolicy,
@@ -38,12 +44,14 @@ class ReportDefinitionSummaryMapper {
   private fun map(
     report: AnyReport,
     isMissing: Boolean,
+    datasetSchedule: String?,
   ): VariantDefinitionSummary = VariantDefinitionSummary(
     id = report.id,
     name = report.name,
     description = report.description,
     isMissing,
     loadType = report.loadType,
+    schedule = CronExpressionInterpreter.interpret(datasetSchedule),
   )
 
   private fun map(

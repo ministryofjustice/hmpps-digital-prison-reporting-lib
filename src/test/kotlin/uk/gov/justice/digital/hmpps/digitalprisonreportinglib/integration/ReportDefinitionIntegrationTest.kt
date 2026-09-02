@@ -88,6 +88,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.id).isEqualTo("last-month")
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+      assertThat(lastMonthVariant.schedule).isEqualTo("at 10:15 every day between Monday and Friday")
 
       val lastWeekVariant = definition.variants[1]
       assertThat(lastWeekVariant.id).isEqualTo("last-week")
