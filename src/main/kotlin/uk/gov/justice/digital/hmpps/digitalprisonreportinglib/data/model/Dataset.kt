@@ -9,6 +9,7 @@ data class Dataset(
   val id: String,
   val name: String,
   val datasource: String,
+  @Serializable(with = QueryDeserializer::class)
   @JsonAdapter(QueryDeserializer::class)
   val query: List<MultiphaseQuery>,
   val schema: Schema,
