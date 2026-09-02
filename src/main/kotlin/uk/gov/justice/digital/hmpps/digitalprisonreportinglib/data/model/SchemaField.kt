@@ -42,7 +42,7 @@ class LegacySchemaFieldSerializerDeserializer : KSerializer<SchemaField> {
       type,
       display ?: String(),
       filter,
-      formula
+      formula,
     )
   }
 
