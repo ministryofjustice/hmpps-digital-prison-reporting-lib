@@ -1,7 +1,7 @@
 Below you can find the changes included in each release.
 
-# 17.8.1
-- Changed content type of csv download from `unicode (utf-8) BOM` to `unicode (utf-8)`
+# 17.8.3
+- Add schedule description to definition summary endpoint
 
 # 17.8.2
 - Improve kotlinx.serialization support
