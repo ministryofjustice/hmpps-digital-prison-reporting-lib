@@ -1,32 +1,32 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.2"
-  kotlin("jvm") version "2.4.0"
-  kotlin("plugin.spring") version "2.4.0"
-  kotlin("plugin.jpa") version "2.4.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.6"
+  kotlin("jvm") version "2.4.10"
+  kotlin("plugin.spring") version "2.4.10"
+  kotlin("plugin.jpa") version "2.4.10"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "4.0.2"
   id("maven-publish")
   id("signing")
   id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-  kotlin("plugin.serialization") version "2.4.0"
+  kotlin("plugin.serialization") version "2.4.10"
 }
 
 configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.45.1"
+val awsSdkVersion = "2.54.7"
 val testContainersVersion = "1.21.4"
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.1")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.14.0")
-  implementation("com.google.guava:guava:33.6.0-jre")
+  implementation("com.google.guava:guava:33.7.1-jre")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
   implementation("com.cronutils:cron-utils:9.2.1")
 
@@ -38,7 +38,7 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0")
 
   // Excel (xlsx) report downloads. Kept out of the public API surface, so `implementation`
   // is enough - consumers get it transitively at runtime.
@@ -47,23 +47,23 @@ dependencies {
   // Postgres dependencies
   implementation("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
-  implementation("org.postgresql:postgresql:42.7.11")
+  implementation("org.postgresql:postgresql:42.7.13")
 
   // Testing
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.0-beta")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.1-beta")
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
   testImplementation("io.jsonwebtoken:jjwt:0.13.0")
   testImplementation("com.marcinziolo:kotlin-wiremock:2.1.1")
-  testImplementation("org.postgresql:postgresql:42.7.11")
+  testImplementation("org.postgresql:postgresql:42.7.13")
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:junit-jupiter:$testContainersVersion")
   testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test") // webclient-test does not autoconfig a webtestclient, so we need to use webflux-test
 
   // Fix for security issue in transient dependency
-  implementation("ch.qos.logback:logback-classic:1.5.33")
-  implementation("ch.qos.logback:logback-core:1.5.33")
+  implementation("ch.qos.logback:logback-classic:1.6.3")
+  implementation("ch.qos.logback:logback-core:1.6.3")
 }
 
 java {
