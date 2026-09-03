@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.8.4
+- Add schedule description to definitions api
+
 # 17.8.3
 - Add another custom deserializer for SchemaField for kotlinx.serialization
 
