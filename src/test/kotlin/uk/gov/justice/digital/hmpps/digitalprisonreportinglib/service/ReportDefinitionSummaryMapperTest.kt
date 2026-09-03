@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProduc
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -131,7 +132,7 @@ class ReportDefinitionSummaryMapperTest {
 
   @Test
   fun `Getting report list for user maps full data correctly`() {
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val result = mapper.map(fullProductDefinition, null, executionContext)
 
@@ -161,7 +162,7 @@ class ReportDefinitionSummaryMapperTest {
         version = "5",
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val result = mapper.map(productDefinition, null, executionContext)
 
@@ -209,7 +210,7 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val result = mapper.map(productDefinition, HTML, executionContext)
 
@@ -220,7 +221,7 @@ class ReportDefinitionSummaryMapperTest {
 
   @Test
   fun `Getting report list with dashboards for user includes the dashboard definition in the mapped data`() {
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val dashboard = Dashboard(
       id = "d1",

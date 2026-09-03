@@ -28,6 +28,7 @@ dependencies {
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+  implementation("com.cronutils:cron-utils:9.2.1")
 
   // AWS
   implementation("software.amazon.awssdk:redshiftdata:$awsSdkVersion")
