@@ -7,34 +7,31 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.D
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.VariantDefinitionSummary
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyReport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 
 @Component
-class ReportDefinitionSummaryMapper {
+class ReportDefinitionSummaryMapper(
+  val identifiedHelper: IdentifiedHelper,
+) {
 
   fun map(
     productDefinition: AnyProductDefinition,
     renderMethod: RenderMethod?,
     executionContext: ExecutionContext,
-  ): ReportDefinitionSummary {
-    val datasetsById = productDefinition.dataset.associateBy { it.id }
-    return ReportDefinitionSummary(
-      id = productDefinition.id,
-      name = productDefinition.name,
-      description = productDefinition.description,
-      variants = productDefinition.report
-        .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
-        .map { map(it, productDefinition.path == DataDefinitionPath.MISSING, findDataset(it.dataset, datasetsById)?.schedule) },
-      dashboards = productDefinition.dashboard?.map { map(it) },
-      authorised = determineAuth(productDefinition, executionContext),
-    )
-  }
-
-  private fun findDataset(dataSetRefId: String, datasetsById: Map<String, Dataset>) = datasetsById.filterKeys { dataSetId -> dataSetRefId.contains(dataSetId) }.values.firstOrNull()
+  ): ReportDefinitionSummary = ReportDefinitionSummary(
+    id = productDefinition.id,
+    name = productDefinition.name,
+    description = productDefinition.description,
+    variants = productDefinition.report
+      .filter { renderMethod == null || it.render.toString() == renderMethod.toString() }
+      .map { map(it, productDefinition.path == DataDefinitionPath.MISSING, identifiedHelper.findOrNull(productDefinition.dataset, it.dataset)?.schedule) },
+    dashboards = productDefinition.dashboard?.map { map(it) },
+    authorised = determineAuth(productDefinition, executionContext),
+  )
 
   private fun determineAuth(
     productDefinition: WithPolicy,
