@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class DashboardOption(
   val useRagColour: Boolean? = null,
   val baseColour: String? = null,

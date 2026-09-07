@@ -67,7 +67,6 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.io.StringWriter
 import java.sql.ResultSet
 import java.sql.ResultSetMetaData
-import java.time.LocalDateTime
 
 class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
@@ -1272,7 +1271,6 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val report = Report(
       id = "6",
       name = "7",
-      created = LocalDateTime.MAX,
       version = "8",
       dataset = "\$ref:datasetId",
       render = RenderMethod.SVG,

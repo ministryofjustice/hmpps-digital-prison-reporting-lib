@@ -1,5 +1,24 @@
 Below you can find the changes included in each release.
 
+# 17.9.0
+- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.1.
+- Upgraded various other package versions
+
+# 17.8.4
+- Add schedule description to definitions api
+
+# 17.8.3
+- Add another custom deserializer for SchemaField for kotlinx.serialization
+
+# 17.8.2
+- Improve kotlinx.serialization support
+
+# 17.8.1
+- Remove BOM encoding from CSV download
+
+# 17.8.0
+- Add kotlinx.serialization support to our main DPD related entities
+
 # 17.7.2
 - User Subscription add filter for subscribed. 
 - 

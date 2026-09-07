@@ -185,7 +185,7 @@ class RedshiftDataApiRepository(
     return jdbcTemplate.queryForList(
       "SELECT COUNT(1) as total FROM reports.$tableId WHERE $whereClause;",
       MapSqlParameterSource(),
-    ).first()?.get("total") as Long
+    ).first().get("total") as Long
   }
 
   fun executeQueryAsync(

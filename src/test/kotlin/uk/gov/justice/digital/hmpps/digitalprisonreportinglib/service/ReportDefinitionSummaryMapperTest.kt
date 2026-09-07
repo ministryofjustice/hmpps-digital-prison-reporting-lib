@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProduc
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod.HTML
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
@@ -32,7 +33,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
-import java.time.LocalDateTime
 import java.util.Collections.singletonMap
 
 class ReportDefinitionSummaryMapperTest {
@@ -63,7 +63,6 @@ class ReportDefinitionSummaryMapperTest {
     id = "21",
     name = "22",
     description = "23",
-    created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
     render = RenderMethod.PDF,
@@ -133,7 +132,7 @@ class ReportDefinitionSummaryMapperTest {
 
   @Test
   fun `Getting report list for user maps full data correctly`() {
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val result = mapper.map(fullProductDefinition, null, executionContext)
 
@@ -163,7 +162,7 @@ class ReportDefinitionSummaryMapperTest {
         version = "5",
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val result = mapper.map(productDefinition, null, executionContext)
 
@@ -196,7 +195,6 @@ class ReportDefinitionSummaryMapperTest {
         Report(
           id = "13",
           name = "14",
-          created = LocalDateTime.MAX,
           version = "15",
           dataset = "\$ref:10",
           render = RenderMethod.SVG,
@@ -205,7 +203,6 @@ class ReportDefinitionSummaryMapperTest {
         Report(
           id = "16",
           name = "17",
-          created = LocalDateTime.MAX,
           version = "18",
           dataset = "\$ref:10",
           render = RenderMethod.HTML,
@@ -213,7 +210,7 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     )
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val result = mapper.map(productDefinition, HTML, executionContext)
 
@@ -224,7 +221,7 @@ class ReportDefinitionSummaryMapperTest {
 
   @Test
   fun `Getting report list with dashboards for user includes the dashboard definition in the mapped data`() {
-    val mapper = ReportDefinitionSummaryMapper()
+    val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
     val dashboard = Dashboard(
       id = "d1",
