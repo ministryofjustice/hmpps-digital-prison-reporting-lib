@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.s3.S3Client
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadedDefinitions
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 @Configuration
 class ProductDefinitionRepositoryAutoConfig(
@@ -62,7 +62,7 @@ class ProductDefinitionRepositoryAutoConfig(
   @ConditionalOnProperty("dpr.lib.dataProductDefinitions.cache.enabled", havingValue = "true")
   @ConditionalOnProperty("dpr.lib.dataProductDefinitions.s3.enabled", havingValue = "false", matchIfMissing = true)
   fun definitionsCache(): Cache<String, List<ProductDefinitionSummary>> = CacheBuilder.newBuilder()
-    .expireAfterWrite(cacheDurationMinutes, TimeUnit.MINUTES)
+    .expireAfterWrite(Duration.ofMinutes(cacheDurationMinutes))
     .concurrencyLevel(Runtime.getRuntime().availableProcessors())
     .build()
 
@@ -72,7 +72,7 @@ class ProductDefinitionRepositoryAutoConfig(
     havingValue = "true",
   )
   fun s3AndDdbDefinitionsCache(): Cache<String, LoadedDefinitions> = CacheBuilder.newBuilder()
-    .expireAfterWrite(cacheDurationMinutes, TimeUnit.MINUTES)
+    .expireAfterWrite(Duration.ofMinutes(cacheDurationMinutes))
     .concurrencyLevel(Runtime.getRuntime().availableProcessors())
     .build()
 
