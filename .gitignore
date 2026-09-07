@@ -71,6 +71,7 @@ ecr.repo
 dps-gradle-spring-boot-suppressions.xml
 .editorconfig
 sonar-project.properties
+.snyk
 
 #Helm
 **/Chart.lock

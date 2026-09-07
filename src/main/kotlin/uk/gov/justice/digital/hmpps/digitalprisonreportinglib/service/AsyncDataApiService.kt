@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.AsyncDownloadContext
 import java.io.Writer
-import java.util.Base64
 
 @Service
 @ConditionalOnBean(value = [RedshiftDataApiRepository::class, AthenaApiRepository::class])
@@ -198,8 +197,8 @@ class AsyncDataApiService(
     ).first,
   )
 
-  fun downloadCsv(
-    writer: Writer,
+  fun download(
+    rowWriter: ReportRowWriter,
     tableId: String,
     asyncDownloadContext: AsyncDownloadContext,
   ) {
@@ -208,8 +207,20 @@ class AsyncDataApiService(
       filters = asyncDownloadContext.validatedFilters,
       sortedAsc = asyncDownloadContext.sortedAsc,
       sortColumn = asyncDownloadContext.sortColumn,
-      rowConsumer = populateRowConsumer(asyncDownloadContext, writer),
+      rowConsumer = populateRowConsumer(asyncDownloadContext, rowWriter),
     )
+  }
+
+  @Deprecated(
+    "Use download() with an explicit ReportRowWriter so the caller chooses the format.",
+    ReplaceWith("download(CsvRowWriter(writer), tableId, asyncDownloadContext)"),
+  )
+  fun downloadCsv(
+    writer: Writer,
+    tableId: String,
+    asyncDownloadContext: AsyncDownloadContext,
+  ) {
+    download(CsvRowWriter(writer), tableId, asyncDownloadContext)
     writer.flush()
   }
 
@@ -291,7 +302,7 @@ class AsyncDataApiService(
     val dataset = identifiedHelper.findOrFail(productDefinition.allDatasets, summary.dataset)
     val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
-    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition)
+    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext)
 
     return results.map {
       formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
@@ -301,7 +312,7 @@ class AsyncDataApiService(
   // Request data from the summary table.
   // If it doesn't exist, create it (waiting for creation to complete).
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition): List<Map<String, Any?>> {
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext): List<Map<String, Any?>> {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
     val s3DataExists = s3ApiService.doesPrefixExist(tableSummaryId)
     log.debug("Redshift table exists: $tableExists")
@@ -309,7 +320,7 @@ class AsyncDataApiService(
     if (tableExists && s3DataExists) {
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } else if (!tableExists && !s3DataExists) {
-      configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition.datasource.name)
+      configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition.datasource.name, executionContext)
       // Might need a small delay here as reading straight after creation might fail
       return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
     } else {
@@ -357,7 +368,7 @@ class AsyncDataApiService(
   fun checkForScheduledDataset(
     productDefinition: SingleReportProductDefinition,
   ): String? {
-    val generatedTableId = generateScheduledDatasetId(productDefinition)
+    val generatedTableId = tableIdGenerator.generateScheduledDatasetId(productDefinition)
     // check if dataset configured for scheduling and table exists
     return if (productDefinition.hasDatasetScheduled() && !redshiftDataApiRepository.isTableMissing(generatedTableId.lowercase())) {
       // generate external table id
@@ -370,13 +381,6 @@ class AsyncDataApiService(
   fun SingleReportProductDefinition.hasDatasetScheduled(): Boolean {
     val reportScheduled = this.scheduled ?: false
     return reportScheduled && this.reportDataset.schedule != null
-  }
-
-  fun generateScheduledDatasetId(definition: SingleReportProductDefinition): String {
-    val id = "${definition.id}:${definition.reportDataset.id}"
-    val encodedId = Base64.getEncoder().encodeToString(id.toByteArray())
-    val updatedId = encodedId.replace("=", "_")
-    return "_$updatedId"
   }
 
   private fun getStatementExecutionStatus(

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
@@ -57,7 +58,14 @@ class ReportDefinitionController(
     dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
-    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+    httpRequest.getUserContext(
+      manageUsersClient,
+      hasProbationDatasources,
+      DataProductReportableInformation(
+        id = "",
+        variantId = "",
+      ),
+    ),
     renderMethod,
     dataProductDefinitionsPath,
   )
@@ -83,7 +91,14 @@ class ReportDefinitionController(
     httpRequest: HttpServletRequest,
   ): ReportDefinitionSummary = reportDefinitionService.getDefinitionSummary(
     reportId,
-    httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+    httpRequest.getUserContext(
+      manageUsersClient,
+      hasProbationDatasources,
+      DataProductReportableInformation(
+        id = reportId,
+        variantId = "",
+      ),
+    ),
     dataProductDefinitionsPath,
   )
 
@@ -121,7 +136,14 @@ class ReportDefinitionController(
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
     reportId = reportId,
     variantId = variantId,
-    executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+    executionContext = httpRequest.getUserContext(
+      manageUsersClient,
+      hasProbationDatasources,
+      DataProductReportableInformation(
+        id = reportId,
+        variantId = variantId,
+      ),
+    ),
     dataProductDefinitionsPath = dataProductDefinitionsPath,
     filters = filterHelper.filtersOnly(filters),
   )

@@ -1,5 +1,63 @@
 Below you can find the changes included in each release.
 
+# 17.9.0
+- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.1.
+- Upgraded various other package versions
+
+# 17.8.4
+- Add schedule description to definitions api
+
+# 17.8.3
+- Add another custom deserializer for SchemaField for kotlinx.serialization
+
+# 17.8.2
+- Improve kotlinx.serialization support
+
+# 17.8.1
+- Remove BOM encoding from CSV download
+
+# 17.8.0
+- Add kotlinx.serialization support to our main DPD related entities
+
+# 17.7.2
+- User Subscription add filter for subscribed. 
+- 
+# 17.7.1
+- Update timestamp handling for User Subscription
+
+# 17.7.0
+ - Add support for Athena prefilter queries
+
+# 17.6.1
+- Add query metrics to summary query, differentiate between different query types (summary/normal), put reportable info into ExecutionContext
+
+# 17.6.0
+- Added User Subscription Endpoints
+
+# 17.5.3
+- Fixed issue with match condition behaving inconsistently for roles versus any other cases.  
+
+# 17.5.2
+- Added extra information in the query comments we generate for Redshift and Athena queries
+
+# 17.5.1
+- Registered `XlsxStreamingSupport` in `AutoConfiguration.imports`. It was added as a `@Component` in 17.5.0 and injected into `DataApiSyncController` and `DataApiAsyncController`, but never listed, so consuming applications failed to start with `No qualifying bean of type ... XlsxStreamingSupport`. 17.5.0 cannot be used and should be skipped.
+
+# 17.5.0
+- Added an Excel (xlsx) download format for reports, alongside the existing csv download:
+  - sync: `GET /reports/{reportId}/{reportVariantId}/download/xlsx`
+  - async: `GET /reports/{reportId}/{reportVariantId}/tables/{tableId}/download/xlsx`
+- Excel type-guesses every value in a csv when the file is opened, so values such as a room number `1.5.2` become dates and `007` loses its leading zeros. Quoting csv fields does not prevent this. In xlsx each cell carries its type explicitly, so text stays text. Columns declared in the schema as dates or numbers are still written as real dates and numbers, so sorting and filtering behave as expected.
+- Report row writing now sits behind a `ReportRowWriter` interface (`CsvRowWriter`, `XlsxRowWriter`). csv output is unchanged.
+- `SyncDataApiService.downloadCsv` and `AsyncDataApiService.downloadCsv` are deprecated in favour of `download(rowWriter, ...)`. The existing methods still work and still produce csv.
+
+# 17.4.1
+- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.0 
+- Upgraded `uk.gov.justice.hmpps.gradle-spring-boot` plugin to 11.0.2
+
+# 17.4.0
+- Added support for parent-child dashboards
+
 # 17.3.0
 - Add basic support for external users
 

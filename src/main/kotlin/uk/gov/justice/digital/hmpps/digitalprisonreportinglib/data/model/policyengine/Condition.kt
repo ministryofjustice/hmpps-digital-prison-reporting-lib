@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOAD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.CASELOADS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.ROLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.PolicyEngine.VariableNames.TOKEN
 
+@Serializable
 data class Condition(
   val match: List<String>? = null,
   val exists: List<String>? = null,
@@ -42,9 +45,12 @@ data class Condition(
   private fun isTheInterpolatedVarInTheList(
     matchList: List<String>,
     interpolateVariables: (String) -> String,
-  ) = matchList.map {
-    interpolateVariables(it)
-  }.toSet().count() == 1
+  ): Boolean {
+    if (matchList.size < 2) return false
+    val interpolatedPlaceholder = interpolateVariables(matchList.first())
+    if (interpolatedPlaceholder == POLICY_DENY) return false
+    return matchList.drop(1).contains(interpolatedPlaceholder)
+  }
 
   private fun isNotNull(
     varPlaceholder: String,

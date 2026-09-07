@@ -62,6 +62,7 @@ class RedshiftDataApiRepository(
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
+          /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
           CREATE EXTERNAL TABLE reports.$tableId 
           STORED AS parquet 
           LOCATION 's3://$s3location/$tableId/' 
@@ -76,7 +77,7 @@ class RedshiftDataApiRepository(
       )
     }
           );
-          ${buildSummaryQueries(tableId, reportSummaries, allDatasets)}
+          ${buildSummaryQueries(tableId, reportSummaries, allDatasets, executionContext)}
     """.trimIndent()
 
     return executeQueryAsync(datasource, tableId, generateSql)
@@ -145,6 +146,7 @@ class RedshiftDataApiRepository(
     tableId: String,
     reportSummaries: List<ReportSummary>?,
     allDatasets: List<Dataset>,
+    executionContext: ExecutionContext,
   ): String = reportSummaries?.joinToString(" ") {
     val query = identifiedHelper.findOrFail(allDatasets, it.dataset).query.first().query
 
@@ -152,6 +154,7 @@ class RedshiftDataApiRepository(
       query,
       tableId,
       it.id,
+      executionContext,
     )
   } ?: ""
 
@@ -182,16 +185,18 @@ class RedshiftDataApiRepository(
     return jdbcTemplate.queryForList(
       "SELECT COUNT(1) as total FROM reports.$tableId WHERE $whereClause;",
       MapSqlParameterSource(),
-    ).first()?.get("total") as Long
+    ).first().get("total") as Long
   }
 
   fun executeQueryAsync(
     productDefinition: SingleDashboardProductDefinition,
     policyEngineResult: String,
     filters: List<ConfiguredApiRepository.Filter>,
+    executionContext: ExecutionContext,
   ): StatementExecutionResponse {
     val tableId = tableIdGenerator.generateNewExternalTableId()
     val generateSql = """
+          /* QUERY_INFO|||${productDefinition.id}|||${productDefinition.name}|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||${productDefinition.dashboard.id}|||${productDefinition.dashboard.name}|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
           CREATE EXTERNAL TABLE reports.$tableId 
           STORED AS parquet 
           LOCATION 's3://$s3location/$tableId/' 

@@ -95,6 +95,7 @@ class AthenaApiRepository(
       reportOrDashboardName,
       executionContext,
       prompts,
+      filters,
       reportFilter,
       policyEngineResult,
       sortColumn,
@@ -111,6 +112,7 @@ class AthenaApiRepository(
       executionContext,
       prompts,
       query.first().query,
+      filters,
       reportFilter,
       policyEngineResult,
       dynamicFilterFieldId,
@@ -186,6 +188,7 @@ class AthenaApiRepository(
     executionContext: ExecutionContext,
     prompts: List<Prompt>?,
     query: String,
+    filters: List<ConfiguredApiRepository.Filter>,
     reportFilter: ReportFilter?,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
@@ -206,9 +209,11 @@ class AthenaApiRepository(
       buildDatasetQuery(query),
       buildReportQuery(reportFilter),
       buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
-      "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
+      buildFiltersQuery(filters),
       buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
     ),
+    executionContext,
+    datasource,
   )
 
   private fun buildContextQuery(executionContext: ExecutionContext, dialect: SqlDialect? = null): String = """WITH $CONTEXT AS (
@@ -246,6 +251,7 @@ class AthenaApiRepository(
     reportOrDashboardName: String,
     executionContext: ExecutionContext,
     prompts: List<Prompt>?,
+    filters: List<ConfiguredApiRepository.Filter>,
     reportFilter: ReportFilter?,
     policyEngineResult: String,
     sortColumn: String?,
@@ -262,6 +268,7 @@ class AthenaApiRepository(
         reportOrDashboardName,
         executionContext,
         prompts,
+        filters,
         reportFilter,
         multiphaseQueries,
         policyEngineResult,
@@ -355,6 +362,8 @@ class AthenaApiRepository(
         "$FILTER_ AS (SELECT * FROM $POLICY_ WHERE $TRUE_WHERE_CLAUSE)",
         buildFinalStageQuery(sortColumn = sortColumn, sortedAsc = sortedAsc),
       ),
+      executionContext,
+      datasource,
     )
     log.debug("Last multiphase query: {}", lastQuery)
     val lastInsertStatement = buildInsertStatement(
@@ -408,6 +417,8 @@ class AthenaApiRepository(
             .joinToString(",") +
             "\nSELECT * FROM $DATASET_"
           ),
+        executionContext,
+        datasource,
       )
       log.debug("Intermediate query at index ${i + 1}: {}", intermediateQueryString)
       val insertQuery = buildInsertStatement(
@@ -461,6 +472,8 @@ class AthenaApiRepository(
           .joinToString(",") +
           "\nSELECT * FROM $DATASET_"
         ),
+      executionContext,
+      datasource,
     )
 
     log.debug("Database query at index ${multiphaseQuerySortedByIndex[0].index}: $firstQuery")
@@ -487,6 +500,7 @@ class AthenaApiRepository(
     reportOrDashboardName: String,
     executionContext: ExecutionContext,
     prompts: List<Prompt>?,
+    filters: List<ConfiguredApiRepository.Filter>,
     reportFilter: ReportFilter?,
     multiphaseQueries: List<MultiphaseQuery>,
     policyEngineResult: String,
@@ -505,12 +519,13 @@ class AthenaApiRepository(
       tableId = tableId,
       executionContext = executionContext,
       prompts = prompts,
-      reportFilter = reportFilter,
       query = multiphaseQueries.first().query,
+      filters = filters,
+      reportFilter = reportFilter,
       policyEngineResult = policyEngineResult,
+      dynamicFilterFieldId = null,
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
-      dynamicFilterFieldId = null,
       datasource = datasource,
     )
     val singleQueryExecutionResult =
@@ -571,6 +586,7 @@ class AthenaApiRepository(
     executionContext: ExecutionContext,
     prompts: List<Prompt>?,
     query: String,
+    filters: List<ConfiguredApiRepository.Filter>,
     reportFilter: ReportFilter?,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>?,
@@ -588,6 +604,7 @@ class AthenaApiRepository(
       executionContext,
       prompts,
       query,
+      filters,
       reportFilter,
       policyEngineResult,
       dynamicFilterFieldId,
@@ -607,12 +624,14 @@ class AthenaApiRepository(
     tableId: String,
     connection: DatasourceConnection,
     innerQuery: String,
+    executionContext: ExecutionContext,
+    datasource: Datasource,
   ): String {
     val fullQuery =
       when (connection) {
         DatasourceConnection.FEDERATED ->
           """
-          /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+          /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
           CREATE TABLE AwsDataCatalog.reports.$tableId 
           WITH (
             format = 'PARQUET'
@@ -626,7 +645,7 @@ class AthenaApiRepository(
 
         DatasourceConnection.AWS_DATA_CATALOG ->
           """
-            /* $productDefinitionId $productDefinitionName $reportOrDashboardId $reportOrDashboardName */
+              /* QUERY_INFO|||$productDefinitionId|||$productDefinitionName|||${datasource.name}|||${datasource.database}|||${datasource.catalog}|||$reportOrDashboardId|||$reportOrDashboardName|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
                 CREATE TABLE AwsDataCatalog.reports.$tableId
                 WITH (
                   format = 'PARQUET'

@@ -13,6 +13,7 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldSource
@@ -73,7 +74,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prom
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
@@ -111,7 +111,6 @@ class ReportDefinitionMapperTest {
     id = "C21",
     name = "C22",
     description = "C23",
-    created = LocalDateTime.MIN,
     version = "C24",
     dataset = "\$ref:10",
     render = RenderMethod.HTMLChild,
@@ -153,7 +152,6 @@ class ReportDefinitionMapperTest {
     id = "21",
     name = "22",
     description = "23",
-    created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
     render = RenderMethod.PDF,
@@ -280,6 +278,7 @@ class ReportDefinitionMapperTest {
     emptyList(),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation(singleReportProductDefinition.id, singleReportProductDefinition.name, singleReportProductDefinition.datasource, singleReportProductDefinition.report.id, singleReportProductDefinition.report.name),
   )
 
   val mapper = ReportDefinitionMapper(
@@ -381,7 +380,6 @@ class ReportDefinitionMapperTest {
         id = "21",
         name = "22",
         description = "23",
-        created = LocalDateTime.MAX,
         version = "24",
         dataset = "\$ref:10",
         render = RenderMethod.PDF,
@@ -1351,7 +1349,6 @@ class ReportDefinitionMapperTest {
     id = "21",
     name = "22",
     description = "23",
-    created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
     render = RenderMethod.PDF,
@@ -1426,7 +1423,6 @@ class ReportDefinitionMapperTest {
     id = "21",
     name = "22",
     description = "23",
-    created = LocalDateTime.MAX,
     version = "24",
     dataset = "\$ref:10",
     render = RenderMethod.PDF,
@@ -1510,7 +1506,6 @@ class ReportDefinitionMapperTest {
       Report(
         id = "16",
         name = "17",
-        created = LocalDateTime.MAX,
         version = "18",
         dataset = "\$ref:10",
         render = RenderMethod.HTML,

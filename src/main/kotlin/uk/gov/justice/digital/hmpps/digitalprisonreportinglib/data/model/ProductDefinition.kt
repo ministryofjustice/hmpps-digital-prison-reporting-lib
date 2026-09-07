@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
@@ -21,6 +22,7 @@ interface AnyProductDefinition : WithPolicy {
   val dashboard: List<Dashboard>? get() = null
 }
 
+@Serializable
 data class ProductDefinition(
   override val id: String,
   override val name: String,

@@ -64,7 +64,7 @@ abstract class RepositoryHelper {
     return if (context.containsBean(mainDataSource)) {
       context.getBean(mainDataSource, DataSource::class) as DataSource
     } else {
-      context.getBean(DataSource::class.java) as DataSource
+      context.getBean(DataSource::class.java)
     }
   }
 

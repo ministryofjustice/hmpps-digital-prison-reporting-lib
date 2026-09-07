@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
@@ -38,7 +39,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvRowWriter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.XlsxStreamingSupport
 import java.util.Collections.singletonList
 
 @Validated
@@ -49,6 +52,7 @@ class DataApiAsyncController(
   val asyncDataApiService: AsyncDataApiService,
   val filterHelper: FilterHelper,
   val csvStreamingSupport: CsvStreamingSupport,
+  val xlsxStreamingSupport: XlsxStreamingSupport,
   val manageUsersClient: ManageUsersClient,
   @Value("\${dpr.lib.hasProbationDatasources}")
   val hasProbationDatasources: Boolean,
@@ -108,7 +112,14 @@ class DataApiAsyncController(
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
-          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+          executionContext = httpRequest.getUserContext(
+            manageUsersClient,
+            hasProbationDatasources,
+            DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
+          ),
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -165,7 +176,14 @@ class DataApiAsyncController(
           dashboardId = dashboardId,
           dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+          executionContext = httpRequest.getUserContext(
+            manageUsersClient,
+            hasProbationDatasources,
+            DataProductReportableInformation(
+              id = reportId,
+              variantId = dashboardId,
+            ),
+          ),
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -227,7 +245,14 @@ class DataApiAsyncController(
         statementId = statementId,
         reportId = reportId,
         reportVariantId = reportVariantId,
-        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+        executionContext = httpRequest.getUserContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
+          ),
+        ),
         dataProductDefinitionsPath,
       ),
     )
@@ -282,7 +307,14 @@ class DataApiAsyncController(
         statementId = statementId,
         productDefinitionId = reportId,
         dashboardId = dashboardId,
-        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+        executionContext = httpRequest.getUserContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = dashboardId,
+          ),
+        ),
         dataProductDefinitionsPath,
       ),
     )
@@ -325,7 +357,14 @@ class DataApiAsyncController(
         statementId,
         reportId,
         reportVariantId,
-        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+        executionContext = httpRequest.getUserContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
+          ),
+        ),
         dataProductDefinitionsPath,
       ),
     )
@@ -356,7 +395,14 @@ class DataApiAsyncController(
         statementId,
         definitionId,
         dashboardId,
-        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+        executionContext = httpRequest.getUserContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = definitionId,
+            variantId = dashboardId,
+          ),
+        ),
         dataProductDefinitionsPath,
       ),
     )
@@ -432,7 +478,14 @@ class DataApiAsyncController(
           reportId,
           reportVariantId,
           filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+          executionContext = httpRequest.getUserContext(
+            manageUsersClient,
+            hasProbationDatasources,
+            DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
+          ),
           dataProductDefinitionsPath,
         ),
       )
@@ -489,7 +542,14 @@ class DataApiAsyncController(
         filters = filterHelper.filtersOnly(filters),
         sortedAsc = sortedAsc,
         sortColumn = sortColumn,
-        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+        executionContext = httpRequest.getUserContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
+          ),
+        ),
       ),
     )
 
@@ -530,7 +590,14 @@ class DataApiAsyncController(
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = filterHelper.filtersOnly(filters),
-        executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+        executionContext = httpRequest.getUserContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = dashboardId,
+          ),
+        ),
       ),
     )
 
@@ -564,7 +631,14 @@ class DataApiAsyncController(
       reportVariantId = reportVariantId,
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
-      executionContext = httpRequest.getUserContext(manageUsersClient, hasProbationDatasources),
+      executionContext = httpRequest.getUserContext(
+        manageUsersClient,
+        hasProbationDatasources,
+        DataProductReportableInformation(
+          id = reportId,
+          variantId = reportVariantId,
+        ),
+      ),
     )
     return ResponseEntity
       .status(HttpStatus.OK)
@@ -609,7 +683,14 @@ class DataApiAsyncController(
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      executionContext = request.getUserContext(manageUsersClient, hasProbationDatasources),
+      executionContext = request.getUserContext(
+        manageUsersClient,
+        hasProbationDatasources,
+        DataProductReportableInformation(
+          id = reportId,
+          variantId = reportVariantId,
+        ),
+      ),
     )
 
     csvStreamingSupport.streamCsv(
@@ -618,8 +699,76 @@ class DataApiAsyncController(
       request,
       response,
     ) { writer ->
-      asyncDataApiService.downloadCsv(
-        writer = writer,
+      CsvRowWriter(writer).use { rowWriter ->
+        asyncDataApiService.download(
+          rowWriter = rowWriter,
+          tableId = tableId,
+          asyncDownloadContext = downloadContext,
+        )
+      }
+    }
+  }
+
+  @GetMapping(
+    "/reports/{reportId}/{reportVariantId}/tables/{tableId}/download/xlsx",
+    produces = [XlsxStreamingSupport.XLSX_CONTENT_TYPE],
+  )
+  @Operation(
+    description = "Streams the entire result set of the async query execution as an Excel (xlsx) file. " +
+      "Unlike the csv download, cell types are explicit, so values such as room numbers are not " +
+      "reinterpreted as dates when the file is opened in Excel.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun downloadXlsx(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @RequestParam(
+      "dataProductDefinitionsPath",
+      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    dataProductDefinitionsPath: String? = null,
+    @PathVariable("tableId") tableId: String,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @Parameter(
+      description = "List of column names to include in the generated report. If not provided all the columns will be returned.",
+    )
+    @RequestParam(required = false)
+    columns: List<String>? = null,
+    @RequestParam sortColumn: String?,
+    @RequestParam sortedAsc: Boolean?,
+    request: HttpServletRequest,
+    response: HttpServletResponse,
+  ) {
+    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      dataProductDefinitionsPath = dataProductDefinitionsPath,
+      filters = filterHelper.filtersOnly(filters),
+      selectedColumns = columns,
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+      executionContext = request.getUserContext(
+        manageUsersClient,
+        hasProbationDatasources,
+        DataProductReportableInformation(
+          id = reportId,
+          variantId = reportVariantId,
+        ),
+      ),
+    )
+
+    xlsxStreamingSupport.streamXlsx(
+      reportId,
+      reportVariantId,
+      response,
+    ) { rowWriter ->
+      asyncDataApiService.download(
+        rowWriter = rowWriter,
         tableId = tableId,
         asyncDownloadContext = downloadContext,
       )

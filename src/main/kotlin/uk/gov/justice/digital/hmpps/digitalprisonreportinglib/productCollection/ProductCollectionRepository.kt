@@ -94,7 +94,7 @@ class ProductCollectionRepository : RepositoryHelper() {
     if (results.isNullOrEmpty()) {
       return null
     }
-    val firstResult = results[0]!!
+    val firstResult = results[0]
     val collection = ProductCollection(firstResult.id, firstResult.name, firstResult.version, firstResult.ownerName, mutableSetOf(), mutableSetOf())
     results.forEach {
       if (it.productId != null) {

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context
 
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
@@ -9,6 +10,7 @@ data class ExecutionContext(
   val userRoles: List<String>,
   val userInfo: AuthUser,
   val hasProbationDatasources: Boolean,
+  val dataProductReportableInformation: DataProductReportableInformation,
 ) {
   fun getActiveCaseLoadId(): String? = prisonCaseloadData.activeCaseload?.id
   fun hasValidAuth(): Boolean {
@@ -19,3 +21,11 @@ data class ExecutionContext(
   }
   fun getCaseLoadIds(): List<String> = prisonCaseloadData.caseloads.map { it.id }
 }
+
+data class DataProductReportableInformation(
+  val id: String,
+  val name: String? = "",
+  val datasource: Datasource? = null,
+  val variantId: String,
+  val variantName: String? = "",
+)

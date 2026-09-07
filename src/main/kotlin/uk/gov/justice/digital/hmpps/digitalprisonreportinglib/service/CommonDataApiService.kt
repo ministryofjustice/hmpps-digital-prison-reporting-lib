@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEng
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.CoreDownloadContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.DownloadContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
-import java.io.Writer
 import java.sql.ResultSet
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -319,33 +318,48 @@ abstract class CommonDataApiService(
 
   protected fun populateRowConsumer(
     downloadContext: DownloadContext,
-    writer: Writer,
+    rowWriter: ReportRowWriter,
   ): (ResultSet) -> Unit {
     var allColumnsFormattedAndValidated: List<String>? = null
-    lateinit var csvOutputColumns: List<String>
+    lateinit var outputColumns: List<String>
     return { rs ->
       if (allColumnsFormattedAndValidated == null) {
         allColumnsFormattedAndValidated = formatColumnNamesToSourceFieldNamesCasing(
           columnHeaders = extractColumnNames(rs),
           fieldNames = downloadContext.schemaFields.map(SchemaField::name),
         )
-        csvOutputColumns =
+        outputColumns =
           filterAndSortColumns(downloadContext.selectedAndValidatedColumns, allColumnsFormattedAndValidated)
-        writeCsvHeader(
-          writer = writer,
-          columns = formatColumnsToDisplayNames(
-            csvOutputColumns,
+        rowWriter.writeHeader(
+          buildReportColumns(
+            outputColumns,
             downloadContext.reportFields,
             downloadContext.schemaFields,
           ),
         )
       }
-      writeRowWithFormulaAsCsv(
+      writeRowWithFormula(
         rs = rs,
-        writer = writer,
+        rowWriter = rowWriter,
         formulaEngine = downloadContext.formulaEngine,
         allColumns = allColumnsFormattedAndValidated,
-        csvOutputColumns = csvOutputColumns,
+        outputColumns = outputColumns,
+      )
+    }
+  }
+
+  private fun buildReportColumns(
+    columnNames: List<String>,
+    reportFields: List<ReportField>?,
+    schemaFields: List<SchemaField>,
+  ): List<ReportColumn> {
+    val displayNames = formatColumnsToDisplayNames(columnNames, reportFields, schemaFields)
+    val typesByName = schemaFields.associate { it.name to it.type }
+    return columnNames.mapIndexed { index, name ->
+      ReportColumn(
+        name = name,
+        display = displayNames[index],
+        type = typesByName[name] ?: ParameterType.String,
       )
     }
   }
@@ -403,47 +417,20 @@ abstract class CommonDataApiService(
     }
   }
 
-  private fun writeCsvHeader(
-    writer: Writer,
-    columns: List<String>,
-  ) {
-    writer.write(
-      columns.joinToString(",") { escapeCsv(it) },
-    )
-    writer.write("\n")
-  }
-
   private fun extractColumnNames(rs: ResultSet): List<String> {
     val meta = rs.metaData
     return (1..meta.columnCount).map { meta.getColumnLabel(it) }
   }
 
-  private fun writeRowWithFormulaAsCsv(
+  private fun writeRowWithFormula(
     rs: ResultSet,
-    writer: Writer,
+    rowWriter: ReportRowWriter,
     formulaEngine: FormulaEngine,
     allColumns: List<String>,
-    csvOutputColumns: List<String>,
+    outputColumns: List<String>,
   ) {
     val fullRowWithFormulasApplied = formulaEngine.applyFormulas(buildRowWithAllColumns(allColumns, rs))
-    csvOutputColumns.forEachIndexed { index, col ->
-      if (index > 0) writer.write(",")
-      writer.write(escapeCsv(fullRowWithFormulasApplied[col]))
-    }
-    writer.write("\n")
-  }
-
-  private fun escapeCsv(value: Any?): String {
-    if (value == null) return ""
-
-    val str = value.toString()
-    val needsEscaping = str.contains(",") || str.contains("\"") || str.contains("\n")
-
-    return if (needsEscaping) {
-      "\"${str.replace("\"", "\"\"")}\""
-    } else {
-      str
-    }
+    rowWriter.writeRow(outputColumns.map { fullRowWithFormulasApplied[it] })
   }
 
   private fun buildRowWithAllColumns(columnNames: List<String>, rs: ResultSet): MutableMap<String, Any?> {

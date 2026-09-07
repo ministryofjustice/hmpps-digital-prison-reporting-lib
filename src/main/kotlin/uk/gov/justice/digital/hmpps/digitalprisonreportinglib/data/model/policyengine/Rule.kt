@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine
 
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 
+@Serializable
 data class Rule(
   val effect: Effect,
   val condition: List<Condition>?,

@@ -9,6 +9,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.then
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RenderMethod
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportDefinitionSummary
@@ -34,7 +35,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
-import java.time.LocalDateTime
 
 class ReportDefinitionServiceTest {
 
@@ -74,7 +74,6 @@ class ReportDefinitionServiceTest {
     report = Report(
       id = "3",
       name = "4",
-      created = LocalDateTime.now(),
       version = "5",
       dataset = "\$ref:10",
       render = HTML,
@@ -108,6 +107,7 @@ class ReportDefinitionServiceTest {
     emptyList(),
     AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
     false,
+    DataProductReportableInformation("", "", mock(), "", ""),
   )
 
   @BeforeEach

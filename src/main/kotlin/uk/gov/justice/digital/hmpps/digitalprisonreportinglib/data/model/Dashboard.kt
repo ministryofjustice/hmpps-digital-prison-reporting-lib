@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 
+@Serializable
 data class Dashboard(
   val id: String,
   val name: String,
@@ -10,4 +12,7 @@ data class Dashboard(
   val section: List<DashboardSection>,
   val filter: ReportFilter? = null,
   val loadType: LoadType? = null,
-)
+  val child: List<DashboardChild>? = null,
+) : Identified {
+  override fun getIdentifier() = this.id
+}
