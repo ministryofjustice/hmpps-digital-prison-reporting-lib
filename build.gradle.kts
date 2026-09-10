@@ -38,7 +38,7 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
   // Excel (xlsx) report downloads. Kept out of the public API surface, so `implementation`
   // is enough - consumers get it transitively at runtime.
