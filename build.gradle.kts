@@ -1,16 +1,16 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.7"
-  kotlin("jvm") version "2.4.10"
-  kotlin("plugin.spring") version "2.4.10"
-  kotlin("plugin.jpa") version "2.4.10"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.8"
+  kotlin("jvm") version "2.4.20"
+  kotlin("plugin.spring") version "2.4.20"
+  kotlin("plugin.jpa") version "2.4.20"
   id("jacoco")
   id("org.barfuin.gradle.jacocolog") version "4.0.2"
   id("maven-publish")
   id("signing")
   id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-  kotlin("plugin.serialization") version "2.4.10"
+  kotlin("plugin.serialization") version "2.4.20"
 }
 
 configurations {
@@ -38,7 +38,7 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
   // Excel (xlsx) report downloads. Kept out of the public API surface, so `implementation`
   // is enough - consumers get it transitively at runtime.
