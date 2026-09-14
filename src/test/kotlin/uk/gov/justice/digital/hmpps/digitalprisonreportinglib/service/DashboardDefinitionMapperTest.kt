@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserial
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -90,7 +91,7 @@ class DashboardDefinitionMapperTest {
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
-    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull())).then {
+    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())).then {
       listOf(
         mapOf("establishment_id" to "AAA", "establishment_name" to "Aardvark"),
         mapOf("establishment_id" to "BBB", "establishment_name" to "Bumblebee"),
@@ -103,6 +104,8 @@ class DashboardDefinitionMapperTest {
       allDashboards = productDefinition.allDashboards,
       allDatasets = productDefinition.allDatasets,
       executionContext = executionContext,
+      null,
+      productDefinition.datasource,
     )
     assertEquals(
       DashboardDefinition(
@@ -169,6 +172,8 @@ class DashboardDefinitionMapperTest {
       sortColumn = eq("establishment_id"),
       dataset = any(),
       prompts = anyOrNull(),
+      datasource = anyOrNull(),
+      executionContext = anyOrNull(),
     )
   }
 
@@ -208,11 +213,15 @@ class DashboardDefinitionMapperTest {
         parameter,
       ),
     )
+    val database = "testdb"
+    val catalog = "testcatalog"
+    val datasource1 = Datasource("id", "testdatasource", database, catalog)
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
+      datasource = datasource1,
     )
     val expected = DashboardDefinition(
       id,
@@ -293,11 +302,15 @@ class DashboardDefinitionMapperTest {
       query = listOf(multiphaseQuery1, multiphaseQuery2),
       schema = Schema(listOf(SchemaField("n", ParameterType.String, "d"))),
     )
+    val database = "testdb"
+    val catalog = "testcatalog"
+    val datasource1 = Datasource("id", "testdatasource", database, catalog)
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
+      datasource = datasource1,
     )
     val expected = DashboardDefinition(
       id,
@@ -365,11 +378,15 @@ class DashboardDefinitionMapperTest {
         ),
       ),
     )
+    val database = "testdb"
+    val catalog = "testcatalog"
+    val datasource1 = Datasource("id", "testdatasource", database, catalog)
     val actual = dashboardDefinitionMapper.toDashboardDefinition(
       dashboard = dashboard,
       allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
+      datasource = datasource1,
     )
     val expected = DashboardDefinition(
       id,
@@ -409,7 +426,7 @@ class DashboardDefinitionMapperTest {
 
   @Test
   fun `getDashboardDefinition returns the dashboard definition for parent-child dashboards`() {
-    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull())).then {
+    whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())).then {
       listOf(
         mapOf("establishment_id" to "AAA", "establishment_name" to "Aardvark"),
         mapOf("establishment_id" to "BBB", "establishment_name" to "Bumblebee"),
@@ -432,11 +449,15 @@ class DashboardDefinitionMapperTest {
     )
 
     val productDefinitionWithChild = productDefinitionRepositoryWithChild.getSingleDashboardProductDefinition("missing-ethnicity-metrics", "age-breakdown-dashboard-with-child")
+    val database = "testdb"
+    val catalog = "testcatalog"
+    val datasource1 = Datasource("id", "testdatasource", database, catalog)
     val actual = dashboardDefinitionMapperWithChild.toDashboardDefinition(
       dashboard = productDefinitionWithChild.dashboard,
       allDashboards = productDefinitionWithChild.allDashboards,
       allDatasets = productDefinitionWithChild.allDatasets,
       executionContext = executionContext,
+      datasource = datasource1,
     )
 
     val expectedSections = listOf(
@@ -526,6 +547,8 @@ class DashboardDefinitionMapperTest {
       sortColumn = eq("establishment_id"),
       dataset = any(),
       prompts = anyOrNull(),
+      executionContext = anyOrNull(),
+      datasource = anyOrNull(),
     )
   }
 }

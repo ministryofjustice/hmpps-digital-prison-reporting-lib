@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -54,6 +55,22 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     tableId: String,
     query: String,
   ): StatementExecutionResponse
+
+  abstract fun executeQuery(
+    query: String,
+    filters: List<Filter>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    policyEngineResult: String,
+    dynamicFilterFieldId: Set<String>? = null,
+    dataSourceName: String,
+    reportFilter: ReportFilter? = null,
+    prompts: List<Prompt>? = null,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
+  ): List<Map<String, Any?>>
 
   fun getPaginatedExternalTableResult(
     tableId: String,

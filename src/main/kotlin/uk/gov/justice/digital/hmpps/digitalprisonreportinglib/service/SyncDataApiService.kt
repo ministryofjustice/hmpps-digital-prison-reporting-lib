@@ -1,13 +1,18 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -16,9 +21,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Sync
 import java.io.Writer
 
 @Service
+@ConditionalOnBean(value = [RedshiftDataApiRepository::class, AthenaApiRepository::class])
 class SyncDataApiService(
   productDefinitionRepository: ProductDefinitionRepository,
-  private val configuredApiRepository: ConfiguredApiRepository,
+  val configuredApiRepository: ConfiguredApiRepository,
+  val athenaApiRepository: AthenaApiRepository,
+  val redshiftDataApiRepository: RedshiftDataApiRepository,
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   identifiedHelper: IdentifiedHelper,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
@@ -39,6 +47,11 @@ class SyncDataApiService(
     const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
     const val FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE = "Filter value does not match pattern:"
   }
+
+  private val datasourceNameToRepo: Map<String, RedshiftDataApiRepository>
+    get() = mapOf(
+      "datamart" to redshiftDataApiRepository,
+    )
 
   fun validateAndFetchData(
     reportId: String,
@@ -84,14 +97,18 @@ class SyncDataApiService(
       }
   }
 
+  private fun getRepo(datasourceName: String): AthenaAndRedshiftCommonRepository = datasourceNameToRepo.getOrDefault(datasourceName.lowercase(), athenaApiRepository)
+
   fun validateAndFetchDataForFilterWithDataset(
     pageSize: Long,
     sortColumn: String,
     dataset: Dataset,
     prompts: List<Prompt>? = null,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
     val formulaEngine = FormulaEngine(emptyList(), env, identifiedHelper)
-    return configuredApiRepository
+    return getRepo(dataset.datasource)
       .executeQuery(
         query = dataset.query.first().query,
         filters = emptyList(),
@@ -102,6 +119,8 @@ class SyncDataApiService(
         policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
         dataSourceName = dataset.datasource,
         prompts = prompts,
+        datasource = datasource,
+        executionContext = executionContext,
       )
       .let { records ->
         formatColumnsAndApplyFormulas(

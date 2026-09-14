@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboa
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.DashboardVisualisationColumn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
@@ -58,6 +59,7 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>? = null,
+    datasource: Datasource,
   ): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
@@ -66,8 +68,8 @@ class DashboardDefinitionMapper(
       name = dashboard.name,
       description = dashboard.description,
       sections = mapSections(dashboard, dataset),
-      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters),
-      childVariants = mapChildVariants(dashboard, allDashboards, allDatasets, executionContext, filters),
+      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters, datasource),
+      childVariants = mapChildVariants(dashboard, allDashboards, allDatasets, executionContext, filters, datasource),
     )
   }
 
@@ -77,6 +79,7 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
+    datasource: Datasource,
   ): List<DashboardDefinition>? = dashboard.child?.map { child ->
     val dashboard = identifiedHelper.findOrFail<Dashboard>(
       all = allDashboards,
@@ -89,6 +92,7 @@ class DashboardDefinitionMapper(
       allDatasets = allDatasets,
       executionContext = executionContext,
       filters = filters,
+      datasource = datasource,
     )
   }
 
@@ -146,7 +150,8 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
-  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, executionContext, filters) +
+    datasource: Datasource,
+  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, executionContext, filters, datasource) +
     maybeConvertParametersToReportFields(dataset.query, dataset.parameters)
 
   private fun convertDatasetFilterFieldsToReportFields(
@@ -154,9 +159,10 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
+    datasource: Datasource,
   ) = dataset.schema.field
     .filter { it.filter != null }
-    .map { toFilterField(it, allDatasets, executionContext, dataset, filters) }
+    .map { toFilterField(it, allDatasets, executionContext, dataset, filters, datasource) }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>, dataset: Dataset? = null) = dashboardVisualisationColumns.map {
     val schemaField = identifiedHelper.findOrNull(dataset?.schema?.field, it.id)
@@ -185,6 +191,7 @@ class DashboardDefinitionMapper(
     executionContext: ExecutionContext,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
+    datasource: Datasource,
   ) = FieldDefinition(
     name = schemaField.name,
     display = schemaField.display,
@@ -198,6 +205,7 @@ class DashboardDefinitionMapper(
           executionContext = executionContext,
           dashboardDataset = dashboardDataset,
           filters = filters,
+          datasource = datasource,
         ),
         executionContext,
       )
@@ -210,6 +218,7 @@ class DashboardDefinitionMapper(
     executionContext: ExecutionContext,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
+    datasource: Datasource,
   ): List<FilterOption>? {
     if (filterDefinition.type == FilterType.Caseloads) {
       return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
@@ -226,6 +235,8 @@ class DashboardDefinitionMapper(
               dynamicFilterOption.maximumOptions,
               dashboardDataset,
               filters,
+              datasource,
+              executionContext,
             )
           }
       } ?: filterDefinition.staticOptions?.map(this::map)

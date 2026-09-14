@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.productCollection.ProductCollectionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
@@ -65,6 +66,9 @@ class ProductCollectionIntegrationTest {
 
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
+
+  @MockitoBean
+  lateinit var syncDataApiService: SyncDataApiService
 
   companion object {
 

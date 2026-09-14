@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
@@ -99,6 +100,7 @@ abstract class DefinitionMapper(
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
+    datasource: Datasource,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
       return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
@@ -112,6 +114,8 @@ abstract class DefinitionMapper(
           maxStaticOptions = maxStaticOptions,
           reportDataset = reportDataset,
           filters = filters,
+          datasource = datasource,
+          executionContext = executionContext,
         )
       }
         ?: populateStandardStaticOptionsForReportDefinition(
@@ -149,6 +153,8 @@ abstract class DefinitionMapper(
     maxStaticOptions: Long?,
     reportDataset: Dataset,
     filters: Map<String, String>?,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
   ): List<FilterOption> {
     val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
     val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
@@ -167,6 +173,8 @@ abstract class DefinitionMapper(
       sortColumn = nameSchemaField.name,
       dataset = matchingFilterDataset,
       prompts = prompts,
+      datasource = datasource,
+      executionContext = executionContext,
     )
       .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
   }

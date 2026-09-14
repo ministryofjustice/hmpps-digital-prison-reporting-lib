@@ -26,6 +26,7 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
+import reactor.core.publisher.Mono
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
@@ -38,9 +39,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCa
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentsToWingsRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
@@ -88,6 +92,9 @@ abstract class IntegrationTestBase {
 
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
+
+  @MockitoBean
+  lateinit var syncDataApiService: SyncDataApiService
 
   companion object {
 
@@ -155,6 +162,31 @@ abstract class IntegrationTestBase {
     val secContext = mock<SecurityContext>()
     whenever(secContext.authentication).thenReturn(authentication)
     SecurityContextHolder.setContext(secContext)
+  }
+
+  protected fun stubCaseloadResponse() {
+    val res: CaseloadResponse =  CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("KMI", "KIRKHAM"),
+        Caseload("WWI", "WANDSWORTH (HMP)"),
+      ),
+      activeCaseload = Caseload(id = "WWI", name = "WANDSWORTH (HMP)"),
+    )
+    wireMockServer.stubFor(
+      WireMock.get("/prisonusers/request-user/caseloads")
+        .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer $TEST_TOKEN"))
+        .willReturn(
+          WireMock.aResponse()
+            .withStatus(200)
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .withBody(objectMapper.writeValueAsString(res))
+
+        ),
+    )
+
   }
 
   protected fun stubDefinitionsResponse() {

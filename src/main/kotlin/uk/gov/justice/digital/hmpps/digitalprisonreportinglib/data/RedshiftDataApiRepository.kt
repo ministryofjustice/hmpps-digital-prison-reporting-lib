@@ -14,12 +14,14 @@ import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementReques
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ResourceNotFoundException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -217,4 +219,140 @@ class RedshiftDataApiRepository(
   private fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?): String = generatedTableId?.let { tableId ->
     """WITH $DATASET_ AS (SELECT * FROM reports.$tableId)"""
   } ?: buildDatasetQuery(query)
+
+  override fun executeQuery(
+    query: String,
+    filters: List<ConfiguredApiRepository.Filter>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    policyEngineResult: String,
+    dynamicFilterFieldId: Set<String>?,
+    dataSourceName: String,
+    reportFilter: ReportFilter?,
+    prompts: List<Prompt>?,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
+  ): List<Map<String, Any?>> {
+    val stopwatch = StopWatch.createStarted()
+    val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
+    // The result of the query can contain null values.
+    // This is coming from Java and if the returned type is not specified in Kotlin it will assume it is List<Map<String, Any>>
+    // while in reality it is List<Map<String, Any?>>.
+    val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
+      determineFinalQuery(
+        prompts = prompts,
+        query = query,
+        policyEngineResult = policyEngineResult,
+        filters = filters,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        dynamicFilterFieldId = dynamicFilterFieldId,
+        reportFilter = reportFilter,
+      ),
+      buildPreparedStatementNamedParams(filters),
+    )
+      .map {
+        transformTimestampToLocalDateTime(it)
+      }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return result
+  }
+
+  private fun determineFinalQuery(
+    prompts: List<Prompt>?,
+    query: String,
+    policyEngineResult: String,
+    filters: List<Filter>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    dynamicFilterFieldId: Set<String>?,
+    reportFilter: ReportFilter?,
+  ): String = prompts?.takeIf { it.isNotEmpty() }?.let {
+    buildFinalQuery(
+      prompts = "WITH " + buildPromptsQuery(it, SqlDialect.REDSHIFT4),
+      datasetQuery = buildDatasetQuery(query),
+      reportQuery = buildReportQuery(reportFilter),
+      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      filtersQuery = buildFiltersQuery(filters),
+      selectFromFinalStageQuery = buildFinalStageQueryWithPagination(
+        dynamicFilterFieldId,
+        sortColumn,
+        sortedAsc,
+        pageSize,
+        selectedPage,
+      ),
+    ) + ";"
+  } ?: (
+    buildFinalQuery(
+      datasetQuery = super.buildDatasetQuery(query),
+      reportQuery = buildReportQuery(reportFilter),
+      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      filtersQuery = buildFiltersQuery(filters),
+      selectFromFinalStageQuery = buildFinalStageQueryWithPagination(
+        dynamicFilterFieldId,
+        sortColumn,
+        sortedAsc,
+        pageSize,
+        selectedPage,
+      ),
+    ) + ";"
+    )
+
+  private fun buildFinalQuery(
+    prompts: String,
+    datasetQuery: String,
+    reportQuery: String,
+    policiesQuery: String,
+    filtersQuery: String,
+    selectFromFinalStageQuery: String,
+  ): String {
+    val query = listOf(prompts, datasetQuery, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    log.debug("Database query: $query")
+    return query
+  }
+
+  private fun buildFinalStageQueryWithPagination(
+    dynamicFilterFieldId: Set<String>?,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    pageSize: Long,
+    selectedPage: Long,
+  ) = """${buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc)} 
+        ${buildPaginationQuery(pageSize, selectedPage)}"""
+
+  private fun buildPaginationQuery(pageSize: Long, selectedPage: Long) = """limit $pageSize OFFSET ($selectedPage - 1) * $pageSize"""
+
+  private fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {
+    val preparedStatementNamedParams = MapSqlParameterSource()
+    filters
+      .filterNot { it.type == FilterType.DYNAMIC }
+      .filterNot { it.type == FilterType.BOOLEAN }
+      .filterNot { it.type == FilterType.MULTISELECT }
+      .forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.lowercase()) }
+    filters.filter { it.type == FilterType.BOOLEAN }.forEach { preparedStatementNamedParams.addValue(it.getKey(), it.value.toBoolean()) }
+    addNamedParamsForMultiselect(filters, preparedStatementNamedParams)
+
+    log.debug("Prepared statement named parameters: {}", preparedStatementNamedParams)
+    return preparedStatementNamedParams
+  }
+
+  private fun addNamedParamsForMultiselect(
+    filters: List<Filter>,
+    preparedStatementNamedParams: MapSqlParameterSource,
+  ) {
+    filters.filter { it.type == FilterType.MULTISELECT }
+      .forEach { filter ->
+        filter.value.split(",")
+          .forEachIndexed { i, v ->
+            preparedStatementNamedParams.addValue(filter.field + i, v)
+          }
+      }
+  }
 }

@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.BOOLEAN
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.FilterType.DATE_RANGE_END
@@ -70,6 +72,8 @@ import java.sql.ResultSetMetaData
 
 class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
+  private val redshiftDataApiRepository: RedshiftDataApiRepository = mock<RedshiftDataApiRepository>()
+  private val athenaApiRepository: AthenaApiRepository = mock<AthenaApiRepository>()
   private val expectedRepositoryResult = listOf(
     mapOf(
       "PRISONNUMBER" to "1",
@@ -104,7 +108,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper,
   )
-  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, redshiftDataApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
 
   private val executionContext = ExecutionContext(
     CaseloadResponse(
@@ -556,7 +560,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper,
     )
-    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, redshiftDataApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
     val context = ExecutionContext(
       CaseloadResponse(
         username = "request-user",
@@ -1323,7 +1327,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       mapOf("9" to "1"),
     )
     val productDefRepo = mock<ProductDefinitionRepository>()
-    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, athenaApiRepository, redshiftDataApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
     val dataSourceName = "name"
 
     whenever(productDefRepo.getProductDefinitions())
@@ -1572,6 +1576,8 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val syncDataApiService = SyncDataApiService(
       productDefinitionRepository = productDefinitionRepository,
       configuredApiRepository = configuredApiRepository,
+      athenaApiRepository = athenaApiRepository,
+      redshiftDataApiRepository = redshiftDataApiRepository,
       productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
       identifiedHelper = identifiedHelper,
       env = null,

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
+import org.apache.commons.lang3.time.StopWatch
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Primary
@@ -9,8 +10,11 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.AthenaError
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
+import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
+import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.InvalidRequestException
 import software.amazon.awssdk.services.athena.model.QueryExecutionContext
+import software.amazon.awssdk.services.athena.model.QueryExecutionState
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
@@ -28,6 +32,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.time.Duration
+import java.time.Instant
 import java.util.Base64
 
 const val QUERY_STARTED = "STARTED"
@@ -139,6 +145,129 @@ class AthenaApiRepository(
     val queryExecutionId = athenaClient
       .startQueryExecution(startQueryExecutionRequest).queryExecutionId()
     return StatementExecutionResponse(tableId, queryExecutionId)
+  }
+
+  override fun executeQuery(
+    query: String,
+    filters: List<ConfiguredApiRepository.Filter>,
+    selectedPage: Long,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    policyEngineResult: String,
+    dynamicFilterFieldId: Set<String>?,
+    dataSourceName: String,
+    reportFilter: ReportFilter?,
+    prompts: List<Prompt>?,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
+  ): List<Map<String, Any?>> {
+    val stopwatch = StopWatch.createStarted()
+//    val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
+    // The result of the query can contain null values.
+    // This is coming from Java and if the returned type is not specified in Kotlin it will assume it is List<Map<String, Any>>
+    // while in reality it is List<Map<String, Any?>>.
+
+    // Build the query for the Athena
+    // Request Athena for the query
+    // Wait for the resonse
+    // keep polling still
+    // keep 5 mins time out for start
+    // once get the response decide error or success
+    // gracefully handle the error
+    // success response map to List<Map<String, Any?>>
+
+    val timeout = Duration.ofMinutes(5)
+    val startTime = Instant.now()
+
+    val buildFinalInnerQuery = buildFinalInnerQuery(
+      buildContextQuery(executionContext, datasource.dialect ?: SqlDialect.ORACLE11g),
+      buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ORACLE11g),
+      buildDatasetQuery(query),
+      buildReportQuery(reportFilter),
+      buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      buildFiltersQuery(filters),
+      buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
+    )
+
+    val queryExecutionContext = QueryExecutionContext.builder()
+      .database(datasource.database)
+      .catalog(datasource.catalog)
+      .build()
+    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
+      .queryString(buildFinalInnerQuery)
+      .queryExecutionContext(queryExecutionContext)
+      .workGroup(athenaWorkgroup)
+      .build()
+
+    val queryExecutionId = athenaClient
+      .startQueryExecution(startQueryExecutionRequest).queryExecutionId()
+
+    var res: GetQueryResultsResponse
+
+    while (Duration.between(startTime, Instant.now()) < timeout) {
+      val getQueryExecutionRequest = GetQueryExecutionRequest.builder()
+        .queryExecutionId(queryExecutionId)
+        .build()
+      val getQueryExecutionResponse = athenaClient.getQueryExecution(getQueryExecutionRequest)
+      val status = getQueryExecutionResponse.queryExecution().status()
+      when (status.state()) {
+        QueryExecutionState.SUCCEEDED -> return getResultsAsListOfMaps(
+          athenaClient.getQueryResults(
+            GetQueryResultsRequest.builder()
+              .queryExecutionId(queryExecutionId)
+              .build(),
+          ),
+        )
+
+        QueryExecutionState.FAILED ->
+          throw RuntimeException(status.stateChangeReason())
+
+        QueryExecutionState.CANCELLED ->
+          throw RuntimeException("Query cancelled")
+
+        else -> Thread.sleep(1000)
+      }
+    }
+
+//    val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
+//      determineFinalQuery(
+//        prompts = prompts,
+//        query = query,
+//        policyEngineResult = policyEngineResult,
+//        filters = filters,
+//        selectedPage = selectedPage,
+//        pageSize = pageSize,
+//        sortColumn = sortColumn,
+//        sortedAsc = sortedAsc,
+//        dynamicFilterFieldId = dynamicFilterFieldId,
+//        reportFilter = reportFilter,
+//      ),
+//      buildPreparedStatementNamedParams(filters),
+//    )
+//      .map {
+//        transformTimestampToLocalDateTime(it)
+//      }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    return emptyList()
+  }
+
+  fun getResultsAsListOfMaps(
+    response: GetQueryResultsResponse,
+  ): List<Map<String, Any?>> {
+    val rows = response.resultSet().rows()
+
+    if (rows.isEmpty()) return emptyList()
+
+    // First row contains column names
+    val headers = rows.first().data().map { it.varCharValue() }
+
+    return rows.drop(1).map { row ->
+      headers.zip(row.data()).associate { (column, datum) ->
+        column to datum.varCharValue()
+      }
+    }
   }
 
   override fun getStatementStatus(statementId: String): StatementExecutionStatus {

@@ -613,7 +613,7 @@ class ReportDefinitionMapperTest {
     )
 
     whenever(
-      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull()),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
@@ -639,6 +639,8 @@ class ReportDefinitionMapperTest {
       pageSize = DEFAULT_MAX_STATIC_OPTIONS,
       sortColumn = estCodeSchemaFieldName,
       dataset = establishmentDataset,
+      executionContext = executionContext,
+      datasource = fullDatasource,
     )
   }
 
@@ -689,7 +691,7 @@ class ReportDefinitionMapperTest {
     )
 
     whenever(
-      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull()),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
@@ -731,6 +733,8 @@ class ReportDefinitionMapperTest {
       sortColumn = estCodeSchemaFieldName,
       dataset = establishmentDataset,
       prompts = listOf(Prompt("establishment_code", "BFI", FilterType.AutoComplete)),
+      executionContext = executionContext,
+      datasource = fullDatasource,
     )
   }
 
