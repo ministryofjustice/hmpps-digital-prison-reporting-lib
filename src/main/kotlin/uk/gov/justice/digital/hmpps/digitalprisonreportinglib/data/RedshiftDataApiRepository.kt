@@ -127,21 +127,6 @@ class RedshiftDataApiRepository(
     return StatementCancellationResponse(cancelStatementResponse.status())
   }
 
-  override fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
-    val lowerCaseField = "lower(${filter.field})"
-    return when (filter.type) {
-      FilterType.STANDARD -> "$lowerCaseField = '${filter.value.lowercase()}'"
-      FilterType.RANGE_START -> "$lowerCaseField >= ${filter.value.lowercase()}"
-      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST('${filter.value}' AS timestamp)"
-      FilterType.RANGE_END -> "$lowerCaseField <= ${filter.value.lowercase()}"
-      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST('${filter.value}' AS timestamp) + INTERVAL '1' day)"
-      FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
-      FilterType.BOOLEAN -> "${filter.field} = ${filter.value.toBoolean()}"
-      FilterType.MULTISELECT -> filter.value.split(",")
-        .joinToString(separator = " OR ", prefix = "(", postfix = ")") { "${filter.field} = '$it'" }
-    }
-  }
-
   fun buildSummaryQueries(
     tableId: String,
     reportSummaries: List<ReportSummary>?,
@@ -186,32 +171,6 @@ class RedshiftDataApiRepository(
       "SELECT COUNT(1) as total FROM reports.$tableId WHERE $whereClause;",
       MapSqlParameterSource(),
     ).first().get("total") as Long
-  }
-
-  fun executeQueryAsync(
-    productDefinition: SingleDashboardProductDefinition,
-    policyEngineResult: String,
-    filters: List<ConfiguredApiRepository.Filter>,
-    executionContext: ExecutionContext,
-  ): StatementExecutionResponse {
-    val tableId = tableIdGenerator.generateNewExternalTableId()
-    val generateSql = """
-          /* QUERY_INFO|||${productDefinition.id}|||${productDefinition.name}|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||${productDefinition.dashboard.id}|||${productDefinition.dashboard.name}|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
-          CREATE EXTERNAL TABLE reports.$tableId 
-          STORED AS parquet 
-          LOCATION 's3://$s3location/$tableId/' 
-          AS ( 
-            ${buildFinalQuery(
-      datasetQuery = buildDatasetQuery(productDefinition.dashboardDataset.query.first().query),
-      reportQuery = DEFAULT_REPORT_CTE,
-      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName()),
-      filtersQuery = buildFiltersQuery(filters),
-      selectFromFinalStageQuery = buildFinalStageQuery(sortedAsc = true),
-    )}
-          );
-    """.trimIndent()
-
-    return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
   }
 
   private fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?): String = generatedTableId?.let { tableId ->
