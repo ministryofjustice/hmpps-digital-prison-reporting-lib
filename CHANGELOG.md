@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.9.1
+- Fixed issue which caused Athena queries to fail when pre-filters were present. 
+
 # 17.9.0
 - Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.1.
 - Upgraded various other package versions

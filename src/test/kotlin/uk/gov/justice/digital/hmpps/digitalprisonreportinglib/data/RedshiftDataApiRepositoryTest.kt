@@ -276,11 +276,11 @@ SELECT *
           STORED AS parquet 
           LOCATION 's3://dpr-working-development/reports/$TABLE_ID/' 
           AS ( 
-            WITH dataset_ AS (SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality),report_ AS (SELECT * FROM dataset_),policy_ AS (SELECT * FROM report_ WHERE (establishment_id='ABC')),filter_ AS (SELECT * FROM policy_ WHERE 1=1)
+          WITH dataset_ AS (SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality),report_ AS (SELECT * FROM dataset_),policy_ AS (SELECT * FROM report_ WHERE (establishment_id='ABC')),filter_ AS (SELECT * FROM policy_ WHERE 1=1)
 SELECT *
           FROM filter_ 
           );
-      """.trimIndent()
+          """
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
@@ -304,10 +304,18 @@ SELECT *
     ).thenReturn(executeStatementResponse)
 
     val actual = redshiftDataApiRepository.executeQueryAsync(
-      productDefinition = productDefinition,
-      policyEngineResult = policyEngineResult,
       filters = emptyList(),
-      executionContext,
+      sortedAsc = true,
+      policyEngineResult = policyEngineResult,
+      executionContext = executionContext,
+      query = productDefinition.dashboardDataset.query,
+      reportFilter = productDefinition.dashboard.filter,
+      datasource = productDefinition.datasource,
+      allDatasets = productDefinition.allDatasets,
+      productDefinitionId = productDefinition.id,
+      productDefinitionName = productDefinition.name,
+      reportOrDashboardId = productDefinition.dashboard.id,
+      reportOrDashboardName = productDefinition.dashboard.name,
     )
 
     assertEquals(StatementExecutionResponse(TABLE_ID, executionId), actual)
