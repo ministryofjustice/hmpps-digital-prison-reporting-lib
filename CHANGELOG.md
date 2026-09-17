@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.0.0
+- Remove all references to dataProductDefinitionsPath from API params and internal functions
+
 # 17.9.1
 - Fixed issue which caused Athena queries to fail when pre-filters were present. 
 

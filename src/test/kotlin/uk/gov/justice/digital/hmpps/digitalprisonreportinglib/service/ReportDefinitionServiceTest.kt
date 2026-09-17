@@ -167,10 +167,10 @@ class ReportDefinitionServiceTest {
     )
 
     val repository = mock<ProductDefinitionRepository>()
-    whenever(repository.getSingleReportProductDefinition(any(), any(), anyOrNull())).thenReturn(minimalSingleDefinition)
+    whenever(repository.getSingleReportProductDefinition(any(), any())).thenReturn(minimalSingleDefinition)
 
     val mapper = mock<ReportDefinitionMapper> {
-      on { mapReport(any<SingleReportProductDefinition>(), any(), anyOrNull(), anyOrNull()) } doReturn expectedResult
+      on { mapReport(any<SingleReportProductDefinition>(), any(), anyOrNull()) } doReturn expectedResult
     }
     val service = ReportDefinitionService(repository, mapper, mock<ReportDefinitionSummaryMapper> {}, productDefinitionTokenPolicyChecker)
 

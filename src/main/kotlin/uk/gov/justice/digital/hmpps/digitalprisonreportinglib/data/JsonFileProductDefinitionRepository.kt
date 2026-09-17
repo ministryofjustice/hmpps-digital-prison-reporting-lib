@@ -13,12 +13,12 @@ class JsonFileProductDefinitionRepository(
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 
-  override fun getProductDefinitions(path: String?): List<ProductDefinitionSummary> = resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinitionSummary>() {}.type) }
+  override fun getProductDefinitions(): List<ProductDefinitionSummary> = resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinitionSummary>() {}.type) }
 
-  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition = doGetProductDefinitions(dataProductDefinitionsPath)
+  override fun getProductDefinition(definitionId: String): ProductDefinition = doGetProductDefinitions()
     .filter { it.id == definitionId }
     .ifEmpty { throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId") }
     .first()
 
-  fun doGetProductDefinitions(path: String?): List<ProductDefinition> = resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinition>() {}.type) }
+  fun doGetProductDefinitions(): List<ProductDefinition> = resourceLocations.map { gson.fromJson(this::class.java.classLoader.getResource(it)?.readText(), object : TypeToken<ProductDefinition>() {}.type) }
 }

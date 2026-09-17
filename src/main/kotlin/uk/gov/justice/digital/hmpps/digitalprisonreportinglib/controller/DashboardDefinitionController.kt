@@ -54,8 +54,6 @@ class DashboardDefinitionController(
       description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -66,7 +64,6 @@ class DashboardDefinitionController(
   ): DashboardDefinition = dashboardDefinitionService.getDashboardDefinition(
     dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
-    dataProductDefinitionsPath = dataProductDefinitionsPath,
     executionContext = httpRequest.getUserContext(
       manageUsersClient,
       hasProbationDatasources,

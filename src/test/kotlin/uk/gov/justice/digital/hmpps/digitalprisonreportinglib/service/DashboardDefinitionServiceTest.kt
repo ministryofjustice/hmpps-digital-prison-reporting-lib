@@ -55,7 +55,7 @@ class DashboardDefinitionServiceTest {
 
     whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), any(), any(), anyOrNull())).doReturn(dashboardDefinition)
     whenever(productDefinitionTokenPolicyChecker.determineAuth(any(), any())).doReturn(true)
-    whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any(), anyOrNull())).doReturn(productDefinition)
+    whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any())).doReturn(productDefinition)
     whenever(productDefinition.dashboard).doReturn(dashboard)
     whenever(productDefinition.allDatasets).doReturn(allDatasets)
 

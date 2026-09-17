@@ -51,11 +51,10 @@ class SyncDataApiService(
     sortedAsc: Boolean?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
-    dataProductDefinitionsPath: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository
-      .getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+      .getSingleReportProductDefinition(reportId, reportVariantId)
     checkAuth(productDefinition, executionContext)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
@@ -117,12 +116,10 @@ class SyncDataApiService(
     reportVariantId: String,
     filters: Map<String, String>,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String? = null,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,
-      dataProductDefinitionsPath,
     )
     checkAuth(productDefinition, executionContext)
     val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
@@ -149,11 +146,10 @@ class SyncDataApiService(
     sortedAsc: Boolean?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
-    dataProductDefinitionsPath: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
     val dashboardDefinition = productDefinitionRepository
-      .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
+      .getSingleDashboardProductDefinition(reportId, dashboardId)
     checkAuth(dashboardDefinition, executionContext)
     val policyEngine = PolicyEngine(dashboardDefinition.policy, executionContext)
     val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
@@ -184,7 +180,6 @@ class SyncDataApiService(
     reportId: String,
     reportVariantId: String,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String?,
     filters: Map<String, String>,
     selectedColumns: List<String>?,
     sortColumn: String?,
@@ -193,7 +188,6 @@ class SyncDataApiService(
     val coreContext = buildCoreDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filters,
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,

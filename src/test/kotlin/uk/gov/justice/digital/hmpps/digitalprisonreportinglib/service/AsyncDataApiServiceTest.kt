@@ -1601,7 +1601,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = null,
       filters = emptyMap(),
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
@@ -1627,7 +1626,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val actual = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = null,
       filters = emptyMap(),
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
@@ -1664,7 +1662,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       asyncDataApiService.prepareAsyncDownloadContext(
         reportId = reportId,
         reportVariantId = variantId,
-        dataProductDefinitionsPath = null,
         filters = emptyMap(),
         selectedColumns = selectedColumns,
         sortColumn = "name",
@@ -1729,7 +1726,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = null,
       filters = emptyMap(),
       selectedColumns = null,
       sortColumn = sortColumn,
@@ -1837,7 +1833,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = null,
       filters = emptyMap(),
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
