@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperti
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService.Companion.INVALID_REPORT_ID_MESSAGE
-import kotlin.collections.emptyList
 
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
@@ -72,7 +71,7 @@ class DynamoDbProductDefinitionRepository(
 
   override fun getProductDefinitions(): List<ProductDefinitionSummary> {
     val stopWatch = StopWatch.createStarted()
-    val requestedDefs= loadFromCache(DataDefinitionPath.ORPHANAGE.value)
+    val requestedDefs = loadFromCache(DataDefinitionPath.ORPHANAGE.value)
     log.debug("Definition retrieval took: ${stopWatch.time} ms.")
     return requestedDefs
   }

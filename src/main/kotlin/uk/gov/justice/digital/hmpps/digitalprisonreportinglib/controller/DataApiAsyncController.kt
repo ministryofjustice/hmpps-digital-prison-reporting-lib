@@ -215,7 +215,8 @@ class DataApiAsyncController(
       deprecated = true,
       description = "External table ID.",
       example = "reports._6b3c6dfb_f601_4795_8ee5_2ad65b7fb283",
-    ) @RequestParam(
+    )
+    @RequestParam(
       "tableId",
       required = false,
     )
