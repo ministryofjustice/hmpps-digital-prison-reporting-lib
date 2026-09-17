@@ -173,8 +173,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       given(orphanagePaginator.items()).willReturn(SdkIterable { orphanageItems.toMutableList().iterator() })
       given(dynamoDbClient.queryPaginator(any<QueryRequest>())).willAnswer { invocation ->
         val request = invocation.getArgument<QueryRequest>(0)
-        val category = request.expressionAttributeValues()[":category"]?.s()
-        when (category) {
+        when (val category = request.expressionAttributeValues()[":category"]?.s()) {
           DataDefinitionPath.MISSING.value -> missingPaginator
           DataDefinitionPath.ORPHANAGE.value -> orphanagePaginator
           else -> throw IllegalArgumentException("Unexpected category: $category")
@@ -195,7 +194,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .returnResult()
 
       assertThat(result.responseBody).isNotNull
-      assertThat(result.responseBody).hasSize(3)
+      assertThat(result.responseBody).hasSize(2)
       assertThat(result.responseBody).first().isNotNull
       val missingEthnicityDefinition = result.responseBody!!.find { it.name == "Missing Ethnicity Metrics" }!!
       assertThat(missingEthnicityDefinition).isNotNull
@@ -230,17 +229,12 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastYearVariant.isMissing).isEqualTo(false)
 
       val requestCaptor = ArgumentCaptor.forClass(QueryRequest::class.java)
-      then(dynamoDbClient).should(times(2)).queryPaginator(requestCaptor.capture())
+      then(dynamoDbClient).should(times(1)).queryPaginator(requestCaptor.capture())
       val capturedRequests = requestCaptor.allValues
 
-      assertThat(capturedRequests).hasSize(2)
+      assertThat(capturedRequests).hasSize(1)
       capturedRequests.forEach { assertThat(it.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition") }
-
-      val externalMovementsTest2Definition = result.responseBody!!.find { it.id == "external-movements-test2" }!!
-      assertThat(externalMovementsTest2Definition.variants[0].isMissing).isEqualTo(true)
-      assertThat(externalMovementsTest2Definition.variants[1].isMissing).isEqualTo(true)
-      assertThat(externalMovementsTest2Definition.variants[2].isMissing).isEqualTo(true)
-
+      
       val secondCall = webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
           uriBuilder

@@ -46,9 +46,9 @@ class DynamoDbProductDefinitionRepository(
       .build()
   }
 
-  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
+  override fun getProductDefinition(definitionId: String): ProductDefinition {
     val stopwatch = StopWatch.createStarted()
-    val path = if (dataProductDefinitionsPath.isNullOrBlank()) DataDefinitionPath.ORPHANAGE.value else dataProductDefinitionsPath
+    val path = DataDefinitionPath.ORPHANAGE.value
     val keyMap = hashMapOf<String, AttributeValue>(
       "data-product-id" to AttributeValue.builder().s(definitionId).build(),
       "category" to AttributeValue.builder().s(path).build(),
@@ -70,19 +70,11 @@ class DynamoDbProductDefinitionRepository(
     return definition
   }
 
-  override fun getProductDefinitions(path: String?): List<ProductDefinitionSummary> {
+  override fun getProductDefinitions(): List<ProductDefinitionSummary> {
     val stopWatch = StopWatch.createStarted()
-    val requestedPath =
-      if (path.isNullOrBlank()) DataDefinitionPath.ORPHANAGE.value else path
-    val missingDefs = loadFromCache(DataDefinitionPath.MISSING.value)
-    val requestedDefs =
-      if (requestedPath == DataDefinitionPath.MISSING.value) {
-        emptyList()
-      } else {
-        loadFromCache(requestedPath)
-      }
+    val requestedDefs= loadFromCache(DataDefinitionPath.ORPHANAGE.value)
     log.debug("Definition retrieval took: ${stopWatch.time} ms.")
-    return missingDefs + requestedDefs
+    return requestedDefs
   }
 
   private fun loadFromCache(path: String): List<ProductDefinitionSummary> = definitionsCache?.get(path) {
@@ -90,7 +82,7 @@ class DynamoDbProductDefinitionRepository(
   } ?: queryDefinitionsForPath(path)
 
   private fun queryDefinitionsForPath(path: String): List<ProductDefinitionSummary> {
-    log.debug("Retrieving definitions from DynamoDB for path: $path")
+    log.debug("Retrieving definitions from DynamoDB")
     val results = mutableListOf<ProductDefinitionSummary>()
     val request = getQueryRequest(properties, path)
     val paginator = dynamoDbClient.queryPaginator(request)
