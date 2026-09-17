@@ -234,7 +234,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
 
       assertThat(capturedRequests).hasSize(1)
       capturedRequests.forEach { assertThat(it.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition") }
-      
+
       val secondCall = webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
           uriBuilder

@@ -18,7 +18,6 @@ import software.amazon.awssdk.services.dynamodb.paginators.QueryIterable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.DynamoDbProductDefinitionRepository.Companion.getQueryRequest
 import java.util.concurrent.TimeUnit
 
 class DynamoDbProductDefinitionRepositoryTest {
@@ -45,8 +44,8 @@ class DynamoDbProductDefinitionRepositoryTest {
     val orphanageItems = listOf(
       mapOf(
         "definition" to AttributeValue.fromS("""{"id": "test1"}"""),
-        "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)
-      )
+        "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value),
+      ),
     )
     val orphanagePaginator = mock<QueryIterable>()
 
@@ -74,7 +73,7 @@ class DynamoDbProductDefinitionRepositoryTest {
     given(response.item()).willReturn(
       mapOf(
         "definition" to AttributeValue.fromS("{\"id\": \"test2\"}"),
-        "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)
+        "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value),
       ),
     )
     given(dynamoDbClient.getItem(any(GetItemRequest::class.java))).willReturn(response)
