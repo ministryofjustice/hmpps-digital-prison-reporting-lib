@@ -95,7 +95,6 @@ abstract class DefinitionMapper(
     schemaFieldName: String,
     maxStaticOptions: Long?,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String?,
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
@@ -120,7 +119,6 @@ abstract class DefinitionMapper(
           maxStaticOptions,
           schemaFieldName,
           executionContext,
-          dataProductDefinitionsPath,
         )
     } ?: filterDefinition.staticOptions?.map(this::map)
   }
@@ -249,7 +247,6 @@ abstract class DefinitionMapper(
     maxStaticOptions: Long?,
     schemaFieldName: String,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String?,
   ) = syncDataApiService.validateAndFetchData(
     reportId = productDefinitionId,
     reportVariantId = reportVariantId,
@@ -260,7 +257,6 @@ abstract class DefinitionMapper(
     sortedAsc = true,
     executionContext = executionContext,
     reportFieldId = setOf(schemaFieldName),
-    dataProductDefinitionsPath = dataProductDefinitionsPath,
   )
     .flatMap { it.entries }
     .map { FilterOption(it.value.toString(), it.value.toString()) }

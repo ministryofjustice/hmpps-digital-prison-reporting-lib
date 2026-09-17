@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -45,11 +44,6 @@ class DataApiSyncController(
   @Value("\${dpr.lib.hasProbationDatasources}")
   val hasProbationDatasources: Boolean,
 ) {
-
-  companion object {
-    private val log = LoggerFactory.getLogger(this::class.java)
-  }
-
   object FiltersPrefix {
     const val FILTERS_PREFIX = "filters."
     const val RANGE_FILTER_START_SUFFIX = ".start"
@@ -102,8 +96,6 @@ class DataApiSyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> = try {
     ResponseEntity
@@ -125,7 +117,6 @@ class DataApiSyncController(
               variantId = reportVariantId,
             ),
           ),
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -166,8 +157,6 @@ class DataApiSyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<Count> = try {
     ResponseEntity
@@ -185,7 +174,6 @@ class DataApiSyncController(
               variantId = reportVariantId,
             ),
           ),
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -234,8 +222,6 @@ class DataApiSyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> = try {
     ResponseEntity
@@ -257,7 +243,6 @@ class DataApiSyncController(
               variantId = dashboardId,
             ),
           ),
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -278,11 +263,6 @@ class DataApiSyncController(
   fun downloadCsv(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -302,7 +282,6 @@ class DataApiSyncController(
     val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
       selectedColumns = columns,
       sortedAsc = sortedAsc,
@@ -345,11 +324,6 @@ class DataApiSyncController(
   fun downloadXlsx(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -369,7 +343,6 @@ class DataApiSyncController(
     val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
       selectedColumns = columns,
       sortedAsc = sortedAsc,

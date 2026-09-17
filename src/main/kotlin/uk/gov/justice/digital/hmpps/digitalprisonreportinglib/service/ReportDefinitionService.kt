@@ -20,30 +20,26 @@ class ReportDefinitionService(
   fun getListForUser(
     executionContext: ExecutionContext,
     renderMethod: RenderMethod?,
-    dataProductDefinitionsPath: String? = null,
-  ): List<ReportDefinitionSummary> = productDefinitionRepository.getProductDefinitions(dataProductDefinitionsPath)
+  ): List<ReportDefinitionSummary> = productDefinitionRepository.getProductDefinitions()
     .map { summaryMapper.map(it, renderMethod, executionContext) }
     .filter { containsReportVariantsOrDashboards(it) }
 
   fun getDefinitionSummary(
     reportId: String,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String? = null,
-  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId, dataProductDefinitionsPath).let { summaryMapper.map(it, null, executionContext) }
+  ): ReportDefinitionSummary = productDefinitionRepository.getProductDefinition(reportId).let { summaryMapper.map(it, null, executionContext) }
 
   fun getDefinition(
     reportId: String,
     variantId: String,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>? = null,
   ): SingleVariantReportDefinition {
-    val singleReportDefinitionDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId, dataProductDefinitionsPath)
+    val singleReportDefinitionDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, variantId)
     checkAuth(singleReportDefinitionDefinition, executionContext)
     return mapper.mapReport(
       definition = singleReportDefinitionDefinition,
       executionContext = executionContext,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filters,
     )
   }

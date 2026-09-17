@@ -95,11 +95,6 @@ class DataApiAsyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementExecutionResponse> = try {
     ResponseEntity
@@ -111,7 +106,6 @@ class DataApiAsyncController(
           filters = filterHelper.filtersOnly(filters),
           sortColumn = sortColumn,
           sortedAsc = sortedAsc,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
           executionContext = httpRequest.getUserContext(
             manageUsersClient,
             hasProbationDatasources,
@@ -155,11 +149,6 @@ class DataApiAsyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -174,7 +163,6 @@ class DataApiAsyncController(
         asyncDataApiService.validateAndExecuteStatementAsync(
           reportId = reportId,
           dashboardId = dashboardId,
-          dataProductDefinitionsPath = dataProductDefinitionsPath,
           filters = filterHelper.filtersOnly(filters),
           executionContext = httpRequest.getUserContext(
             manageUsersClient,
@@ -223,11 +211,6 @@ class DataApiAsyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @Parameter(
       deprecated = true,
       description = "External table ID.",
@@ -253,7 +236,6 @@ class DataApiAsyncController(
             variantId = reportVariantId,
           ),
         ),
-        dataProductDefinitionsPath,
       ),
     )
 
@@ -284,11 +266,6 @@ class DataApiAsyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @Parameter(
       deprecated = true,
       description = "External table ID.",
@@ -315,7 +292,6 @@ class DataApiAsyncController(
             variantId = dashboardId,
           ),
         ),
-        dataProductDefinitionsPath,
       ),
     )
 
@@ -344,11 +320,6 @@ class DataApiAsyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
     .status(HttpStatus.OK)
@@ -365,7 +336,6 @@ class DataApiAsyncController(
             variantId = reportVariantId,
           ),
         ),
-        dataProductDefinitionsPath,
       ),
     )
 
@@ -382,11 +352,6 @@ class DataApiAsyncController(
       description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<StatementCancellationResponse> = ResponseEntity
     .status(HttpStatus.OK)
@@ -403,7 +368,6 @@ class DataApiAsyncController(
             variantId = dashboardId,
           ),
         ),
-        dataProductDefinitionsPath,
       ),
     )
 
@@ -463,11 +427,6 @@ class DataApiAsyncController(
     @PathVariable("reportVariantId") reportVariantId: String,
     @RequestParam
     filters: Map<String, String>,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<Count> = try {
     ResponseEntity
@@ -486,7 +445,6 @@ class DataApiAsyncController(
               variantId = reportVariantId,
             ),
           ),
-          dataProductDefinitionsPath,
         ),
       )
   } catch (exception: NoDataAvailableException) {
@@ -508,11 +466,6 @@ class DataApiAsyncController(
   fun getQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @RequestParam(defaultValue = "1")
     @Min(1)
@@ -536,7 +489,6 @@ class DataApiAsyncController(
         tableId = tableId,
         reportId = reportId,
         reportVariantId = reportVariantId,
-        dataProductDefinitionsPath = dataProductDefinitionsPath,
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = filterHelper.filtersOnly(filters),
@@ -562,11 +514,6 @@ class DataApiAsyncController(
   fun getDashboardQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("dashboardId") dashboardId: String,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @RequestParam(defaultValue = "1")
     @Min(1)
@@ -586,7 +533,6 @@ class DataApiAsyncController(
         tableId = tableId,
         reportId = reportId,
         dashboardId = dashboardId,
-        dataProductDefinitionsPath = dataProductDefinitionsPath,
         selectedPage = selectedPage,
         pageSize = pageSize,
         filters = filterHelper.filtersOnly(filters),
@@ -609,11 +555,6 @@ class DataApiAsyncController(
   fun getSummaryQueryExecutionResult(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @PathVariable("summaryId") summaryId: String,
     @Parameter(
@@ -629,7 +570,6 @@ class DataApiAsyncController(
       summaryId = summaryId,
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
       executionContext = httpRequest.getUserContext(
         manageUsersClient,
@@ -653,11 +593,6 @@ class DataApiAsyncController(
   fun downloadCsv(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
@@ -678,7 +613,6 @@ class DataApiAsyncController(
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
       selectedColumns = columns,
       sortedAsc = sortedAsc,
@@ -722,11 +656,6 @@ class DataApiAsyncController(
   fun downloadXlsx(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
-    @RequestParam(
-      "dataProductDefinitionsPath",
-      defaultValue = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
-    )
-    dataProductDefinitionsPath: String? = null,
     @PathVariable("tableId") tableId: String,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
@@ -747,7 +676,6 @@ class DataApiAsyncController(
     val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filterHelper.filtersOnly(filters),
       selectedColumns = columns,
       sortedAsc = sortedAsc,

@@ -60,7 +60,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(false),
         eq(null),
         eq(null),
-        eq("definitions/prisons/orphanage"),
       ),
     )
       .willReturn(statementExecutionResponse)
@@ -98,7 +97,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       asyncDataApiService.validateAndExecuteStatementAsync(
         reportId = eq("some-metrics-dpd"),
         dashboardId = eq("some-dashboard-id"),
-        dataProductDefinitionsPath = eq("definitions/prisons/orphanage"),
         filters = eq(emptyMap()),
         executionContext = any<ExecutionContext>(),
       ),
@@ -137,7 +135,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(false),
         eq(null),
         eq(null),
-        eq("definitions/prisons/orphanage"),
       ),
     )
       .willThrow(ValidationException.builder().message("Validation Error").build())
@@ -168,7 +165,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(false),
         eq(null),
         eq(null),
-        eq("definitions/prisons/orphanage"),
       ),
     )
       .willThrow(ActiveStatementsExceededException.builder().build())
@@ -208,7 +204,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(reportId),
         eq(reportVariantId),
         any<ExecutionContext>(),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
       .willReturn(statementExecutionStatus)
@@ -257,7 +252,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(reportId),
         eq(dashboardId),
         any<ExecutionContext>(),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
       .willReturn(statementExecutionStatus)
@@ -299,7 +293,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(reportId),
         eq(reportVariantId),
         any<ExecutionContext>(),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
       .willReturn(statementCancellationResponse)
@@ -337,7 +330,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(reportId),
         eq(dashboardId),
         any<ExecutionContext>(),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       ),
     )
       .willReturn(statementCancellationResponse)
@@ -385,7 +377,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         tableId = eq(tableId),
         reportId = eq("external-movements"),
         reportVariantId = eq("last-month"),
-        dataProductDefinitionsPath = eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         selectedPage = eq(selectedPage),
         pageSize = eq(pageSize),
         filters = eq(emptyMap()),
@@ -432,7 +423,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -458,7 +449,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(tableId),
         eq("external-movements"),
         eq("last-month"),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(selectedPage),
         eq(pageSize),
         eq(mapOf("direction" to "out")),
@@ -479,7 +469,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         tableId = eq(tableId),
         reportId = eq("external-movements"),
         reportVariantId = eq("last-month"),
-        dataProductDefinitionsPath = eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         selectedPage = eq(selectedPage),
         pageSize = eq(pageSize),
         filters = eq(emptyMap()),
@@ -522,7 +511,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -544,7 +533,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(tableId),
       eq(dpdId),
       eq(dashboardId),
-      eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       eq(selectedPage),
       eq(pageSize),
       eq(emptyMap()),
@@ -570,7 +558,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         ),
       )
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -593,7 +581,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(tableId),
       eq(dpdId),
       eq(dashboardId),
-      eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       eq(selectedPage),
       eq(pageSize),
       eq(mapOf("direction" to "out")),
@@ -609,7 +596,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val selectedPage = 2L
     val pageSize = 20L
 
-    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willThrow(UncategorizedSQLException("EntityNotFoundException from glue - Entity Not Found", "", SQLException()))
 
     webTestClient.get()
@@ -629,7 +616,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       eq(tableId),
       eq(dpdId),
       eq(dashboardId),
-      eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       eq(selectedPage),
       eq(pageSize),
       eq(emptyMap()),
@@ -654,7 +640,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq(summaryId),
         eq("external-movements"),
         eq("last-month"),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
         eq(emptyMap()),
         any<ExecutionContext>(),
       ),
@@ -706,7 +691,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val tableId = "tableId"
     val expectedServiceResult = Count(10)
 
-    given(asyncDataApiService.count(any(), any(), any(), any(), any(), any()))
+    given(asyncDataApiService.count(any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
 
     webTestClient.get()
@@ -730,7 +715,6 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("last-month"),
         eq(mapOf("direction" to "out")),
         any<ExecutionContext>(),
-        eq(ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE),
       )
   }
 

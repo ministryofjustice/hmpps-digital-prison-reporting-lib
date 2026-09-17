@@ -1579,7 +1579,6 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val downloadContext = syncDataApiService.prepareSyncDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = null,
       filters = emptyMap(),
       selectedColumns = listOf("col2", "col1"),
       sortColumn = sortColumn,

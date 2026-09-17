@@ -33,7 +33,7 @@ class S3AndDynamoDbProductDefinitionRepository(
     private const val DDB_ID_PREFIX = "dpr_"
   }
 
-  override fun getProductDefinitions(path: String?): List<ProductDefinitionSummary> {
+  override fun getProductDefinitions(): List<ProductDefinitionSummary> {
     val stopWatch = StopWatch.createStarted()
 
     val loadedDefinitions = loadDefinitionsFromCache()
@@ -44,7 +44,7 @@ class S3AndDynamoDbProductDefinitionRepository(
     return loadedDefinitions.summaries
   }
 
-  override fun getProductDefinition(definitionId: String, dataProductDefinitionsPath: String?): ProductDefinition {
+  override fun getProductDefinition(definitionId: String): ProductDefinition {
     val stopwatch = StopWatch.createStarted()
 
     val loadedDefinitions = loadDefinitionsFromCache()
