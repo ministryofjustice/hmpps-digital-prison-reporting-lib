@@ -1378,8 +1378,12 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should call the repository with all provided arguments when getSummaryResult is called`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
+    val summarySort = "one,two"
+    val filters: Map<String, String> = mapOf(
+      "sortColumn" to "one,two",
+    )
     whenever(
-      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
+      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId), summarySort),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
 
     whenever(
@@ -1394,7 +1398,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       summaryId,
       reportId,
       reportVariantId,
-      filters = emptyMap(),
+      filters = filters,
       executionContext = executionContext,
     )
 
@@ -1405,12 +1409,15 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should create and query summary table when it doesn't exist`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
-
+    val summarySort = "one,two"
+    val filters: Map<String, String> = mapOf(
+      "sortColumn" to "one,two",
+    )
     whenever(
       redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
     whenever(
-      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
+      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId), summarySort),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
 
     whenever(
@@ -1428,12 +1435,12 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       summaryId,
       reportId,
       reportVariantId,
-      filters = emptyMap(),
+      filters = filters,
       executionContext = executionContext,
     )
 
     assertEquals(listOf(mapOf("total" to 1)), actual)
-    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
+    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull(), anyOrNull())
     verify(configuredApiRepository).createSummaryTable(any(), any(), any(), any(), any())
   }
 
@@ -1441,8 +1448,9 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should throw TableExpiredException if s3 exists and table doesnt`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
+    val summarySort = "one,two"
     whenever(
-      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
+      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId), summarySort),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
 
     whenever(
@@ -1458,7 +1466,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       s3ApiService.doesPrefixExist(any()),
     ).thenReturn(true)
     whenever(
-      redshiftDataApiRepository.getFullExternalTableResult(any(), anyOrNull()),
+      redshiftDataApiRepository.getFullExternalTableResult(any(), anyOrNull(), anyOrNull()),
     ).thenThrow(TableExpiredException("${tableId}_summaryId"))
 
     Assertions.assertThrows(TableExpiredException::class.java) {
@@ -1471,7 +1479,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         executionContext = executionContext,
       )
     }
-    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
+    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull(), anyOrNull())
     verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any(), any())
   }
 
@@ -1479,8 +1487,9 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should throw TableExpiredException if s3 doesnt exist and table does`() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
+    val summarySort = "one,two"
     whenever(
-      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId)),
+      redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId), summarySort),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
 
     whenever(
@@ -1496,7 +1505,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       s3ApiService.doesPrefixExist(any()),
     ).thenReturn(false)
     whenever(
-      redshiftDataApiRepository.getFullExternalTableResult(any(), anyOrNull()),
+      redshiftDataApiRepository.getFullExternalTableResult(any(), anyOrNull(), anyOrNull()),
     ).thenThrow(TableExpiredException("${tableId}_summaryId"))
     Assertions.assertThrows(TableExpiredException::class.java) {
       asyncDataApiService.getSummaryResult(
@@ -1508,7 +1517,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         executionContext = executionContext,
       )
     }
-    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull())
+    verify(redshiftDataApiRepository, times(1)).getFullExternalTableResult(any(), anyOrNull(), anyOrNull())
     verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any(), any())
   }
 

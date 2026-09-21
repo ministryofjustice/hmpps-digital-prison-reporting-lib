@@ -302,7 +302,7 @@ class AsyncDataApiService(
     val dataset = identifiedHelper.findOrFail(productDefinition.allDatasets, summary.dataset)
     val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
-    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext)
+    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext, filters)
 
     return results.map {
       formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
@@ -312,17 +312,18 @@ class AsyncDataApiService(
   // Request data from the summary table.
   // If it doesn't exist, create it (waiting for creation to complete).
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext): List<Map<String, Any?>> {
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext, filters: Map<String, String>): List<Map<String, Any?>> {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
     val s3DataExists = s3ApiService.doesPrefixExist(tableSummaryId)
+    val summarySort = filters.getOrDefault("sortColumn", "")
     log.debug("Redshift table exists: $tableExists")
     log.debug("S3 data exists: $s3DataExists")
     if (tableExists && s3DataExists) {
-      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort)
     } else if (!tableExists && !s3DataExists) {
       configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition.datasource.name, executionContext)
       // Might need a small delay here as reading straight after creation might fail
-      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort)
     } else {
       try {
         // We cannot ensure total alignment of both the Redshift table and S3 data having completed their deletion before we check if one or the other is missing.
@@ -332,7 +333,7 @@ class AsyncDataApiService(
         // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
         log.warn("Summary table is in an expired state.")
         // Cause a failure to log the exact reason of the failure.
-        return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+        return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort)
       } catch (e: Exception) {
         // Log what the actual error is when trying to retrieve the result in each case i.e. redshift table missing or S3 data missing
         log.warn("Summary table {} has expired and cannot be retrieved", tableSummaryId, e)
