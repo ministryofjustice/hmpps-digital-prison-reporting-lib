@@ -571,7 +571,7 @@ class DataApiAsyncController(
       summaryId = summaryId,
       reportId = reportId,
       reportVariantId = reportVariantId,
-      filters = filterHelper.filtersOnly(filters),
+      filters = if (filters.containsKey("sortColumn")) filters else filterHelper.filtersOnly(filters),
       executionContext = httpRequest.getUserContext(
         manageUsersClient,
         hasProbationDatasources,

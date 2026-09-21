@@ -144,12 +144,16 @@ class RedshiftDataApiRepository(
 
   fun getFullExternalTableResult(
     tableId: String,
+    summarySort: String,
     jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
+    var summarySortOrder = ""
+    if (summarySort.isNotBlank()) summarySortOrder = "ORDER BY $summarySort ASC"
+
     val result = jdbcTemplate
       .queryForList(
-        "SELECT * FROM reports.$tableId;",
+        "SELECT * FROM reports.$tableId $summarySortOrder;",
         MapSqlParameterSource(),
       )
       .map {

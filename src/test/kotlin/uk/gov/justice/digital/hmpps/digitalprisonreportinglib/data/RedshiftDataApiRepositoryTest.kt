@@ -818,6 +818,7 @@ SELECT *
   @Test
   fun `getFullExternalTableResult should make an unpaginated JDBC call and return the existing results`() {
     val jdbcTemplate = mock<NamedParameterJdbcTemplate>()
+    val summarySort = "one,two"
     val redshiftDataApiRepository = RedshiftDataApiRepository(
       redshiftDataClient,
       tableIdGenerator,
@@ -831,12 +832,12 @@ SELECT *
 
     whenever(
       jdbcTemplate.queryForList(
-        eq("SELECT * FROM reports.$TABLE_ID;"),
+        eq("SELECT * FROM reports.$TABLE_ID ORDER BY $summarySort ASC;"),
         any<MapSqlParameterSource>(),
       ),
     ).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.getFullExternalTableResult(TABLE_ID, jdbcTemplate)
+    val actual = redshiftDataApiRepository.getFullExternalTableResult(TABLE_ID, summarySort, jdbcTemplate)
 
     assertEquals(expected, actual)
   }
