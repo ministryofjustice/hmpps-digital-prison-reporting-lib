@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Sync
 import java.io.Writer
 
 @Service
-@ConditionalOnBean(value = [RedshiftDataApiRepository::class, AthenaApiRepository::class])
 class SyncDataApiService(
   productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,
