@@ -564,6 +564,9 @@ class DataApiAsyncController(
     )
     @RequestParam
     filters: Map<String, String>,
+    @RequestParam sortColumn: String?,
+    @RequestParam(required = false)
+    sortedAsc: Boolean? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> {
     val summaryResult = asyncDataApiService.getSummaryResult(
@@ -572,6 +575,8 @@ class DataApiAsyncController(
       reportId = reportId,
       reportVariantId = reportVariantId,
       filters = filterHelper.filtersOnly(filters),
+      sortColumn = sortColumn,
+      sortedAsc = sortedAsc,
       executionContext = httpRequest.getUserContext(
         manageUsersClient,
         hasProbationDatasources,
