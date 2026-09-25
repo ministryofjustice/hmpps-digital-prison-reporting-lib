@@ -1571,7 +1571,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     verify(configuredApiRepository, times(0)).createSummaryTable(any(), any(), any(), any(), any())
   }
 
-
   @Test
   fun `should call the repository with all provided arguments when count is called`() {
     val tableId = "123"
