@@ -641,6 +641,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("last-month"),
         eq(emptyMap()),
         eq(null),
+        eq(null),
         any<ExecutionContext>(),
       ),
     )

@@ -837,7 +837,7 @@ SELECT *
       ),
     ).thenReturn(expected)
 
-    val actual = redshiftDataApiRepository.getFullExternalTableResult(TABLE_ID, summarySort, jdbcTemplate)
+    val actual = redshiftDataApiRepository.getFullExternalTableResult(TABLE_ID, summarySort, null, jdbcTemplate)
 
     assertEquals(expected, actual)
   }
