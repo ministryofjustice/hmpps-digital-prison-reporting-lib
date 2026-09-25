@@ -640,6 +640,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         eq("external-movements"),
         eq("last-month"),
         eq(emptyMap()),
+        eq(null),
         any<ExecutionContext>(),
       ),
     )

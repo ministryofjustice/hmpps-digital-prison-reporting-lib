@@ -1379,9 +1379,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     val summarySort = "one,two"
-    val filters: Map<String, String> = mapOf(
-      "sortColumn" to "one,two",
-    )
     whenever(
       redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId), summarySort),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
@@ -1398,7 +1395,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       summaryId,
       reportId,
       reportVariantId,
-      filters = filters,
+      filters = emptyMap(),
+      summarySort,
       executionContext = executionContext,
     )
 
@@ -1410,9 +1408,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     val summarySort = "one,two"
-    val filters: Map<String, String> = mapOf(
-      "sortColumn" to "one,two",
-    )
     whenever(
       redshiftDataApiRepository.isTableMissing(any(), anyOrNull()),
     ).thenReturn(true)
@@ -1435,7 +1430,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       summaryId,
       reportId,
       reportVariantId,
-      filters = filters,
+      filters = emptyMap(),
+      summarySort,
       executionContext = executionContext,
     )
 
@@ -1476,6 +1472,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         reportId,
         reportVariantId,
         filters = emptyMap(),
+        summarySort,
         executionContext = executionContext,
       )
     }
@@ -1488,9 +1485,6 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val summaryId = "summaryId"
     val summarySort = "one,two"
-    val filters: Map<String, String> = mapOf(
-      "sortColumn" to "one,two",
-    )
     whenever(
       redshiftDataApiRepository.getFullExternalTableResult(tableIdGenerator.getTableSummaryId(tableId, summaryId), summarySort),
     ).thenReturn(listOf(mapOf("TOTAL" to 1)))
@@ -1516,7 +1510,8 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         summaryId,
         reportId,
         reportVariantId,
-        filters = filters,
+        filters = emptyMap(),
+        summarySort,
         executionContext = executionContext,
       )
     }

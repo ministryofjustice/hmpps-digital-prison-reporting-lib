@@ -283,6 +283,7 @@ class AsyncDataApiService(
     reportId: String,
     reportVariantId: String,
     filters: Map<String, String>,
+    sortColumn: String?,
     executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
@@ -293,7 +294,7 @@ class AsyncDataApiService(
     val dataset = identifiedHelper.findOrFail(productDefinition.allDatasets, summary.dataset)
     val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
-    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext, filters)
+    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext, sortColumn)
 
     return results.map {
       formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
@@ -303,10 +304,10 @@ class AsyncDataApiService(
   // Request data from the summary table.
   // If it doesn't exist, create it (waiting for creation to complete).
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext, filters: Map<String, String>): List<Map<String, Any?>> {
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext, sortColumn: String?): List<Map<String, Any?>> {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
     val s3DataExists = s3ApiService.doesPrefixExist(tableSummaryId)
-    val summarySort = filters.getOrDefault("sortColumn", "")
+    val summarySort = sortColumn
     log.debug("Redshift table exists: $tableExists")
     log.debug("S3 data exists: $s3DataExists")
     log.debug("SummarySort values: $summarySort")
