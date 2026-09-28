@@ -61,6 +61,7 @@ class DashboardDefinitionServiceTest {
     whenever(productDefinition.dashboard).doReturn(dashboard)
     whenever(productDefinition.allDatasets).doReturn(allDatasets)
     whenever(productDefinition.datasource).doReturn(datasource)
+    whenever(productDefinition.allDatasources).doReturn(listOf(datasource))
 
     val actual = dashboardDefinitionService.getDashboardDefinition(
       dataProductDefinitionId = definitionId,
@@ -71,6 +72,6 @@ class DashboardDefinitionServiceTest {
     assertThat(actual).isEqualTo(dashboardDefinition)
 
     verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
-    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, emptyList(), allDatasets, executionContext, null, datasource)
+    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, emptyList(), allDatasets, executionContext, null, listOf(datasource))
   }
 }

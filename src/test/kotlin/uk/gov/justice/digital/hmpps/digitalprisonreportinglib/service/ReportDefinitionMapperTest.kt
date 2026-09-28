@@ -596,7 +596,7 @@ class ReportDefinitionMapperTest {
     val establishmentDataset = Dataset(
       estDatasetId,
       "establishment-dataset-name",
-      "12A",
+      "18",
       query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select * from table")),
       Schema(
         listOf(
@@ -654,7 +654,7 @@ class ReportDefinitionMapperTest {
     val establishmentDataset = Dataset(
       id = estDatasetId,
       name = "establishment-dataset-name",
-      datasource = "12A",
+      datasource = "18",
       query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select * from table")),
       schema = Schema(
         listOf(

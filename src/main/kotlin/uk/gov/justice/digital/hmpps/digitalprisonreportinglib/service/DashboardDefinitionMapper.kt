@@ -59,7 +59,7 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>? = null,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
@@ -68,8 +68,8 @@ class DashboardDefinitionMapper(
       name = dashboard.name,
       description = dashboard.description,
       sections = mapSections(dashboard, dataset),
-      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters, datasource),
-      childVariants = mapChildVariants(dashboard, allDashboards, allDatasets, executionContext, filters, datasource),
+      filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters, allDatasources),
+      childVariants = mapChildVariants(dashboard, allDashboards, allDatasets, executionContext, filters, allDatasources),
     )
   }
 
@@ -79,7 +79,7 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    datasource: List<Datasource>,
   ): List<DashboardDefinition>? = dashboard.child?.map { child ->
     val dashboard = identifiedHelper.findOrFail<Dashboard>(
       all = allDashboards,
@@ -92,7 +92,7 @@ class DashboardDefinitionMapper(
       allDatasets = allDatasets,
       executionContext = executionContext,
       filters = filters,
-      datasource = datasource,
+      allDatasources = datasource,
     )
   }
 
@@ -150,8 +150,8 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
-    datasource: Datasource,
-  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, executionContext, filters, datasource) +
+    allDatasources: List<Datasource>,
+  ) = convertDatasetFilterFieldsToReportFields(dataset, allDatasets, executionContext, filters, allDatasources) +
     maybeConvertParametersToReportFields(dataset.query, dataset.parameters)
 
   private fun convertDatasetFilterFieldsToReportFields(
@@ -159,10 +159,10 @@ class DashboardDefinitionMapper(
     allDatasets: List<Dataset>,
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ) = dataset.schema.field
     .filter { it.filter != null }
-    .map { toFilterField(it, allDatasets, executionContext, dataset, filters, datasource) }
+    .map { toFilterField(it, allDatasets, executionContext, dataset, filters, allDatasources) }
 
   private fun mapToDashboardVisualisationColumnDefinitions(dashboardVisualisationColumns: List<DashboardVisualisationColumn>, dataset: Dataset? = null) = dashboardVisualisationColumns.map {
     val schemaField = identifiedHelper.findOrNull(dataset?.schema?.field, it.id)
@@ -191,7 +191,7 @@ class DashboardDefinitionMapper(
     executionContext: ExecutionContext,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ) = FieldDefinition(
     name = schemaField.name,
     display = schemaField.display,
@@ -205,7 +205,7 @@ class DashboardDefinitionMapper(
           executionContext = executionContext,
           dashboardDataset = dashboardDataset,
           filters = filters,
-          datasource = datasource,
+          allDatasources = allDatasources,
         ),
         executionContext,
       )
@@ -218,7 +218,7 @@ class DashboardDefinitionMapper(
     executionContext: ExecutionContext,
     dashboardDataset: Dataset,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ): List<FilterOption>? {
     if (filterDefinition.type == FilterType.Caseloads) {
       return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
@@ -235,7 +235,7 @@ class DashboardDefinitionMapper(
               dynamicFilterOption.maximumOptions,
               dashboardDataset,
               filters,
-              datasource,
+              allDatasources,
               executionContext,
             )
           }

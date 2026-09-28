@@ -105,7 +105,7 @@ class DashboardDefinitionMapperTest {
       allDatasets = productDefinition.allDatasets,
       executionContext = executionContext,
       null,
-      productDefinition.datasource,
+      productDefinition.allDatasources,
     )
     assertEquals(
       DashboardDefinition(
@@ -221,7 +221,7 @@ class DashboardDefinitionMapperTest {
       allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
-      datasource = datasource1,
+      allDatasources = listOf(datasource1),
     )
     val expected = DashboardDefinition(
       id,
@@ -310,7 +310,7 @@ class DashboardDefinitionMapperTest {
       allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
-      datasource = datasource1,
+      allDatasources = listOf(datasource1),
     )
     val expected = DashboardDefinition(
       id,
@@ -386,7 +386,7 @@ class DashboardDefinitionMapperTest {
       allDashboards = listOf(dashboard),
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
-      datasource = datasource1,
+      allDatasources = listOf(datasource1),
     )
     val expected = DashboardDefinition(
       id,
@@ -451,13 +451,14 @@ class DashboardDefinitionMapperTest {
     val productDefinitionWithChild = productDefinitionRepositoryWithChild.getSingleDashboardProductDefinition("missing-ethnicity-metrics", "age-breakdown-dashboard-with-child")
     val database = "testdb"
     val catalog = "testcatalog"
-    val datasource1 = Datasource("id", "testdatasource", database, catalog)
+    val datasource1 = Datasource("nomis", "NOMIS", "DIGITAL_PRISON_REPORTING", "nomis")
+
     val actual = dashboardDefinitionMapperWithChild.toDashboardDefinition(
       dashboard = productDefinitionWithChild.dashboard,
       allDashboards = productDefinitionWithChild.allDashboards,
       allDatasets = productDefinitionWithChild.allDatasets,
       executionContext = executionContext,
-      datasource = datasource1,
+      allDatasources = listOf(datasource1),
     )
 
     val expectedSections = listOf(

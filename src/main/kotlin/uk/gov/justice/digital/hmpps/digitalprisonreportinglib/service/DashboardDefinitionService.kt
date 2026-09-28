@@ -33,7 +33,7 @@ class DashboardDefinitionService(
       allDatasets = productDefinition.allDatasets,
       executionContext = executionContext,
       filters = filters,
-      datasource = productDefinition.datasource,
+      allDatasources = productDefinition.allDatasources,
     )
   }
 

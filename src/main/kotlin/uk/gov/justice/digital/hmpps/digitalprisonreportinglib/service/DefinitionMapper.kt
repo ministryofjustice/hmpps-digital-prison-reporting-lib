@@ -100,7 +100,7 @@ abstract class DefinitionMapper(
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
       return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
@@ -114,7 +114,7 @@ abstract class DefinitionMapper(
           maxStaticOptions = maxStaticOptions,
           reportDataset = reportDataset,
           filters = filters,
-          datasource = datasource,
+          allDatasources = allDatasources,
           executionContext = executionContext,
         )
       }
@@ -153,10 +153,11 @@ abstract class DefinitionMapper(
     maxStaticOptions: Long?,
     reportDataset: Dataset,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
     executionContext: ExecutionContext,
   ): List<FilterOption> {
     val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
+    val matchingFilterDatasource = identifiedHelper.findOrFail(allDatasources, matchingFilterDataset.datasource)
     val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
     val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
     val displaySchemaField =
@@ -173,7 +174,7 @@ abstract class DefinitionMapper(
       sortColumn = nameSchemaField.name,
       dataset = matchingFilterDataset,
       prompts = prompts,
-      datasource = datasource,
+      datasource = matchingFilterDatasource,
       executionContext = executionContext,
     )
       .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }

@@ -66,7 +66,7 @@ class ReportDefinitionMapper(
       allDatasets = definition.allDatasets,
       allReports = definition.allReports,
       filters = filters,
-      datasource = definition.datasource,
+      allDatasources = definition.allDatasources,
     ),
   )
 
@@ -79,7 +79,7 @@ class ReportDefinitionMapper(
     allDatasets: List<Dataset>,
     allReports: List<Report>,
     filters: Map<String, String>? = null,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ): VariantDefinition = VariantDefinition(
     id = report.id,
     name = report.name,
@@ -95,7 +95,7 @@ class ReportDefinitionMapper(
       parameters = dataSet.parameters,
       reportDataset = dataSet,
       filters = filters,
-      datasource = datasource,
+      allDatasources = allDatasources,
     ),
     classification = report.classification,
     printable = report.feature?.any { it.type == FeatureType.PRINT } ?: false,
@@ -110,7 +110,7 @@ class ReportDefinitionMapper(
         dataProductDefinitionsPath = dataProductDefinitionsPath,
         allDatasets = allDatasets,
         allReports = allReports,
-        datasource = datasource,
+        allDatasources = allDatasources,
       )
     },
   )
@@ -122,7 +122,7 @@ class ReportDefinitionMapper(
     dataProductDefinitionsPath: String? = null,
     allDatasets: List<Dataset>,
     allReports: List<Report>,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ): ChildVariantDefinition {
     val report = identifiedHelper.findOrFail(allReports, child.reportId)
 
@@ -134,7 +134,7 @@ class ReportDefinitionMapper(
       dataProductDefinitionsPath = dataProductDefinitionsPath,
       allDatasets = allDatasets,
       allReports = allReports,
-      datasource = datasource,
+      allDatasources = allDatasources,
     )
 
     return ChildVariantDefinition(
@@ -157,7 +157,7 @@ class ReportDefinitionMapper(
     parameters: List<Parameter>? = null,
     reportDataset: Dataset,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ): Specification? {
     if (specification == null) {
       return null
@@ -175,7 +175,7 @@ class ReportDefinitionMapper(
         allDatasets = allDatasets,
         reportDataset = reportDataset,
         filters = filters,
-        datasource = datasource,
+        allDatasources = allDatasources,
       ) + maybeConvertParametersToReportFields(reportDataset.query, parameters),
     )
   }
@@ -207,7 +207,7 @@ class ReportDefinitionMapper(
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ) = specification.field.map {
     mapField(
       field = it,
@@ -219,7 +219,7 @@ class ReportDefinitionMapper(
       allDatasets = allDatasets,
       reportDataset = reportDataset,
       filters = filters,
-      datasource = datasource,
+      allDatasources = allDatasources,
     )
   }
 
@@ -233,7 +233,7 @@ class ReportDefinitionMapper(
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
-    datasource: Datasource,
+    allDatasources: List<Datasource>,
   ): FieldDefinition {
     val schemaField = identifiedHelper.findOrFail(schemaFields, field.name)
     return FieldDefinition(
@@ -254,7 +254,7 @@ class ReportDefinitionMapper(
             allDatasets = allDatasets,
             reportDataset = reportDataset,
             filters = filters,
-            datasource = datasource,
+            allDatasources = allDatasources,
           ),
           executionContext = executionContext,
         )

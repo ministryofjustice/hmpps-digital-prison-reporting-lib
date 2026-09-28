@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremo
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
@@ -68,9 +67,6 @@ abstract class IntegrationSystemTestBase {
 
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
-
-  @MockitoBean
-  lateinit var syncDataApiService: SyncDataApiService
 
   companion object {
     @Suppress("unused")
