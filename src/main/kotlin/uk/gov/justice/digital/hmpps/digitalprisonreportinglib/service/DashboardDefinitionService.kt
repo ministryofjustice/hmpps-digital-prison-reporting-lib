@@ -17,13 +17,11 @@ class DashboardDefinitionService(
     dataProductDefinitionId: String,
     dashboardId: String,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>? = null,
   ): DashboardDefinition {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(
       dataProductDefinitionId,
       dashboardId,
-      dataProductDefinitionsPath,
     )
     checkAuth(productDefinition, executionContext)
 

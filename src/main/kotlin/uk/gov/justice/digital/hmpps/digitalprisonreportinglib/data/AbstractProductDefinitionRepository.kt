@@ -15,9 +15,8 @@ abstract class AbstractProductDefinitionRepository(
   override fun getSingleReportProductDefinition(
     definitionId: String,
     reportId: String,
-    dataProductDefinitionsPath: String?,
   ): SingleReportProductDefinition {
-    val productDefinition: ProductDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
+    val productDefinition: ProductDefinition = getProductDefinition(definitionId)
     val reportDefinition = identifiedHelper.findOrFail(productDefinition.report, reportId)
     val dataSet = identifiedHelper.findOrFail(productDefinition.dataset, reportDefinition.dataset)
     reportDefinition.specification?.field?.forEach { specField -> identifiedHelper.findOrFail(dataSet.schema.field, specField.name) }
@@ -40,9 +39,8 @@ abstract class AbstractProductDefinitionRepository(
   override fun getSingleDashboardProductDefinition(
     definitionId: String,
     dashboardId: String,
-    dataProductDefinitionsPath: String?,
   ): SingleDashboardProductDefinition {
-    val productDefinition: AnyProductDefinition = getProductDefinition(definitionId, dataProductDefinitionsPath)
+    val productDefinition: AnyProductDefinition = getProductDefinition(definitionId)
     val dashboard = productDefinition.dashboard?.firstOrNull { it.id == dashboardId }
       ?: throw ValidationException("Invalid report dashboard id provided: $dashboardId")
     val dataSet = identifiedHelper.findOrFail(productDefinition.dataset, dashboard.dataset)

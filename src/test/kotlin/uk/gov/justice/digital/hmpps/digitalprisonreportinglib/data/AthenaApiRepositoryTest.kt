@@ -269,7 +269,7 @@ SELECT * FROM dataset_'
 
   @Test
   fun `executeQueryAsync should call the athena data api with the correct query which includes the athena prefilters`() {
-    val startQueryExecutionRequest = setupBasicMocks(filtersWhereClauseCondition = "lower(filterName1) = :filtername1 AND lower(filterName2) = :filtername2")
+    val startQueryExecutionRequest = setupBasicMocks(filtersWhereClauseCondition = "lower(filterName1) = ''filtervalue1'' AND lower(filterName2) = ''filtervalue2''")
     val query = mock<MultiphaseQuery>()
     whenever(dataset.query).thenReturn(listOf(query))
     whenever(dataset.query.first().query).thenReturn(dpdQuery)

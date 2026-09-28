@@ -363,7 +363,7 @@ class ReportDefinitionMapperTest {
   @Test
   fun `Getting report for statically returned dynamic filter values on a number succeeds`() {
     whenever(
-      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()),
+      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
 
     val datasource = Datasource("datasourceId", "datasourceName")

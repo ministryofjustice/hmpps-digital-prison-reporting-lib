@@ -1,7 +1,16 @@
 Below you can find the changes included in each release.
 
+# 19.0.0
+- Added Athena support for dynamic options filters. In order to use this feature, the dynamic options filter has to point to an existing non "datamart" datasource.
+
+# 18.1.0
+- Added support for sorting within the summary section
+
 # 18.0.0
-- Added Athena support for dynamic options filters. In order to use this feature, the dynamic options filter has to point to an existing non "datamart" datasource.  
+- Remove all references to dataProductDefinitionsPath from API params and internal functions
+
+# 17.9.1
+- Fixed issue which caused Athena queries to fail when pre-filters were present. 
 
 # 17.9.0
 - Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.1.

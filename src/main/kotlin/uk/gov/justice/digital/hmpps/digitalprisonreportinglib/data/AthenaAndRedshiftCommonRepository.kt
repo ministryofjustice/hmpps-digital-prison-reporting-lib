@@ -56,6 +56,21 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     query: String,
   ): StatementExecutionResponse
 
+  override fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
+    val lowerCaseField = "lower(${filter.field})"
+    return when (filter.type) {
+      FilterType.STANDARD -> "$lowerCaseField = '${filter.value.lowercase()}'"
+      FilterType.RANGE_START -> "$lowerCaseField >= ${filter.value.lowercase()}"
+      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST('${filter.value}' AS timestamp)"
+      FilterType.RANGE_END -> "$lowerCaseField <= ${filter.value.lowercase()}"
+      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST('${filter.value}' AS timestamp) + INTERVAL '1' day)"
+      FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
+      FilterType.BOOLEAN -> "${filter.field} = ${filter.value.toBoolean()}"
+      FilterType.MULTISELECT -> filter.value.split(",")
+        .joinToString(separator = " OR ", prefix = "(", postfix = ")") { "${filter.field} = '$it'" }
+    }
+  }
+
   abstract fun executeQuery(
     query: String,
     filters: List<Filter>,
