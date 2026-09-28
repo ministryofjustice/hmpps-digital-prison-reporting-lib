@@ -154,7 +154,7 @@ class AthenaApiRepository(
     sortedAsc: Boolean,
     policyEngineResult: String,
     dynamicFilterFieldId: Set<String>? = null,
-    reportFilter: ReportFilter?,
+    reportFilter: ReportFilter? = null,
     prompts: List<Prompt>?,
     datasource: Datasource,
     executionContext: ExecutionContext,
