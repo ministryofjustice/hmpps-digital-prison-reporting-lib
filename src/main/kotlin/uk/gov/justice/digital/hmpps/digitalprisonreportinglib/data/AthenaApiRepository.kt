@@ -150,13 +150,10 @@ class AthenaApiRepository(
   fun executeQuery(
     query: String,
     filters: List<ConfiguredApiRepository.Filter>,
-    selectedPage: Long,
-    pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean,
     policyEngineResult: String,
-    dynamicFilterFieldId: Set<String>?,
-    dataSourceName: String,
+    dynamicFilterFieldId: Set<String>? = null,
     reportFilter: ReportFilter?,
     prompts: List<Prompt>?,
     datasource: Datasource,
@@ -213,8 +210,8 @@ class AthenaApiRepository(
               .build(),
           ),
         ).map {
-        transformTimestampToLocalDateTime(it)
-      }
+          transformTimestampToLocalDateTime(it)
+        }
 
         QueryExecutionState.FAILED ->
           throw RuntimeException(status.stateChangeReason())
