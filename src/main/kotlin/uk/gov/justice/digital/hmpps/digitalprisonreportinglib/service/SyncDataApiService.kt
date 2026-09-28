@@ -264,6 +264,7 @@ class SyncDataApiService(
     athenaApiRepository?.executeQuery(
       query = dataset.query.first().query,
       filters = emptyList(),
+      pageSize = pageSize,
       sortColumn = sortColumn,
       sortedAsc = true,
       policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },

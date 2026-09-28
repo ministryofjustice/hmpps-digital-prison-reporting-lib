@@ -150,6 +150,7 @@ class AthenaApiRepository(
   fun executeQuery(
     query: String,
     filters: List<ConfiguredApiRepository.Filter>,
+    pageSize: Long,
     sortColumn: String?,
     sortedAsc: Boolean,
     policyEngineResult: String,
@@ -159,6 +160,10 @@ class AthenaApiRepository(
     datasource: Datasource,
     executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
+    if (pageSize > 1000) {
+      //Athena limits GetQueryResults to 1000 rows per request https://docs.aws.amazon.com/athena/latest/APIReference/API_GetQueryResults.html
+      throw IllegalArgumentException("More than 1000 rows per page are not supported.")
+    }
     val stopwatch = StopWatch.createStarted()
     // Build the query for the Athena
     // Request Athena for the query
@@ -207,6 +212,7 @@ class AthenaApiRepository(
           athenaClient.getQueryResults(
             GetQueryResultsRequest.builder()
               .queryExecutionId(queryExecutionId)
+              .maxResults(pageSize.toInt() + 1) //first row is the column names
               .build(),
           ),
         ).map {
