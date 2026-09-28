@@ -71,22 +71,6 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     }
   }
 
-  abstract fun executeQuery(
-    query: String,
-    filters: List<Filter>,
-    selectedPage: Long,
-    pageSize: Long,
-    sortColumn: String?,
-    sortedAsc: Boolean,
-    policyEngineResult: String,
-    dynamicFilterFieldId: Set<String>? = null,
-    dataSourceName: String,
-    reportFilter: ReportFilter? = null,
-    prompts: List<Prompt>? = null,
-    datasource: Datasource,
-    executionContext: ExecutionContext,
-  ): List<Map<String, Any?>>
-
   fun getPaginatedExternalTableResult(
     tableId: String,
     selectedPage: Long,

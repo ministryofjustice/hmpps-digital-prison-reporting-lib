@@ -147,7 +147,7 @@ class AthenaApiRepository(
     return StatementExecutionResponse(tableId, queryExecutionId)
   }
 
-  override fun executeQuery(
+  fun executeQuery(
     query: String,
     filters: List<ConfiguredApiRepository.Filter>,
     selectedPage: Long,
@@ -163,11 +163,6 @@ class AthenaApiRepository(
     executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
-//    val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
-    // The result of the query can contain null values.
-    // This is coming from Java and if the returned type is not specified in Kotlin it will assume it is List<Map<String, Any>>
-    // while in reality it is List<Map<String, Any?>>.
-
     // Build the query for the Athena
     // Request Athena for the query
     // Wait for the resonse

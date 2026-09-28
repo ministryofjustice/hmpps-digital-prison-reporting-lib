@@ -95,7 +95,6 @@ abstract class IntegrationTestBase {
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
 
-
   companion object {
 
     @JvmField
