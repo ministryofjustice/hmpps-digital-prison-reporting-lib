@@ -172,7 +172,8 @@ class AthenaApiRepository(
     // gracefully handle the error
     // success response map to List<Map<String, Any?>>
 
-    val timeout = Duration.ofMinutes(5)
+    val maxQueryDurationInMin = 5L
+    val timeout = Duration.ofMinutes(maxQueryDurationInMin)
     val startTime = Instant.now()
 
     val buildFinalInnerQuery = buildFinalInnerQuery(
@@ -198,8 +199,6 @@ class AthenaApiRepository(
     val queryExecutionId = athenaClient
       .startQueryExecution(startQueryExecutionRequest).queryExecutionId()
 
-    var res: GetQueryResultsResponse
-
     while (Duration.between(startTime, Instant.now()) < timeout) {
       val getQueryExecutionRequest = GetQueryExecutionRequest.builder()
         .queryExecutionId(queryExecutionId)
@@ -213,7 +212,9 @@ class AthenaApiRepository(
               .queryExecutionId(queryExecutionId)
               .build(),
           ),
-        )
+        ).map {
+        transformTimestampToLocalDateTime(it)
+      }
 
         QueryExecutionState.FAILED ->
           throw RuntimeException(status.stateChangeReason())
@@ -224,27 +225,9 @@ class AthenaApiRepository(
         else -> Thread.sleep(1000)
       }
     }
-
-//    val result: List<Map<String, Any?>> = jdbcTemplate.queryForList(
-//      determineFinalQuery(
-//        prompts = prompts,
-//        query = query,
-//        policyEngineResult = policyEngineResult,
-//        filters = filters,
-//        selectedPage = selectedPage,
-//        pageSize = pageSize,
-//        sortColumn = sortColumn,
-//        sortedAsc = sortedAsc,
-//        dynamicFilterFieldId = dynamicFilterFieldId,
-//        reportFilter = reportFilter,
-//      ),
-//      buildPreparedStatementNamedParams(filters),
-//    )
-//      .map {
-//        transformTimestampToLocalDateTime(it)
-//      }
     stopwatch.stop()
     log.debug("Query Execution time in ms: {}", stopwatch.time)
+    log.warn("Query timed out after running for more than $maxQueryDurationInMin minutes.")
     return emptyList()
   }
 
