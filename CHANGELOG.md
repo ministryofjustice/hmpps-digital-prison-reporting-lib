@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.1.0
+- Added support for sorting within the summary section
+
 # 18.0.0
 - Remove all references to dataProductDefinitionsPath from API params and internal functions
 
