@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
@@ -9,7 +8,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepo
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
@@ -26,7 +24,6 @@ class SyncDataApiService(
   productDefinitionRepository: ProductDefinitionRepository,
   val configuredApiRepository: ConfiguredApiRepository,
   val athenaApiRepository: AthenaApiRepository? = null,
-  val redshiftDataApiRepository: RedshiftDataApiRepository,
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   identifiedHelper: IdentifiedHelper,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
@@ -47,11 +44,6 @@ class SyncDataApiService(
     const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
     const val FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE = "Filter value does not match pattern:"
   }
-
-  private val datasourceNameToRepo: Map<String, RedshiftDataApiRepository>
-    get() = mapOf(
-      "datamart" to redshiftDataApiRepository,
-    )
 
   fun validateAndFetchData(
     reportId: String,

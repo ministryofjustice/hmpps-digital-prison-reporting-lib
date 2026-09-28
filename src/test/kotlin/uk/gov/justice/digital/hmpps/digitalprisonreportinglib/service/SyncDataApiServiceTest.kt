@@ -108,7 +108,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper,
   )
-  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, redshiftDataApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
 
   private val executionContext = ExecutionContext(
     CaseloadResponse(
@@ -560,7 +560,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper,
     )
-    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, redshiftDataApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
     val context = ExecutionContext(
       CaseloadResponse(
         username = "request-user",
@@ -1327,7 +1327,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       mapOf("9" to "1"),
     )
     val productDefRepo = mock<ProductDefinitionRepository>()
-    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, athenaApiRepository, redshiftDataApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
     val dataSourceName = "name"
 
     whenever(productDefRepo.getProductDefinitions())
@@ -1577,7 +1577,6 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       productDefinitionRepository = productDefinitionRepository,
       configuredApiRepository = configuredApiRepository,
       athenaApiRepository = athenaApiRepository,
-      redshiftDataApiRepository = redshiftDataApiRepository,
       productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
       identifiedHelper = identifiedHelper,
       env = null,

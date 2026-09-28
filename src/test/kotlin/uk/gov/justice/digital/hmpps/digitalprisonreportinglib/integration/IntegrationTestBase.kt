@@ -26,11 +26,11 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.reactive.server.WebTestClient
-import reactor.core.publisher.Mono
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ExternalMovementRepository
@@ -90,11 +90,12 @@ abstract class IntegrationTestBase {
   @MockitoBean
   lateinit var alertCategoryRepository: AlertCategoryRepository
 
+  @MockitoBean(name = "athenaApiRepository")
+  lateinit var athenaApiRepository: AthenaApiRepository
+
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
 
-  @MockitoBean
-  lateinit var syncDataApiService: SyncDataApiService
 
   companion object {
 
