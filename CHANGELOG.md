@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.0.0
+- Added Athena support for dynamic options filters. In order to use this feature, the dynamic options filter has to point to an existing non "datamart" datasource.  
+
 # 17.9.0
 - Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.1.
 - Upgraded various other package versions
