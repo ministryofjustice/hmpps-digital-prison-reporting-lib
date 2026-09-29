@@ -3,7 +3,6 @@ Below you can find the changes included in each release.
 # 18.1.2
 - Added the optional metadata tags field at the DPD level.
 - Added the optional dataset description field. 
-- The above two fields are optional.
 - Changed 'wordWrap' to 'wordwrap' at the report field level.
 - All the above changes were made to bring the model in-line with the schema.
 
