@@ -215,7 +215,7 @@ class ReportDefinitionMapper(
     return FieldDefinition(
       name = schemaField.name,
       display = populateDisplay(field.display, schemaField.display),
-      wordWrap = field.wordWrap?.toString()?.let(WordWrap::valueOf),
+      wordWrap = field.wordwrap?.toString()?.let(WordWrap::valueOf),
       filter = (schemaField.filter ?: field.filter)?.let {
         map(
           filterDefinition = it,

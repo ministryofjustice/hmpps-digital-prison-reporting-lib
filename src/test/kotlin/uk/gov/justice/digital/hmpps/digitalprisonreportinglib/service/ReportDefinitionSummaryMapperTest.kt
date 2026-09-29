@@ -74,7 +74,7 @@ class ReportDefinitionSummaryMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.Radio,
             staticOptions = listOf(
