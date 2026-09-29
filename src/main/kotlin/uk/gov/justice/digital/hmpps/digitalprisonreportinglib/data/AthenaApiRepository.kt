@@ -164,14 +164,6 @@ class AthenaApiRepository(
     // +1 as the first row is the column names
     val adjustedPageSize = if (pageSize >= 999) 1000 else pageSize.toInt() + 1
     val stopwatch = StopWatch.createStarted()
-    // Build the query for the Athena
-    // Request Athena for the query
-    // Wait for the resonse
-    // keep polling still
-    // keep 5 mins time out for start
-    // once get the response decide error or success
-    // gracefully handle the error
-    // success response map to List<Map<String, Any?>>
 
     val maxQueryDurationInMin = 5L
     val timeout = Duration.ofMinutes(maxQueryDurationInMin)
@@ -233,7 +225,7 @@ class AthenaApiRepository(
     return emptyList()
   }
 
-  fun getResultsAsListOfMaps(
+  private fun getResultsAsListOfMaps(
     response: GetQueryResultsResponse,
   ): List<Map<String, Any?>> {
     val rows = response.resultSet().rows()
