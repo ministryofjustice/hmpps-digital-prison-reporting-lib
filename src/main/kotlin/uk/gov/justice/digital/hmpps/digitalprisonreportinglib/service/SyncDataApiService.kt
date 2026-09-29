@@ -271,6 +271,6 @@ class SyncDataApiService(
       prompts = prompts,
       datasource = datasource,
       executionContext = executionContext,
-    ) ?: throw AthenaClientNotEnabledException("AthenaClient is not enabled.")
+    ) ?: throw AthenaClientNotEnabledException("You have configured a query to execute on Athena datasource with id: ${datasource.id} and name: ${datasource.name} while an AthenaClient is not enabled.")
   }
 }
