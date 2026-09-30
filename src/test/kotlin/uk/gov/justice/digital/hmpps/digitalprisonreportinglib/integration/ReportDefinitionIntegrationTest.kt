@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
@@ -14,7 +15,6 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
-import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.core.pagination.sync.SdkIterable
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
@@ -159,12 +159,29 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
       val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
-      val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
+      val otherProductDefinitionJson =
+        this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
       val orphanageItems = listOf(
-        mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-        mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+        mapOf(
+          "definition" to AttributeValue.fromS(productDefinitionJson),
+          "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value),
+        ),
+        mapOf(
+          "definition" to AttributeValue.fromS(otherProductDefinitionJson),
+          "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value),
+        ),
       )
-      val missingItems = listOf(mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)))
+      val missingItems = listOf(
+        mapOf(
+          "definition" to AttributeValue.fromS(
+            productDefinitionJson.replace(
+              "\"id\" : \"external-movements\"",
+              "\"id\":\"external-movements-test2\"",
+            ),
+          ),
+          "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value),
+        ),
+      )
 
       val missingPaginator = mock<QueryIterable>()
       val orphanagePaginator = mock<QueryIterable>()
@@ -732,8 +749,11 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .returnResult()
 
     assertThat(reportDef.responseBody!!.variant.specification!!.fields.size).isEqualTo(11)
-    assertThat(reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.SpecField }.size).isEqualTo(10)
-    val paramFields = reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.ParamField }
+    assertThat(reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.SpecField }.size).isEqualTo(
+      10,
+    )
+    val paramFields =
+      reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.ParamField }
     assertThat(paramFields.size).isEqualTo(1)
     assertThat(paramFields.first().name).isEqualTo("establishment_code")
   }
@@ -877,7 +897,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       }
     }
 
-    @Test fun `dpd without lao policy should come back as unauthorised`() {
+    @Test
+    fun `dpd without lao policy should come back as unauthorised`() {
       webTestClient.get()
         .uri("/definitions")
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -898,7 +919,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       }
     }
 
-    @Test fun `dpd with lao policy should come back as authorised`() {
+    @Test
+    fun `dpd with lao policy should come back as authorised`() {
       webTestClient.get()
         .uri("/definitions")
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -937,7 +959,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
         externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
 
-        webTestClient.get()
+        val result = webTestClient.get()
           .uri { uriBuilder: UriBuilder ->
             uriBuilder
               .path("/definitions/external-movements-with-parameters/last-month")
@@ -947,277 +969,339 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            """
-          {
-            "id": "external-movements-with-parameters",
-            "name": "External Movements",
-            "description": "Reports about prisoner external movements",
-            "variant": {
-              "id": "last-month",
-              "name": "Last month",
-              "resourceName": "reports/external-movements-with-parameters/last-month",
-              "description": "All movements in the past month",
-              "specification": {
-                "template": "list-section",
-                "sections": [ "direction" ],
-                "fields": [
-                  {
-                    "name": "prisonNumber",
-                    "display": "Prison Number",
-                    "wordWrap": null,
-                    "sortable": true,
-                    "defaultsort": false,
-                    "type": "string",
-                    "mandatory": false,
-                    "visible": true,
-                    "filter": {
-                      "type": "Radio",
-                      "staticOptions": [
-                        {
-                          "name": "DD105GF",
-                          "display": "LastName6, F"
-                        },
-                        {
-                          "name": "G2504UV",
-                          "display": "LastName1, F"
-                        },
-                        {
-                          "name": "G2927UV",
-                          "display": "LastName1, F"
-                        },
-                        {
-                          "name": "G3154UG",
-                          "display": "LastName5, F"
-                        },
-                        {
-                          "name": "G3411VR",
-                          "display": "LastName5, F"
-                        },
-                        {
-                          "name": "G3418VR",
-                          "display": "LastName3, F"
-                        }
-                      ],
-                      "dynamicOptions": {
-                        "minimumLength": 2
-                      },
-                      "defaultValue": null,
-                      "min": null,
-                      "max": null
-                    }
-                  },
-                  {
-                    "name": "name",
-                    "display": "Name",
-                    "wordWrap": "none",
-                    "filter": {
-                      "type": "autocomplete",
-                      "staticOptions": null,
-                      "dynamicOptions": {
-                        "minimumLength": 2
-                      },
-                      "defaultValue": null,
-                      "min": null,
-                      "max": null
-                    },
-                    "sortable": true,
-                    "defaultsort": false,
-                    "type": "string",
-                    "mandatory": false,
-                    "visible": true
-                  },
-                  {
-                    "name": "date",
-                    "display": "Date",
-                    "wordWrap": null,
-                    "filter": {
-                      "type": "daterange",
-                      "staticOptions": null,
-                      "dynamicOptions": null,
-                      "mandatory": false,
-                      "min": null,
-                      "max": null
-                    },
-                    "sortable": true,
-                    "defaultsort": true,
-                    "type": "date",
-                    "mandatory": false,
-                    "visible": true
-                  },
-                  {
-                    "name": "origin",
-                    "display": "From",
-                    "wordWrap": "none",
-                    "filter": {
-                      "type": "text"
-                    },
-                    "sortable": true,
-                    "defaultsort": false,
-                    "type": "string",
-                    "mandatory": false,
-                    "visible": true
-                  },
-                  {
-                    "name": "destination",
-                    "display": "To",
-                    "wordWrap": "none",
-                    "filter": null,
-                    "sortable": true,
-                    "defaultsort": false,
-                    "type": "string",
-                    "visible": true,
-                    "mandatory": false
-                  },
-                  {
-                    "name": "direction",
-                    "display": "Direction",
-                    "wordWrap": "break-words",
-                    "filter": {
-                      "type": "Radio",
-                      "staticOptions": [
-                        {
-                          "name": "in",
-                          "display": "In"
-                        },
-                        {
-                          "name": "out",
-                          "display": "Out"
-                        }
-                      ],
-                      "dynamicOptions": null,
-                      "defaultValue": null,
-                      "min": null,
-                      "max": null
-                    },
-                    "sortable": true,
-                    "defaultsort": false,
-                    "type": "string",
-                    "mandatory": false,
-                    "visible": true
-                  },
-                  {
-                    "name": "type",
-                    "display": "Type",
-                    "wordWrap": "normal",
-                    "filter": null,
-                    "sortable": true,
-                    "defaultsort": false,
-                    "type": "string",
-                    "mandatory": false,
-                    "visible": false
-                  },
-                  {
-                    "name": "reason",
-                    "display": "Reason",
-                    "wordWrap": null,
-                    "filter": {
-                      "type": "autocomplete",
-                      "staticOptions": [
-                        {
-                          "name": "Transfer In from Other Establishment",
-                          "display": "Transfer In from Other Establishment"
-                        }
-                      ],
-                      "dynamicOptions": {
-                        "minimumLength": 2
-                      },
-                      "defaultValue": null,
-                      "min": null,
-                      "max": null
-                    },
-                    "sortable": true,
-                    "defaultsort": false,
-                    "type": "string",
-                    "visible": true,
-                    "mandatory": true
-                  },
-                  {
-                    "name": "is_closed",
-                    "display": "Closed",
-                    "wordWrap":null,
-                    "sortable": true,
-                    "defaultsort":false,
-                    "filter": {
-                      "type": "Radio",
-                      "staticOptions": [
-                        {
-                          "name": "false",
-                          "display": "Only open"
-                        },
-                        {
-                          "name": "true",
-                          "display": "Only closed"
-                        }
-                      ],
-                      "dynamicOptions": null,
-                      "defaultValue":"false",
-                      "min": null,
-                      "max": null
-                    },
-                    "type": "boolean",
-                    "mandatory": false,
-                    "visible": true,
-                    "calculated": false
-                  },
-                  {
-                    "name": "establishment_code",
-                    "display": "Establishment",
-                    "filter": {
-                      "mandatory": true,
-                      "type": "autocomplete",
-                      "staticOptions": [
-                        {
-                          "name": "BFI",
-                          "display": "BEDFORD (HMP)"
-                        }
-                      ]
-                    },
-                    "sortable": false,
-                    "defaultsort": false,
-                    "type": "string",
-                    "mandatory": false,
-                    "visible": false,
-                    "calculated": false
-                  }, 
-                 {
-                  "name": "wing",
-                  "display": "Wing",
-                  "filter": {
-                    "mandatory": true,
-                    "type": "autocomplete",
-                    "staticOptions": [
-                      {
-                        "name": "BFI-A",
-                        "display": "BFI-A"
-                      },
-                      {
-                        "name":"All",
-                        "display":"All"
-                      }
-                    ]
-                  },
-                  "sortable": false,
-                  "defaultsort": false,
-                  "type": "string",
-                  "mandatory": false,
-                  "visible": false,
-                  "calculated": false
-                }
-                ]
-              },
-              "classification": "report classification",
-              "printable": true
-            }
-          }
+          .expectBody<SingleVariantReportDefinition>()
+          .returnResult()
 
-            """.trimIndent(),
-          )
+        println("ReturnResult : $result")
+//          .json(
+//            """
+//          {
+//            "id": "external-movements-with-parameters",
+//            "name": "External Movements",
+//            "description": "Reports about prisoner external movements",
+//            "variant": {
+//              "id": "last-month",
+//              "name": "Last month",
+//              "resourceName": "reports/external-movements-with-parameters/last-month",
+//              "description": "All movements in the past month",
+//              "specification": {
+//                "template": "list-section",
+//                "sections": [ "direction" ],
+//                "fields": [
+//                  {
+//                    "name": "prisonNumber",
+//                    "display": "Prison Number",
+//                    "wordWrap": null,
+//                    "sortable": true,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "mandatory": false,
+//                    "visible": true,
+//                    "filter": {
+//                      "type": "Radio",
+//                      "staticOptions": [
+//                        {
+//                          "name": "DD105GF",
+//                          "display": "LastName6, F"
+//                        },
+//                        {
+//                          "name": "G2504UV",
+//                          "display": "LastName1, F"
+//                        },
+//                        {
+//                          "name": "G2927UV",
+//                          "display": "LastName1, F"
+//                        },
+//                        {
+//                          "name": "G3154UG",
+//                          "display": "LastName5, F"
+//                        },
+//                        {
+//                          "name": "G3411VR",
+//                          "display": "LastName5, F"
+//                        },
+//                        {
+//                          "name": "G3418VR",
+//                          "display": "LastName3, F"
+//                        }
+//                      ],
+//                      "dynamicOptions": {
+//                        "minimumLength": 2
+//                      },
+//                      "defaultValue": null,
+//                      "min": null,
+//                      "max": null
+//                    }
+//                  },
+//                  {
+//                    "name": "name",
+//                    "display": "Name",
+//                    "wordWrap": "none",
+//                    "filter": {
+//                      "type": "autocomplete",
+//                      "staticOptions": null,
+//                      "dynamicOptions": {
+//                        "minimumLength": 2
+//                      },
+//                      "defaultValue": null,
+//                      "min": null,
+//                      "max": null
+//                    },
+//                    "sortable": true,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "mandatory": false,
+//                    "visible": true
+//                  },
+//                  {
+//                    "name": "date",
+//                    "display": "Date",
+//                    "wordWrap": null,
+//                    "filter": {
+//                      "type": "daterange",
+//                      "staticOptions": null,
+//                      "dynamicOptions": null,
+//                      "mandatory": false,
+//                      "min": null,
+//                      "max": null
+//                    },
+//                    "sortable": true,
+//                    "defaultsort": true,
+//                    "type": "date",
+//                    "mandatory": false,
+//                    "visible": true
+//                  },
+//                  {
+//                    "name": "origin",
+//                    "display": "From",
+//                    "wordWrap": "none",
+//                    "filter": {
+//                      "type": "text"
+//                    },
+//                    "sortable": true,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "mandatory": false,
+//                    "visible": true
+//                  },
+//                  {
+//                    "name": "destination",
+//                    "display": "To",
+//                    "wordWrap": "none",
+//                    "filter": null,
+//                    "sortable": true,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "visible": true,
+//                    "mandatory": false
+//                  },
+//                  {
+//                    "name": "direction",
+//                    "display": "Direction",
+//                    "wordWrap": "break-words",
+//                    "filter": {
+//                      "type": "Radio",
+//                      "staticOptions": [
+//                        {
+//                          "name": "in",
+//                          "display": "In"
+//                        },
+//                        {
+//                          "name": "out",
+//                          "display": "Out"
+//                        }
+//                      ],
+//                      "dynamicOptions": null,
+//                      "defaultValue": null,
+//                      "min": null,
+//                      "max": null
+//                    },
+//                    "sortable": true,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "mandatory": false,
+//                    "visible": true
+//                  },
+//                  {
+//                    "name": "type",
+//                    "display": "Type",
+//                    "wordWrap": "normal",
+//                    "filter": null,
+//                    "sortable": true,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "mandatory": false,
+//                    "visible": false
+//                  },
+//                  {
+//                    "name": "reason",
+//                    "display": "Reason",
+//                    "wordWrap": null,
+//                    "filter": {
+//                      "type": "autocomplete",
+//                      "staticOptions": [
+//                        {
+//                          "name": "Transfer In from Other Establishment",
+//                          "display": "Transfer In from Other Establishment"
+//                        }
+//                      ],
+//                      "dynamicOptions": {
+//                        "minimumLength": 2
+//                      },
+//                      "defaultValue": null,
+//                      "min": null,
+//                      "max": null
+//                    },
+//                    "sortable": true,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "visible": true,
+//                    "mandatory": true
+//                  },
+//                  {
+//                    "name": "is_closed",
+//                    "display": "Closed",
+//                    "wordWrap":null,
+//                    "sortable": true,
+//                    "defaultsort":false,
+//                    "filter": {
+//                      "type": "Radio",
+//                      "staticOptions": [
+//                        {
+//                          "name": "false",
+//                          "display": "Only open"
+//                        },
+//                        {
+//                          "name": "true",
+//                          "display": "Only closed"
+//                        }
+//                      ],
+//                      "dynamicOptions": null,
+//                      "defaultValue":"false",
+//                      "min": null,
+//                      "max": null
+//                    },
+//                    "type": "boolean",
+//                    "mandatory": false,
+//                    "visible": true,
+//                    "calculated": false
+//                  },
+//                  {
+//                    "name": "establishment_code",
+//                    "display": "Establishment",
+//                    "filter": {
+//                      "mandatory": true,
+//                      "type": "autocomplete",
+//                      "staticOptions": [
+//                        {
+//                          "name": "BFI",
+//                          "display": "BEDFORD (HMP)"
+//                        }
+//                      ]
+//                    },
+//                    "sortable": false,
+//                    "defaultsort": false,
+//                    "type": "string",
+//                    "mandatory": false,
+//                    "visible": false,
+//                    "calculated": false
+//                  },
+//                 {
+//                  "name": "wing",
+//                  "display": "Wing",
+//                  "filter": {
+//                    "mandatory": true,
+//                    "type": "autocomplete",
+//                    "staticOptions": [
+//                      {
+//                        "name": "BFI-A",
+//                        "display": "BFI-A"
+//                      },
+//                      {
+//                        "name":"All",
+//                        "display":"All"
+//                      }
+//                    ]
+//                  },
+//                  "sortable": false,
+//                  "defaultsort": false,
+//                  "type": "string",
+//                  "mandatory": false,
+//                  "visible": false,
+//                  "calculated": false
+//                }
+//                ]
+//              },
+//              "classification": "report classification",
+//              "printable": true
+//            }
+//          }
+//
+//            """.trimIndent(),
+//          )
       } finally {
         externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
         prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
       }
+    }
+  }
+
+  class ReportDefinitionDynamicOptionsTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithAthenaDynamicOptions.json" }
+      }
+    }
+
+    @Test
+    fun `Single Definition with Athena DynamicOptions is returned with respected StaticOptions`() {
+      val expectedRepositoryResult = listOf(
+        mapOf(
+          "prisonNumber" to "1",
+          "NAME" to "FirstName",
+        ),
+      )
+      whenever(
+        athenaApiRepository.executeQuery(
+          query = anyOrNull(),
+          filters = anyOrNull(),
+          pageSize = anyOrNull(),
+          sortColumn = anyOrNull(),
+          sortedAsc = anyOrNull(),
+          policyEngineResult = anyOrNull(),
+          dynamicFilterFieldId = anyOrNull(),
+          reportFilter = anyOrNull(),
+          prompts = anyOrNull(),
+          datasource = anyOrNull(),
+          executionContext = anyOrNull(),
+        ),
+      ).thenReturn(expectedRepositoryResult)
+
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-with-parameters/last-month")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<SingleVariantReportDefinition>()
+        .returnResult()
+        .responseBody!!
+
+      val staticOptions = result.variant.specification?.fields
+        ?.first { it.name == "prisonNumber" }
+        ?.filter!!
+        .staticOptions
+
+      assertThat(staticOptions).hasSize(1)
+      assertThat(staticOptions!![0].name).isEqualTo("1")
+      assertThat(staticOptions[0].display).isEqualTo("FirstName")
     }
   }
 }
