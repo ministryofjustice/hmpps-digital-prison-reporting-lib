@@ -122,7 +122,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "C14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.Radio,
             staticOptions = listOf(
@@ -163,7 +163,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.Radio,
             staticOptions = listOf(
@@ -322,7 +322,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -391,7 +391,7 @@ class ReportDefinitionMapperTest {
             ReportField(
               name = "\$ref:13",
               display = "14",
-              wordWrap = WordWrap.None,
+              wordwrap = WordWrap.None,
               filter = FilterDefinition(
                 type = FilterType.Radio,
                 dynamicOptions = DynamicFilterOption(
@@ -528,7 +528,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -798,7 +798,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -856,7 +856,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -1360,7 +1360,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.AutoComplete,
             dynamicOptions = dynamicFilterOption,
@@ -1399,7 +1399,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -1434,7 +1434,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           sortable = true,
           defaultSort = true,
           formula = formula,
