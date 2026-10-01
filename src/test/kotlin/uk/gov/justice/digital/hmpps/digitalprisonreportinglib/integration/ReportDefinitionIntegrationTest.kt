@@ -969,276 +969,273 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody<SingleVariantReportDefinition>()
-          .returnResult()
+          .expectBody()
+          .json(
+            """
+          {
+            "id": "external-movements-with-parameters",
+            "name": "External Movements",
+            "description": "Reports about prisoner external movements",
+            "variant": {
+              "id": "last-month",
+              "name": "Last month",
+              "resourceName": "reports/external-movements-with-parameters/last-month",
+              "description": "All movements in the past month",
+              "specification": {
+                "template": "list-section",
+                "sections": [ "direction" ],
+                "fields": [
+                  {
+                    "name": "prisonNumber",
+                    "display": "Prison Number",
+                    "wordWrap": null,
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": true,
+                    "filter": {
+                      "type": "Radio",
+                      "staticOptions": [
+                        {
+                          "name": "DD105GF",
+                          "display": "LastName6, F"
+                        },
+                        {
+                          "name": "G2504UV",
+                          "display": "LastName1, F"
+                        },
+                        {
+                          "name": "G2927UV",
+                          "display": "LastName1, F"
+                        },
+                        {
+                          "name": "G3154UG",
+                          "display": "LastName5, F"
+                        },
+                        {
+                          "name": "G3411VR",
+                          "display": "LastName5, F"
+                        },
+                        {
+                          "name": "G3418VR",
+                          "display": "LastName3, F"
+                        }
+                      ],
+                      "dynamicOptions": {
+                        "minimumLength": 2
+                      },
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    }
+                  },
+                  {
+                    "name": "name",
+                    "display": "Name",
+                    "wordWrap": "none",
+                    "filter": {
+                      "type": "autocomplete",
+                      "staticOptions": null,
+                      "dynamicOptions": {
+                        "minimumLength": 2
+                      },
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": true
+                  },
+                  {
+                    "name": "date",
+                    "display": "Date",
+                    "wordWrap": null,
+                    "filter": {
+                      "type": "daterange",
+                      "staticOptions": null,
+                      "dynamicOptions": null,
+                      "mandatory": false,
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": true,
+                    "type": "date",
+                    "mandatory": false,
+                    "visible": true
+                  },
+                  {
+                    "name": "origin",
+                    "display": "From",
+                    "wordWrap": "none",
+                    "filter": {
+                      "type": "text"
+                    },
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": true
+                  },
+                  {
+                    "name": "destination",
+                    "display": "To",
+                    "wordWrap": "none",
+                    "filter": null,
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "visible": true,
+                    "mandatory": false
+                  },
+                  {
+                    "name": "direction",
+                    "display": "Direction",
+                    "wordWrap": "break-words",
+                    "filter": {
+                      "type": "Radio",
+                      "staticOptions": [
+                        {
+                          "name": "in",
+                          "display": "In"
+                        },
+                        {
+                          "name": "out",
+                          "display": "Out"
+                        }
+                      ],
+                      "dynamicOptions": null,
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": true
+                  },
+                  {
+                    "name": "type",
+                    "display": "Type",
+                    "wordWrap": "normal",
+                    "filter": null,
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": false
+                  },
+                  {
+                    "name": "reason",
+                    "display": "Reason",
+                    "wordWrap": null,
+                    "filter": {
+                      "type": "autocomplete",
+                      "staticOptions": [
+                        {
+                          "name": "Transfer In from Other Establishment",
+                          "display": "Transfer In from Other Establishment"
+                        }
+                      ],
+                      "dynamicOptions": {
+                        "minimumLength": 2
+                      },
+                      "defaultValue": null,
+                      "min": null,
+                      "max": null
+                    },
+                    "sortable": true,
+                    "defaultsort": false,
+                    "type": "string",
+                    "visible": true,
+                    "mandatory": true
+                  },
+                  {
+                    "name": "is_closed",
+                    "display": "Closed",
+                    "wordWrap":null,
+                    "sortable": true,
+                    "defaultsort":false,
+                    "filter": {
+                      "type": "Radio",
+                      "staticOptions": [
+                        {
+                          "name": "false",
+                          "display": "Only open"
+                        },
+                        {
+                          "name": "true",
+                          "display": "Only closed"
+                        }
+                      ],
+                      "dynamicOptions": null,
+                      "defaultValue":"false",
+                      "min": null,
+                      "max": null
+                    },
+                    "type": "boolean",
+                    "mandatory": false,
+                    "visible": true,
+                    "calculated": false
+                  },
+                  {
+                    "name": "establishment_code",
+                    "display": "Establishment",
+                    "filter": {
+                      "mandatory": true,
+                      "type": "autocomplete",
+                      "staticOptions": [
+                        {
+                          "name": "BFI",
+                          "display": "BEDFORD (HMP)"
+                        }
+                      ]
+                    },
+                    "sortable": false,
+                    "defaultsort": false,
+                    "type": "string",
+                    "mandatory": false,
+                    "visible": false,
+                    "calculated": false
+                  },
+                 {
+                  "name": "wing",
+                  "display": "Wing",
+                  "filter": {
+                    "mandatory": true,
+                    "type": "autocomplete",
+                    "staticOptions": [
+                      {
+                        "name": "BFI-A",
+                        "display": "BFI-A"
+                      },
+                      {
+                        "name":"All",
+                        "display":"All"
+                      }
+                    ]
+                  },
+                  "sortable": false,
+                  "defaultsort": false,
+                  "type": "string",
+                  "mandatory": false,
+                  "visible": false,
+                  "calculated": false
+                }
+                ]
+              },
+              "classification": "report classification",
+              "printable": true
+            }
+          }
 
-        println("ReturnResult : $result")
-//          .json(
-//            """
-//          {
-//            "id": "external-movements-with-parameters",
-//            "name": "External Movements",
-//            "description": "Reports about prisoner external movements",
-//            "variant": {
-//              "id": "last-month",
-//              "name": "Last month",
-//              "resourceName": "reports/external-movements-with-parameters/last-month",
-//              "description": "All movements in the past month",
-//              "specification": {
-//                "template": "list-section",
-//                "sections": [ "direction" ],
-//                "fields": [
-//                  {
-//                    "name": "prisonNumber",
-//                    "display": "Prison Number",
-//                    "wordWrap": null,
-//                    "sortable": true,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "mandatory": false,
-//                    "visible": true,
-//                    "filter": {
-//                      "type": "Radio",
-//                      "staticOptions": [
-//                        {
-//                          "name": "DD105GF",
-//                          "display": "LastName6, F"
-//                        },
-//                        {
-//                          "name": "G2504UV",
-//                          "display": "LastName1, F"
-//                        },
-//                        {
-//                          "name": "G2927UV",
-//                          "display": "LastName1, F"
-//                        },
-//                        {
-//                          "name": "G3154UG",
-//                          "display": "LastName5, F"
-//                        },
-//                        {
-//                          "name": "G3411VR",
-//                          "display": "LastName5, F"
-//                        },
-//                        {
-//                          "name": "G3418VR",
-//                          "display": "LastName3, F"
-//                        }
-//                      ],
-//                      "dynamicOptions": {
-//                        "minimumLength": 2
-//                      },
-//                      "defaultValue": null,
-//                      "min": null,
-//                      "max": null
-//                    }
-//                  },
-//                  {
-//                    "name": "name",
-//                    "display": "Name",
-//                    "wordWrap": "none",
-//                    "filter": {
-//                      "type": "autocomplete",
-//                      "staticOptions": null,
-//                      "dynamicOptions": {
-//                        "minimumLength": 2
-//                      },
-//                      "defaultValue": null,
-//                      "min": null,
-//                      "max": null
-//                    },
-//                    "sortable": true,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "mandatory": false,
-//                    "visible": true
-//                  },
-//                  {
-//                    "name": "date",
-//                    "display": "Date",
-//                    "wordWrap": null,
-//                    "filter": {
-//                      "type": "daterange",
-//                      "staticOptions": null,
-//                      "dynamicOptions": null,
-//                      "mandatory": false,
-//                      "min": null,
-//                      "max": null
-//                    },
-//                    "sortable": true,
-//                    "defaultsort": true,
-//                    "type": "date",
-//                    "mandatory": false,
-//                    "visible": true
-//                  },
-//                  {
-//                    "name": "origin",
-//                    "display": "From",
-//                    "wordWrap": "none",
-//                    "filter": {
-//                      "type": "text"
-//                    },
-//                    "sortable": true,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "mandatory": false,
-//                    "visible": true
-//                  },
-//                  {
-//                    "name": "destination",
-//                    "display": "To",
-//                    "wordWrap": "none",
-//                    "filter": null,
-//                    "sortable": true,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "visible": true,
-//                    "mandatory": false
-//                  },
-//                  {
-//                    "name": "direction",
-//                    "display": "Direction",
-//                    "wordWrap": "break-words",
-//                    "filter": {
-//                      "type": "Radio",
-//                      "staticOptions": [
-//                        {
-//                          "name": "in",
-//                          "display": "In"
-//                        },
-//                        {
-//                          "name": "out",
-//                          "display": "Out"
-//                        }
-//                      ],
-//                      "dynamicOptions": null,
-//                      "defaultValue": null,
-//                      "min": null,
-//                      "max": null
-//                    },
-//                    "sortable": true,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "mandatory": false,
-//                    "visible": true
-//                  },
-//                  {
-//                    "name": "type",
-//                    "display": "Type",
-//                    "wordWrap": "normal",
-//                    "filter": null,
-//                    "sortable": true,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "mandatory": false,
-//                    "visible": false
-//                  },
-//                  {
-//                    "name": "reason",
-//                    "display": "Reason",
-//                    "wordWrap": null,
-//                    "filter": {
-//                      "type": "autocomplete",
-//                      "staticOptions": [
-//                        {
-//                          "name": "Transfer In from Other Establishment",
-//                          "display": "Transfer In from Other Establishment"
-//                        }
-//                      ],
-//                      "dynamicOptions": {
-//                        "minimumLength": 2
-//                      },
-//                      "defaultValue": null,
-//                      "min": null,
-//                      "max": null
-//                    },
-//                    "sortable": true,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "visible": true,
-//                    "mandatory": true
-//                  },
-//                  {
-//                    "name": "is_closed",
-//                    "display": "Closed",
-//                    "wordWrap":null,
-//                    "sortable": true,
-//                    "defaultsort":false,
-//                    "filter": {
-//                      "type": "Radio",
-//                      "staticOptions": [
-//                        {
-//                          "name": "false",
-//                          "display": "Only open"
-//                        },
-//                        {
-//                          "name": "true",
-//                          "display": "Only closed"
-//                        }
-//                      ],
-//                      "dynamicOptions": null,
-//                      "defaultValue":"false",
-//                      "min": null,
-//                      "max": null
-//                    },
-//                    "type": "boolean",
-//                    "mandatory": false,
-//                    "visible": true,
-//                    "calculated": false
-//                  },
-//                  {
-//                    "name": "establishment_code",
-//                    "display": "Establishment",
-//                    "filter": {
-//                      "mandatory": true,
-//                      "type": "autocomplete",
-//                      "staticOptions": [
-//                        {
-//                          "name": "BFI",
-//                          "display": "BEDFORD (HMP)"
-//                        }
-//                      ]
-//                    },
-//                    "sortable": false,
-//                    "defaultsort": false,
-//                    "type": "string",
-//                    "mandatory": false,
-//                    "visible": false,
-//                    "calculated": false
-//                  },
-//                 {
-//                  "name": "wing",
-//                  "display": "Wing",
-//                  "filter": {
-//                    "mandatory": true,
-//                    "type": "autocomplete",
-//                    "staticOptions": [
-//                      {
-//                        "name": "BFI-A",
-//                        "display": "BFI-A"
-//                      },
-//                      {
-//                        "name":"All",
-//                        "display":"All"
-//                      }
-//                    ]
-//                  },
-//                  "sortable": false,
-//                  "defaultsort": false,
-//                  "type": "string",
-//                  "mandatory": false,
-//                  "visible": false,
-//                  "calculated": false
-//                }
-//                ]
-//              },
-//              "classification": "report classification",
-//              "printable": true
-//            }
-//          }
-//
-//            """.trimIndent(),
-//          )
+            """.trimIndent(),
+          )
       } finally {
         externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
         prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
