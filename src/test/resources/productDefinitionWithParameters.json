@@ -15,7 +15,12 @@
       "catalog": "nomis",
       "connection": "federated",
       "dialect": "oracle/11g"
-    }],
+    },
+    {
+      "id": "datamart",
+      "name": "datamart"
+    }
+  ],
   "dataset" : [ {
     "id" : "external-movements",
     "name" : "All movements",

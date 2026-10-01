@@ -20,11 +20,17 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import software.amazon.awssdk.services.athena.AthenaClient
+import software.amazon.awssdk.services.athena.model.Datum
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionResponse
+import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
+import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.QueryExecution
 import software.amazon.awssdk.services.athena.model.QueryExecutionContext
+import software.amazon.awssdk.services.athena.model.QueryExecutionState
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
+import software.amazon.awssdk.services.athena.model.ResultSet
+import software.amazon.awssdk.services.athena.model.Row
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionResponse
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
@@ -32,6 +38,7 @@ import software.amazon.awssdk.services.athena.model.StopQueryExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.Companion.REPOSITORY_TEST_QUERY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.CONTEXT
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.DEFAULT_REPORT_CTE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.FALSE_WHERE_CLAUSE
@@ -411,6 +418,72 @@ SELECT * FROM dataset_'
     assertEquals(StatementExecutionResponse(tableId, executionId), actual)
     verify(athenaClient).startQueryExecution(startQueryExecutionRequest)
   }
+
+  @Test
+  fun `should return results for athena dynamicOptions`() {
+    val datasource1 = Datasource("nomis", "NOMIS", "DIGITAL_PRISON_REPORTING", "nomis")
+    val prompts = listOf(Prompt("start_date", "01/01/2023", FilterType.Date))
+
+    whenever(
+      athenaClient.startQueryExecution(
+        any(StartQueryExecutionRequest::class.java),
+      ),
+    ).thenReturn(startQueryExecutionResponse)
+    whenever(
+      athenaClient.getQueryExecution(any<GetQueryExecutionRequest>()),
+    ).thenReturn(
+      GetQueryExecutionResponse.builder()
+        .queryExecution(
+          QueryExecution.builder()
+            .status(
+              QueryExecutionStatus.builder()
+                .state(QueryExecutionState.SUCCEEDED)
+                .build(),
+            )
+            .build(),
+        )
+        .build(),
+    )
+    val row1 = buildRow("prisonNumber", "NAME")
+    val row2 = buildRow("1", "FirstName")
+    whenever(
+      athenaClient.getQueryResults(any<GetQueryResultsRequest>()),
+    ).thenReturn(
+      GetQueryResultsResponse.builder()
+        .resultSet(
+          ResultSet.builder()
+            .rows(listOf(row1, row2))
+            .build(),
+        )
+        .build(),
+    )
+    val expectedRepositoryResult = listOf(
+      mapOf(
+        "prisonNumber" to "1",
+        "NAME" to "FirstName",
+      ),
+    )
+    val actual = athenaApiRepository.executeQuery(
+      query = REPOSITORY_TEST_QUERY,
+      filters = emptyList(),
+      pageSize = 5,
+      sortColumn = "date",
+      sortedAsc = true,
+      policyEngineResult = POLICY_DENY,
+      prompts = prompts,
+      datasource = datasource1,
+      executionContext = executionContext,
+    )
+    assertEquals(expectedRepositoryResult, actual)
+    assertEquals(1, actual.size)
+  }
+
+  private fun buildRow(column1: String, column2: String): Row? = Row.builder().data(
+    listOf(
+      Datum.builder().varCharValue(column1).build(),
+      Datum.builder().varCharValue(column2).build(),
+    ),
+  ).build()
 
   @ParameterizedTest
   @CsvSource(

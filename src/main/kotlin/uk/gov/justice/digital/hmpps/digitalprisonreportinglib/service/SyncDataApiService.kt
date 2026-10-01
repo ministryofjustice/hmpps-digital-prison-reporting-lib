@@ -4,13 +4,17 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.AthenaClientNotEnabledException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService.Companion.DATAMART
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.SyncDownloadContext
 import java.io.Writer
@@ -18,7 +22,8 @@ import java.io.Writer
 @Service
 class SyncDataApiService(
   productDefinitionRepository: ProductDefinitionRepository,
-  private val configuredApiRepository: ConfiguredApiRepository,
+  val configuredApiRepository: ConfiguredApiRepository,
+  val athenaApiRepository: AthenaApiRepository? = null,
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   identifiedHelper: IdentifiedHelper,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
@@ -88,27 +93,15 @@ class SyncDataApiService(
     sortColumn: String,
     dataset: Dataset,
     prompts: List<Prompt>? = null,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
     val formulaEngine = FormulaEngine(emptyList(), env, identifiedHelper)
-    return configuredApiRepository
-      .executeQuery(
-        query = dataset.query.first().query,
-        filters = emptyList(),
-        selectedPage = 1,
-        pageSize = pageSize,
-        sortColumn = sortColumn,
-        sortedAsc = true,
-        policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
-        dataSourceName = dataset.datasource,
-        prompts = prompts,
-      )
-      .let { records ->
-        formatColumnsAndApplyFormulas(
-          records,
-          dataset.schema.field,
-          formulaEngine,
-        )
-      }
+    return formatColumnsAndApplyFormulas(
+      fetchResults(datasource, dataset, pageSize, sortColumn, prompts, executionContext),
+      dataset.schema.field,
+      formulaEngine,
+    )
   }
 
   fun validateAndCount(
@@ -247,4 +240,37 @@ class SyncDataApiService(
   ) = records
     .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, schemaFields.map(SchemaField::name)) }
     .map(formulaEngine::applyFormulas)
+
+  private fun fetchResults(
+    datasource: Datasource,
+    dataset: Dataset,
+    pageSize: Long,
+    sortColumn: String,
+    prompts: List<Prompt>?,
+    executionContext: ExecutionContext,
+  ): List<Map<String, Any?>> = if (datasource.name.lowercase() == DATAMART) {
+    configuredApiRepository.executeQuery(
+      query = dataset.query.first().query,
+      filters = emptyList(),
+      selectedPage = 1,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
+      dataSourceName = dataset.datasource,
+      prompts = prompts,
+    )
+  } else {
+    athenaApiRepository?.executeQuery(
+      query = dataset.query.first().query,
+      filters = emptyList(),
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
+      prompts = prompts,
+      datasource = datasource,
+      executionContext = executionContext,
+    ) ?: throw AthenaClientNotEnabledException("You have configured a query to execute on Athena datasource with id: ${datasource.id} and name: ${datasource.name} while an AthenaClient is not enabled.")
+  }
 }

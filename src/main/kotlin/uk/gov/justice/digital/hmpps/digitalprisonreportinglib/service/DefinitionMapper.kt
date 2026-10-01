@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.alert.AlertCategory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
@@ -98,6 +99,7 @@ abstract class DefinitionMapper(
     allDatasets: List<Dataset>,
     reportDataset: Dataset,
     filters: Map<String, String>?,
+    allDatasources: List<Datasource>,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
       return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
@@ -111,6 +113,8 @@ abstract class DefinitionMapper(
           maxStaticOptions = maxStaticOptions,
           reportDataset = reportDataset,
           filters = filters,
+          allDatasources = allDatasources,
+          executionContext = executionContext,
         )
       }
         ?: populateStandardStaticOptionsForReportDefinition(
@@ -147,8 +151,11 @@ abstract class DefinitionMapper(
     maxStaticOptions: Long?,
     reportDataset: Dataset,
     filters: Map<String, String>?,
+    allDatasources: List<Datasource>,
+    executionContext: ExecutionContext,
   ): List<FilterOption> {
     val matchingFilterDataset = identifiedHelper.findOrFail(allDatasets, dynamicFilterDatasetId)
+    val matchingFilterDatasource = identifiedHelper.findOrFail(allDatasources, matchingFilterDataset.datasource)
     val matchingSchemaFieldsForFilterDataset = matchingFilterDataset.schema.field
     val nameSchemaField = identifiedHelper.findOrFail(matchingSchemaFieldsForFilterDataset, dynamicFilterOption.name)
     val displaySchemaField =
@@ -165,6 +172,8 @@ abstract class DefinitionMapper(
       sortColumn = nameSchemaField.name,
       dataset = matchingFilterDataset,
       prompts = prompts,
+      datasource = matchingFilterDatasource,
+      executionContext = executionContext,
     )
       .map { FilterOption(it[nameSchemaField.name].toString(), it[displaySchemaField.name].toString()) }
   }

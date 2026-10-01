@@ -1,6 +1,11 @@
 Below you can find the changes included in each release.
 
-# 18.1.2
+# 19.0.0
+- Added Athena support for dynamic options filters.
+  In order to use this feature for Athena, the dynamic options filter has to point to an existing non "datamart" datasource.
+  "Datamart" based datasources will continue to function as before. Datasets pointing to non-existing datasources are invalid.
+
+# 18.1.1
 - Added the optional metadata tags field at the DPD level.
 - Added the optional dataset description field. 
 - Changed 'wordWrap' to 'wordwrap' at the report field level.

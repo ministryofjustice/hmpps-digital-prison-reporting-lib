@@ -51,12 +51,13 @@ class AsyncDataApiService(
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
     const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
     const val FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE = "Filter value does not match pattern:"
+    const val DATAMART = "datamart"
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
   private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
     get() = mapOf(
-      "datamart" to redshiftDataApiRepository,
+      DATAMART to redshiftDataApiRepository,
     )
 
   fun validateAndExecuteStatementAsync(
