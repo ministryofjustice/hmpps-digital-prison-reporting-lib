@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.2.1
+- Added defaultSort to the SummaryField
+
 # 18.2.0
 - Added Athena support for dynamic options filters.
   In order to use this feature for Athena, the dynamic options filter has to point to an existing non "datamart" datasource.
