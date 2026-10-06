@@ -185,6 +185,7 @@ class ReportDefinitionMapper(
       type = convertParameterTypeToFieldType(field.type),
       header = summaryField?.header,
       mergeRows = summaryField?.mergeRows,
+      defaultSort = summaryField?.defaultSort,
     )
   }
 
