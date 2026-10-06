@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.2.3
+Added null as the default value to report.summary.field to satisfy Kotlinx strict validation.
+
 # 18.2.2
 - Updated mapping for defaultSort SummaryField
 
