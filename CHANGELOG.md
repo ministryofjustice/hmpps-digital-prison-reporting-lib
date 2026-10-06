@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.2.2
+- Updated mapping for defaultSort SummaryField
+
 # 18.2.1
 - Added defaultSort to the SummaryField
 
