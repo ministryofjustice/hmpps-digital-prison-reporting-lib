@@ -20,7 +20,7 @@
     {
       "id": "establishments",
       "name": "Establishments",
-      "datasource": "datamart",
+      "datasource": "nomis",
       "query": "SELECT 'AAA' AS establishment_id, 'Aardvark' AS establishment_name UNION SELECT 'BBB' AS establishment_id, 'Bumblebee' AS establishment_name",
       "schema": {
         "field": [

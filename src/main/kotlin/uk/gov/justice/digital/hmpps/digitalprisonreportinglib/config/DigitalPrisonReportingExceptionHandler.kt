@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.AthenaClientNotEnabledException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.InvalidDpdException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
@@ -46,6 +47,10 @@ class DigitalPrisonReportingExceptionHandler {
   @ExceptionHandler(InvalidDpdException::class)
   @ResponseStatus(BAD_REQUEST)
   fun handleInvalidDpdException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
+
+  @ExceptionHandler(AthenaClientNotEnabledException::class)
+  @ResponseStatus(BAD_REQUEST)
+  fun handleAthenaNotEnabledException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
   @ExceptionHandler(MethodArgumentNotValidException::class)
   @ResponseStatus(BAD_REQUEST)

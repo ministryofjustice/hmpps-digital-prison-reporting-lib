@@ -6,4 +6,5 @@ data class SummaryField(
   val type: FieldType?,
   val header: Boolean?,
   val mergeRows: Boolean?,
+  val defaultSort: Boolean?,
 )

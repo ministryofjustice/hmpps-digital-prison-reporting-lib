@@ -1,8 +1,7 @@
 {
-  "id" : "external-movements",
+  "id" : "external-movements-with-parameters",
   "name" : "External Movements",
   "description" : "Reports about prisoner external movements",
-  "scheduled": "true",
   "metadata" : {
     "author" : "Adam",
     "version" : "1.2.3",
@@ -22,9 +21,11 @@
       "name": "datamart"
     }
   ],
-  "dataset" : [ {
+  "dataset" : [
+    {
     "id" : "external-movements",
     "name" : "All movements",
+    "query" : "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM datamart.domain.movement_movement as movements\nJOIN datamart.domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id",
     "parameters": [
       {
         "index": 0,
@@ -32,13 +33,21 @@
         "filterType": "autocomplete",
         "reportFieldType": "string",
         "display": "Establishment",
-        "description": "@prompt('Establishment Code','A','Establishment\\Establishment Code',Mono,Free,Not_Persistent,,User:0)",
+        "description": "@Prompt('Enter NOMS Number',,,mono,free,Not_Persistent,User:1)",
         "mandatory": "true",
         "referenceType": "establishment"
+      },
+      {
+        "index": 1,
+        "name": "wing",
+        "filterType": "autocomplete",
+        "reportFieldType": "string",
+        "display": "Wing",
+        "description": "@Prompt('Enter NOMS Number',,,mono,free,Not_Persistent,User:1)",
+        "mandatory": "true",
+        "referenceType": "wing"
       }
     ],
-    "query" : "SELECT prisoners.number AS prisonNumber,CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name,movements.time AS date,movements.direction,movements.type,movements.origin,movements.origin_code,movements.destination,movements.destination_code,movements.reason\nFROM datamart.domain.movement_movement as movements\nJOIN datamart.domain.prisoner_prisoner as prisoners\nON movements.prisoner = prisoners.id",
-    "schedule": "0 15 10 ? * MON-FRI",
     "schema" : {
       "field" : [ {
         "name" : "prisonNumber",
@@ -90,7 +99,7 @@
     {
       "id": "prisoner-dataset",
       "name": "prisoner dataset",
-      "datasource": "datamart",
+      "datasource": "nomis",
       "query": "SELECT prisoners.number AS prisonNumber, CONCAT(CONCAT(prisoners.lastname, ', '), substring(prisoners.firstname, 1, 1)) AS name FROM datamart.domain.prisoner_prisoner as prisoners",
       "schema": {
         "field": [
@@ -104,19 +113,6 @@
             "type": "string",
             "display": "Prisoner Name"
           }]
-      }
-    },
-    {
-      "id": "summary-dataset",
-      "name": "Summary Dataset",
-      "datasource": "datamart",
-      "query": "SELECT COUNT(*) AS TOTAL FROM ${tableId}",
-      "schema": {
-        "field": [{
-          "name": "total",
-          "type": "int",
-          "display": "Total"
-        }]
       }
     }
   ],
@@ -147,14 +143,10 @@
       ]
     }
   ],
-  "report" : [
-    {
+  "report" : [ {
     "id" : "last-month",
     "name" : "Last month",
     "description" : "All movements in the past month",
-    "metadata" : {
-      "hints" : ["interactive"]
-    },
     "created" : "2023-09-20T14:41:00.000Z",
     "classification": "report classification",
     "version" : "1.2.3",
@@ -166,7 +158,8 @@
     "specification" : {
       "template" : "list-section",
       "section": [ "$ref:direction" ],
-      "field" : [ {
+      "field" : [
+        {
         "name" : "$ref:prisonNumber",
         "sortable" : true,
         "defaultsort" : false,
@@ -202,8 +195,7 @@
           "default" : "today(-1,months) - today()"
         },
         "sortable" : true,
-        "defaultsort" : true,
-        "sortdirection" : "asc"
+        "defaultsort" : true
       }, {
         "name" : "$ref:origin",
         "display" : "From",
@@ -226,7 +218,6 @@
         "wordwrap" : "break-words",
         "filter" : {
           "type" : "Radio",
-          "interactive": true,
           "staticoptions" : [ {
             "name" : "in",
             "display" : "In"
@@ -276,25 +267,10 @@
             }
           ]
         }
-      },{
-        "name" : "$ref:origin_code",
-        "display": "Origin Code",
-        "sortable" : true,
-        "defaultsort" : false,
-        "filter" : {
-          "type" : "caseloads",
-          "mandatory": "false"
-        }
-      }]
+      } ]
     },
-    "destination" : [ ],
-    "summary": [{
-      "id": "summaryId",
-      "template": "page-header",
-      "dataset": "$ref:summary-dataset"
-    }]
-  },
-    {
+    "destination" : [ ]
+  }, {
     "id" : "last-week",
     "name" : "Last week",
     "description" : "All movements in the past week",
@@ -379,10 +355,8 @@
       } ]
     },
     "destination" : [ ]
-  },
-    {
+  }, {
     "id" : "last-year",
-    "loadType": "async",
     "name" : "Last year",
     "description" : "All movements in the past year",
     "created" : "2023-09-20T14:41:00.000Z",
@@ -498,41 +472,5 @@
       } ]
     },
     "destination" : [ ]
-  },
-    {
-      "id" : "fewer-spec-fields-than-dataset-schema-fields",
-      "loadType": "async",
-      "name" : "Fewer Report Spec Fields Than Dataset Schema Fields",
-      "description" : "A test report with only prison number and name",
-      "created" : "2023-09-20T14:41:00.000Z",
-      "classification": "report classification",
-      "version" : "1.2.3",
-      "dataset" : "$ref:external-movements",
-      "render" : "HTML",
-      "feature": [ {
-        "type": "print"
-      }],
-      "specification" : {
-        "template" : "list",
-        "field" : [ {
-          "name" : "$ref:prisonNumber",
-          "sortable" : true,
-          "defaultsort" : false
-        }, {
-          "name" : "$ref:name",
-          "display" : "Name",
-          "wordwrap" : "none",
-          "sortable" : true,
-          "defaultsort" : false,
-          "filter" : {
-            "type" : "autocomplete",
-            "dynamicoptions":{
-              "minimumLength": 2,
-              "returnAsStaticOptions": false
-            }
-          }
-        } ]
-      },
-      "destination" : [ ]
-    }]
+  } ]
 }

@@ -7,5 +7,5 @@ data class ReportSummary(
   val id: String,
   val dataset: String,
   val template: SummaryTemplate,
-  val field: List<SummaryField>?,
+  val field: List<SummaryField>? = null,
 )

@@ -1,5 +1,39 @@
 Below you can find the changes included in each release.
 
+# 18.2.2
+- Added null as the default value to report.summary.field to satisfy Kotlinx strict validation.
+- Updated mapping for defaultSort SummaryField
+
+# 18.2.1
+- Added defaultSort to the SummaryField
+
+# 18.2.0
+- Added Athena support for dynamic options filters.
+  In order to use this feature for Athena, the dynamic options filter has to point to an existing non "datamart" datasource.
+  "Datamart" based datasources will continue to function as before. Datasets pointing to non-existing datasources are invalid.
+
+# 18.1.1
+- Added the optional metadata tags field at the DPD level.
+- Added the optional dataset description field. 
+- Changed 'wordWrap' to 'wordwrap' at the report field level.
+- All the above changes were made to bring the model in-line with the schema.
+
+# 18.1.0
+- Added support for sorting within the summary section
+
+# 18.0.0
+- Remove all references to dataProductDefinitionsPath from API params and internal functions
+
+# 17.9.1
+- Fixed issue which caused Athena queries to fail when pre-filters were present. 
+
+# 17.9.0
+- Upgraded `uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter` dependency to 3.0.1.
+- Upgraded various other package versions
+
+# 17.8.4
+- Add schedule description to definitions api
+
 # 17.8.3
 - Add another custom deserializer for SchemaField for kotlinx.serialization
 

@@ -4,13 +4,17 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.AthenaClientNotEnabledException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService.Companion.DATAMART
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.SyncDownloadContext
 import java.io.Writer
@@ -18,7 +22,8 @@ import java.io.Writer
 @Service
 class SyncDataApiService(
   productDefinitionRepository: ProductDefinitionRepository,
-  private val configuredApiRepository: ConfiguredApiRepository,
+  val configuredApiRepository: ConfiguredApiRepository,
+  val athenaApiRepository: AthenaApiRepository? = null,
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   identifiedHelper: IdentifiedHelper,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
@@ -51,11 +56,10 @@ class SyncDataApiService(
     sortedAsc: Boolean?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
-    dataProductDefinitionsPath: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository
-      .getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+      .getSingleReportProductDefinition(reportId, reportVariantId)
     checkAuth(productDefinition, executionContext)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
@@ -89,27 +93,15 @@ class SyncDataApiService(
     sortColumn: String,
     dataset: Dataset,
     prompts: List<Prompt>? = null,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
     val formulaEngine = FormulaEngine(emptyList(), env, identifiedHelper)
-    return configuredApiRepository
-      .executeQuery(
-        query = dataset.query.first().query,
-        filters = emptyList(),
-        selectedPage = 1,
-        pageSize = pageSize,
-        sortColumn = sortColumn,
-        sortedAsc = true,
-        policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
-        dataSourceName = dataset.datasource,
-        prompts = prompts,
-      )
-      .let { records ->
-        formatColumnsAndApplyFormulas(
-          records,
-          dataset.schema.field,
-          formulaEngine,
-        )
-      }
+    return formatColumnsAndApplyFormulas(
+      fetchResults(datasource, dataset, pageSize, sortColumn, prompts, executionContext),
+      dataset.schema.field,
+      formulaEngine,
+    )
   }
 
   fun validateAndCount(
@@ -117,12 +109,10 @@ class SyncDataApiService(
     reportVariantId: String,
     filters: Map<String, String>,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String? = null,
   ): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,
-      dataProductDefinitionsPath,
     )
     checkAuth(productDefinition, executionContext)
     val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
@@ -149,11 +139,10 @@ class SyncDataApiService(
     sortedAsc: Boolean?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
-    dataProductDefinitionsPath: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
     val dashboardDefinition = productDefinitionRepository
-      .getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
+      .getSingleDashboardProductDefinition(reportId, dashboardId)
     checkAuth(dashboardDefinition, executionContext)
     val policyEngine = PolicyEngine(dashboardDefinition.policy, executionContext)
     val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
@@ -184,7 +173,6 @@ class SyncDataApiService(
     reportId: String,
     reportVariantId: String,
     executionContext: ExecutionContext,
-    dataProductDefinitionsPath: String?,
     filters: Map<String, String>,
     selectedColumns: List<String>?,
     sortColumn: String?,
@@ -193,7 +181,6 @@ class SyncDataApiService(
     val coreContext = buildCoreDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filters,
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
@@ -253,4 +240,37 @@ class SyncDataApiService(
   ) = records
     .map { row -> formatColumnNamesToSourceFieldNamesCasing(row, schemaFields.map(SchemaField::name)) }
     .map(formulaEngine::applyFormulas)
+
+  private fun fetchResults(
+    datasource: Datasource,
+    dataset: Dataset,
+    pageSize: Long,
+    sortColumn: String,
+    prompts: List<Prompt>?,
+    executionContext: ExecutionContext,
+  ): List<Map<String, Any?>> = if (datasource.name.lowercase() == DATAMART) {
+    configuredApiRepository.executeQuery(
+      query = dataset.query.first().query,
+      filters = emptyList(),
+      selectedPage = 1,
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
+      dataSourceName = dataset.datasource,
+      prompts = prompts,
+    )
+  } else {
+    athenaApiRepository?.executeQuery(
+      query = dataset.query.first().query,
+      filters = emptyList(),
+      pageSize = pageSize,
+      sortColumn = sortColumn,
+      sortedAsc = true,
+      policyEngineResult = dataset.let { Policy.PolicyResult.POLICY_PERMIT },
+      prompts = prompts,
+      datasource = datasource,
+      executionContext = executionContext,
+    ) ?: throw AthenaClientNotEnabledException("You have configured a query to execute on Athena datasource with id: ${datasource.id} and name: ${datasource.name} while an AthenaClient is not enabled.")
+  }
 }
