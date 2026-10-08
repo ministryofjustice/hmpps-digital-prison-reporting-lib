@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 17.8.4
+- Remove check on SYSTEM_TOKEN_ENABLED env variable
+
 # 17.8.3
 - Add another custom deserializer for SchemaField for kotlinx.serialization
 
