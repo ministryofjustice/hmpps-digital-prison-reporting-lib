@@ -13,7 +13,6 @@ import uk.gov.justice.hmpps.kotlin.auth.HmppsResourceServerConfiguration
 import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomizer
 
 @Configuration("dprResourceServerConfiguration")
-@ConditionalOnProperty(name = ["dpr.lib.system.token.enabled"], havingValue = "true")
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
 class DprSystemAuthResourceConfiguration(
   @Value("\${dpr.lib.system.role}") private val systemRole: String,
