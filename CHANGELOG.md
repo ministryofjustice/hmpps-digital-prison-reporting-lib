@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.2.3
+- Remove check on SYSTEM_TOKEN_ENABLED env variable
+
 # 18.2.2
 - Added null as the default value to report.summary.field to satisfy Kotlinx strict validation.
 - Updated mapping for defaultSort SummaryField
