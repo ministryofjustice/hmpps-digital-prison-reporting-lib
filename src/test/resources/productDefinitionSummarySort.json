@@ -16,12 +16,7 @@
       "catalog": "nomis",
       "connection": "federated",
       "dialect": "oracle/11g"
-    },
-    {
-      "id": "datamart",
-      "name": "datamart"
-    }
-  ],
+    }],
   "dataset" : [ {
     "id" : "external-movements",
     "name" : "All movements",
@@ -110,12 +105,20 @@
       "id": "summary-dataset",
       "name": "Summary Dataset",
       "datasource": "datamart",
-      "query": "SELECT COUNT(*) AS TOTAL FROM ${tableId}",
+      "query": "SELECT prisonNumber,name AS TOTAL FROM ${tableId}",
       "schema": {
         "field": [{
-          "name": "total",
-          "type": "int",
-          "display": "Total"
+          "name" : "prisonNumber",
+          "type" : "string",
+          "display" : "Prison Number"
+        }, {
+          "name" : "name",
+          "type" : "string",
+          "display" : "Name"
+        },{
+          "name" : "date",
+          "type" : "date",
+          "display" : ""
         }]
       }
     }

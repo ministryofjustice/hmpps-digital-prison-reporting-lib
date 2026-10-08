@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
@@ -14,7 +15,6 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
-import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.util.UriBuilder
 import software.amazon.awssdk.core.pagination.sync.SdkIterable
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
@@ -88,6 +88,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastMonthVariant.id).isEqualTo("last-month")
       assertThat(lastMonthVariant.name).isEqualTo("Last month")
       assertThat(lastMonthVariant.description).isEqualTo("All movements in the past month")
+      assertThat(lastMonthVariant.schedule).isEqualTo("at 10:15 every day between Monday and Friday")
 
       val lastWeekVariant = definition.variants[1]
       assertThat(lastWeekVariant.id).isEqualTo("last-week")
@@ -158,12 +159,29 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Definition list is returned as expected when the definitions are retrieved from a service endpoint call`() {
       val productDefinitionJson = this::class.java.classLoader.getResource("productDefinition.json")!!.readText()
-      val otherProductDefinitionJson = this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
+      val otherProductDefinitionJson =
+        this::class.java.classLoader.getResource("productDefinitionWithDashboard.json")!!.readText()
       val orphanageItems = listOf(
-        mapOf("definition" to AttributeValue.fromS(productDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
-        mapOf("definition" to AttributeValue.fromS(otherProductDefinitionJson), "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value)),
+        mapOf(
+          "definition" to AttributeValue.fromS(productDefinitionJson),
+          "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value),
+        ),
+        mapOf(
+          "definition" to AttributeValue.fromS(otherProductDefinitionJson),
+          "category" to AttributeValue.fromS(DataDefinitionPath.ORPHANAGE.value),
+        ),
       )
-      val missingItems = listOf(mapOf("definition" to AttributeValue.fromS(productDefinitionJson.replace("\"id\" : \"external-movements\"", "\"id\":\"external-movements-test2\"")), "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value)))
+      val missingItems = listOf(
+        mapOf(
+          "definition" to AttributeValue.fromS(
+            productDefinitionJson.replace(
+              "\"id\" : \"external-movements\"",
+              "\"id\":\"external-movements-test2\"",
+            ),
+          ),
+          "category" to AttributeValue.fromS(DataDefinitionPath.MISSING.value),
+        ),
+      )
 
       val missingPaginator = mock<QueryIterable>()
       val orphanagePaginator = mock<QueryIterable>()
@@ -172,8 +190,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       given(orphanagePaginator.items()).willReturn(SdkIterable { orphanageItems.toMutableList().iterator() })
       given(dynamoDbClient.queryPaginator(any<QueryRequest>())).willAnswer { invocation ->
         val request = invocation.getArgument<QueryRequest>(0)
-        val category = request.expressionAttributeValues()[":category"]?.s()
-        when (category) {
+        when (val category = request.expressionAttributeValues()[":category"]?.s()) {
           DataDefinitionPath.MISSING.value -> missingPaginator
           DataDefinitionPath.ORPHANAGE.value -> orphanagePaginator
           else -> throw IllegalArgumentException("Unexpected category: $category")
@@ -194,7 +211,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         .returnResult()
 
       assertThat(result.responseBody).isNotNull
-      assertThat(result.responseBody).hasSize(3)
+      assertThat(result.responseBody).hasSize(2)
       assertThat(result.responseBody).first().isNotNull
       val missingEthnicityDefinition = result.responseBody!!.find { it.name == "Missing Ethnicity Metrics" }!!
       assertThat(missingEthnicityDefinition).isNotNull
@@ -229,16 +246,11 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(lastYearVariant.isMissing).isEqualTo(false)
 
       val requestCaptor = ArgumentCaptor.forClass(QueryRequest::class.java)
-      then(dynamoDbClient).should(times(2)).queryPaginator(requestCaptor.capture())
+      then(dynamoDbClient).should(times(1)).queryPaginator(requestCaptor.capture())
       val capturedRequests = requestCaptor.allValues
 
-      assertThat(capturedRequests).hasSize(2)
+      assertThat(capturedRequests).hasSize(1)
       capturedRequests.forEach { assertThat(it.tableName()).isEqualTo("arn:aws:dynamodb:eu-west-2:1:table/dpr-data-product-definition") }
-
-      val externalMovementsTest2Definition = result.responseBody!!.find { it.id == "external-movements-test2" }!!
-      assertThat(externalMovementsTest2Definition.variants[0].isMissing).isEqualTo(true)
-      assertThat(externalMovementsTest2Definition.variants[1].isMissing).isEqualTo(true)
-      assertThat(externalMovementsTest2Definition.variants[2].isMissing).isEqualTo(true)
 
       val secondCall = webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
@@ -737,8 +749,11 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       .returnResult()
 
     assertThat(reportDef.responseBody!!.variant.specification!!.fields.size).isEqualTo(11)
-    assertThat(reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.SpecField }.size).isEqualTo(10)
-    val paramFields = reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.ParamField }
+    assertThat(reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.SpecField }.size).isEqualTo(
+      10,
+    )
+    val paramFields =
+      reportDef.responseBody!!.variant.specification!!.fields.filter { it.fieldSource == FieldSource.ParamField }
     assertThat(paramFields.size).isEqualTo(1)
     assertThat(paramFields.first().name).isEqualTo("establishment_code")
   }
@@ -882,7 +897,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       }
     }
 
-    @Test fun `dpd without lao policy should come back as unauthorised`() {
+    @Test
+    fun `dpd without lao policy should come back as unauthorised`() {
       webTestClient.get()
         .uri("/definitions")
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -903,7 +919,8 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       }
     }
 
-    @Test fun `dpd with lao policy should come back as authorised`() {
+    @Test
+    fun `dpd with lao policy should come back as authorised`() {
       webTestClient.get()
         .uri("/definitions")
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
@@ -942,7 +959,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         prisonerRepository.save(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
         externalMovementRepository.save(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
 
-        webTestClient.get()
+        val result = webTestClient.get()
           .uri { uriBuilder: UriBuilder ->
             uriBuilder
               .path("/definitions/external-movements-with-parameters/last-month")
@@ -1185,7 +1202,7 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
                     "mandatory": false,
                     "visible": false,
                     "calculated": false
-                  }, 
+                  },
                  {
                   "name": "wing",
                   "display": "Wing",
@@ -1223,6 +1240,65 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
         externalMovementRepository.delete(ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn)
         prisonerRepository.delete(ConfiguredApiRepositoryTest.AllPrisoners.prisoner9848)
       }
+    }
+  }
+
+  class ReportDefinitionDynamicOptionsTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("dpr.lib.definition.locations") { "productDefinitionWithAthenaDynamicOptions.json" }
+      }
+    }
+
+    @Test
+    fun `Single Definition with Athena DynamicOptions is returned with respected StaticOptions`() {
+      val expectedRepositoryResult = listOf(
+        mapOf(
+          "prisonNumber" to "1",
+          "NAME" to "FirstName",
+        ),
+      )
+      whenever(
+        athenaApiRepository.executeQuery(
+          query = anyOrNull(),
+          filters = anyOrNull(),
+          pageSize = anyOrNull(),
+          sortColumn = anyOrNull(),
+          sortedAsc = anyOrNull(),
+          policyEngineResult = anyOrNull(),
+          dynamicFilterFieldId = anyOrNull(),
+          reportFilter = anyOrNull(),
+          prompts = anyOrNull(),
+          datasource = anyOrNull(),
+          executionContext = anyOrNull(),
+        ),
+      ).thenReturn(expectedRepositoryResult)
+
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-with-parameters/last-month")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody<SingleVariantReportDefinition>()
+        .returnResult()
+        .responseBody!!
+
+      val staticOptions = result.variant.specification?.fields
+        ?.first { it.name == "prisonNumber" }
+        ?.filter!!
+        .staticOptions
+
+      assertThat(staticOptions).hasSize(1)
+      assertThat(staticOptions!![0].name).isEqualTo("1")
+      assertThat(staticOptions[0].display).isEqualTo("FirstName")
     }
   }
 }

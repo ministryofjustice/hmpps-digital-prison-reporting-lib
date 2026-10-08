@@ -9,4 +9,5 @@ data class MetaData(
   val owner: String,
   val purpose: String? = null,
   val profile: String? = null,
+  val tags: List<String>? = null,
 )

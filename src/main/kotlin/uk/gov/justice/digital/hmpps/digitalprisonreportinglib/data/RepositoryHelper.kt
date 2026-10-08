@@ -64,11 +64,11 @@ abstract class RepositoryHelper {
     return if (context.containsBean(mainDataSource)) {
       context.getBean(mainDataSource, DataSource::class) as DataSource
     } else {
-      context.getBean(DataSource::class.java) as DataSource
+      context.getBean(DataSource::class.java)
     }
   }
 
-  protected fun transformTimestampToLocalDateTime(it: MutableMap<String, Any?>) = it.entries.associate { (k, v) ->
+  protected fun transformTimestampToLocalDateTime(it: Map<String, Any?>) = it.entries.associate { (k, v) ->
     if (v is Timestamp) {
       k to v.toLocalDateTime()
     } else {

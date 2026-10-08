@@ -51,12 +51,13 @@ class AsyncDataApiService(
     const val INVALID_DYNAMIC_FILTER_MESSAGE = "Error. This filter is not a dynamic filter."
     const val MISSING_MANDATORY_FILTER_MESSAGE = "Mandatory filter value not provided:"
     const val FILTER_VALUE_DOES_NOT_MATCH_PATTERN_MESSAGE = "Filter value does not match pattern:"
+    const val DATAMART = "datamart"
     private val log = LoggerFactory.getLogger(this::class.java)
   }
 
   private val datasourceNameToRepo: Map<String, AthenaAndRedshiftCommonRepository>
     get() = mapOf(
-      "datamart" to redshiftDataApiRepository,
+      DATAMART to redshiftDataApiRepository,
     )
 
   fun validateAndExecuteStatementAsync(
@@ -68,12 +69,10 @@ class AsyncDataApiService(
     sortedAsc: Boolean?,
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
-    dataProductDefinitionsPath: String? = null,
   ): StatementExecutionResponse {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,
-      dataProductDefinitionsPath,
     )
     checkAuth(productDefinition, executionContext)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
@@ -114,14 +113,12 @@ class AsyncDataApiService(
   fun validateAndExecuteStatementAsync(
     reportId: String,
     dashboardId: String,
-    dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
     executionContext: ExecutionContext,
   ): StatementExecutionResponse {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(
       definitionId = reportId,
       dashboardId = dashboardId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
     )
     checkAuth(productDefinition, executionContext)
     val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
@@ -155,8 +152,8 @@ class AsyncDataApiService(
       )
   }
 
-  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+  fun getStatementStatus(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext): StatementExecutionStatus {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     checkAuth(productDefinition, executionContext)
     return getStatementExecutionStatus(
       productDefinition.reportDataset.query,
@@ -165,8 +162,8 @@ class AsyncDataApiService(
     )
   }
 
-  fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementExecutionStatus {
-    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId, dataProductDefinitionsPath)
+  fun getDashboardStatementStatus(statementId: String, productDefinitionId: String, dashboardId: String, executionContext: ExecutionContext): StatementExecutionStatus {
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(productDefinitionId, dashboardId)
     checkAuth(productDefinition, executionContext)
     return getStatementExecutionStatus(
       productDefinition.dashboardDataset.query,
@@ -178,7 +175,6 @@ class AsyncDataApiService(
   fun prepareAsyncDownloadContext(
     reportId: String,
     reportVariantId: String,
-    dataProductDefinitionsPath: String?,
     filters: Map<String, String>,
     executionContext: ExecutionContext,
     selectedColumns: List<String>?,
@@ -188,7 +184,6 @@ class AsyncDataApiService(
     core = buildCoreDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
-      dataProductDefinitionsPath = dataProductDefinitionsPath,
       filters = filters,
       selectedColumns = selectedColumns,
       sortColumn = sortColumn,
@@ -228,7 +223,6 @@ class AsyncDataApiService(
     tableId: String,
     reportId: String,
     reportVariantId: String,
-    dataProductDefinitionsPath: String? = null,
     selectedPage: Long,
     pageSize: Long,
     filters: Map<String, String>,
@@ -236,7 +230,7 @@ class AsyncDataApiService(
     sortedAsc: Boolean?,
     sortColumn: String? = null,
   ): List<Map<String, Any?>> {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     checkAuth(productDefinition, executionContext)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
@@ -258,13 +252,12 @@ class AsyncDataApiService(
     tableId: String,
     reportId: String,
     dashboardId: String,
-    dataProductDefinitionsPath: String? = null,
     selectedPage: Long,
     pageSize: Long? = null,
     filters: Map<String, String>,
     executionContext: ExecutionContext,
   ): List<List<Map<String, Any?>>> {
-    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId, dataProductDefinitionsPath)
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId)
     checkAuth(productDefinition, executionContext)
     val formulaEngine = FormulaEngine(datasetSchemaFields = productDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return listOf(
@@ -290,11 +283,12 @@ class AsyncDataApiService(
     summaryId: String,
     reportId: String,
     reportVariantId: String,
-    dataProductDefinitionsPath: String? = null,
     filters: Map<String, String>,
+    sortColumn: String?,
+    sortedAsc: Boolean?,
     executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     checkAuth(productDefinition, executionContext)
     val summary = productDefinition.report.summary?.find { it.id == summaryId }
       ?: throw ValidationException("Invalid summary ID: $summaryId")
@@ -302,7 +296,7 @@ class AsyncDataApiService(
     val dataset = identifiedHelper.findOrFail(productDefinition.allDatasets, summary.dataset)
     val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
-    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext)
+    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext, sortColumn, sortedAsc)
 
     return results.map {
       formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
@@ -312,17 +306,19 @@ class AsyncDataApiService(
   // Request data from the summary table.
   // If it doesn't exist, create it (waiting for creation to complete).
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext): List<Map<String, Any?>> {
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext, sortColumn: String?, sortedAsc: Boolean?): List<Map<String, Any?>> {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
     val s3DataExists = s3ApiService.doesPrefixExist(tableSummaryId)
+    val summarySort = validateSummarySort(sortColumn, dataset)
     log.debug("Redshift table exists: $tableExists")
     log.debug("S3 data exists: $s3DataExists")
+    log.debug("SummarySort values: $summarySort")
     if (tableExists && s3DataExists) {
-      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc)
     } else if (!tableExists && !s3DataExists) {
       configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition.datasource.name, executionContext)
       // Might need a small delay here as reading straight after creation might fail
-      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc)
     } else {
       try {
         // We cannot ensure total alignment of both the Redshift table and S3 data having completed their deletion before we check if one or the other is missing.
@@ -332,7 +328,7 @@ class AsyncDataApiService(
         // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
         log.warn("Summary table is in an expired state.")
         // Cause a failure to log the exact reason of the failure.
-        return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId)
+        return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc)
       } catch (e: Exception) {
         // Log what the actual error is when trying to retrieve the result in each case i.e. redshift table missing or S3 data missing
         log.warn("Summary table {} has expired and cannot be retrieved", tableSummaryId, e)
@@ -341,25 +337,37 @@ class AsyncDataApiService(
     }
   }
 
-  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
-    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId, dataProductDefinitionsPath)
+  protected fun validateSummarySort(
+    sortColumn: String?,
+    dataset: Dataset,
+  ): String = if (sortColumn.isNullOrBlank()) {
+    ""
+  } else {
+    sortColumn
+      .split(",")
+      .map { it.trim() }
+      .map { findSortColumn(it, dataset) }
+      .joinToString(",")
+  }
+
+  fun cancelStatementExecution(statementId: String, reportId: String, reportVariantId: String, executionContext: ExecutionContext): StatementCancellationResponse {
+    val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
     checkAuth(productDefinition, executionContext)
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
-  fun cancelDashboardStatementExecution(statementId: String, definitionId: String, dashboardId: String, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): StatementCancellationResponse {
-    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId, dataProductDefinitionsPath)
+  fun cancelDashboardStatementExecution(statementId: String, definitionId: String, dashboardId: String, executionContext: ExecutionContext): StatementCancellationResponse {
+    val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(definitionId, dashboardId)
     checkAuth(productDefinition, executionContext)
     return getRepo(productDefinition.datasource.name).cancelStatementExecution(statementId)
   }
 
   fun count(tableId: String): Count = Count(redshiftDataApiRepository.count(tableId))
 
-  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, executionContext: ExecutionContext, dataProductDefinitionsPath: String? = null): Count {
+  fun count(tableId: String, reportId: String, reportVariantId: String, filters: Map<String, String>, executionContext: ExecutionContext): Count {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(
       reportId,
       reportVariantId,
-      dataProductDefinitionsPath,
     )
     checkAuth(productDefinition, executionContext)
     return Count(redshiftDataApiRepository.count(tableId, validateAndMapFilters(productDefinition, filters, true)))
