@@ -122,7 +122,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "C14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.Radio,
             staticOptions = listOf(
@@ -163,7 +163,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.Radio,
             staticOptions = listOf(
@@ -322,7 +322,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -363,7 +363,7 @@ class ReportDefinitionMapperTest {
   @Test
   fun `Getting report for statically returned dynamic filter values on a number succeeds`() {
     whenever(
-      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull()),
+      configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
 
     val datasource = Datasource("datasourceId", "datasourceName")
@@ -391,7 +391,7 @@ class ReportDefinitionMapperTest {
             ReportField(
               name = "\$ref:13",
               display = "14",
-              wordWrap = WordWrap.None,
+              wordwrap = WordWrap.None,
               filter = FilterDefinition(
                 type = FilterType.Radio,
                 dynamicOptions = DynamicFilterOption(
@@ -528,7 +528,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -596,7 +596,7 @@ class ReportDefinitionMapperTest {
     val establishmentDataset = Dataset(
       estDatasetId,
       "establishment-dataset-name",
-      "12A",
+      "18",
       query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select * from table")),
       Schema(
         listOf(
@@ -613,7 +613,7 @@ class ReportDefinitionMapperTest {
     )
 
     whenever(
-      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull()),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
@@ -639,6 +639,8 @@ class ReportDefinitionMapperTest {
       pageSize = DEFAULT_MAX_STATIC_OPTIONS,
       sortColumn = estCodeSchemaFieldName,
       dataset = establishmentDataset,
+      executionContext = executionContext,
+      datasource = fullDatasource,
     )
   }
 
@@ -652,7 +654,7 @@ class ReportDefinitionMapperTest {
     val establishmentDataset = Dataset(
       id = estDatasetId,
       name = "establishment-dataset-name",
-      datasource = "12A",
+      datasource = "18",
       query = listOf(MultiphaseQuery(index = 0, datasource = PLACEHOLDER_DATASOURCE, query = "select * from table")),
       schema = Schema(
         listOf(
@@ -689,7 +691,7 @@ class ReportDefinitionMapperTest {
     )
 
     whenever(
-      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull()),
+      configuredApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
     ).thenReturn(
       listOf(
         mapOf(estCodeSchemaFieldName to "code1", estNameSchemaFieldName to "name1"),
@@ -731,6 +733,8 @@ class ReportDefinitionMapperTest {
       sortColumn = estCodeSchemaFieldName,
       dataset = establishmentDataset,
       prompts = listOf(Prompt("establishment_code", "BFI", FilterType.AutoComplete)),
+      executionContext = executionContext,
+      datasource = fullDatasource,
     )
   }
 
@@ -798,7 +802,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -856,7 +860,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -1360,7 +1364,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           filter = FilterDefinition(
             type = FilterType.AutoComplete,
             dynamicOptions = dynamicFilterOption,
@@ -1399,7 +1403,7 @@ class ReportDefinitionMapperTest {
 
     assertThat(field.name).isEqualTo(sourceSchemaField.name)
     assertThat(field.display).isEqualTo(sourceReportField.display)
-    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordWrap.toString())
+    assertThat(field.wordWrap.toString()).isEqualTo(sourceReportField.wordwrap.toString())
     assertThat(field.sortable).isEqualTo(sourceReportField.sortable)
     assertThat(field.sortDirection).isEqualTo(sourceReportField.sortDirection)
     assertThat(field.defaultsort).isEqualTo(sourceReportField.defaultSort)
@@ -1434,7 +1438,7 @@ class ReportDefinitionMapperTest {
         ReportField(
           name = "\$ref:13",
           display = "14",
-          wordWrap = WordWrap.None,
+          wordwrap = WordWrap.None,
           sortable = true,
           defaultSort = true,
           formula = formula,

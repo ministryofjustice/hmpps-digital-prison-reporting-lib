@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
@@ -54,6 +55,21 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     tableId: String,
     query: String,
   ): StatementExecutionResponse
+
+  override fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
+    val lowerCaseField = "lower(${filter.field})"
+    return when (filter.type) {
+      FilterType.STANDARD -> "$lowerCaseField = '${filter.value.lowercase()}'"
+      FilterType.RANGE_START -> "$lowerCaseField >= ${filter.value.lowercase()}"
+      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST('${filter.value}' AS timestamp)"
+      FilterType.RANGE_END -> "$lowerCaseField <= ${filter.value.lowercase()}"
+      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST('${filter.value}' AS timestamp) + INTERVAL '1' day)"
+      FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
+      FilterType.BOOLEAN -> "${filter.field} = ${filter.value.toBoolean()}"
+      FilterType.MULTISELECT -> filter.value.split(",")
+        .joinToString(separator = " OR ", prefix = "(", postfix = ")") { "${filter.field} = '$it'" }
+    }
+  }
 
   fun getPaginatedExternalTableResult(
     tableId: String,

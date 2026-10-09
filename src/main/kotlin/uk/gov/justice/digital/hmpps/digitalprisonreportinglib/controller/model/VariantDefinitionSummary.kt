@@ -8,4 +8,5 @@ data class VariantDefinitionSummary(
   val description: String? = null,
   val isMissing: Boolean = false,
   val loadType: LoadType? = null,
+  val schedule: String? = null,
 )

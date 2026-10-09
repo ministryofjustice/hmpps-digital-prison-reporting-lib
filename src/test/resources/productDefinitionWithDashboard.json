@@ -15,7 +15,12 @@
       "catalog": "nomis",
       "connection": "federated",
       "dialect": "oracle/11g"
-    }  ],
+    },
+    {
+      "id": "datamart",
+      "name": "datamart"
+    }
+  ],
   "dataset": [
     {
       "id": "establishments",
@@ -40,7 +45,7 @@
     {
       "id": "missing-ethnicity-dataset",
       "name": "Missing Ethnicity By Establishment Dataset",
-      "datasource": "datamart",
+      "datasource": "nomis",
       "query": "SELECT establishment_id, has_ethnicity, ethnicity_is_missing FROM datamart.metrics.data_quality",
       "schema": {
         "field": [

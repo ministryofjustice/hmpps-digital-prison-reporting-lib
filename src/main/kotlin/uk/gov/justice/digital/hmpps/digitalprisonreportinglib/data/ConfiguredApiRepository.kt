@@ -193,7 +193,7 @@ class ConfiguredApiRepository(
         selectFromFinalStageQuery = "SELECT COUNT(1) as total FROM $FILTER_",
       ) + ";",
       buildPreparedStatementNamedParams(filters),
-    ).first()?.get("total") as Long
+    ).first().get("total") as Long
   }
 
   private fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {

@@ -90,7 +90,7 @@
       }, {
         "name" : "$ref:name",
         "display" : "Name",
-        "wordWrap" : "None",
+        "wordwrap" : "None",
         "sortable" : true,
         "defaultsort" : false,
         "filter" : {
@@ -112,13 +112,13 @@
       }, {
         "name" : "$ref:origin",
         "display" : "From",
-        "wordWrap" : "None",
+        "wordwrap" : "None",
         "sortable" : true,
         "defaultsort" : false
       }, {
         "name" : "$ref:destination",
         "display" : "To",
-        "wordWrap" : "None",
+        "wordwrap" : "None",
         "sortable" : true,
         "defaultsort" : false
       }, {

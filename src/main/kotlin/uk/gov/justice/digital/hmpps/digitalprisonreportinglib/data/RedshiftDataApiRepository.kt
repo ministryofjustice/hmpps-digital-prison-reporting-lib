@@ -14,12 +14,12 @@ import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementReques
 import software.amazon.awssdk.services.redshiftdata.model.ExecuteStatementResponse
 import software.amazon.awssdk.services.redshiftdata.model.ResourceNotFoundException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportSummary
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -127,21 +127,6 @@ class RedshiftDataApiRepository(
     return StatementCancellationResponse(cancelStatementResponse.status())
   }
 
-  override fun buildCondition(filter: ConfiguredApiRepository.Filter): String {
-    val lowerCaseField = "lower(${filter.field})"
-    return when (filter.type) {
-      FilterType.STANDARD -> "$lowerCaseField = '${filter.value.lowercase()}'"
-      FilterType.RANGE_START -> "$lowerCaseField >= ${filter.value.lowercase()}"
-      FilterType.DATE_RANGE_START -> "${filter.field} >= CAST('${filter.value}' AS timestamp)"
-      FilterType.RANGE_END -> "$lowerCaseField <= ${filter.value.lowercase()}"
-      FilterType.DATE_RANGE_END -> "${filter.field} < (CAST('${filter.value}' AS timestamp) + INTERVAL '1' day)"
-      FilterType.DYNAMIC -> "${filter.field} ILIKE '${filter.value}%'"
-      FilterType.BOOLEAN -> "${filter.field} = ${filter.value.toBoolean()}"
-      FilterType.MULTISELECT -> filter.value.split(",")
-        .joinToString(separator = " OR ", prefix = "(", postfix = ")") { "${filter.field} = '$it'" }
-    }
-  }
-
   fun buildSummaryQueries(
     tableId: String,
     reportSummaries: List<ReportSummary>?,
@@ -160,12 +145,18 @@ class RedshiftDataApiRepository(
 
   fun getFullExternalTableResult(
     tableId: String,
+    summarySort: String,
+    sortedAsc: Boolean?,
     jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),
   ): List<Map<String, Any?>> {
     val stopwatch = StopWatch.createStarted()
+    val sortDirection = if (sortedAsc == false) "DESC" else "ASC"
+    var summarySortOrder = ""
+    summarySort.isNotBlank().let { if (it) summarySortOrder = "ORDER BY $summarySort $sortDirection" }
+
     val result = jdbcTemplate
       .queryForList(
-        "SELECT * FROM reports.$tableId;",
+        "SELECT * FROM reports.$tableId $summarySortOrder;",
         MapSqlParameterSource(),
       )
       .map {
@@ -185,33 +176,7 @@ class RedshiftDataApiRepository(
     return jdbcTemplate.queryForList(
       "SELECT COUNT(1) as total FROM reports.$tableId WHERE $whereClause;",
       MapSqlParameterSource(),
-    ).first()?.get("total") as Long
-  }
-
-  fun executeQueryAsync(
-    productDefinition: SingleDashboardProductDefinition,
-    policyEngineResult: String,
-    filters: List<ConfiguredApiRepository.Filter>,
-    executionContext: ExecutionContext,
-  ): StatementExecutionResponse {
-    val tableId = tableIdGenerator.generateNewExternalTableId()
-    val generateSql = """
-          /* QUERY_INFO|||${productDefinition.id}|||${productDefinition.name}|||${productDefinition.datasource.name}|||${productDefinition.datasource.database}|||${productDefinition.datasource.catalog}|||${productDefinition.dashboard.id}|||${productDefinition.dashboard.name}|||${executionContext.hasProbationDatasources}|||NORMAL|||END */
-          CREATE EXTERNAL TABLE reports.$tableId 
-          STORED AS parquet 
-          LOCATION 's3://$s3location/$tableId/' 
-          AS ( 
-            ${buildFinalQuery(
-      datasetQuery = buildDatasetQuery(productDefinition.dashboardDataset.query.first().query),
-      reportQuery = DEFAULT_REPORT_CTE,
-      policiesQuery = buildPolicyQuery(policyEngineResult, determinePreviousCteName()),
-      filtersQuery = buildFiltersQuery(filters),
-      selectFromFinalStageQuery = buildFinalStageQuery(sortedAsc = true),
-    )}
-          );
-    """.trimIndent()
-
-    return executeQueryAsync(productDefinition.datasource, tableId, generateSql)
+    ).first().get("total") as Long
   }
 
   private fun checkAndBuildDatasetQuery(query: String, generatedTableId: String?): String = generatedTableId?.let { tableId ->

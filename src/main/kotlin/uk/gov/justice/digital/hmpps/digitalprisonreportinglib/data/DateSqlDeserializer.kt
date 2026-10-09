@@ -18,7 +18,7 @@ class DateSqlDeserializer : StdDeserializer<Date>(Date::class.java) {
     p: JsonParser?,
     ctxt: DeserializationContext?,
   ): Date? {
-    val dateStr = p?.text ?: return null
+    val dateStr = p?.string ?: return null
     return try {
       formatter.parse(dateStr)
     } catch (e: Exception) {

@@ -27,7 +27,6 @@ data class Report(
   override val id: String,
   override val name: String,
   override val description: String? = null,
-
   val version: String,
   override val dataset: String,
   override val render: RenderMethod,

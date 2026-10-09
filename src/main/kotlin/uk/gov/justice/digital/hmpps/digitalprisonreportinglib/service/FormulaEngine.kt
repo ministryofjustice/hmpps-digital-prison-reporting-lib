@@ -49,7 +49,7 @@ class FormulaEngine(
       } ?: e.value
     )
 
-  private fun findFormula(columnName: String) = identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { return null }
+  private fun findFormula(columnName: String): String? = identifiedHelper.findOrNull(reportFields, columnName)?.formula?.ifEmpty { return null }
     ?: identifiedHelper.findOrNull(datasetSchemaFields, columnName)?. formula?.ifEmpty { return null }
 
   private fun interpolate(formula: String, row: Map<String, Any?>): String? = when {

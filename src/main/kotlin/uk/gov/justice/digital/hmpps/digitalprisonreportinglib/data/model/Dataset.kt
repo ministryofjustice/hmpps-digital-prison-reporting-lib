@@ -15,6 +15,7 @@ data class Dataset(
   val schema: Schema,
   val parameters: List<Parameter>? = null,
   val schedule: String? = null,
+  val description: String? = null,
 ) : Identified {
   override fun getIdentifier() = this.id
 }

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,7 +12,6 @@ import uk.gov.justice.hmpps.kotlin.auth.HmppsResourceServerConfiguration
 import uk.gov.justice.hmpps.kotlin.auth.dsl.ResourceServerConfigurationCustomizer
 
 @Configuration("dprResourceServerConfiguration")
-@ConditionalOnProperty(name = ["dpr.lib.system.token.enabled"], havingValue = "true")
 @AutoConfigureBefore(WebMvcAutoConfiguration::class)
 class DprSystemAuthResourceConfiguration(
   @Value("\${dpr.lib.system.role}") private val systemRole: String,
