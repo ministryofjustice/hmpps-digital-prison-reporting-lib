@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.2.4
+- Default optional report field display value to null to comply with Kotlinx deserialisation.
+
 # 18.2.3
 - Remove check on SYSTEM_TOKEN_ENABLED env variable
 
