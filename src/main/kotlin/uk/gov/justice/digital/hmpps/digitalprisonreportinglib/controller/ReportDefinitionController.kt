@@ -54,8 +54,6 @@ class ReportDefinitionController(
       description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
     httpRequest.getUserContext(
@@ -67,7 +65,6 @@ class ReportDefinitionController(
       ),
     ),
     renderMethod,
-    dataProductDefinitionsPath,
   )
 
   @GetMapping("/definitions/{reportId}")
@@ -86,8 +83,6 @@ class ReportDefinitionController(
       description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
     httpRequest: HttpServletRequest,
   ): ReportDefinitionSummary = reportDefinitionService.getDefinitionSummary(
     reportId,
@@ -99,7 +94,6 @@ class ReportDefinitionController(
         variantId = "",
       ),
     ),
-    dataProductDefinitionsPath,
   )
 
   @GetMapping("/definitions/{reportId}/{variantId}")
@@ -124,8 +118,6 @@ class ReportDefinitionController(
       description = DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
       example = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
-    @RequestParam("dataProductDefinitionsPath", defaultValue = DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE)
-    dataProductDefinitionsPath: String? = null,
     @Parameter(
       description = FILTERS_QUERY_DESCRIPTION,
       example = FILTERS_QUERY_EXAMPLE,
@@ -144,7 +136,6 @@ class ReportDefinitionController(
         variantId = variantId,
       ),
     ),
-    dataProductDefinitionsPath = dataProductDefinitionsPath,
     filters = filterHelper.filtersOnly(filters),
   )
 }

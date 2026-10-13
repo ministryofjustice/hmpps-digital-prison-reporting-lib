@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortD
 @Serializable
 data class ReportField(
   val name: String,
-  val display: String?,
-  val wordWrap: WordWrap? = null,
+  val display: String? = null,
+  val wordwrap: WordWrap? = null,
   val filter: FilterDefinition? = null,
   val sortable: Boolean = true,
   @SerialName("defaultsort")

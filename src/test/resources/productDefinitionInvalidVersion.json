@@ -206,7 +206,7 @@
           {
             "name": "$ref:name",
             "display": "Name",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -235,14 +235,14 @@
             "filter": {
               "type": "text"
             },
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false
           },
           {
             "name": "$ref:destination",
             "display": "To",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false,
             "visible": "true"
@@ -250,7 +250,7 @@
           {
             "name": "$ref:direction",
             "display": "Direction",
-            "wordWrap": "break-words",
+            "wordwrap": "break-words",
             "filter": {
               "type": "Radio",
               "interactive": true,
@@ -274,7 +274,7 @@
             "sortable": true,
             "defaultsort": false,
             "visible": "false",
-            "wordWrap": "normal"
+            "wordwrap": "normal"
           },
           {
             "name": "$ref:reason",
@@ -351,7 +351,7 @@
           {
             "name": "$ref:name",
             "display": "Name",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -376,14 +376,14 @@
           {
             "name": "$ref:origin",
             "display": "From",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false
           },
           {
             "name": "$ref:destination",
             "display": "To",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false
           },
@@ -455,7 +455,7 @@
           {
             "name": "$ref:name",
             "display": "Name",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false,
             "filter": {
@@ -485,14 +485,14 @@
               "mandatory": true,
               "pattern": "[A-Z]{3,3}"
             },
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false
           },
           {
             "name": "$ref:destination",
             "display": "To",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false,
             "visible": "true"
@@ -500,7 +500,7 @@
           {
             "name": "$ref:direction",
             "display": "Direction",
-            "wordWrap": "break-words",
+            "wordwrap": "break-words",
             "filter": {
               "type": "Radio",
               "staticoptions": [
@@ -523,7 +523,7 @@
             "sortable": true,
             "defaultsort": false,
             "visible": "false",
-            "wordWrap": "normal"
+            "wordwrap": "normal"
           },
           {
             "name": "$ref:reason",
@@ -589,7 +589,7 @@
           {
             "name": "$ref:name",
             "display": "Name",
-            "wordWrap": "none",
+            "wordwrap": "none",
             "sortable": true,
             "defaultsort": false,
             "filter": {

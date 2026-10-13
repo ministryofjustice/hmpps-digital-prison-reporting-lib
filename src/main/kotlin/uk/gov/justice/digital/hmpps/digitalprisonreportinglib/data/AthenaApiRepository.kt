@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import jakarta.validation.ValidationException
+import org.apache.commons.lang3.time.StopWatch
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.context.annotation.Primary
@@ -9,8 +10,11 @@ import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.athena.AthenaClient
 import software.amazon.awssdk.services.athena.model.AthenaError
 import software.amazon.awssdk.services.athena.model.GetQueryExecutionRequest
+import software.amazon.awssdk.services.athena.model.GetQueryResultsRequest
+import software.amazon.awssdk.services.athena.model.GetQueryResultsResponse
 import software.amazon.awssdk.services.athena.model.InvalidRequestException
 import software.amazon.awssdk.services.athena.model.QueryExecutionContext
+import software.amazon.awssdk.services.athena.model.QueryExecutionState
 import software.amazon.awssdk.services.athena.model.QueryExecutionStatus
 import software.amazon.awssdk.services.athena.model.StartQueryExecutionRequest
 import software.amazon.awssdk.services.athena.model.StopQueryExecutionRequest
@@ -28,6 +32,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshif
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.TableIdGenerator
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
+import java.time.Duration
+import java.time.Instant
 import java.util.Base64
 
 const val QUERY_STARTED = "STARTED"
@@ -139,6 +145,101 @@ class AthenaApiRepository(
     val queryExecutionId = athenaClient
       .startQueryExecution(startQueryExecutionRequest).queryExecutionId()
     return StatementExecutionResponse(tableId, queryExecutionId)
+  }
+
+  fun executeQuery(
+    query: String,
+    filters: List<ConfiguredApiRepository.Filter>,
+    pageSize: Long,
+    sortColumn: String?,
+    sortedAsc: Boolean,
+    policyEngineResult: String,
+    dynamicFilterFieldId: Set<String>? = null,
+    reportFilter: ReportFilter? = null,
+    prompts: List<Prompt>?,
+    datasource: Datasource,
+    executionContext: ExecutionContext,
+  ): List<Map<String, Any?>> {
+    // Athena limits GetQueryResults to 1000 rows per request https://docs.aws.amazon.com/athena/latest/APIReference/API_GetQueryResults.html
+    // +1 as the first row is the column names
+    val adjustedPageSize = if (pageSize >= 999) 1000 else pageSize.toInt() + 1
+    val stopwatch = StopWatch.createStarted()
+
+    val maxQueryDurationInMin = 5L
+    val timeout = Duration.ofMinutes(maxQueryDurationInMin)
+    val startTime = Instant.now()
+
+    val buildFinalInnerQuery = buildFinalInnerQuery(
+      buildContextQuery(executionContext, datasource.dialect ?: SqlDialect.ORACLE11g),
+      buildPromptsQuery(prompts, datasource.dialect ?: SqlDialect.ORACLE11g),
+      buildDatasetQuery(query),
+      buildReportQuery(reportFilter),
+      buildPolicyQuery(policyEngineResult, determinePreviousCteName(reportFilter)),
+      buildFiltersQuery(filters),
+      buildFinalStageQuery(dynamicFilterFieldId, sortColumn, sortedAsc),
+    )
+
+    val queryExecutionContext = QueryExecutionContext.builder()
+      .database(datasource.database)
+      .catalog(datasource.catalog)
+      .build()
+    val startQueryExecutionRequest = StartQueryExecutionRequest.builder()
+      .queryString(buildFinalInnerQuery)
+      .queryExecutionContext(queryExecutionContext)
+      .workGroup(athenaWorkgroup)
+      .build()
+
+    val queryExecutionId = athenaClient
+      .startQueryExecution(startQueryExecutionRequest).queryExecutionId()
+
+    while (Duration.between(startTime, Instant.now()) < timeout) {
+      val getQueryExecutionRequest = GetQueryExecutionRequest.builder()
+        .queryExecutionId(queryExecutionId)
+        .build()
+      val getQueryExecutionResponse = athenaClient.getQueryExecution(getQueryExecutionRequest)
+      val status = getQueryExecutionResponse.queryExecution().status()
+      when (status.state()) {
+        QueryExecutionState.SUCCEEDED -> return getResultsAsListOfMaps(
+          athenaClient.getQueryResults(
+            GetQueryResultsRequest.builder()
+              .queryExecutionId(queryExecutionId)
+              .maxResults(adjustedPageSize)
+              .build(),
+          ),
+        ).map {
+          transformTimestampToLocalDateTime(it)
+        }
+
+        QueryExecutionState.FAILED ->
+          throw RuntimeException(status.stateChangeReason())
+
+        QueryExecutionState.CANCELLED ->
+          throw RuntimeException("Query cancelled")
+
+        else -> Thread.sleep(1000)
+      }
+    }
+    stopwatch.stop()
+    log.debug("Query Execution time in ms: {}", stopwatch.time)
+    log.warn("Query timed out after running for more than $maxQueryDurationInMin minutes.")
+    return emptyList()
+  }
+
+  private fun getResultsAsListOfMaps(
+    response: GetQueryResultsResponse,
+  ): List<Map<String, Any?>> {
+    val rows = response.resultSet().rows()
+
+    if (rows.isEmpty()) return emptyList()
+
+    // First row contains column names
+    val headers = rows.first().data().map { it.varCharValue() }
+
+    return rows.drop(1).map { row ->
+      headers.zip(row.data()).associate { (column, datum) ->
+        column to datum.varCharValue()
+      }
+    }
   }
 
   override fun getStatementStatus(statementId: String): StatementExecutionStatus {
