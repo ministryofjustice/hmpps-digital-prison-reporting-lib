@@ -1,0 +1,124 @@
+name: Publish Hotfix
+
+on:
+  workflow_dispatch:
+    inputs:
+      hotfixBranch:
+        description: "Branch containing the fix (cut from the release tag), e.g. hotfix/1.4.x"
+        required: true
+        type: string
+      releaseLine:
+        description: "Major.minor line to patch, e.g. 1.4"
+        required: true
+        type: string
+
+# Shared with the main Publish workflow so two releases can't run at the same time
+concurrency:
+  group: publish-package
+  cancel-in-progress: false
+
+jobs:
+  publish-hotfix:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Validate inputs
+        shell: bash
+        env:
+          HOTFIX_BRANCH: ${{ inputs.hotfixBranch }}
+          RELEASE_LINE: ${{ inputs.releaseLine }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [[ ! "$RELEASE_LINE" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::releaseLine must be major.minor, e.g. 1.4 (got '$RELEASE_LINE')"
+            exit 1
+          fi
+          if [[ "$HOTFIX_BRANCH" == "$DEFAULT_BRANCH" ]]; then
+            echo "::error::Use the normal Publish workflow for $DEFAULT_BRANCH"
+            exit 1
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ inputs.hotfixBranch }}
+          fetch-depth: 0 # needed for tags and the ancestry check
+
+      - name: Set up JDK
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          java-version: "21"
+          distribution: "corretto"
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@a8f75513eafdebd8141bd1cd4e30fcd194af8dfa
+
+      - name: Determine hotfix version
+        id: hotfix-version
+        shell: bash
+        env:
+          RELEASE_LINE: ${{ inputs.releaseLine }}
+        run: |
+          ALL_VERSIONS=$(curl -sf --request GET https://repo1.maven.org/maven2/uk/gov/justice/service/hmpps/hmpps-digital-prison-reporting-lib/maven-metadata.xml \
+            | grep -oP '(?<=<version>)[^<]+' \
+            | grep -v -e '2024-02-27' -e '2024-02-28')
+
+          if [[ -z "$ALL_VERSIONS" ]]; then
+            echo "::error::Failed to read published versions from Maven Central"
+            exit 1
+          fi
+
+          # Highest stable patch on this line (ignores alphas), sorted by version not publish order
+          LINE_REGEX="^${RELEASE_LINE//./\\.}\.[0-9]+$"
+          LATEST_IN_LINE=$(echo "$ALL_VERSIONS" | grep -E "$LINE_REGEX" | sort -V | tail -n1)
+
+          if [[ -z "$LATEST_IN_LINE" ]]; then
+            echo "::error::No published release found for line $RELEASE_LINE"
+            exit 1
+          fi
+
+          PATCH="${LATEST_IN_LINE##*.}"
+          NEW_VERSION="$RELEASE_LINE.$((PATCH+1))"
+
+          echo "Latest on $RELEASE_LINE line: $LATEST_IN_LINE"
+          echo "Hotfix version: $NEW_VERSION"
+
+          # Safety: the hotfix branch must be built on top of the release it is patching
+          if ! git rev-parse -q --verify "refs/tags/$LATEST_IN_LINE" > /dev/null; then
+            echo "::error::Tag $LATEST_IN_LINE not found; cannot verify the branch is based on it"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "refs/tags/$LATEST_IN_LINE" HEAD; then
+            echo "::error::Branch does not contain tag $LATEST_IN_LINE. Rebase it onto that tag first."
+            exit 1
+          fi
+
+          # Safety: never republish an existing version
+          if echo "$ALL_VERSIONS" | grep -qx "$NEW_VERSION" || git rev-parse -q --verify "refs/tags/$NEW_VERSION" > /dev/null; then
+            echo "::error::Version $NEW_VERSION already exists"
+            exit 1
+          fi
+
+          echo "next-version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Sonatype
+        env:
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+        run: |
+          ORG_GRADLE_PROJECT_signingKey=$(echo -e "$ORG_GRADLE_PROJECT_signingKey")
+          ./gradlew -PpublishVersion=${{ steps.hotfix-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
+
+      - name: Tag release
+        env:
+          NEW_VERSION: ${{ steps.hotfix-version.outputs.next-version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+          git tag -a "$NEW_VERSION" -m "hotfix: $COMMIT_MESSAGE"
+          git push origin "$NEW_VERSION"
