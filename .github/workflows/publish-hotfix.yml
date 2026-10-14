@@ -1,8 +1,6 @@
 name: Publish Hotfix
 
 on:
-  push:
-    branches: [DPR2-3185-publish-hot-fix]
   workflow_dispatch:
     inputs:
       hotfixBranch:
