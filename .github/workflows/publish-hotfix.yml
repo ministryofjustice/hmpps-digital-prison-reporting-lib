@@ -11,6 +11,11 @@ on:
         description: "Major.minor line to patch, e.g. 1.4"
         required: true
         type: string
+      dryRun:
+        description: "Dry run: work out the version and build, but don't publish or tag"
+        required: false
+        default: true
+        type: boolean
 
 # Shared with the main Publish workflow so two releases can't run at the same time
 concurrency:
@@ -103,7 +108,14 @@ jobs:
 
           echo "next-version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Dry run build
+        if: ${{ inputs.dryRun }}
+        run: |
+          echo "DRY RUN: would publish and tag ${{ steps.hotfix-version.outputs.next-version }}"
+          ./gradlew -PpublishVersion=${{ steps.hotfix-version.outputs.next-version }} build
+
       - name: Publish to Sonatype
+        if: ${{ !inputs.dryRun }}
         env:
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
@@ -114,6 +126,7 @@ jobs:
           ./gradlew -PpublishVersion=${{ steps.hotfix-version.outputs.next-version }} publishToSonatype closeAndReleaseSonatypeStagingRepository
 
       - name: Tag release
+        if: ${{ !inputs.dryRun }}
         env:
           NEW_VERSION: ${{ steps.hotfix-version.outputs.next-version }}
         run: |
