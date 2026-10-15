@@ -45,6 +45,8 @@ management.endpoint:
 
 dpr:
   lib:
+    auditEnabled: true
+    serviceName: "int-test-mi"
     hasProbationDatasources: false
     caseloads:
       host: http://localhost:9999
@@ -61,6 +63,11 @@ dpr:
       sts:
         enabled: true
 hmpps:
+  sqs:
+    provider: localstack
+    queues:
+      audit:
+        queueName: ${random.uuid}
   auth:
     url: http://localhost:8090/auth
 

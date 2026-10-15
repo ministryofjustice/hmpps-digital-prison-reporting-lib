@@ -293,6 +293,7 @@ abstract class CommonDataApiService(
     executionContext: ExecutionContext,
   ): Pair<CoreDownloadContext, SingleReportProductDefinition> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
+    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
     checkAuth(productDefinition, executionContext)
     val (computedSortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
     val columnsTrimmed = selectedColumns?.map { it.trim() }?.filter { it.isNotEmpty() }?.toHashSet().orEmpty()

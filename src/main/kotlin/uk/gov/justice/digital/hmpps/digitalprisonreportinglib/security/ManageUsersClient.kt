@@ -9,7 +9,6 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
@@ -17,17 +16,10 @@ import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.io.IOException
 import java.time.Duration
 
-const val WARNING_NO_ACTIVE_CASELOAD = "User has not set an active caseload."
-const val WARNING_NO_CASELOADS = "User does not have any caseloads."
-
 class ManageUsersClient(
   private val manageUsersWebClient: WebClient,
   private val requiredAuthSources: List<String>,
 ) {
-  /**
-   * @throws NoDataAvailableException if caseloads is empty and user is NOMIS user with [WARNING_NO_CASELOADS]
-   * @throws NoDataAvailableException if no active caseload and user is NOMIS user with [WARNING_NO_ACTIVE_CASELOAD]
-   */
   fun getCaseloads(username: String): CaseloadResponse {
     val caseloadResponse = fetchCaseloadInfo(username)
 
@@ -42,11 +34,6 @@ class ManageUsersClient(
           activeCaseload = caseloadResponse.activeCaseload,
         )
       }
-      if (caseloadResponse.caseloads.isEmpty()) {
-        throw NoDataAvailableException(WARNING_NO_CASELOADS)
-      }
-
-      throw NoDataAvailableException(WARNING_NO_ACTIVE_CASELOAD)
     }
 
     return caseloadResponse

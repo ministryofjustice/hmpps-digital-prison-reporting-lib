@@ -231,6 +231,7 @@ class AsyncDataApiService(
     sortColumn: String? = null,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
+    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
     checkAuth(productDefinition, executionContext)
     val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
     val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
@@ -258,6 +259,7 @@ class AsyncDataApiService(
     executionContext: ExecutionContext,
   ): List<List<Map<String, Any?>>> {
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId)
+    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
     checkAuth(productDefinition, executionContext)
     val formulaEngine = FormulaEngine(datasetSchemaFields = productDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
     return listOf(
@@ -289,6 +291,7 @@ class AsyncDataApiService(
     executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
+    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
     checkAuth(productDefinition, executionContext)
     val summary = productDefinition.report.summary?.find { it.id == summaryId }
       ?: throw ValidationException("Invalid summary ID: $summaryId")
