@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MissingReportSubmissionRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
@@ -48,7 +48,7 @@ class MissingReportSubmissionController(
     httpRequest: HttpServletRequest,
   ): MissingReportSubmission = missingReportService.createMissingReportSubmission(
     MissingReportSubmissionRequest(
-      httpRequest.getUserContext(
+      httpRequest.getExecutionContext(
         manageUsersClient,
         hasProbationDatasources,
         DataProductReportableInformation(

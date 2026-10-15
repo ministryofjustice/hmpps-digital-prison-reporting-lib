@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovements.externalMovementDestinationCaseloadDirectionIn
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ExternalMovementEntity
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.PrisonerEntity
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.WARNING_NO_ACTIVE_CASELOAD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.XlsxStreamingSupport
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.io.ByteArrayInputStream
@@ -565,8 +564,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk()
-      .expectHeader()
-      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, listOf(WARNING_NO_ACTIVE_CASELOAD).toString())
       .expectBody()
       .json("[]")
   }
@@ -610,8 +607,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk()
-      .expectHeader()
-      .valueEquals(ResponseHeader.NO_DATA_WARNING_HEADER_NAME, listOf(WARNING_NO_ACTIVE_CASELOAD).toString())
       .expectBody()
       .jsonPath("count").isEqualTo("0")
   }

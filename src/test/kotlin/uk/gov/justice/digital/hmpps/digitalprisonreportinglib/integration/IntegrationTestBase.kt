@@ -29,6 +29,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.LocalStackContainer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -97,6 +99,8 @@ abstract class IntegrationTestBase {
 
   companion object {
 
+    private val localStackContainer = LocalStackContainer.instance
+
     @JvmField
     val hmppsAuthMockServer = HmppsAuthMockServer()
 
@@ -108,6 +112,7 @@ abstract class IntegrationTestBase {
     @JvmStatic
     @DynamicPropertySource
     fun setupClass(registry: DynamicPropertyRegistry) {
+      localStackContainer?.also { setLocalStackProperties(it, registry) }
       registry.add("spring.datasource.url", { PostgresContainer.jdbcUrl })
       registry.add("spring.datasource.username", { PostgresContainer.username })
       registry.add("spring.datasource.password", { PostgresContainer.password })

@@ -60,6 +60,7 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val productDefinition = productDefinitionRepository
       .getSingleReportProductDefinition(reportId, reportVariantId)
+    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
     checkAuth(productDefinition, executionContext)
     val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
     val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
@@ -143,6 +144,7 @@ class SyncDataApiService(
   ): List<Map<String, Any?>> {
     val dashboardDefinition = productDefinitionRepository
       .getSingleDashboardProductDefinition(reportId, dashboardId)
+    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(dashboardDefinition)
     checkAuth(dashboardDefinition, executionContext)
     val policyEngine = PolicyEngine(dashboardDefinition.policy, executionContext)
     val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
