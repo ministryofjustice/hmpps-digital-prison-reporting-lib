@@ -9,8 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
+import kotlinx.coroutines.CoroutineScope
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
@@ -18,19 +18,19 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditAction
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvRowWriter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataApiService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.XlsxStreamingSupport
-import java.util.Collections.singletonList
 
 @Validated
 @RestController
@@ -41,6 +41,8 @@ class DataApiSyncController(
   val csvStreamingSupport: CsvStreamingSupport,
   val xlsxStreamingSupport: XlsxStreamingSupport,
   val manageUsersClient: ManageUsersClient,
+  val auditService: AuditService,
+  val auditCoroutineScope: CoroutineScope,
   @Value("\${dpr.lib.hasProbationDatasources}")
   val hasProbationDatasources: Boolean,
 ) {
@@ -97,36 +99,35 @@ class DataApiSyncController(
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<List<Map<String, Any?>>> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        dataApiSyncService.validateAndFetchData(
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          filters = filterHelper.filtersOnly(filters),
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          sortColumn = sortColumn,
-          sortedAsc = sortedAsc,
-          executionContext = httpRequest.getUserContext(
-            manageUsersClient,
-            hasProbationDatasources,
-            DataProductReportableInformation(
-              id = reportId,
-              variantId = reportVariantId,
-            ),
+  ): ResponseEntity<List<Map<String, Any?>>> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return auditService.runAuditableAction(
+      hasProbationDatasources = hasProbationDatasources,
+      reportId = reportId,
+      reportVariantId = reportVariantId,
+      filters = cleanFilters,
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+      auditAttemptAction = AuditAction.DATA_REQUEST_ATTEMPT,
+      auditSuccessAction = AuditAction.DATA_REQUEST_SUCCESS,
+      auditFailureAction = AuditAction.DATA_REQUEST_FAILURE,
+      request = httpRequest,
+    ) { executionContext ->
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          dataApiSyncService.validateAndFetchData(
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            filters = cleanFilters,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            sortColumn = sortColumn,
+            sortedAsc = sortedAsc,
+            executionContext = executionContext,
           ),
-        ),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(emptyList())
+        )
+    }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")
@@ -158,33 +159,23 @@ class DataApiSyncController(
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<Count> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        dataApiSyncService.validateAndCount(
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          filters = filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(
-            manageUsersClient,
-            hasProbationDatasources,
-            DataProductReportableInformation(
-              id = reportId,
-              variantId = reportVariantId,
-            ),
+  ): ResponseEntity<Count> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      dataApiSyncService.validateAndCount(
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        filters = filterHelper.filtersOnly(filters),
+        executionContext = httpRequest.getExecutionContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
           ),
         ),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(Count(0))
-  }
+      ),
+    )
 
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}")
   @Operation(
@@ -223,36 +214,35 @@ class DataApiSyncController(
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<List<Map<String, Any?>>> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        dataApiSyncService.validateAndFetchDataForDashboard(
-          reportId = reportId,
-          dashboardId = dashboardId,
-          filters = filterHelper.filtersOnly(filters),
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          sortColumn = sortColumn,
-          sortedAsc = sortedAsc,
-          executionContext = httpRequest.getUserContext(
-            manageUsersClient,
-            hasProbationDatasources,
-            DataProductReportableInformation(
-              id = reportId,
-              variantId = dashboardId,
-            ),
+  ): ResponseEntity<List<Map<String, Any?>>> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return auditService.runAuditableAction(
+      hasProbationDatasources = hasProbationDatasources,
+      reportId = reportId,
+      reportVariantId = dashboardId,
+      filters = cleanFilters,
+      sortedAsc = sortedAsc,
+      sortColumn = sortColumn,
+      auditAttemptAction = AuditAction.DATA_REQUEST_ATTEMPT,
+      auditSuccessAction = AuditAction.DATA_REQUEST_SUCCESS,
+      auditFailureAction = AuditAction.DATA_REQUEST_FAILURE,
+      request = httpRequest,
+    ) { executionContext ->
+      ResponseEntity
+        .status(HttpStatus.OK)
+        .body(
+          dataApiSyncService.validateAndFetchDataForDashboard(
+            reportId = reportId,
+            dashboardId = dashboardId,
+            filters = cleanFilters,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            sortColumn = sortColumn,
+            sortedAsc = sortedAsc,
+            executionContext = executionContext,
           ),
-        ),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(emptyList())
+        )
+    }
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/download", produces = ["text/csv"])
@@ -279,34 +269,42 @@ class DataApiSyncController(
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
-    val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return auditService.runAuditableAction(
+      hasProbationDatasources = hasProbationDatasources,
       reportId = reportId,
       reportVariantId = reportVariantId,
-      filters = filterHelper.filtersOnly(filters),
+      filters = cleanFilters,
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      executionContext = request.getUserContext(
-        manageUsersClient,
-        hasProbationDatasources,
-        DataProductReportableInformation(
-          id = reportId,
-          variantId = reportVariantId,
-        ),
-      ),
-    )
+      auditAttemptAction = AuditAction.DOWNLOAD_REQUEST_ATTEMPT,
+      auditSuccessAction = AuditAction.DOWNLOAD_REQUEST_SUCCESS,
+      auditFailureAction = AuditAction.DOWNLOAD_REQUEST_FAILURE,
+      request = request,
+    ) { executionContext ->
+      val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        filters = cleanFilters,
+        selectedColumns = columns,
+        sortedAsc = sortedAsc,
+        sortColumn = sortColumn,
+        executionContext = executionContext,
+      )
 
-    csvStreamingSupport.streamCsv(
-      reportId,
-      reportVariantId,
-      request,
-      response,
-    ) { writer ->
-      CsvRowWriter(writer).use { rowWriter ->
-        dataApiSyncService.download(
-          rowWriter = rowWriter,
-          downloadContext = downloadContext,
-        )
+      csvStreamingSupport.streamCsv(
+        reportId,
+        reportVariantId,
+        request,
+        response,
+      ) { writer ->
+        CsvRowWriter(writer).use { rowWriter ->
+          dataApiSyncService.download(
+            rowWriter = rowWriter,
+            downloadContext = downloadContext,
+          )
+        }
       }
     }
   }
@@ -340,32 +338,40 @@ class DataApiSyncController(
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
-    val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return auditService.runAuditableAction(
+      hasProbationDatasources = hasProbationDatasources,
       reportId = reportId,
       reportVariantId = reportVariantId,
-      filters = filterHelper.filtersOnly(filters),
+      filters = cleanFilters,
       selectedColumns = columns,
       sortedAsc = sortedAsc,
       sortColumn = sortColumn,
-      executionContext = request.getUserContext(
-        manageUsersClient,
-        hasProbationDatasources,
-        DataProductReportableInformation(
-          id = reportId,
-          variantId = reportVariantId,
-        ),
-      ),
-    )
-
-    xlsxStreamingSupport.streamXlsx(
-      reportId,
-      reportVariantId,
-      response,
-    ) { rowWriter ->
-      dataApiSyncService.download(
-        rowWriter = rowWriter,
-        downloadContext = downloadContext,
+      auditAttemptAction = AuditAction.DOWNLOAD_REQUEST_ATTEMPT,
+      auditSuccessAction = AuditAction.DOWNLOAD_REQUEST_SUCCESS,
+      auditFailureAction = AuditAction.DOWNLOAD_REQUEST_FAILURE,
+      request = request,
+    ) { executionContext ->
+      val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        filters = filterHelper.filtersOnly(filters),
+        selectedColumns = columns,
+        sortedAsc = sortedAsc,
+        sortColumn = sortColumn,
+        executionContext = executionContext,
       )
+
+      xlsxStreamingSupport.streamXlsx(
+        reportId,
+        reportVariantId,
+        response,
+      ) { rowWriter ->
+        dataApiSyncService.download(
+          rowWriter = rowWriter,
+          downloadContext = downloadContext,
+        )
+      }
     }
   }
 }

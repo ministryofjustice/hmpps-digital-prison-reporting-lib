@@ -23,6 +23,8 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.LocalStackContainer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.HmppsAuthMockServer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.wiremock.ManageUsersMockServer
@@ -71,10 +73,12 @@ class ProductCollectionIntegrationTest {
   lateinit var syncDataApiService: SyncDataApiService
 
   companion object {
+    private val localStackContainer = LocalStackContainer.instance
 
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
+      localStackContainer?.also { setLocalStackProperties(it, registry) }
       registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
     }
 
