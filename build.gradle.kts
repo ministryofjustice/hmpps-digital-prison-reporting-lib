@@ -6,7 +6,7 @@ plugins {
   kotlin("plugin.spring") version "2.4.21"
   kotlin("plugin.jpa") version "2.4.21"
   id("jacoco")
-  id("org.barfuin.gradle.jacocolog") version "4.0.2"
+  id("org.barfuin.gradle.jacocolog") version "4.0.3"
   id("maven-publish")
   id("signing")
   id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
@@ -17,7 +17,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.55.13"
+val awsSdkVersion = "2.56.0"
 val testContainersVersion = "1.21.4"
 
 dependencies {
