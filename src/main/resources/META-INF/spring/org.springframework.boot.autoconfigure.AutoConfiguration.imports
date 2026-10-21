@@ -48,3 +48,5 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.CaseInsensitiveAut
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserSubscriptionService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserSubscriptionController
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserSubscriptionRepository
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AuditConfig

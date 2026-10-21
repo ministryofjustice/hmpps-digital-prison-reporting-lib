@@ -67,7 +67,7 @@ hmpps:
     provider: localstack
     queues:
       audit:
-        queueName: ${random.uuid}
+        queueName: auditqueue
   auth:
     url: http://localhost:8090/auth
 

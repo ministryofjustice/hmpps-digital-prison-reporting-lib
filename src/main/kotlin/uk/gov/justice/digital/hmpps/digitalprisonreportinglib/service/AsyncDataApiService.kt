@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditAction
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
@@ -36,6 +38,7 @@ class AsyncDataApiService(
   identifiedHelper: IdentifiedHelper,
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   val s3ApiService: S3ApiService,
+  val auditService: AuditService,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
 ) : CommonDataApiService(
   identifiedHelper = identifiedHelper,
@@ -180,8 +183,8 @@ class AsyncDataApiService(
     selectedColumns: List<String>?,
     sortColumn: String?,
     sortedAsc: Boolean?,
-  ): AsyncDownloadContext = AsyncDownloadContext(
-    core = buildCoreDownloadContext(
+  ): Pair<AsyncDownloadContext, SingleReportProductDefinition> {
+    val context = buildCoreDownloadContext(
       reportId = reportId,
       reportVariantId = reportVariantId,
       filters = filters,
@@ -189,8 +192,9 @@ class AsyncDataApiService(
       sortColumn = sortColumn,
       sortedAsc = sortedAsc,
       executionContext = executionContext,
-    ).first,
-  )
+    )
+    return Pair(AsyncDownloadContext(context.first), context.second)
+  }
 
   fun download(
     rowWriter: ReportRowWriter,
@@ -230,23 +234,42 @@ class AsyncDataApiService(
     sortedAsc: Boolean?,
     sortColumn: String? = null,
   ): List<Map<String, Any?>> {
+    auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
-    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
-    checkAuth(productDefinition, executionContext)
-    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
-    val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
-    return formatColumnsAndApplyFormulas(
-      redshiftDataApiRepository.getPaginatedExternalTableResult(
-        tableId,
-        selectedPage,
-        pageSize,
-        validateAndMapFilters(productDefinition, filters, true),
-        sortedAsc = computedSortedAsc,
-        sortColumn = sortColumn,
+
+    return auditService.runAuditableAction(
+      AuditAction.DATA,
+      executionContext = executionContext.copy(
+        policies = productDefinition.policy,
+        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
+          id = productDefinition.id,
+          name = productDefinition.name,
+          variantName = productDefinition.report.name,
+          datasource = productDefinition.datasource,
+        ),
       ),
-      productDefinition.reportDataset.schema.field,
-      formulaEngine,
-    )
+    ) {
+      checkAuth(productDefinition, executionContext)
+      val formulaEngine =
+        FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+      val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(
+        productDefinition,
+        sortColumn,
+        sortedAsc,
+      )
+      formatColumnsAndApplyFormulas(
+        redshiftDataApiRepository.getPaginatedExternalTableResult(
+          tableId,
+          selectedPage,
+          pageSize,
+          validateAndMapFilters(productDefinition, filters, true),
+          sortedAsc = computedSortedAsc,
+          sortColumn = sortColumn,
+        ),
+        productDefinition.reportDataset.schema.field,
+        formulaEngine,
+      )
+    }
   }
 
   fun getDashboardStatementResult(
@@ -258,26 +281,43 @@ class AsyncDataApiService(
     filters: Map<String, String>,
     executionContext: ExecutionContext,
   ): List<List<Map<String, Any?>>> {
+    auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId)
-    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
-    checkAuth(productDefinition, executionContext)
-    val formulaEngine = FormulaEngine(datasetSchemaFields = productDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
-    return listOf(
-      redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
-        tableId = tableId,
-        selectedPage = selectedPage,
-        pageSize = pageSize,
-        filters = validateAndMapFilters(productDefinition, filters, true),
+    return auditService.runAuditableAction(
+      AuditAction.DATA,
+      executionContext = executionContext.copy(
+        policies = productDefinition.policy,
+        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
+          id = productDefinition.id,
+          name = productDefinition.name,
+          variantName = productDefinition.dashboard.name,
+          datasource = productDefinition.datasource,
+        ),
+      ),
+    ) {
+      checkAuth(productDefinition, executionContext)
+      val formulaEngine = FormulaEngine(
+        datasetSchemaFields = productDefinition.dashboardDataset.schema.field,
+        env = env,
+        identifiedHelper = identifiedHelper,
       )
-        .map { row ->
-          formatColumnNamesToSourceFieldNamesCasing(
-            row,
-            productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
-          )
-        }
-        .map(formulaEngine::applyFormulas)
-        .map { row -> toMetricData(row) },
-    )
+      listOf(
+        redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
+          tableId = tableId,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = validateAndMapFilters(productDefinition, filters, true),
+        )
+          .map { row ->
+            formatColumnNamesToSourceFieldNamesCasing(
+              row,
+              productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
+            )
+          }
+          .map(formulaEngine::applyFormulas)
+          .map { row -> toMetricData(row) },
+      )
+    }
   }
 
   fun getSummaryResult(
@@ -290,19 +330,42 @@ class AsyncDataApiService(
     sortedAsc: Boolean?,
     executionContext: ExecutionContext,
   ): List<Map<String, Any?>> {
+    auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
-    executionContext.dataProductReportableInformation.updateValuesWithProductDefinitionValues(productDefinition)
-    checkAuth(productDefinition, executionContext)
-    val summary = productDefinition.report.summary?.find { it.id == summaryId }
-      ?: throw ValidationException("Invalid summary ID: $summaryId")
 
-    val dataset = identifiedHelper.findOrFail(productDefinition.allDatasets, summary.dataset)
-    val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
+    return auditService.runAuditableAction(
+      executionContext = executionContext.copy(
+        policies = productDefinition.policy,
+        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
+          id = productDefinition.id,
+          name = productDefinition.name,
+          variantName = productDefinition.report.name,
+          datasource = productDefinition.datasource,
+        ),
+      ),
+      auditAction = AuditAction.DATA,
+    ) {
+      checkAuth(productDefinition, executionContext)
+      val summary = productDefinition.report.summary?.find { it.id == summaryId }
+        ?: throw ValidationException("Invalid summary ID: $summaryId")
 
-    val results = checkDataExistsAndFetch(tableSummaryId, tableId, summaryId, dataset, productDefinition, executionContext, sortColumn, sortedAsc)
+      val dataset = identifiedHelper.findOrFail(productDefinition.allDatasets, summary.dataset)
+      val tableSummaryId = tableIdGenerator.getTableSummaryId(tableId, summaryId)
 
-    return results.map {
-      formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
+      val results = checkDataExistsAndFetch(
+        tableSummaryId,
+        tableId,
+        summaryId,
+        dataset,
+        productDefinition,
+        executionContext,
+        sortColumn,
+        sortedAsc,
+      )
+
+      results.map {
+        formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
+      }
     }
   }
 

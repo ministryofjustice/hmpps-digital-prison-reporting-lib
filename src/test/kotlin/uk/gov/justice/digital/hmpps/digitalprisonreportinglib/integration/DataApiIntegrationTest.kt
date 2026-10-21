@@ -1,17 +1,26 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.mockito.kotlin.any
+import org.mockito.kotlin.whenever
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.StatusAssertions
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
@@ -37,6 +46,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.XlsxStream
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.io.ByteArrayInputStream
 import java.sql.DriverManager
+import java.time.Duration
 import java.time.LocalDateTime
 
 class DataApiIntegrationTest : IntegrationTestBase() {
@@ -1200,6 +1210,95 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       "${FILTERS_PREFIX}origin" to "AAA",
     )
     requestWithQueryAndAssert200(params, "/reports/external-movements/last-year")
+  }
+
+  @Test
+  fun `Data API audits attempt and success events`() = runTest {
+    wireMockServer.resetAll()
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+    stubDefinitionsResponse()
+
+    webTestClient.get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month")
+          .queryParam("selectedPage", 1)
+          .queryParam("pageSize", 3)
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .isOk()
+
+    await().atMost(Duration.ofSeconds(30)).untilAsserted {
+      val msgs = inboundSqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build()).get().messages()
+      val json = Json { coerceInputValues = true }
+      assertThat(msgs.size == 2)
+      val attemptMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
+      val successMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
+      assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
+      assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+
+      assertThat(successMsg["what"] == "VIEW_DATA_SUCCESS")
+      assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
+    }
+  }
+
+  @Test
+  fun `Data API audits attempt and failure events`() = runTest {
+    wireMockServer.resetAll()
+    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+    manageUsersMockServer.stubLookupUsersRoles()
+    stubDefinitionsResponse()
+
+    whenever(
+      configuredApiRepository.executeQuery(
+        query = any(),
+        filters = any(),
+        selectedPage = any(),
+        pageSize = any(),
+        sortColumn = any(),
+        sortedAsc = any(),
+        policyEngineResult = any(),
+        dynamicFilterFieldId = any(),
+        dataSourceName = any(),
+        reportFilter = any(),
+        any(),
+      ),
+    ).thenThrow(IllegalStateException("Some error"))
+
+    webTestClient.mutate().responseTimeout(Duration.ofSeconds(5000)).build().get()
+      .uri { uriBuilder: UriBuilder ->
+        uriBuilder
+          .path("/reports/external-movements/last-month")
+          .queryParam("selectedPage", 1)
+          .queryParam("pageSize", 3)
+          .queryParam("sortColumn", "date")
+          .queryParam("sortedAsc", false)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .exchange()
+      .expectStatus()
+      .is2xxSuccessful
+
+    await().atMost(Duration.ofSeconds(30)).untilAsserted {
+      val msgs = inboundSqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build()).get().messages()
+      val json = Json { coerceInputValues = true }
+      assertThat(msgs.size == 2)
+      val attemptMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
+      val successMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
+      assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
+      assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+
+      assertThat(successMsg["what"] == "VIEW_DATA_FAILURE")
+      assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
+    }
   }
 
   private fun requestWithQueryAndAssert400(paramName: String, paramValue: Any, path: String) {

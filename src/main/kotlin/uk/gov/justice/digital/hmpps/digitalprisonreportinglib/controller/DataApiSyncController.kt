@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.constraints.Min
-import kotlinx.coroutines.CoroutineScope
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -20,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditAction
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
@@ -42,8 +43,7 @@ class DataApiSyncController(
   val xlsxStreamingSupport: XlsxStreamingSupport,
   val manageUsersClient: ManageUsersClient,
   val auditService: AuditService,
-  val auditCoroutineScope: CoroutineScope,
-  @Value("\${dpr.lib.hasProbationDatasources}")
+  @Value($$"${dpr.lib.hasProbationDatasources}")
   val hasProbationDatasources: Boolean,
 ) {
   object FiltersPrefix {
@@ -101,33 +101,30 @@ class DataApiSyncController(
     httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> {
     val cleanFilters = filterHelper.filtersOnly(filters)
-    return auditService.runAuditableAction(
-      hasProbationDatasources = hasProbationDatasources,
-      reportId = reportId,
-      reportVariantId = reportVariantId,
-      filters = cleanFilters,
-      sortedAsc = sortedAsc,
-      sortColumn = sortColumn,
-      auditAttemptAction = AuditAction.DATA_REQUEST_ATTEMPT,
-      auditSuccessAction = AuditAction.DATA_REQUEST_SUCCESS,
-      auditFailureAction = AuditAction.DATA_REQUEST_FAILURE,
-      request = httpRequest,
-    ) { executionContext ->
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          dataApiSyncService.validateAndFetchData(
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            filters = cleanFilters,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            executionContext = executionContext,
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        dataApiSyncService.validateAndFetchData(
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          filters = cleanFilters,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
+            preFilters = cleanFilters,
+            sortColumnName = sortColumn,
+            sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
-        )
-    }
+        ),
+      )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/count")
@@ -216,33 +213,30 @@ class DataApiSyncController(
     httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> {
     val cleanFilters = filterHelper.filtersOnly(filters)
-    return auditService.runAuditableAction(
-      hasProbationDatasources = hasProbationDatasources,
-      reportId = reportId,
-      reportVariantId = dashboardId,
-      filters = cleanFilters,
-      sortedAsc = sortedAsc,
-      sortColumn = sortColumn,
-      auditAttemptAction = AuditAction.DATA_REQUEST_ATTEMPT,
-      auditSuccessAction = AuditAction.DATA_REQUEST_SUCCESS,
-      auditFailureAction = AuditAction.DATA_REQUEST_FAILURE,
-      request = httpRequest,
-    ) { executionContext ->
-      ResponseEntity
-        .status(HttpStatus.OK)
-        .body(
-          dataApiSyncService.validateAndFetchDataForDashboard(
-            reportId = reportId,
-            dashboardId = dashboardId,
-            filters = cleanFilters,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            executionContext = executionContext,
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        dataApiSyncService.validateAndFetchDataForDashboard(
+          reportId = reportId,
+          dashboardId = dashboardId,
+          filters = cleanFilters,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = dashboardId,
+            ),
+            preFilters = cleanFilters,
+            sortColumnName = sortColumn,
+            sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
-        )
-    }
+        ),
+      )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/download", produces = ["text/csv"])
@@ -250,7 +244,7 @@ class DataApiSyncController(
     description = "Streams the entire result set of the sync query execution as a csv file.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  fun downloadCsv(
+  suspend fun downloadCsv(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @Parameter(
@@ -270,19 +264,19 @@ class DataApiSyncController(
     response: HttpServletResponse,
   ) {
     val cleanFilters = filterHelper.filtersOnly(filters)
-    return auditService.runAuditableAction(
+    val executionContext = request.getExecutionContext(
+      manageUsersClient = manageUsersClient,
       hasProbationDatasources = hasProbationDatasources,
-      reportId = reportId,
-      reportVariantId = reportVariantId,
-      filters = cleanFilters,
-      selectedColumns = columns,
-      sortedAsc = sortedAsc,
-      sortColumn = sortColumn,
-      auditAttemptAction = AuditAction.DOWNLOAD_REQUEST_ATTEMPT,
-      auditSuccessAction = AuditAction.DOWNLOAD_REQUEST_SUCCESS,
-      auditFailureAction = AuditAction.DOWNLOAD_REQUEST_FAILURE,
-      request = request,
-    ) { executionContext ->
+      dataProductReportableInformation = DataProductReportableInformation(
+        id = reportId,
+        variantId = reportVariantId,
+      ),
+      preFilters = cleanFilters,
+      sortColumnName = sortColumn,
+      sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+    )
+    auditService.publishAttempt(AuditAction.DOWNLOAD, executionContext)
+    try {
       val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
         reportId = reportId,
         reportVariantId = reportVariantId,
@@ -290,10 +284,20 @@ class DataApiSyncController(
         selectedColumns = columns,
         sortedAsc = sortedAsc,
         sortColumn = sortColumn,
-        executionContext = executionContext,
+        executionContext = request.getExecutionContext(
+          manageUsersClient = manageUsersClient,
+          hasProbationDatasources = hasProbationDatasources,
+          dataProductReportableInformation = DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
+          ),
+          preFilters = cleanFilters,
+          sortColumnName = sortColumn,
+          sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+        ),
       )
 
-      csvStreamingSupport.streamCsv(
+      val stream = csvStreamingSupport.streamCsv(
         reportId,
         reportVariantId,
         request,
@@ -306,6 +310,11 @@ class DataApiSyncController(
           )
         }
       }
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext)
+      return stream
+    } catch (e: Throwable) {
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
+      throw e
     }
   }
 
@@ -319,7 +328,7 @@ class DataApiSyncController(
       "reinterpreted as dates when the file is opened in Excel.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  fun downloadXlsx(
+  suspend fun downloadXlsx(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @Parameter(
@@ -339,19 +348,19 @@ class DataApiSyncController(
     response: HttpServletResponse,
   ) {
     val cleanFilters = filterHelper.filtersOnly(filters)
-    return auditService.runAuditableAction(
+    val executionContext = request.getExecutionContext(
+      manageUsersClient = manageUsersClient,
       hasProbationDatasources = hasProbationDatasources,
-      reportId = reportId,
-      reportVariantId = reportVariantId,
-      filters = cleanFilters,
-      selectedColumns = columns,
-      sortedAsc = sortedAsc,
-      sortColumn = sortColumn,
-      auditAttemptAction = AuditAction.DOWNLOAD_REQUEST_ATTEMPT,
-      auditSuccessAction = AuditAction.DOWNLOAD_REQUEST_SUCCESS,
-      auditFailureAction = AuditAction.DOWNLOAD_REQUEST_FAILURE,
-      request = request,
-    ) { executionContext ->
+      dataProductReportableInformation = DataProductReportableInformation(
+        id = reportId,
+        variantId = reportVariantId,
+      ),
+      preFilters = cleanFilters,
+      sortColumnName = sortColumn,
+      sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+    )
+    auditService.publishAttempt(AuditAction.DOWNLOAD, executionContext)
+    try {
       val downloadContext = dataApiSyncService.prepareSyncDownloadContext(
         reportId = reportId,
         reportVariantId = reportVariantId,
@@ -359,10 +368,20 @@ class DataApiSyncController(
         selectedColumns = columns,
         sortedAsc = sortedAsc,
         sortColumn = sortColumn,
-        executionContext = executionContext,
+        executionContext = request.getExecutionContext(
+          manageUsersClient = manageUsersClient,
+          hasProbationDatasources = hasProbationDatasources,
+          dataProductReportableInformation = DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
+          ),
+          preFilters = cleanFilters,
+          sortColumnName = sortColumn,
+          sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+        ),
       )
 
-      xlsxStreamingSupport.streamXlsx(
+      val stream = xlsxStreamingSupport.streamXlsx(
         reportId,
         reportVariantId,
         response,
@@ -372,6 +391,11 @@ class DataApiSyncController(
           downloadContext = downloadContext,
         )
       }
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext)
+      return stream
+    } catch (e: Throwable) {
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
+      throw e
     }
   }
 }

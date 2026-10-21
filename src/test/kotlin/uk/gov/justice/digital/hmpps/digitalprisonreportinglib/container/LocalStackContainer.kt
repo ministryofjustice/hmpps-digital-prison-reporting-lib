@@ -39,9 +39,9 @@ object LocalStackContainer {
   }
 
   private fun localstackIsRunning(): Boolean = try {
-    val serverSocket = ServerSocket(4566)
-    serverSocket.localPort == 0
-  } catch (e: IOException) {
+    ServerSocket(4566).use {}
+    false
+  } catch (_: IOException) {
     true
   }
 }

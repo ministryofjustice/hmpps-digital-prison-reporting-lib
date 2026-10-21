@@ -64,6 +64,16 @@ class DefaultUserPermissionProviderTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `getActiveCaseloadId should not throw for non-NOMIS account with no active caseload`() {
+    manageUsersMockServer.stubLookupUserCaseload404("request-user")
+    manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.DELIUS)
+    val info = manageUsersClient.getCaseloads("request-user")
+
+    assertEquals(info.username, "request-user")
+    assertEquals(info.activeCaseload, null)
+  }
+
+  @Test
   fun `should retry calling manage-users to retrieve caseloads twice and succeed after temporary 500 errors`() {
     val username = "request-user"
     val url = "prisonusers/$username/caseloads"

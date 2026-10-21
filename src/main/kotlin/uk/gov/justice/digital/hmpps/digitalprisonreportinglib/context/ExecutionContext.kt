@@ -1,10 +1,7 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
@@ -71,25 +68,9 @@ data class ExecutionContext(
 }
 
 data class DataProductReportableInformation(
-  var id: String,
-  var name: String? = "",
-  var datasource: Datasource? = null,
-  var variantId: String,
-  var variantName: String? = "",
-) {
-  fun updateValuesWithProductDefinitionValues(productDefinition: WithPolicy) {
-    when (productDefinition) {
-      is SingleReportProductDefinition -> {
-        name = productDefinition.name
-        variantName = productDefinition.report.name
-        datasource = productDefinition.datasource
-      }
-      is SingleDashboardProductDefinition -> {
-        name = productDefinition.name
-        variantName = productDefinition.dashboard.name
-        datasource = productDefinition.datasource
-      }
-      else -> throw IllegalStateException("WithPolicy productDefinition should have been either SingleReportProductDefinition or SingleDashboardProductDefinition but was ${productDefinition.javaClass.name}")
-    }
-  }
-}
+  val id: String,
+  val name: String? = "",
+  val datasource: Datasource? = null,
+  val variantId: String,
+  val variantName: String? = "",
+)
