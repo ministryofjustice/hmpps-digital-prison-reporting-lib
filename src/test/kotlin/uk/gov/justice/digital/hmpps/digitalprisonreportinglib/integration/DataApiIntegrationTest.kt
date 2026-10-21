@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -1256,8 +1258,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     manageUsersMockServer.stubLookupUsersRoles()
     stubDefinitionsResponse()
 
-    whenever(
-      configuredApiRepository.executeQuery(
+    doThrow(IllegalStateException("Some error message"))
+      .whenever(configuredApiRepository).executeQuery(
         query = any(),
         filters = any(),
         selectedPage = any(),
@@ -1269,8 +1271,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         dataSourceName = any(),
         reportFilter = any(),
         any(),
-      ),
-    ).thenThrow(IllegalStateException("Some error"))
+      )
 
     webTestClient.mutate().responseTimeout(Duration.ofSeconds(5000)).build().get()
       .uri { uriBuilder: UriBuilder ->
