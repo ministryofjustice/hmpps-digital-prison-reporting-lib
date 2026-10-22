@@ -28,7 +28,7 @@ enum class AuditStatus {
 class AuditService(
   private val hmppsAuditService: HmppsAuditService? = null,
   private val scope: CoroutineScope,
-  @Value(value = $$"${dpr.lib.serviceName:#{null}}", ) private val serviceName: String? = null,
+  @Value(value = $$"${dpr.lib.serviceName:#{null}}") private val serviceName: String? = null,
 ) {
   fun <T> runAuditableAction(
     auditAction: AuditAction,
