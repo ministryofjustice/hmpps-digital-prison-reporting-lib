@@ -19,7 +19,6 @@ data class ExecutionContext(
   val columns: List<String> = emptyList(),
   val policies: List<Policy> = emptyList(),
 ) {
-  fun getActiveCaseLoadId(): String? = prisonCaseloadData?.activeCaseload?.id
   constructor(
     username: String,
     reportId: String,
@@ -58,7 +57,7 @@ data class ExecutionContext(
     sortColumnDirection = sortColumnDirection,
     columns = columns,
   )
-  fun getActiveCaseLoadId(): String? = prisonCaseloadData.activeCaseload?.id
+  fun getActiveCaseLoadId(): String? = prisonCaseloadData?.activeCaseload?.id
   fun hasValidAuth(): Boolean {
     if (hasProbationDatasources) {
       return userInfo.username.isNotBlank() && userInfo.active && listOf(AuthSource.DELIUS.name.lowercase(), AuthSource.AUTH.name.lowercase()).contains(userInfo.authSource.name.lowercase())
