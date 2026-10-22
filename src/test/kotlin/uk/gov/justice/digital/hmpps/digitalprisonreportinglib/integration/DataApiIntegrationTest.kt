@@ -1220,6 +1220,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       fun registerProperties(registry: DynamicPropertyRegistry) {
         registry.add("hmpps.sqs.queues.audit.queueName") { "auditqueue" }
         registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+        registry.add("dpr.lib.serviceName") { "int-test-mi" }
       }
     }
 

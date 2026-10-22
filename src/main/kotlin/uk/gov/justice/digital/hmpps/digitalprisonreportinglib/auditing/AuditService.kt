@@ -28,7 +28,7 @@ enum class AuditStatus {
 class AuditService(
   private val hmppsAuditService: HmppsAuditService? = null,
   private val scope: CoroutineScope,
-  @Value($$"${dpr.lib.serviceName}") private val serviceName: String,
+  @Value(value = $$"${dpr.lib.serviceName:#{null}}", ) private val serviceName: String? = null,
 ) {
   fun <T> runAuditableAction(
     auditAction: AuditAction,
@@ -82,7 +82,6 @@ class AuditService(
       subjectType = "REPORT_ID",
       `when` = Clock.System.now().toJavaInstant(),
       who = executionContext.userInfo.uuid,
-      service = serviceName,
       details = Json.encodeToString(generateAuditDetails(executionContext)),
     )
   }
@@ -93,7 +92,6 @@ class AuditService(
       subjectType = "REPORT_ID",
       `when` = Clock.System.now().toJavaInstant(),
       who = executionContext.userInfo.uuid,
-      service = serviceName,
       details = "",
     )
   }
@@ -104,7 +102,6 @@ class AuditService(
       subjectType = "REPORT_ID",
       `when` = Clock.System.now().toJavaInstant(),
       who = executionContext.userInfo.uuid,
-      service = serviceName,
       details = Json.encodeToString(generateAuditDetails(executionContext)),
     )
   }
@@ -115,7 +112,6 @@ class AuditService(
       subjectType = "REPORT_ID",
       `when` = Clock.System.now().toJavaInstant(),
       who = executionContext.userInfo.uuid,
-      service = serviceName,
       details = Json.encodeToString(generateAuditDetails(executionContext)),
     )
   }
@@ -138,10 +134,12 @@ class AuditService(
     subjectType: String? = null,
     `when`: Instant,
     who: String,
-    service: String? = null,
     details: String? = null,
   ) {
     if (hmppsAuditService == null) {
+      return
+    }
+    if (serviceName == null) {
       return
     }
     scope.launch {
@@ -151,7 +149,7 @@ class AuditService(
         subjectType = subjectType,
         `when` = `when`,
         who = who,
-        service = service,
+        service = serviceName,
         details = details,
       )
     }
