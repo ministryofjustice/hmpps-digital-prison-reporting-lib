@@ -18,13 +18,12 @@ data class ExecutionContext(
       return userInfo.username.isNotBlank() && userInfo.active && listOf(AuthSource.DELIUS.name.lowercase(), AuthSource.AUTH.name.lowercase()).contains(userInfo.authSource.name.lowercase())
     }
 
-    if (userInfo.authSource == AuthSource.NOMIS && prisonCaseloadData !=null) {
+    if (userInfo.authSource == AuthSource.NOMIS && prisonCaseloadData != null) {
       return prisonCaseloadData.let {
         it.username.isNotBlank() && it.active && userInfo.username.isNotBlank() && userInfo.active
       }
     }
     return false
-    //return prisonCaseloadData?.username.isNotBlank() && prisonCaseloadData?.active && userInfo.username.isNotBlank() && userInfo.active && userInfo.authSource == AuthSource.NOMIS
   }
   fun getCaseLoadIds(): List<String> = prisonCaseloadData?.caseloads?.map { it.id } ?: emptyList()
 }

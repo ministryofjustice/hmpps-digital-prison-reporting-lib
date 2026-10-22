@@ -33,10 +33,12 @@ fun HttpServletRequest.getUserContext(
     } ?: throw UserAuthorisationException("userName on auth token was blank or did not exist")
 }
 
-fun getCaseLoads(manageUsersClient: ManageUsersClient,
-                 userName: String,
-                 authSource: AuthSource) : CaseloadResponse?{
-  return if (authSource == AuthSource.NOMIS) {
-    manageUsersClient.getCaseloads(userName)
-  } else null
+fun getCaseLoads(
+  manageUsersClient: ManageUsersClient,
+  userName: String,
+  authSource: AuthSource,
+): CaseloadResponse? = if (authSource == AuthSource.NOMIS) {
+  manageUsersClient.getCaseloads(userName)
+} else {
+  null
 }
