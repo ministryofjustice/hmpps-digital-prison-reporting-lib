@@ -997,7 +997,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
@@ -1021,7 +1021,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS ))
         .exchange()
         .expectStatus()
         .isOk()
@@ -1045,7 +1045,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
