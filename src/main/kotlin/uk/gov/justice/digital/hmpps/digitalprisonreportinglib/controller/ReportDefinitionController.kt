@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
@@ -56,7 +56,7 @@ class ReportDefinitionController(
     )
     httpRequest: HttpServletRequest,
   ): List<ReportDefinitionSummary> = reportDefinitionService.getListForUser(
-    httpRequest.getUserContext(
+    httpRequest.getExecutionContext(
       manageUsersClient,
       hasProbationDatasources,
       DataProductReportableInformation(
@@ -86,7 +86,7 @@ class ReportDefinitionController(
     httpRequest: HttpServletRequest,
   ): ReportDefinitionSummary = reportDefinitionService.getDefinitionSummary(
     reportId,
-    httpRequest.getUserContext(
+    httpRequest.getExecutionContext(
       manageUsersClient,
       hasProbationDatasources,
       DataProductReportableInformation(
@@ -128,7 +128,7 @@ class ReportDefinitionController(
   ): SingleVariantReportDefinition = reportDefinitionService.getDefinition(
     reportId = reportId,
     variantId = variantId,
-    executionContext = httpRequest.getUserContext(
+    executionContext = httpRequest.getExecutionContext(
       manageUsersClient,
       hasProbationDatasources,
       DataProductReportableInformation(

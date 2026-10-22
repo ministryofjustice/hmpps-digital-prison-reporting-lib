@@ -22,6 +22,8 @@ val testContainersVersion = "1.21.4"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -50,6 +52,9 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.14")
 
   // Testing
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+  testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
+  testImplementation("org.testcontainers:localstack:1.21.4")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.3")
   testImplementation("com.h2database:h2")
   testImplementation("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
