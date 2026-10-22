@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.AnySubscribableRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UserSubscriptionRequest
@@ -36,7 +36,7 @@ class UserSubscriptionController(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.subscribe(
     UserSubscriptionRequest(
-      httpRequest.getUserContext(
+      httpRequest.getExecutionContext(
         manageUsersClient,
         hasProbationDatasources,
         DataProductReportableInformation(
@@ -59,7 +59,7 @@ class UserSubscriptionController(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.unsubscribe(
     UserSubscriptionRequest(
-      httpRequest.getUserContext(
+      httpRequest.getExecutionContext(
         manageUsersClient,
         hasProbationDatasources,
         DataProductReportableInformation(
@@ -80,7 +80,7 @@ class UserSubscriptionController(
   fun subscriptions(
     httpRequest: HttpServletRequest,
   ) = userSubscriptionService.findByUserId(
-    httpRequest.getUserContext(
+    httpRequest.getExecutionContext(
       manageUsersClient,
       hasProbationDatasources,
       DataProductReportableInformation(

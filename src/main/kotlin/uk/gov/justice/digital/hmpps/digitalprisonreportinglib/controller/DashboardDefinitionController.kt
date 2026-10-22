@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
@@ -64,7 +64,7 @@ class DashboardDefinitionController(
   ): DashboardDefinition = dashboardDefinitionService.getDashboardDefinition(
     dataProductDefinitionId = dataProductDefinitionId,
     dashboardId = dashboardId,
-    executionContext = httpRequest.getUserContext(
+    executionContext = httpRequest.getExecutionContext(
       manageUsersClient,
       hasProbationDatasources,
       DataProductReportableInformation(

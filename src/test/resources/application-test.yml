@@ -61,6 +61,8 @@ dpr:
       sts:
         enabled: true
 hmpps:
+  sqs:
+    provider: localstack
   auth:
     url: http://localhost:8090/auth
 

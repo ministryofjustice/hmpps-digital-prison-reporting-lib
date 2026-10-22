@@ -25,10 +25,13 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.context.bean.override.mockito.MockitoBean
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import org.springframework.test.web.reactive.server.WebTestClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import tools.jackson.databind.ObjectMapper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.TestFlywayConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.LocalStackContainer
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
@@ -45,6 +48,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
+import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = ["spring.main.allow-bean-definition-overriding=true"])
@@ -71,7 +76,7 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var authenticationHelper: TestAuthenticationHelper
 
-  @Autowired
+  @MockitoSpyBean
   lateinit var configuredApiRepository: ConfiguredApiRepository
 
   @Autowired
@@ -95,7 +100,16 @@ abstract class IntegrationTestBase {
   @MockitoBean
   lateinit var asyncDataApiService: AsyncDataApiService
 
+  @Autowired
+  protected lateinit var hmppsQueueService: HmppsQueueService
+
+  protected val inboundQueue by lazy { hmppsQueueService.findByQueueName("auditqueue") ?: throw MissingQueueException("HmppsQueue auditqueue not found") }
+  protected val inboundSqsClient by lazy { inboundQueue.sqsClient }
+  protected val inboundQueueUrl by lazy { inboundQueue.queueUrl }
+
   companion object {
+
+    private val localStackContainer = LocalStackContainer.instance
 
     @JvmField
     val hmppsAuthMockServer = HmppsAuthMockServer()
@@ -108,6 +122,7 @@ abstract class IntegrationTestBase {
     @JvmStatic
     @DynamicPropertySource
     fun setupClass(registry: DynamicPropertyRegistry) {
+      localStackContainer?.also { setLocalStackProperties(it, registry) }
       registry.add("spring.datasource.url", { PostgresContainer.jdbcUrl })
       registry.add("spring.datasource.username", { PostgresContainer.username })
       registry.add("spring.datasource.password", { PostgresContainer.password })

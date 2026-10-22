@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.3.0
+- Adding auditing as an optional module that will audit certain endpoints when setup and configured. See [integrating-with-library.md](integrating-with-library.md).
+
 # 18.2.5
 - Various dependency upgrades
 

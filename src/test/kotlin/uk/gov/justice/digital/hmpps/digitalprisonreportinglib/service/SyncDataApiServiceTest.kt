@@ -11,12 +11,14 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
@@ -74,6 +76,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val configuredApiRepository: ConfiguredApiRepository = mock<ConfiguredApiRepository>()
   private val redshiftDataApiRepository: RedshiftDataApiRepository = mock<RedshiftDataApiRepository>()
   private val athenaApiRepository: AthenaApiRepository = mock<AthenaApiRepository>()
+  private val auditService: AuditService = mock<AuditService>()
   private val expectedRepositoryResult = listOf(
     mapOf(
       "PRISONNUMBER" to "1",
@@ -108,7 +111,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     identifiedHelper,
   )
-  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
 
   private val executionContext = ExecutionContext(
     CaseloadResponse(
@@ -134,6 +137,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         executionContext = any(),
       ),
     ).thenReturn(true)
+    doAnswer { it.getArgument<() -> Any?>(2).invoke() }.whenever(auditService).runAuditableAction(any(), any(), any<() -> Any?>())
   }
 
   @Test
@@ -560,7 +564,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       identifiedHelper,
     )
-    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
     val context = ExecutionContext(
       CaseloadResponse(
         username = "request-user",
@@ -1327,7 +1331,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       mapOf("9" to "1"),
     )
     val productDefRepo = mock<ProductDefinitionRepository>()
-    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, null)
+    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
     val dataSourceName = "name"
 
     whenever(productDefRepo.getProductDefinitions())
@@ -1579,6 +1583,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       athenaApiRepository = athenaApiRepository,
       productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
       identifiedHelper = identifiedHelper,
+      auditService = auditService,
       env = null,
     )
     val downloadContext = syncDataApiService.prepareSyncDownloadContext(

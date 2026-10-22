@@ -10,6 +10,9 @@ An example of its can be seen in this example where the [username passed in the 
 The client API making use of this library will need to implement their own `ResourceServerConfiguration` if they want to override the default implementation, but will need to chain the [securityFilterChain](https://github.com/ministryofjustice/hmpps-incident-reporting-api/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/incidentreporting/config/ResourceServerConfiguration.kt#L13-L17) to make sure the DPR library security filter is applied.
  
 
+### Auditing
+This library supports auditing of certain endpoints, including the endpoints that return data and download endpoints. This auditing is **opt-in**, and requires you to define `hmpps.sqs.queues.audit.queueName` as a spring property or `HMPPS_SQS_QUEUES_AUDIT_QUEUE_NAME` as an env var and set it to `audit`, and we also require you to send in `dpr.lib.serviceName`. You may need to do other setup - please read the README here https://github.com/ministryofjustice/hmpps-spring-boot-sqs#audit-queue and here https://github.com/ministryofjustice/hmpps-spring-boot-sqs#publishing-audit-events-hmppsauditservice. No resultset data is ever sent to audit when enabled. For more details about what is sent, please see the [AuditService](src/main/kotlin/uk/gov/justice/digital/hmpps/digitalprisonreportinglib/auditing/AuditService.kt)
+
 ### Open API Docs
 The API documentation is generated via the following dependency:
 `implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")`

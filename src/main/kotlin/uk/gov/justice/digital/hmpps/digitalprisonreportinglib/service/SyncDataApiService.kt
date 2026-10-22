@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditAction
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
@@ -26,6 +28,7 @@ class SyncDataApiService(
   val athenaApiRepository: AthenaApiRepository? = null,
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   identifiedHelper: IdentifiedHelper,
+  val auditService: AuditService,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
 ) : CommonDataApiService(
   identifiedHelper = identifiedHelper,
@@ -58,34 +61,49 @@ class SyncDataApiService(
     prefix: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
+    auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository
       .getSingleReportProductDefinition(reportId, reportVariantId)
-    checkAuth(productDefinition, executionContext)
-    val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
-    val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
-    val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
-    val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
-    return configuredApiRepository
-      .executeQuery(
-        query = datasetForFilter?.query?.firstOrNull()?.query ?: productDefinition.reportDataset.query.first().query,
-        filters = validateAndMapFilters(productDefinition, filters, null, reportFieldId) + dynamicFilter,
-        selectedPage = selectedPage,
-        pageSize = pageSize,
-        sortColumn,
-        sortedAsc = computedSortedAsc,
-        policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
-        dynamicFilterFieldId = reportFieldId,
-        dataSourceName = productDefinition.datasource.name,
-        reportFilter = productDefinition.report.filter,
-      )
-      .let { records ->
-        applyFormulasSelectivelyAndFormatColumns(
-          records,
-          productDefinition,
-          formulaEngine,
-          datasetForFilter,
+
+    return auditService.runAuditableAction(
+      AuditAction.DATA,
+      executionContext = executionContext.copy(
+        policies = productDefinition.policy,
+        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
+          id = productDefinition.id,
+          name = productDefinition.name,
+          variantName = productDefinition.report.name,
+          datasource = productDefinition.datasource,
+        ),
+      ),
+    ) {
+      checkAuth(productDefinition, executionContext)
+      val dynamicFilter = buildAndValidateDynamicFilter(reportFieldId?.first(), prefix, productDefinition)
+      val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
+      val formulaEngine = FormulaEngine(productDefinition.report.specification?.field ?: emptyList(), env, identifiedHelper)
+      val (sortColumn, computedSortedAsc) = sortColumnFromQueryOrGetDefault(productDefinition, sortColumn, sortedAsc)
+      configuredApiRepository
+        .executeQuery(
+          query = datasetForFilter?.query?.firstOrNull()?.query ?: productDefinition.reportDataset.query.first().query,
+          filters = validateAndMapFilters(productDefinition, filters, null, reportFieldId) + dynamicFilter,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn,
+          sortedAsc = computedSortedAsc,
+          policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
+          dynamicFilterFieldId = reportFieldId,
+          dataSourceName = productDefinition.datasource.name,
+          reportFilter = productDefinition.report.filter,
         )
-      }
+        .let { records ->
+          applyFormulasSelectivelyAndFormatColumns(
+            records,
+            productDefinition,
+            formulaEngine,
+            datasetForFilter,
+          )
+        }
+    }
   }
 
   fun validateAndFetchDataForFilterWithDataset(
@@ -141,32 +159,46 @@ class SyncDataApiService(
     prefix: String? = null,
     datasetForFilter: Dataset? = null,
   ): List<Map<String, Any?>> {
+    auditService.publishAttempt(AuditAction.DATA, executionContext)
     val dashboardDefinition = productDefinitionRepository
       .getSingleDashboardProductDefinition(reportId, dashboardId)
-    checkAuth(dashboardDefinition, executionContext)
-    val policyEngine = PolicyEngine(dashboardDefinition.policy, executionContext)
-    val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
-    return configuredApiRepository
-      .executeQuery(
-        query = datasetForFilter?.query?.firstOrNull()?.query ?: dashboardDefinition.dashboardDataset.query.first().query,
-        filters = validateAndMapFilters(dashboardDefinition, filters, false),
-        selectedPage = selectedPage,
-        pageSize = pageSize,
-        sortColumn,
-        sortedAsc = sortedAsc ?: true,
-        policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
-        dynamicFilterFieldId = reportFieldId,
-        dataSourceName = dashboardDefinition.datasource.name,
-        reportFilter = dashboardDefinition.dashboard.filter,
-      )
-      .map { row ->
-        formatColumnNamesToSourceFieldNamesCasing(
-          row,
-          dashboardDefinition.dashboardDataset.schema.field.map(SchemaField::name),
+    return auditService.runAuditableAction(
+      AuditAction.DATA,
+      executionContext = executionContext.copy(
+        policies = dashboardDefinition.policy,
+        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
+          id = dashboardDefinition.id,
+          name = dashboardDefinition.name,
+          variantName = dashboardDefinition.dashboard.name,
+          datasource = dashboardDefinition.datasource,
+        ),
+      ),
+    ) {
+      checkAuth(dashboardDefinition, executionContext)
+      val policyEngine = PolicyEngine(dashboardDefinition.policy, executionContext)
+      val formulaEngine = FormulaEngine(datasetSchemaFields = dashboardDefinition.dashboardDataset.schema.field, env = env, identifiedHelper = identifiedHelper)
+      configuredApiRepository
+        .executeQuery(
+          query = datasetForFilter?.query?.firstOrNull()?.query ?: dashboardDefinition.dashboardDataset.query.first().query,
+          filters = validateAndMapFilters(dashboardDefinition, filters, false),
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn,
+          sortedAsc = sortedAsc ?: true,
+          policyEngineResult = datasetForFilter?.let { Policy.PolicyResult.POLICY_PERMIT } ?: policyEngine.execute(),
+          dynamicFilterFieldId = reportFieldId,
+          dataSourceName = dashboardDefinition.datasource.name,
+          reportFilter = dashboardDefinition.dashboard.filter,
         )
-      }
-      .map(formulaEngine::applyFormulas)
-      .map { row -> toMetricData(row) }
+        .map { row ->
+          formatColumnNamesToSourceFieldNamesCasing(
+            row,
+            dashboardDefinition.dashboardDataset.schema.field.map(SchemaField::name),
+          )
+        }
+        .map(formulaEngine::applyFormulas)
+        .map { row -> toMetricData(row) }
+    }
   }
 
   fun prepareSyncDownloadContext(

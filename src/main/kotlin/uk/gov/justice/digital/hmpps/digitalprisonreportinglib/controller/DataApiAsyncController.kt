@@ -13,7 +13,6 @@ import jakarta.validation.constraints.Min
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.Authentication
@@ -25,7 +24,11 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getUserContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditAction
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
@@ -36,13 +39,11 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.NoDataAvailableException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvRowWriter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvStreamingSupport
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.XlsxStreamingSupport
-import java.util.Collections.singletonList
 
 @Validated
 @RestController
@@ -54,6 +55,7 @@ class DataApiAsyncController(
   val csvStreamingSupport: CsvStreamingSupport,
   val xlsxStreamingSupport: XlsxStreamingSupport,
   val manageUsersClient: ManageUsersClient,
+  val auditService: AuditService,
   @Value("\${dpr.lib.hasProbationDatasources}")
   val hasProbationDatasources: Boolean,
 ) {
@@ -96,35 +98,25 @@ class DataApiAsyncController(
       example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
     )
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<StatementExecutionResponse> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.validateAndExecuteStatementAsync(
-          reportId = reportId,
-          reportVariantId = reportVariantId,
-          filters = filterHelper.filtersOnly(filters),
-          sortColumn = sortColumn,
-          sortedAsc = sortedAsc,
-          executionContext = httpRequest.getUserContext(
-            manageUsersClient,
-            hasProbationDatasources,
-            DataProductReportableInformation(
-              id = reportId,
-              variantId = reportVariantId,
-            ),
+  ): ResponseEntity<StatementExecutionResponse> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.validateAndExecuteStatementAsync(
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        filters = filterHelper.filtersOnly(filters),
+        sortColumn = sortColumn,
+        sortedAsc = sortedAsc,
+        executionContext = httpRequest.getExecutionContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
           ),
         ),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(null)
-  }
+      ),
+    )
 
   @GetMapping("/async/dashboards/{reportId}/{dashboardId}")
   @Operation(
@@ -156,33 +148,23 @@ class DataApiAsyncController(
     @RequestParam
     filters: Map<String, String>,
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<StatementExecutionResponse> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.validateAndExecuteStatementAsync(
-          reportId = reportId,
-          dashboardId = dashboardId,
-          filters = filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(
-            manageUsersClient,
-            hasProbationDatasources,
-            DataProductReportableInformation(
-              id = reportId,
-              variantId = dashboardId,
-            ),
+  ): ResponseEntity<StatementExecutionResponse> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.validateAndExecuteStatementAsync(
+        reportId = reportId,
+        dashboardId = dashboardId,
+        filters = filterHelper.filtersOnly(filters),
+        executionContext = httpRequest.getExecutionContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = dashboardId,
           ),
         ),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(null)
-  }
+      ),
+    )
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/statements/{statementId}/status")
   @Operation(
@@ -229,7 +211,7 @@ class DataApiAsyncController(
         statementId = statementId,
         reportId = reportId,
         reportVariantId = reportVariantId,
-        executionContext = httpRequest.getUserContext(
+        executionContext = httpRequest.getExecutionContext(
           manageUsersClient,
           hasProbationDatasources,
           DataProductReportableInformation(
@@ -285,7 +267,7 @@ class DataApiAsyncController(
         statementId = statementId,
         productDefinitionId = reportId,
         dashboardId = dashboardId,
-        executionContext = httpRequest.getUserContext(
+        executionContext = httpRequest.getExecutionContext(
           manageUsersClient,
           hasProbationDatasources,
           DataProductReportableInformation(
@@ -329,7 +311,7 @@ class DataApiAsyncController(
         statementId,
         reportId,
         reportVariantId,
-        executionContext = httpRequest.getUserContext(
+        executionContext = httpRequest.getExecutionContext(
           manageUsersClient,
           hasProbationDatasources,
           DataProductReportableInformation(
@@ -361,7 +343,7 @@ class DataApiAsyncController(
         statementId,
         definitionId,
         dashboardId,
-        executionContext = httpRequest.getUserContext(
+        executionContext = httpRequest.getExecutionContext(
           manageUsersClient,
           hasProbationDatasources,
           DataProductReportableInformation(
@@ -390,21 +372,11 @@ class DataApiAsyncController(
   fun getExternalTableRowCount(
     @PathVariable("tableId") tableId: String,
     authentication: Authentication,
-  ): ResponseEntity<Count> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.count(tableId),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(null)
-  }
+  ): ResponseEntity<Count> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.count(tableId),
+    )
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/count")
   @Operation(
@@ -429,34 +401,24 @@ class DataApiAsyncController(
     @RequestParam
     filters: Map<String, String>,
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<Count> = try {
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .body(
-        asyncDataApiService.count(
-          tableId,
-          reportId,
-          reportVariantId,
-          filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getUserContext(
-            manageUsersClient,
-            hasProbationDatasources,
-            DataProductReportableInformation(
-              id = reportId,
-              variantId = reportVariantId,
-            ),
+  ): ResponseEntity<Count> = ResponseEntity
+    .status(HttpStatus.OK)
+    .body(
+      asyncDataApiService.count(
+        tableId,
+        reportId,
+        reportVariantId,
+        filterHelper.filtersOnly(filters),
+        executionContext = httpRequest.getExecutionContext(
+          manageUsersClient,
+          hasProbationDatasources,
+          DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
           ),
         ),
-      )
-  } catch (exception: NoDataAvailableException) {
-    val headers = HttpHeaders()
-    headers[ResponseHeader.NO_DATA_WARNING_HEADER_NAME] = singletonList(exception.reason).toString()
-
-    ResponseEntity
-      .status(HttpStatus.OK)
-      .headers(headers)
-      .body(null)
-  }
+      ),
+    )
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result")
   @Operation(
@@ -483,28 +445,34 @@ class DataApiAsyncController(
     @RequestParam sortColumn: String?,
     @RequestParam sortedAsc: Boolean?,
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<List<Map<String, Any?>>> = ResponseEntity
-    .status(HttpStatus.OK)
-    .body(
-      asyncDataApiService.getStatementResult(
-        tableId = tableId,
-        reportId = reportId,
-        reportVariantId = reportVariantId,
-        selectedPage = selectedPage,
-        pageSize = pageSize,
-        filters = filterHelper.filtersOnly(filters),
-        sortedAsc = sortedAsc,
-        sortColumn = sortColumn,
-        executionContext = httpRequest.getUserContext(
-          manageUsersClient,
-          hasProbationDatasources,
-          DataProductReportableInformation(
-            id = reportId,
-            variantId = reportVariantId,
+  ): ResponseEntity<List<Map<String, Any?>>> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.getStatementResult(
+          tableId = tableId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
+          sortedAsc = sortedAsc,
+          sortColumn = sortColumn,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
+            preFilters = cleanFilters,
+            sortColumnName = sortColumn,
+            sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
         ),
-      ),
-    )
+      )
+  }
 
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result")
   @Operation(
@@ -527,26 +495,30 @@ class DataApiAsyncController(
     @RequestParam
     filters: Map<String, String>,
     httpRequest: HttpServletRequest,
-  ): ResponseEntity<List<List<Map<String, Any?>>>> = ResponseEntity
-    .status(HttpStatus.OK)
-    .body(
-      asyncDataApiService.getDashboardStatementResult(
-        tableId = tableId,
-        reportId = reportId,
-        dashboardId = dashboardId,
-        selectedPage = selectedPage,
-        pageSize = pageSize,
-        filters = filterHelper.filtersOnly(filters),
-        executionContext = httpRequest.getUserContext(
-          manageUsersClient,
-          hasProbationDatasources,
-          DataProductReportableInformation(
-            id = reportId,
-            variantId = dashboardId,
+  ): ResponseEntity<List<List<Map<String, Any?>>>> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        asyncDataApiService.getDashboardStatementResult(
+          tableId = tableId,
+          reportId = reportId,
+          dashboardId = dashboardId,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = dashboardId,
+            ),
+            preFilters = cleanFilters,
           ),
         ),
-      ),
-    )
+      )
+  }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/summary/{summaryId}")
   @Operation(
@@ -569,26 +541,31 @@ class DataApiAsyncController(
     sortedAsc: Boolean? = null,
     httpRequest: HttpServletRequest,
   ): ResponseEntity<List<Map<String, Any?>>> {
-    val summaryResult = asyncDataApiService.getSummaryResult(
-      tableId = tableId,
-      summaryId = summaryId,
-      reportId = reportId,
-      reportVariantId = reportVariantId,
-      filters = filterHelper.filtersOnly(filters),
-      sortColumn = sortColumn,
-      sortedAsc = sortedAsc,
-      executionContext = httpRequest.getUserContext(
-        manageUsersClient,
-        hasProbationDatasources,
-        DataProductReportableInformation(
-          id = reportId,
-          variantId = reportVariantId,
-        ),
-      ),
-    )
+    val cleanFilters = filterHelper.filtersOnly(filters)
     return ResponseEntity
       .status(HttpStatus.OK)
-      .body(summaryResult)
+      .body(
+        asyncDataApiService.getSummaryResult(
+          tableId = tableId,
+          summaryId = summaryId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          filters = filterHelper.filtersOnly(filters),
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
+            preFilters = cleanFilters,
+            sortColumnName = sortColumn,
+            sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+          ),
+        ),
+      )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/download", produces = ["text/csv"])
@@ -616,36 +593,60 @@ class DataApiAsyncController(
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
-    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
-      reportId = reportId,
-      reportVariantId = reportVariantId,
-      filters = filterHelper.filtersOnly(filters),
-      selectedColumns = columns,
-      sortedAsc = sortedAsc,
-      sortColumn = sortColumn,
-      executionContext = request.getUserContext(
-        manageUsersClient,
-        hasProbationDatasources,
-        DataProductReportableInformation(
-          id = reportId,
-          variantId = reportVariantId,
-        ),
-      ),
-    )
+    val cleanFilters = filterHelper.filtersOnly(filters)
 
-    csvStreamingSupport.streamCsv(
-      reportId,
-      reportVariantId,
-      request,
-      response,
-    ) { writer ->
-      CsvRowWriter(writer).use { rowWriter ->
-        asyncDataApiService.download(
-          rowWriter = rowWriter,
-          tableId = tableId,
-          asyncDownloadContext = downloadContext,
-        )
+    val executionContext = request.getExecutionContext(
+      manageUsersClient = manageUsersClient,
+      hasProbationDatasources = hasProbationDatasources,
+      dataProductReportableInformation = DataProductReportableInformation(
+        id = reportId,
+        variantId = reportVariantId,
+      ),
+      preFilters = cleanFilters,
+      sortColumnName = sortColumn,
+      sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+    )
+    auditService.publishAttempt(AuditAction.DOWNLOAD, executionContext)
+    try {
+      val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        filters = filterHelper.filtersOnly(filters),
+        selectedColumns = columns,
+        sortedAsc = sortedAsc,
+        sortColumn = sortColumn,
+        executionContext = request.getExecutionContext(
+          manageUsersClient = manageUsersClient,
+          hasProbationDatasources = hasProbationDatasources,
+          dataProductReportableInformation = DataProductReportableInformation(
+            id = reportId,
+            variantId = reportVariantId,
+          ),
+          preFilters = cleanFilters,
+          sortColumnName = sortColumn,
+          sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+        ),
+      )
+
+      val stream = csvStreamingSupport.streamCsv(
+        reportId,
+        reportVariantId,
+        request,
+        response,
+      ) { writer ->
+        CsvRowWriter(writer).use { rowWriter ->
+          asyncDataApiService.download(
+            rowWriter = rowWriter,
+            tableId = tableId,
+            asyncDownloadContext = downloadContext.first,
+          )
+        }
       }
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext)
+      return stream
+    } catch (e: Throwable) {
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
+      throw e
     }
   }
 
@@ -679,33 +680,46 @@ class DataApiAsyncController(
     request: HttpServletRequest,
     response: HttpServletResponse,
   ) {
-    val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
-      reportId = reportId,
-      reportVariantId = reportVariantId,
-      filters = filterHelper.filtersOnly(filters),
-      selectedColumns = columns,
-      sortedAsc = sortedAsc,
-      sortColumn = sortColumn,
-      executionContext = request.getUserContext(
-        manageUsersClient,
-        hasProbationDatasources,
-        DataProductReportableInformation(
-          id = reportId,
-          variantId = reportVariantId,
-        ),
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    val executionContext = request.getExecutionContext(
+      manageUsersClient = manageUsersClient,
+      hasProbationDatasources = hasProbationDatasources,
+      dataProductReportableInformation = DataProductReportableInformation(
+        id = reportId,
+        variantId = reportVariantId,
       ),
+      preFilters = cleanFilters,
+      sortColumnName = sortColumn,
+      sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
     )
-
-    xlsxStreamingSupport.streamXlsx(
-      reportId,
-      reportVariantId,
-      response,
-    ) { rowWriter ->
-      asyncDataApiService.download(
-        rowWriter = rowWriter,
-        tableId = tableId,
-        asyncDownloadContext = downloadContext,
+    auditService.publishAttempt(AuditAction.DOWNLOAD, executionContext)
+    try {
+      val downloadContext = asyncDataApiService.prepareAsyncDownloadContext(
+        reportId = reportId,
+        reportVariantId = reportVariantId,
+        filters = filterHelper.filtersOnly(filters),
+        selectedColumns = columns,
+        sortedAsc = sortedAsc,
+        sortColumn = sortColumn,
+        executionContext = executionContext,
       )
+
+      val stream = xlsxStreamingSupport.streamXlsx(
+        reportId,
+        reportVariantId,
+        response,
+      ) { rowWriter ->
+        asyncDataApiService.download(
+          rowWriter = rowWriter,
+          tableId = tableId,
+          asyncDownloadContext = downloadContext.first,
+        )
+      }
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext)
+      return stream
+    } catch (e: Throwable) {
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
+      throw e
     }
   }
 }
