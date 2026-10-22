@@ -1256,7 +1256,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
         val successMsg =
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
-        assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
+        assertThat(attemptMsg["what"] == "abc")
         assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
 
         assertThat(successMsg["what"] == "VIEW_DATA_SUCCESS")
