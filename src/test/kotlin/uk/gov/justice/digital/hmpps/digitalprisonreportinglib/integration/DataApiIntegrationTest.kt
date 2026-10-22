@@ -1213,91 +1213,110 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     requestWithQueryAndAssert200(params, "/reports/external-movements/last-year")
   }
 
-  @Test
-  fun `Data API audits attempt and success events`() = runTest {
-    wireMockServer.resetAll()
-    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
-    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
-    stubDefinitionsResponse()
-
-    webTestClient.get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/reports/external-movements/last-month")
-          .queryParam("selectedPage", 1)
-          .queryParam("pageSize", 3)
-          .queryParam("sortColumn", "date")
-          .queryParam("sortedAsc", false)
-          .build()
+  class AuditIntegrationTest : IntegrationTestBase() {
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(registry: DynamicPropertyRegistry) {
+        registry.add("hmpps.sqs.queues.audit.queueName") { "auditqueue" }
+        registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .isOk()
-
-    await().atMost(Duration.ofSeconds(30)).untilAsserted {
-      val msgs = inboundSqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build()).get().messages()
-      val json = Json { coerceInputValues = true }
-      assertThat(msgs.size == 2)
-      val attemptMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
-      val successMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
-      assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
-      assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
-
-      assertThat(successMsg["what"] == "VIEW_DATA_SUCCESS")
-      assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
     }
-  }
 
-  @Test
-  fun `Data API audits attempt and failure events`() = runTest {
-    wireMockServer.resetAll()
-    manageUsersMockServer.stubLookupUserCaseload("request-user", null)
-    manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
-    manageUsersMockServer.stubLookupUsersRoles()
-    stubDefinitionsResponse()
+    @Test
+    fun `Data API audits attempt and success events`() = runTest {
+      wireMockServer.resetAll()
+      manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+      manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+      stubDefinitionsResponse()
 
-    doThrow(IllegalStateException("Some error message"))
-      .whenever(configuredApiRepository).executeQuery(
-        query = any(),
-        filters = any(),
-        selectedPage = any(),
-        pageSize = any(),
-        sortColumn = any(),
-        sortedAsc = any(),
-        policyEngineResult = any(),
-        dynamicFilterFieldId = any(),
-        dataSourceName = any(),
-        reportFilter = any(),
-        any(),
-      )
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", false)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk()
 
-    webTestClient.mutate().responseTimeout(Duration.ofSeconds(5000)).build().get()
-      .uri { uriBuilder: UriBuilder ->
-        uriBuilder
-          .path("/reports/external-movements/last-month")
-          .queryParam("selectedPage", 1)
-          .queryParam("pageSize", 3)
-          .queryParam("sortColumn", "date")
-          .queryParam("sortedAsc", false)
-          .build()
+      await().atMost(Duration.ofSeconds(30)).untilAsserted {
+        val msgs = inboundSqsClient.receiveMessage(
+          ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
+        ).get().messages()
+        val json = Json { coerceInputValues = true }
+        assertThat(msgs.size == 2)
+        val attemptMsg =
+          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
+        val successMsg =
+          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
+        assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
+        assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+
+        assertThat(successMsg["what"] == "VIEW_DATA_SUCCESS")
+        assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
-      .exchange()
-      .expectStatus()
-      .is2xxSuccessful
+    }
 
-    await().atMost(Duration.ofSeconds(30)).untilAsserted {
-      val msgs = inboundSqsClient.receiveMessage(ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build()).get().messages()
-      val json = Json { coerceInputValues = true }
-      assertThat(msgs.size == 2)
-      val attemptMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
-      val successMsg = json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
-      assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
-      assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+    @Test
+    fun `Data API audits attempt and failure events`() = runTest {
+      wireMockServer.resetAll()
+      manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+      manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+      manageUsersMockServer.stubLookupUsersRoles()
+      stubDefinitionsResponse()
 
-      assertThat(successMsg["what"] == "VIEW_DATA_FAILURE")
-      assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
+      doThrow(IllegalStateException("Some error message"))
+        .whenever(configuredApiRepository).executeQuery(
+          query = any(),
+          filters = any(),
+          selectedPage = any(),
+          pageSize = any(),
+          sortColumn = any(),
+          sortedAsc = any(),
+          policyEngineResult = any(),
+          dynamicFilterFieldId = any(),
+          dataSourceName = any(),
+          reportFilter = any(),
+          any(),
+        )
+
+      webTestClient.mutate().responseTimeout(Duration.ofSeconds(5000)).build().get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/reports/external-movements/last-month")
+            .queryParam("selectedPage", 1)
+            .queryParam("pageSize", 3)
+            .queryParam("sortColumn", "date")
+            .queryParam("sortedAsc", false)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .is2xxSuccessful
+
+      await().atMost(Duration.ofSeconds(30)).untilAsserted {
+        val msgs = inboundSqsClient.receiveMessage(
+          ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
+        ).get().messages()
+        val json = Json { coerceInputValues = true }
+        assertThat(msgs.size == 2)
+        val attemptMsg =
+          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
+        val successMsg =
+          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
+        assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
+        assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+
+        assertThat(successMsg["what"] == "VIEW_DATA_FAILURE")
+        assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
+      }
     }
   }
 

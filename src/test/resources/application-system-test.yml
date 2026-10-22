@@ -41,7 +41,6 @@ management.endpoint:
 
 dpr:
   lib:
-    auditEnabled: true
     serviceName: "int-test-mi"
     hasProbationDatasources: false
     manage-users:

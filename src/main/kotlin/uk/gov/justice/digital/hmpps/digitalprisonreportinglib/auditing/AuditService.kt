@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.hmpps.sqs.audit.HmppsAuditService
+import java.time.Instant
 import kotlin.time.Clock
 import kotlin.time.toJavaInstant
 
@@ -25,29 +26,21 @@ enum class AuditStatus {
 
 @Service
 class AuditService(
-  private val hmppsAuditService: HmppsAuditService,
+  private val hmppsAuditService: HmppsAuditService? = null,
   private val scope: CoroutineScope,
   @Value($$"${dpr.lib.serviceName}") private val serviceName: String,
-  @Value($$"${dpr.lib.auditEnabled}") private val auditEnabled: Boolean,
 ) {
   fun <T> runAuditableAction(
     auditAction: AuditAction,
     executionContext: ExecutionContext,
     action: () -> T,
   ): T {
-    if (!auditEnabled) {
-      return action()
-    }
     try {
       val result = action()
-      scope.launch {
-        publish(auditAction, AuditStatus.SUCCESS, executionContext)
-      }
+      publish(auditAction, AuditStatus.SUCCESS, executionContext)
       return result
     } catch (e: Throwable) {
-      scope.launch {
-        publish(auditAction, AuditStatus.FAILURE, executionContext)
-      }
+      publish(auditAction, AuditStatus.FAILURE, executionContext)
       throw e
     }
   }
@@ -58,14 +51,11 @@ class AuditService(
       AuditAction.DOWNLOAD -> scope.launch { auditDataDownloadRequestAttemptEvent(executionContext) }
     }
   }
-  suspend fun publish(
+  fun publish(
     action: AuditAction,
     status: AuditStatus,
     executionContext: ExecutionContext,
   ) {
-    if (!auditEnabled) {
-      return
-    }
     when (action) {
       AuditAction.DATA -> {
         when (status) {
@@ -83,10 +73,10 @@ class AuditService(
       }
     }
   }
-  suspend fun auditDataRequestAttemptEvent(
+  fun auditDataRequestAttemptEvent(
     executionContext: ExecutionContext,
   ) {
-    hmppsAuditService.publishEvent(
+    publishEvent(
       what = "VIEW_DATA_ATTEMPT",
       subjectId = executionContext.dataProductReportableInformation.id + "_" + executionContext.dataProductReportableInformation.variantId,
       subjectType = "REPORT_ID",
@@ -96,8 +86,8 @@ class AuditService(
       details = Json.encodeToString(generateAuditDetails(executionContext)),
     )
   }
-  suspend fun auditDataRequestCompletionEvent(success: Boolean, executionContext: ExecutionContext) {
-    hmppsAuditService.publishEvent(
+  fun auditDataRequestCompletionEvent(success: Boolean, executionContext: ExecutionContext) {
+    publishEvent(
       what = "VIEW_DATA_${if (success) "SUCCESS" else "FAILURE"}",
       subjectId = executionContext.dataProductReportableInformation.id + "_" + executionContext.dataProductReportableInformation.variantId,
       subjectType = "REPORT_ID",
@@ -107,8 +97,8 @@ class AuditService(
       details = "",
     )
   }
-  suspend fun auditDataDownloadRequestAttemptEvent(executionContext: ExecutionContext) {
-    hmppsAuditService.publishEvent(
+  fun auditDataDownloadRequestAttemptEvent(executionContext: ExecutionContext) {
+    publishEvent(
       what = "DOWNLOAD_DATA_ATTEMPT",
       subjectId = executionContext.dataProductReportableInformation.id + "_" + executionContext.dataProductReportableInformation.variantId,
       subjectType = "REPORT_ID",
@@ -118,8 +108,8 @@ class AuditService(
       details = Json.encodeToString(generateAuditDetails(executionContext)),
     )
   }
-  suspend fun auditDataDownloadRequestCompletionEvent(success: Boolean, executionContext: ExecutionContext) {
-    hmppsAuditService.publishEvent(
+  fun auditDataDownloadRequestCompletionEvent(success: Boolean, executionContext: ExecutionContext) {
+    publishEvent(
       what = "DOWNLOAD_DATA_${if (success) "SUCCESS" else "FAILURE"}",
       subjectId = executionContext.dataProductReportableInformation.id + "_" + executionContext.dataProductReportableInformation.variantId,
       subjectType = "REPORT_ID",
@@ -141,6 +131,31 @@ class AuditService(
     columns = executionContext.columns,
     policies = executionContext.policies,
   )
+
+  private fun publishEvent(
+    what: String,
+    subjectId: String? = null,
+    subjectType: String? = null,
+    `when`: Instant,
+    who: String,
+    service: String? = null,
+    details: String? = null,
+  ) {
+    if (hmppsAuditService == null) {
+      return
+    }
+    scope.launch {
+      hmppsAuditService.publishEvent(
+        what = what,
+        subjectId = subjectId,
+        subjectType = subjectType,
+        `when` = `when`,
+        who = who,
+        service = service,
+        details = details,
+      )
+    }
+  }
 }
 
 @Serializable

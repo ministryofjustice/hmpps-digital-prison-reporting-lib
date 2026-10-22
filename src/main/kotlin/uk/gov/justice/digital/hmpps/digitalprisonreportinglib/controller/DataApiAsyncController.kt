@@ -573,7 +573,7 @@ class DataApiAsyncController(
     description = "Streams the entire result set of the async query execution as a csv file.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun downloadCsv(
+  fun downloadCsv(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("tableId") tableId: String,
@@ -660,7 +660,7 @@ class DataApiAsyncController(
       "reinterpreted as dates when the file is opened in Excel.",
     security = [SecurityRequirement(name = "bearer-jwt")],
   )
-  suspend fun downloadXlsx(
+  fun downloadXlsx(
     @PathVariable("reportId") reportId: String,
     @PathVariable("reportVariantId") reportVariantId: String,
     @PathVariable("tableId") tableId: String,
