@@ -1256,11 +1256,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
         val successMsg =
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
-        assertThat(attemptMsg["what"]).isEqualTo("abc")
-        assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+        assertThat(attemptMsg["what"]).isEqualTo("VIEW_DATA_ATTEMPT")
+        assertThat(attemptMsg["subjectId"]).isEqualTo("external-movements_last-month")
 
-        assertThat(successMsg["what"] == "VIEW_DATA_SUCCESS")
-        assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
+        assertThat(successMsg["what"]).isEqualTo("VIEW_DATA_SUCCESS")
+        assertThat(successMsg["subjectId"]).isEqualTo("dpr_external-movements_last-month")
       }
     }
 
@@ -1312,11 +1312,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
         val successMsg =
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
-        assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
-        assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+        assertThat(attemptMsg["what"]).isEqualTo("VIEW_DATA_ATTEMPT")
+        assertThat(attemptMsg["subjectId"]).isEqualTo("external-movements_last-month")
 
-        assertThat(successMsg["what"] == "VIEW_DATA_FAILURE")
-        assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
+        assertThat(successMsg["what"]).isEqualTo("VIEW_DATA_FAILURE")
+        assertThat(successMsg["subjectId"]).isEqualTo("dpr_external-movements_last-month")
       }
     }
   }
