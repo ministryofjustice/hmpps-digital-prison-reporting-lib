@@ -1251,11 +1251,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
         ).get().messages()
         val json = Json { coerceInputValues = true }
-        println(
-          "Received ${msgs.size} messages: ${
-            msgs.map { "${it.messageId()}: ${it.body()}" }
-          }",
-        )
         assertThat(msgs).hasSize(2)
         val attemptMsg =
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
