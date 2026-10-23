@@ -1259,7 +1259,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
-        .isOk
+        .isOk()
 
       val eventsByMessageId =
         mutableMapOf<String, Map<String, String?>>()
