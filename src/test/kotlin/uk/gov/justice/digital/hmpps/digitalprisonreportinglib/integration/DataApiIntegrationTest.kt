@@ -1261,8 +1261,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .isOk()
 
-      val eventsByMessageId =
-        mutableMapOf<String, Map<String, String?>>()
+      val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
       val json = Json { coerceInputValues = true }
 
       await()
@@ -1343,8 +1342,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .is5xxServerError
 
-      val eventsByMessageId =
-        mutableMapOf<String, Map<String, String?>>()
+      val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
       val json = Json { coerceInputValues = true }
 
       await()
