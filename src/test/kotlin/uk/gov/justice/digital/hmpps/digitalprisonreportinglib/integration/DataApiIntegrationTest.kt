@@ -1260,7 +1260,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         assertThat(attemptMsg["subjectId"]).isEqualTo("external-movements_last-month")
 
         assertThat(successMsg["what"]).isEqualTo("VIEW_DATA_SUCCESS")
-        //Local DPDs don't contain the dpr_ prefix
+        // Local DPDs don't contain the dpr_ prefix
         assertThat(successMsg["subjectId"]).isEqualTo("external-movements_last-month")
       }
     }
@@ -1317,7 +1317,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         assertThat(attemptMsg["subjectId"]).isEqualTo("external-movements_last-month")
 
         assertThat(successMsg["what"]).isEqualTo("VIEW_DATA_FAILURE")
-        //Local DPDs don't contain the dpr_ prefix
+        // Local DPDs don't contain the dpr_ prefix
         assertThat(successMsg["subjectId"]).isEqualTo("external-movements_last-month")
       }
     }
