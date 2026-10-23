@@ -1251,7 +1251,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
         ).get().messages()
         val json = Json { coerceInputValues = true }
-        assertThat(msgs.size == 2)
+        println(
+          "Received ${msgs.size} messages: ${
+            msgs.map { "${it.messageId()}: ${it.body()}" }
+          }",
+        )
+        assertThat(msgs).hasSize(2)
         val attemptMsg =
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
         val successMsg =
@@ -1260,7 +1265,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         assertThat(attemptMsg["subjectId"]).isEqualTo("external-movements_last-month")
 
         assertThat(successMsg["what"]).isEqualTo("VIEW_DATA_SUCCESS")
-        assertThat(successMsg["subjectId"]).isEqualTo("dpr_external-movements_last-month")
+        //Local DPDs don't contain the dpr_ prefix
+        assertThat(successMsg["subjectId"]).isEqualTo("external-movements_last-month")
       }
     }
 
@@ -1307,7 +1313,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
         ).get().messages()
         val json = Json { coerceInputValues = true }
-        assertThat(msgs.size == 2)
+        assertThat(msgs).hasSize(2)
         val attemptMsg =
           json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
         val successMsg =
@@ -1316,7 +1322,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         assertThat(attemptMsg["subjectId"]).isEqualTo("external-movements_last-month")
 
         assertThat(successMsg["what"]).isEqualTo("VIEW_DATA_FAILURE")
-        assertThat(successMsg["subjectId"]).isEqualTo("dpr_external-movements_last-month")
+        //Local DPDs don't contain the dpr_ prefix
+        assertThat(successMsg["subjectId"]).isEqualTo("external-movements_last-month")
       }
     }
   }
