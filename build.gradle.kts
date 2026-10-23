@@ -17,19 +17,19 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.56.0"
+val awsSdkVersion = "2.57.0"
 val testContainersVersion = "1.21.4"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.3")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.12.0")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
   implementation("com.google.code.gson:gson:2.14.0")
   implementation("com.google.guava:guava:33.7.2-jre")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
   implementation("com.cronutils:cron-utils:9.2.1")
 
   // AWS
@@ -52,7 +52,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.14")
 
   // Testing
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.12.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.testcontainers:localstack:1.21.4")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.3")
