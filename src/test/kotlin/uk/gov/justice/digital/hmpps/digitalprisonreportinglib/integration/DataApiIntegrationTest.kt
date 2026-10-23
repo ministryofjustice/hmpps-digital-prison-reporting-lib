@@ -1277,14 +1277,13 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           ).get().messages()
 
           msgs.forEach { message ->
-            eventsByMessageId[message.messageId()] =
-              json.decodeFromString(
-                MapSerializer(
-                  String.serializer(),
-                  String.serializer().nullable,
-                ),
-                message.body(),
-              )
+            eventsByMessageId[message.messageId()] = json.decodeFromString(
+              MapSerializer(
+                String.serializer(),
+                String.serializer().nullable,
+              ),
+              message.body(),
+            )
           }
 
           assertThat(eventsByMessageId.values.map { it["what"] })
@@ -1366,14 +1365,13 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           ).get().messages()
 
           msgs.forEach { message ->
-            eventsByMessageId[message.messageId()] =
-              json.decodeFromString(
-                MapSerializer(
-                  String.serializer(),
-                  String.serializer().nullable,
-                ),
-                message.body(),
-              )
+            eventsByMessageId[message.messageId()] = json.decodeFromString(
+              MapSerializer(
+                String.serializer(),
+                String.serializer().nullable,
+              ),
+              message.body(),
+            )
           }
 
           assertThat(eventsByMessageId.values.map { it["what"] })
