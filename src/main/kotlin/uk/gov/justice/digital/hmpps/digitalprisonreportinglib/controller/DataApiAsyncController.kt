@@ -30,14 +30,12 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditStat
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.getExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryStateRequest
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
@@ -644,7 +642,7 @@ class DataApiAsyncController(
           )
         }
       }
-      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, enrichContext(executionContext, downloadContext.second))
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext.withReportDetails(downloadContext.second))
     } catch (e: Throwable) {
       auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
       throw e
@@ -716,23 +714,10 @@ class DataApiAsyncController(
           asyncDownloadContext = downloadContext.first,
         )
       }
-      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, enrichContext(executionContext, downloadContext.second))
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext.withReportDetails(downloadContext.second))
     } catch (e: Throwable) {
       auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
       throw e
     }
   }
-
-  private fun enrichContext(
-    executionContext: ExecutionContext,
-    reportDefinition: SingleReportProductDefinition,
-  ): ExecutionContext = executionContext.copy(
-    policies = reportDefinition.policy,
-    dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
-      id = reportDefinition.id,
-      name = reportDefinition.name,
-      variantName = reportDefinition.report.name,
-      datasource = reportDefinition.datasource,
-    ),
-  )
 }
