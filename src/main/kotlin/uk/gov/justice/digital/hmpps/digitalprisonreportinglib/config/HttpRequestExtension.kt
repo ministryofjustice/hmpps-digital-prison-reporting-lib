@@ -50,7 +50,7 @@ fun getCaseLoads(
   manageUsersClient: ManageUsersClient,
   userName: String,
   authSource: AuthSource,
-): CaseloadResponse? = if (authSource == AuthSource.NOMIS ) {
+): CaseloadResponse? = if (authSource == AuthSource.NOMIS) {
   manageUsersClient.getCaseloads(userName)
 } else {
   null
