@@ -1295,20 +1295,14 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       assertThat(eventsByMessageId).hasSize(2)
 
-      val attemptEvent = eventsByMessageId.values.single {
-        it["what"] == "VIEW_DATA_ATTEMPT"
-      }
+      val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
 
-      val successEvent = eventsByMessageId.values.single {
-        it["what"] == "VIEW_DATA_SUCCESS"
-      }
+      val successEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_SUCCESS" }
 
-      assertThat(attemptEvent["subjectId"])
-        .isEqualTo("external-movements_last-month")
+      assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
 
       // Local DPDs don't contain the dpr_ prefix.
-      assertThat(successEvent["subjectId"])
-        .isEqualTo("external-movements_last-month")
+      assertThat(successEvent["subjectId"]).isEqualTo("external-movements_last-month")
     }
 
     @Test
@@ -1383,19 +1377,13 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       assertThat(eventsByMessageId).hasSize(2)
 
-      val attemptEvent = eventsByMessageId.values.single {
-        it["what"] == "VIEW_DATA_ATTEMPT"
-      }
+      val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
 
-      val failureEvent = eventsByMessageId.values.single {
-        it["what"] == "VIEW_DATA_FAILURE"
-      }
+      val failureEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_FAILURE" }
 
-      assertThat(attemptEvent["subjectId"])
-        .isEqualTo("external-movements_last-month")
+      assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
 
-      assertThat(failureEvent["subjectId"])
-        .isEqualTo("external-movements_last-month")
+      assertThat(failureEvent["subjectId"]).isEqualTo("external-movements_last-month")
     }
   }
 
