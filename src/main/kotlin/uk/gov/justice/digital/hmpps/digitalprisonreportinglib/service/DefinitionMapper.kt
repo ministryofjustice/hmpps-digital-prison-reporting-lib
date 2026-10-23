@@ -102,7 +102,7 @@ abstract class DefinitionMapper(
     allDatasources: List<Datasource>,
   ): List<FilterOption>? {
     if (filterDefinition.type == Caseloads) {
-      return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
+      return executionContext.prisonCaseloadData?.caseloads?.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions?.takeIf { it.returnAsStaticOptions }?.let { dynamicFilterOption ->
       dynamicFilterOption.dataset?.let { dynamicFilterDatasetId ->

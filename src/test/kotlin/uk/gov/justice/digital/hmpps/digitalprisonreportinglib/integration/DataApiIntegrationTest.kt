@@ -808,19 +808,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
         .execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
   }
 
@@ -879,7 +878,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -891,7 +889,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("0")
+        .jsonPath("count").isEqualTo("4")
     }
 
     @Test
@@ -902,19 +900,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("0")
+        .jsonPath("count").isEqualTo("4")
     }
 
     @Test
@@ -923,19 +920,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -946,19 +942,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -967,19 +962,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -990,19 +984,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111113', 'G3411VR', 'P111113', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -1013,20 +1006,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("0")
+        .jsonPath("count").isEqualTo("4")
     }
 
     @Test
@@ -1037,20 +1028,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -1059,7 +1048,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -1071,7 +1059,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -1082,7 +1070,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -1094,7 +1081,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -1105,19 +1092,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
         .execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("0")
+        .jsonPath("count").isEqualTo("4")
     }
   }
 
