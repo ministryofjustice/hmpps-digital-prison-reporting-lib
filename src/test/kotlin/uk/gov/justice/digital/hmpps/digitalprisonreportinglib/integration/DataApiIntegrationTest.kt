@@ -1246,7 +1246,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .isOk()
 
-      await().atMost(Duration.ofSeconds(30)).untilAsserted {
+      await().atMost(Duration.ofSeconds(10)).untilAsserted {
         val msgs = inboundSqsClient.receiveMessage(
           ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
         ).get().messages()
@@ -1303,7 +1303,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .is2xxSuccessful
 
-      await().atMost(Duration.ofSeconds(30)).untilAsserted {
+      await().atMost(Duration.ofSeconds(10)).untilAsserted {
         val msgs = inboundSqsClient.receiveMessage(
           ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
         ).get().messages()
