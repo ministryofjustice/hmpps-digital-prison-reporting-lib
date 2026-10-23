@@ -1,7 +1,7 @@
 Below you can find the changes included in each release.
 
 # 18.3.1
-- Publication success in download uses context after report definition retrieval with definition specific information.
+- Publication success in download uses context after report definition retrieval with retrieved definition specific information.
 - Code clean up in download controllers. 
 
 # 18.3.0
