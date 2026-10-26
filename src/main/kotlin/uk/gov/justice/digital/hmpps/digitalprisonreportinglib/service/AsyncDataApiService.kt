@@ -239,15 +239,7 @@ class AsyncDataApiService(
 
     return auditService.runAuditableAction(
       AuditAction.DATA,
-      executionContext = executionContext.copy(
-        policies = productDefinition.policy,
-        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
-          id = productDefinition.id,
-          name = productDefinition.name,
-          variantName = productDefinition.report.name,
-          datasource = productDefinition.datasource,
-        ),
-      ),
+      executionContext = executionContext.withReportDetails(productDefinition),
     ) {
       checkAuth(productDefinition, executionContext)
       val formulaEngine =
@@ -285,15 +277,7 @@ class AsyncDataApiService(
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId)
     return auditService.runAuditableAction(
       AuditAction.DATA,
-      executionContext = executionContext.copy(
-        policies = productDefinition.policy,
-        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
-          id = productDefinition.id,
-          name = productDefinition.name,
-          variantName = productDefinition.dashboard.name,
-          datasource = productDefinition.datasource,
-        ),
-      ),
+      executionContext = executionContext.withDashboardDetails(productDefinition),
     ) {
       checkAuth(productDefinition, executionContext)
       val formulaEngine = FormulaEngine(
@@ -334,15 +318,7 @@ class AsyncDataApiService(
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
 
     return auditService.runAuditableAction(
-      executionContext = executionContext.copy(
-        policies = productDefinition.policy,
-        dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
-          id = productDefinition.id,
-          name = productDefinition.name,
-          variantName = productDefinition.report.name,
-          datasource = productDefinition.datasource,
-        ),
-      ),
+      executionContext = executionContext.withReportDetails(productDefinition),
       auditAction = AuditAction.DATA,
     ) {
       checkAuth(productDefinition, executionContext)

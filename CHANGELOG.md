@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+# 18.3.1
+- Publication success in download uses context after report definition retrieval with retrieved definition specific information.
+- Code clean up and refactoring in DataApiAsyncController, AsyncDataApiService and ExecutionContext. 
+
 # 18.3.0
 - Adding auditing as an optional module that will audit certain endpoints when setup and configured. See [integrating-with-library.md](integrating-with-library.md).
 
