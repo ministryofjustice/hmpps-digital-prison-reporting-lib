@@ -11,9 +11,12 @@ import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.whenever
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -21,6 +24,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.StatusAssertions
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.web.util.UriBuilder
+import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_PREFIX
@@ -1199,6 +1203,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     requestWithQueryAndAssert200(params, "/reports/external-movements/last-year")
   }
 
+  @Execution(ExecutionMode.SAME_THREAD)
   class AuditIntegrationTest : IntegrationTestBase() {
     companion object {
       @JvmStatic
@@ -1208,6 +1213,16 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
         registry.add("dpr.lib.serviceName") { "int-test-mi" }
       }
+    }
+
+    @BeforeEach
+    override fun setup() {
+      super.setup()
+      inboundSqsClient.purgeQueue(
+        PurgeQueueRequest.builder()
+          .queueUrl(inboundQueueUrl)
+          .build(),
+      ).get()
     }
 
     @Test
@@ -1232,22 +1247,47 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .expectStatus()
         .isOk()
 
-      await().atMost(Duration.ofSeconds(30)).untilAsserted {
-        val msgs = inboundSqsClient.receiveMessage(
-          ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
-        ).get().messages()
-        val json = Json { coerceInputValues = true }
-        assertThat(msgs.size == 2)
-        val attemptMsg =
-          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
-        val successMsg =
-          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
-        assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
-        assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+      val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
+      val json = Json { coerceInputValues = true }
 
-        assertThat(successMsg["what"] == "VIEW_DATA_SUCCESS")
-        assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
-      }
+      await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted {
+          val msgs = inboundSqsClient.receiveMessage(
+            ReceiveMessageRequest.builder()
+              .queueUrl(inboundQueueUrl)
+              .maxNumberOfMessages(2)
+              .waitTimeSeconds(1)
+              .build(),
+          ).get().messages()
+
+          msgs.forEach { message ->
+            eventsByMessageId[message.messageId()] = json.decodeFromString(
+              MapSerializer(
+                String.serializer(),
+                String.serializer().nullable,
+              ),
+              message.body(),
+            )
+          }
+
+          assertThat(eventsByMessageId.values.map { it["what"] })
+            .containsExactlyInAnyOrder(
+              "VIEW_DATA_ATTEMPT",
+              "VIEW_DATA_SUCCESS",
+            )
+        }
+
+      assertThat(eventsByMessageId).hasSize(2)
+
+      val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
+
+      val successEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_SUCCESS" }
+
+      assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
+
+      // Local DPDs don't contain the dpr_ prefix.
+      assertThat(successEvent["subjectId"]).isEqualTo("external-movements_last-month")
     }
 
     @Test
@@ -1267,10 +1307,10 @@ class DataApiIntegrationTest : IntegrationTestBase() {
           sortColumn = any(),
           sortedAsc = any(),
           policyEngineResult = any(),
-          dynamicFilterFieldId = any(),
+          dynamicFilterFieldId = anyOrNull(),
           dataSourceName = any(),
-          reportFilter = any(),
-          any(),
+          reportFilter = anyOrNull(),
+          prompts = anyOrNull(),
         )
 
       webTestClient.mutate().responseTimeout(Duration.ofSeconds(5000)).build().get()
@@ -1286,24 +1326,48 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
-        .is2xxSuccessful
+        .is5xxServerError
 
-      await().atMost(Duration.ofSeconds(30)).untilAsserted {
-        val msgs = inboundSqsClient.receiveMessage(
-          ReceiveMessageRequest.builder().queueUrl(inboundQueueUrl).maxNumberOfMessages(2).build(),
-        ).get().messages()
-        val json = Json { coerceInputValues = true }
-        assertThat(msgs.size == 2)
-        val attemptMsg =
-          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs.first().body())
-        val successMsg =
-          json.decodeFromString(MapSerializer(String.serializer(), String.serializer().nullable), msgs[1].body())
-        assertThat(attemptMsg["what"] == "VIEW_DATA_ATTEMPT")
-        assertThat(attemptMsg["subjectId"] == "external-movements_last-month")
+      val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
+      val json = Json { coerceInputValues = true }
 
-        assertThat(successMsg["what"] == "VIEW_DATA_FAILURE")
-        assertThat(successMsg["subjectId"] == "dpr_external-movements_last-month")
-      }
+      await()
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted {
+          val msgs = inboundSqsClient.receiveMessage(
+            ReceiveMessageRequest.builder()
+              .queueUrl(inboundQueueUrl)
+              .maxNumberOfMessages(2)
+              .waitTimeSeconds(1)
+              .build(),
+          ).get().messages()
+
+          msgs.forEach { message ->
+            eventsByMessageId[message.messageId()] = json.decodeFromString(
+              MapSerializer(
+                String.serializer(),
+                String.serializer().nullable,
+              ),
+              message.body(),
+            )
+          }
+
+          assertThat(eventsByMessageId.values.map { it["what"] })
+            .containsExactlyInAnyOrder(
+              "VIEW_DATA_ATTEMPT",
+              "VIEW_DATA_FAILURE",
+            )
+        }
+
+      assertThat(eventsByMessageId).hasSize(2)
+
+      val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
+
+      val failureEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_FAILURE" }
+
+      assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
+
+      assertThat(failureEvent["subjectId"]).isEqualTo("external-movements_last-month")
     }
   }
 

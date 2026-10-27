@@ -628,7 +628,7 @@ class DataApiAsyncController(
         ),
       )
 
-      val stream = csvStreamingSupport.streamCsv(
+      csvStreamingSupport.streamCsv(
         reportId,
         reportVariantId,
         request,
@@ -642,8 +642,7 @@ class DataApiAsyncController(
           )
         }
       }
-      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext)
-      return stream
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext.withReportDetails(downloadContext.second))
     } catch (e: Throwable) {
       auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
       throw e
@@ -704,7 +703,7 @@ class DataApiAsyncController(
         executionContext = executionContext,
       )
 
-      val stream = xlsxStreamingSupport.streamXlsx(
+      xlsxStreamingSupport.streamXlsx(
         reportId,
         reportVariantId,
         response,
@@ -715,8 +714,7 @@ class DataApiAsyncController(
           asyncDownloadContext = downloadContext.first,
         )
       }
-      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext)
-      return stream
+      auditService.publish(AuditAction.DOWNLOAD, AuditStatus.SUCCESS, executionContext.withReportDetails(downloadContext.second))
     } catch (e: Throwable) {
       auditService.publish(AuditAction.DOWNLOAD, AuditStatus.FAILURE, executionContext)
       throw e

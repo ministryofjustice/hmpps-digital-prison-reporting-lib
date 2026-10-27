@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context
 
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
@@ -71,6 +73,30 @@ data class ExecutionContext(
     return false
   }
   fun getCaseLoadIds(): List<String> = prisonCaseloadData?.caseloads?.map { it.id } ?: emptyList()
+ 
+  fun withReportDetails(
+    reportDefinition: SingleReportProductDefinition,
+  ): ExecutionContext = this.copy(
+    policies = reportDefinition.policy,
+    dataProductReportableInformation = dataProductReportableInformation.copy(
+      id = reportDefinition.id,
+      name = reportDefinition.name,
+      variantName = reportDefinition.report.name,
+      datasource = reportDefinition.datasource,
+    ),
+  )
+
+  fun withDashboardDetails(
+    dashboardDefinition: SingleDashboardProductDefinition,
+  ): ExecutionContext = this.copy(
+    policies = dashboardDefinition.policy,
+    dataProductReportableInformation = this.dataProductReportableInformation.copy(
+      id = dashboardDefinition.id,
+      name = dashboardDefinition.name,
+      variantName = dashboardDefinition.dashboard.name,
+      datasource = dashboardDefinition.datasource,
+    ),
+  )
 }
 
 data class DataProductReportableInformation(
