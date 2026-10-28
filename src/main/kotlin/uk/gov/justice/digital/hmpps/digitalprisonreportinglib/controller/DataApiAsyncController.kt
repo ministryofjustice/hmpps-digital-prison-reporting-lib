@@ -33,6 +33,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProduc
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryStateRequest
@@ -474,6 +476,62 @@ class DataApiAsyncController(
       )
   }
 
+  @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/v2")
+  @Operation(
+    description = "Returns the resulting rows of the executed statement in a paginated " +
+      "fashion which has been stored in a dedicated table.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun getQueryExecutionResultV2(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @PathVariable("tableId") tableId: String,
+    @RequestParam(defaultValue = "1")
+    @Min(1)
+    selectedPage: Long,
+    @RequestParam(defaultValue = "10")
+    @Min(1)
+    pageSize: Long,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @RequestParam sortColumn: String?,
+    @RequestParam sortedAsc: Boolean?,
+    httpRequest: HttpServletRequest,
+  ): ResponseEntity<ReportExecutionResults> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        ReportExecutionResults(
+          data = asyncDataApiService.getStatementResult(
+            tableId = tableId,
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            filters = filterHelper.filtersOnly(filters),
+            sortedAsc = sortedAsc,
+            sortColumn = sortColumn,
+            executionContext = httpRequest.getExecutionContext(
+              manageUsersClient = manageUsersClient,
+              hasProbationDatasources = hasProbationDatasources,
+              dataProductReportableInformation = DataProductReportableInformation(
+                id = reportId,
+                variantId = reportVariantId,
+              ),
+              preFilters = cleanFilters,
+              sortColumnName = sortColumn,
+              sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+            ),
+          ),
+        )
+      )
+  }
+
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result")
   @Operation(
     description = "Returns the resulting rows of the executed statement in a paginated " +
@@ -499,7 +557,7 @@ class DataApiAsyncController(
     val cleanFilters = filterHelper.filtersOnly(filters)
     return ResponseEntity
       .status(HttpStatus.OK)
-      .body(
+      .body(listOf(
         asyncDataApiService.getDashboardStatementResult(
           tableId = tableId,
           reportId = reportId,
@@ -515,6 +573,54 @@ class DataApiAsyncController(
               variantId = dashboardId,
             ),
             preFilters = cleanFilters,
+          ),
+        ),
+      ))
+  }
+
+  @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result/v2")
+  @Operation(
+    description = "Returns the resulting rows of the executed statement in a paginated " +
+      "fashion which has been stored in a dedicated table.",
+    security = [SecurityRequirement(name = "bearer-jwt")],
+  )
+  fun getDashboardQueryExecutionResultV2(
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("dashboardId") dashboardId: String,
+    @PathVariable("tableId") tableId: String,
+    @RequestParam(defaultValue = "1")
+    @Min(1)
+    selectedPage: Long,
+    pageSize: Long? = null,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    httpRequest: HttpServletRequest,
+  ): ResponseEntity<DashboardExecutionResults> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        DashboardExecutionResults(
+          data = asyncDataApiService.getDashboardStatementResult(
+            tableId = tableId,
+            reportId = reportId,
+            dashboardId = dashboardId,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            filters = filterHelper.filtersOnly(filters),
+            executionContext = httpRequest.getExecutionContext(
+              manageUsersClient = manageUsersClient,
+              hasProbationDatasources = hasProbationDatasources,
+              dataProductReportableInformation = DataProductReportableInformation(
+                id = reportId,
+                variantId = dashboardId,
+              ),
+              preFilters = cleanFilters,
+            ),
           ),
         ),
       )
@@ -549,17 +655,17 @@ class DataApiAsyncController(
           tableId = tableId,
           summaryId = summaryId,
           reportId = reportId,
-          reportVariantId = reportVariantId,
-          filters = filterHelper.filtersOnly(filters),
-          sortColumn = sortColumn,
-          sortedAsc = sortedAsc,
-          executionContext = httpRequest.getExecutionContext(
-            manageUsersClient = manageUsersClient,
-            hasProbationDatasources = hasProbationDatasources,
-            dataProductReportableInformation = DataProductReportableInformation(
-              id = reportId,
-              variantId = reportVariantId,
-            ),
+            reportVariantId = reportVariantId,
+            filters = filterHelper.filtersOnly(filters),
+            sortColumn = sortColumn,
+            sortedAsc = sortedAsc,
+            executionContext = httpRequest.getExecutionContext(
+              manageUsersClient = manageUsersClient,
+              hasProbationDatasources = hasProbationDatasources,
+              dataProductReportableInformation = DataProductReportableInformation(
+                id = reportId,
+                variantId = reportVariantId,
+              ),
             preFilters = cleanFilters,
             sortColumnName = sortColumn,
             sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
