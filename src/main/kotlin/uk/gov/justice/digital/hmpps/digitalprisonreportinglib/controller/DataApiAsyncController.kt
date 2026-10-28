@@ -528,7 +528,7 @@ class DataApiAsyncController(
               sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
             ),
           ),
-        )
+        ),
       )
   }
 
@@ -557,25 +557,27 @@ class DataApiAsyncController(
     val cleanFilters = filterHelper.filtersOnly(filters)
     return ResponseEntity
       .status(HttpStatus.OK)
-      .body(listOf(
-        asyncDataApiService.getDashboardStatementResult(
-          tableId = tableId,
-          reportId = reportId,
-          dashboardId = dashboardId,
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          filters = filterHelper.filtersOnly(filters),
-          executionContext = httpRequest.getExecutionContext(
-            manageUsersClient = manageUsersClient,
-            hasProbationDatasources = hasProbationDatasources,
-            dataProductReportableInformation = DataProductReportableInformation(
-              id = reportId,
-              variantId = dashboardId,
+      .body(
+        listOf(
+          asyncDataApiService.getDashboardStatementResult(
+            tableId = tableId,
+            reportId = reportId,
+            dashboardId = dashboardId,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            filters = filterHelper.filtersOnly(filters),
+            executionContext = httpRequest.getExecutionContext(
+              manageUsersClient = manageUsersClient,
+              hasProbationDatasources = hasProbationDatasources,
+              dataProductReportableInformation = DataProductReportableInformation(
+                id = reportId,
+                variantId = dashboardId,
+              ),
+              preFilters = cleanFilters,
             ),
-            preFilters = cleanFilters,
           ),
         ),
-      ))
+      )
   }
 
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result/v2")
@@ -655,17 +657,17 @@ class DataApiAsyncController(
           tableId = tableId,
           summaryId = summaryId,
           reportId = reportId,
-            reportVariantId = reportVariantId,
-            filters = filterHelper.filtersOnly(filters),
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            executionContext = httpRequest.getExecutionContext(
-              manageUsersClient = manageUsersClient,
-              hasProbationDatasources = hasProbationDatasources,
-              dataProductReportableInformation = DataProductReportableInformation(
-                id = reportId,
-                variantId = reportVariantId,
-              ),
+          reportVariantId = reportVariantId,
+          filters = filterHelper.filtersOnly(filters),
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
+            ),
             preFilters = cleanFilters,
             sortColumnName = sortColumn,
             sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },

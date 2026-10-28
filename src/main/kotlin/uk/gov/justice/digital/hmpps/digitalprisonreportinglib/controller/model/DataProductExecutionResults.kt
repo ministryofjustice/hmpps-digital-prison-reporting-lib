@@ -20,7 +20,7 @@ sealed class PolicySpecificMetadata(
 data class LaoPolicyMetadata(
   val identifyingColumn: String,
   val identifyingColumnValue: String,
-): PolicySpecificMetadata(PolicyType.LAO)
+) : PolicySpecificMetadata(PolicyType.LAO)
 
 data class PolicyBasedDataChange(
   val rowIdentifier: RowIdentifier,
@@ -31,7 +31,7 @@ data class PolicyBasedDataChange(
 
 enum class ResultType {
   REPORT,
-  DASHBOARD
+  DASHBOARD,
 }
 
 abstract class DataProductExecutionResults(

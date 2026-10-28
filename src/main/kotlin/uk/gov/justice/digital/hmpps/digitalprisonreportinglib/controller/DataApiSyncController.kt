@@ -306,7 +306,7 @@ class DataApiSyncController(
               sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
             ),
           ),
-        )
+        ),
       )
   }
 
