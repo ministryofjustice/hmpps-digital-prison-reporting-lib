@@ -501,12 +501,10 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val pageSize = 20L
     val expectedServiceResult =
       listOf(
-        listOf(
-          mapOf(
-            "establishment_id" to MetricData("KMI"),
-            "has_ethnicity" to MetricData("10"),
-            "ethnicity_is_missing" to MetricData("30"),
-          ),
+        mapOf(
+          "establishment_id" to MetricData("KMI"),
+          "has_ethnicity" to MetricData("10"),
+          "ethnicity_is_missing" to MetricData("30"),
         ),
       )
 
@@ -526,7 +524,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectBody()
-      .json(Gson().toJson(expectedServiceResult))
+      .json(Gson().toJson(listOf(expectedServiceResult)))
 
     verify(asyncDataApiService).getDashboardStatementResult(
       eq(tableId),
@@ -548,12 +546,10 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val pageSize = 20L
     val expectedServiceResult =
       listOf(
-        listOf(
-          mapOf(
-            "establishment_id" to MetricData("KMI"),
-            "has_ethnicity" to MetricData("10"),
-            "ethnicity_is_missing" to MetricData("30"),
-          ),
+        mapOf(
+          "establishment_id" to MetricData("KMI"),
+          "has_ethnicity" to MetricData("10"),
+          "ethnicity_is_missing" to MetricData("30"),
         ),
       )
 
@@ -574,7 +570,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectBody()
-      .json(Gson().toJson(expectedServiceResult))
+      .json(Gson().toJson(listOf(expectedServiceResult)))
 
     verify(asyncDataApiService).getDashboardStatementResult(
       eq(tableId),

@@ -26,6 +26,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProduc
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_DESCRIPTION
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.FILTERS_QUERY_EXAMPLE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResponseHeader
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.CsvRowWriter
@@ -60,6 +62,73 @@ class DataApiSyncController(
         "filters.date$RANGE_FILTER_END_SUFFIX": "2023-05-30",
         "filters.someMultiselectFilter": "a,b,c"
         }"""
+  }
+
+  @GetMapping("/v2/reports/{reportId}/{reportVariantId}")
+  @Operation(
+    description = "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = ResponseHeader.NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun configuredApiDatasetV2(
+    @RequestParam(defaultValue = "1")
+    @Min(1)
+    selectedPage: Long,
+    @RequestParam(defaultValue = "10")
+    @Min(1)
+    pageSize: Long,
+    @RequestParam sortColumn: String?,
+    @RequestParam sortedAsc: Boolean?,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("reportVariantId") reportVariantId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    httpRequest: HttpServletRequest,
+  ): ResponseEntity<ReportExecutionResults> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        ReportExecutionResults(
+          data = dataApiSyncService.validateAndFetchData(
+            reportId = reportId,
+            reportVariantId = reportVariantId,
+            filters = cleanFilters,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            sortColumn = sortColumn,
+            sortedAsc = sortedAsc,
+            executionContext = httpRequest.getExecutionContext(
+              manageUsersClient = manageUsersClient,
+              hasProbationDatasources = hasProbationDatasources,
+              dataProductReportableInformation = DataProductReportableInformation(
+                id = reportId,
+                variantId = reportVariantId,
+              ),
+              preFilters = cleanFilters,
+              sortColumnName = sortColumn,
+              sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+            ),
+          ),
+        ),
+      )
   }
 
   @GetMapping("/reports/{reportId}/{reportVariantId}")
@@ -173,6 +242,73 @@ class DataApiSyncController(
         ),
       ),
     )
+
+  @GetMapping("/v2/reports/{reportId}/dashboards/{dashboardId}")
+  @Operation(
+    description = "Returns the dataset for the given report ID and dashboard ID filtered by the filters provided in the query.",
+    security = [ SecurityRequirement(name = "bearer-jwt") ],
+    responses = [
+      ApiResponse(
+        headers = [
+          Header(
+            name = ResponseHeader.NO_DATA_WARNING_HEADER_NAME,
+            description = "Provides additional information about why no data has been returned.",
+          ),
+        ],
+      ),
+    ],
+  )
+  fun configuredApiDatasetForDashboardV2(
+    @RequestParam(defaultValue = "1")
+    @Min(1)
+    selectedPage: Long,
+    @RequestParam(defaultValue = "10")
+    @Min(1)
+    pageSize: Long,
+    @RequestParam sortColumn: String?,
+    @RequestParam sortedAsc: Boolean?,
+    @Parameter(
+      description = FILTERS_QUERY_DESCRIPTION,
+      example = FILTERS_QUERY_EXAMPLE,
+    )
+    @RequestParam
+    filters: Map<String, String>,
+    @PathVariable("reportId") reportId: String,
+    @PathVariable("dashboardId") dashboardId: String,
+    @Parameter(
+      description = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_DESCRIPTION,
+      example = ReportDefinitionController.DATA_PRODUCT_DEFINITIONS_PATH_EXAMPLE,
+    )
+    httpRequest: HttpServletRequest,
+  ): ResponseEntity<DashboardExecutionResults> {
+    val cleanFilters = filterHelper.filtersOnly(filters)
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(
+        DashboardExecutionResults(
+          data = dataApiSyncService.validateAndFetchDataForDashboard(
+            reportId = reportId,
+            dashboardId = dashboardId,
+            filters = cleanFilters,
+            selectedPage = selectedPage,
+            pageSize = pageSize,
+            sortColumn = sortColumn,
+            sortedAsc = sortedAsc,
+            executionContext = httpRequest.getExecutionContext(
+              manageUsersClient = manageUsersClient,
+              hasProbationDatasources = hasProbationDatasources,
+              dataProductReportableInformation = DataProductReportableInformation(
+                id = reportId,
+                variantId = dashboardId,
+              ),
+              preFilters = cleanFilters,
+              sortColumnName = sortColumn,
+              sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+            ),
+          ),
+        ),
+      )
+  }
 
   @GetMapping("/reports/{reportId}/dashboards/{dashboardId}")
   @Operation(
