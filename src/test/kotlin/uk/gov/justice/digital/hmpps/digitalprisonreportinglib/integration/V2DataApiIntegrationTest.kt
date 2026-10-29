@@ -9,17 +9,15 @@ import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import org.springframework.test.web.reactive.server.StatusAssertions
 import org.springframework.web.util.UriBuilder
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultType
 
 class V2DataApiIntegrationTest : IntegrationTestBase() {
   companion object {
-    fun dateTimeWithSeconds(dateTime: Any?) = """$dateTime:00"""
-
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
@@ -43,6 +41,7 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
       .value {
         assertThat(it!!.data).isNotEmpty()
         assertThat(it.policyBasedDataChanges).isEmpty()
+        assertThat(it.resultType).isEqualTo(ResultType.REPORT)
       }
   }
 
@@ -62,6 +61,7 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
       .value {
         assertThat(it!!.data).isNotEmpty()
         assertThat(it.policyBasedDataChanges).isEmpty()
+        assertThat(it.resultType).isEqualTo(ResultType.DASHBOARD)
       }
   }
 
@@ -113,8 +113,9 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
       .isOk()
       .expectBody(ReportExecutionResults::class.java)
       .value {
-        assertThat(it!!.data).isNotEmpty()
+        assertThat(it!!.data).isEqualTo(expectedServiceResult)
         assertThat(it.policyBasedDataChanges).isEmpty()
+        assertThat(it.resultType).isEqualTo(ResultType.REPORT)
       }
   }
 
@@ -164,26 +165,4 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
       any<ExecutionContext>(),
     )
   }
-
-  private fun requestWithQueryAndAssert400(paramName: String, paramValue: Any, path: String) {
-    requestWithQueryAndAssert400(mapOf(paramName to paramValue), path)
-  }
-
-  private fun requestWithQueryAndAssert400(params: Map<String, Any>, path: String) {
-    requestWithQueryAndAssert(params, path).isBadRequest
-  }
-
-  private fun requestWithQueryAndAssert200(params: Map<String, Any>, path: String) {
-    requestWithQueryAndAssert(params, path).isOk
-  }
-
-  private fun requestWithQueryAndAssert(params: Map<String, Any>, path: String): StatusAssertions = webTestClient.get()
-    .uri { uriBuilder: UriBuilder ->
-      params.entries.forEach { uriBuilder.queryParam(it.key, it.value) }
-
-      uriBuilder.path(path).build()
-    }
-    .headers(setAuthorisation(roles = listOf(authorisedRole)))
-    .exchange()
-    .expectStatus()
 }

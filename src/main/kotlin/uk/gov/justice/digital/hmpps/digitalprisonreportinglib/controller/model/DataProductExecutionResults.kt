@@ -4,7 +4,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 
 data class RowIdentifier(
-  val rowIndex: String,
+  val rowIndex: Long,
 )
 
 data class ColumnChange(
