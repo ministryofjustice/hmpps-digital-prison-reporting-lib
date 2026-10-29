@@ -476,7 +476,7 @@ class DataApiAsyncController(
       )
   }
 
-  @GetMapping("/reports/{reportId}/{reportVariantId}/tables/{tableId}/result/v2")
+  @GetMapping("/v2/reports/{reportId}/{reportVariantId}/tables/{tableId}/result")
   @Operation(
     description = "Returns the resulting rows of the executed statement in a paginated " +
       "fashion which has been stored in a dedicated table.",
@@ -580,7 +580,7 @@ class DataApiAsyncController(
       )
   }
 
-  @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result/v2")
+  @GetMapping("/v2/reports/{reportId}/dashboards/{dashboardId}/tables/{tableId}/result")
   @Operation(
     description = "Returns the resulting rows of the executed statement in a paginated " +
       "fashion which has been stored in a dedicated table.",

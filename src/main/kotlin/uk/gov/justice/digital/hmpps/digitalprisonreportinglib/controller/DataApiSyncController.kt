@@ -64,7 +64,7 @@ class DataApiSyncController(
         }"""
   }
 
-  @GetMapping("/reports/{reportId}/{reportVariantId}/v2")
+  @GetMapping("/v2/reports/{reportId}/{reportVariantId}")
   @Operation(
     description = "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
@@ -243,7 +243,7 @@ class DataApiSyncController(
       ),
     )
 
-  @GetMapping("/reports/{reportId}/dashboards/{dashboardId}/v2")
+  @GetMapping("/v2/reports/{reportId}/dashboards/{dashboardId}")
   @Operation(
     description = "Returns the dataset for the given report ID and dashboard ID filtered by the filters provided in the query.",
     security = [ SecurityRequirement(name = "bearer-jwt") ],
