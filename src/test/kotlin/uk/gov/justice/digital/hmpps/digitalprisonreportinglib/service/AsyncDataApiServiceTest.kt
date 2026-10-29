@@ -1297,14 +1297,13 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
     )
     val expectedServiceResult = listOf(
-      listOf(
-        mapOf(
-          "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/1' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">1</a>"),
-          "has_ethnicity" to MetricData("100"),
-          "ethnicity_is_missing" to MetricData("30"),
-        ),
+      mapOf(
+        "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/1' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">1</a>"),
+        "has_ethnicity" to MetricData("100"),
+        "ethnicity_is_missing" to MetricData("30"),
       ),
     )
+
     val configuredApiService = AsyncDataApiService(productDefinitionRepository, configuredApiRepository, redshiftDataApiRepository, athenaApiRepository, tableIdGenerator, identifiedHelper, productDefinitionTokenPolicyChecker, s3ApiService, auditService)
     val tableId = TableIdGenerator().generateNewExternalTableId()
     val selectedPage = 1L
