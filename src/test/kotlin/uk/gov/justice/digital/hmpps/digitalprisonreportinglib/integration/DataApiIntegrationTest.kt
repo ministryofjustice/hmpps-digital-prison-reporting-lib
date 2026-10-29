@@ -878,7 +878,7 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun `Data API count returns zero if LAO is restricted to someone who isnt the requesting user`() {
-      //Restrict every prisoner in the data to another user, so that the LAO policy alone filters the data
+      // Restrict every prisoner in the data to another user, so that the LAO policy alone filters the data
       listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
         DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
           .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")

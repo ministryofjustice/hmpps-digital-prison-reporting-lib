@@ -73,7 +73,7 @@ data class ExecutionContext(
     return false
   }
   fun getCaseLoadIds(): List<String> = prisonCaseloadData?.caseloads?.map { it.id } ?: emptyList()
- 
+
   fun withReportDetails(
     reportDefinition: SingleReportProductDefinition,
   ): ExecutionContext = this.copy(
