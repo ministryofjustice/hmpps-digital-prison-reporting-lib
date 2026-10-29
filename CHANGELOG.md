@@ -1,7 +1,10 @@
 Below you can find the changes included in each release.
 
-# 18.3.2
+# 18.4.1
 - Removing case load api lookups for non NOMIS users.
+
+# 18.4.0
+- Added new v2 endpoints for async and sync data product execution results retrieval
 
 # 18.3.1
 - Publication success in download uses context after report definition retrieval with retrieved definition specific information.

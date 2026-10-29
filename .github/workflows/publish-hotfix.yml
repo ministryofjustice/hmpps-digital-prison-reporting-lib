@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       hotfixBranch:
-        description: "Branch containing the fix (cut from the release tag), e.g. hotfix/1.4.x"
+        description: "Branch containing the fix (cut from the release tag), e.g. hotfix/17.8.x"
         required: true
         type: string
       releaseLine:
-        description: "Major.minor line to patch, e.g. 1.4"
+        description: "Major.minor.bug line to patch, e.g. 17.8.3"
         required: true
         type: string
       dryRun:
@@ -37,8 +37,8 @@ jobs:
           RELEASE_LINE: ${{ inputs.releaseLine }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          if [[ ! "$RELEASE_LINE" =~ ^[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::releaseLine must be major.minor, e.g. 1.4 (got '$RELEASE_LINE')"
+          if [[ ! "$RELEASE_LINE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::releaseLine must be major.minor.bug, e.g. 17.8.3 (got '$RELEASE_LINE')"
             exit 1
           fi
           if [[ "$HOTFIX_BRANCH" == "$DEFAULT_BRANCH" ]]; then
