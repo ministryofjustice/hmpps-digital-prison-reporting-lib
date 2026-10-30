@@ -11,7 +11,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.Timestamp
 import javax.sql.DataSource
@@ -28,6 +30,7 @@ abstract class RepositoryHelper {
     const val REPORT_ = """report_"""
     const val POLICY_ = """policy_"""
     const val FILTER_ = """filter_"""
+    const val TRANSFORMATION_ = """transformation_"""
     const val PROMPT = """prompt_"""
     const val CONTEXT = """context_"""
 
@@ -82,8 +85,9 @@ abstract class RepositoryHelper {
     policiesQuery: String,
     filtersQuery: String,
     selectFromFinalStageQuery: String,
+    transformationInfoQuery: String,
   ): String {
-    val query = listOf(datasetQuery, reportQuery, policiesQuery, filtersQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
+    val query = listOf(datasetQuery, reportQuery, policiesQuery, filtersQuery, transformationInfoQuery).joinToString(",") + "\n$selectFromFinalStageQuery"
     log.debug("Database query: $query")
     return query
   }
@@ -96,6 +100,16 @@ abstract class RepositoryHelper {
 
   protected fun buildPolicyQuery(policyEngineResult: String, previousCteName: String? = DATASET_) = """$POLICY_ AS (SELECT * FROM $previousCteName WHERE ${convertPolicyResultToSql(policyEngineResult)})"""
   protected fun buildFiltersQuery(filters: List<ConfiguredApiRepository.Filter>) = """$FILTER_ AS (SELECT * FROM $POLICY_ WHERE ${buildFiltersWhereClause(filters)})"""
+
+  protected fun buildTransformationInfoQuery(policies: List<Policy>): String {
+    if (policies.any { it.type == PolicyType.LAO }) {
+      return """
+        $TRANSFORMATION_ AS (select has_related_lao_exclusion, has_related_lao_restriction, lao_reason ......., has_related_lao_exclusion is true if product_.lao_exclusions matches user_id to executionContext.userInfo.username and restriction true if any match that arent executionContext.userInfo.username)
+      """.trimIndent()
+    }
+
+    return TRANSFORMATION_
+  }
 
   protected fun buildFinalStageQuery(
     dynamicFilterFieldId: Set<String>? = null,
@@ -136,7 +150,9 @@ abstract class RepositoryHelper {
     return filterClause
   }
 
-  private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) = dynamicFilterFieldId?.let { "DISTINCT ${dynamicFilterFieldId.joinToString(", ")}" } ?: "*"
+  private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) = dynamicFilterFieldId?.let {
+    "DISTINCT ${dynamicFilterFieldId.plus(listOf("has_related_lao_exclusion", "has_related_lao_restriction", "lao_reason")).joinToString(", ")}"
+  } ?: "*"
 
   protected fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) = sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
 
