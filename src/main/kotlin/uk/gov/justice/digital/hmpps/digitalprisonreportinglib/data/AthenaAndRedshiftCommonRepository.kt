@@ -75,7 +75,7 @@ abstract class AthenaAndRedshiftCommonRepository : RepositoryHelper() {
     tableId: String,
     selectedPage: Long,
     pageSize: Long,
-    filters: List<ConfiguredApiRepository.Filter>,
+    filters: List<Filter>,
     sortedAsc: Boolean = false,
     sortColumn: String? = null,
     jdbcTemplate: NamedParameterJdbcTemplate = populateNamedParameterJdbcTemplate(),

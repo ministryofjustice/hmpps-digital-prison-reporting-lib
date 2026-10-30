@@ -191,6 +191,7 @@ class ConfiguredApiRepository(
         policiesQuery = buildPolicyQuery(policyEngineResult),
         filtersQuery = buildFiltersQuery(filters),
         selectFromFinalStageQuery = "SELECT COUNT(1) as total FROM $FILTER_",
+        transformationInfoQuery = buildTransformationInfoQuery(productDefinition.policy),
       ) + ";",
       buildPreparedStatementNamedParams(filters),
     ).first().get("total") as Long
