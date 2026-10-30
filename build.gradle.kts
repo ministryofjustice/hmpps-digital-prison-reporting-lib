@@ -1,7 +1,7 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.12"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.14"
   kotlin("jvm") version "2.4.21"
   kotlin("plugin.spring") version "2.4.21"
   kotlin("plugin.jpa") version "2.4.21"
@@ -17,19 +17,19 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val awsSdkVersion = "2.56.0"
+val awsSdkVersion = "2.57.4"
 val testContainersVersion = "1.21.4"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:3.0.3")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.4.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.12.0")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-  implementation("com.google.code.gson:gson:2.14.0")
+  implementation("com.google.code.gson:gson:2.15.0")
   implementation("com.google.guava:guava:33.7.2-jre")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
   implementation("com.cronutils:cron-utils:9.2.1")
 
   // AWS
@@ -40,7 +40,7 @@ dependencies {
   implementation("software.amazon.awssdk:dynamodb:$awsSdkVersion")
 
   // Swagger
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
 
   // Excel (xlsx) report downloads. Kept out of the public API surface, so `implementation`
   // is enough - consumers get it transitively at runtime.
@@ -52,7 +52,7 @@ dependencies {
   implementation("org.postgresql:postgresql:42.7.14")
 
   // Testing
-  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.12.0")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.testcontainers:localstack:1.21.4")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:3.0.3")
@@ -67,8 +67,8 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test") // webclient-test does not autoconfig a webtestclient, so we need to use webflux-test
 
   // Fix for security issue in transient dependency
-  implementation("ch.qos.logback:logback-classic:1.6.5")
-  implementation("ch.qos.logback:logback-core:1.6.5")
+  implementation("ch.qos.logback:logback-classic:1.6.6")
+  implementation("ch.qos.logback:logback-core:1.6.6")
 }
 
 java {
