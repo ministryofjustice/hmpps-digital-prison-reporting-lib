@@ -36,15 +36,15 @@ enum class ResultType {
 abstract class DataProductExecutionResults(
   val resultType: ResultType,
 ) {
-  abstract val policyBasedDataChanges: List<PolicyBasedDataChange>
+  abstract val policyBasedDataChanges: Map<PolicyType, List<PolicyBasedDataChange>>
 }
 
 data class ReportExecutionResults(
-  override val policyBasedDataChanges: List<PolicyBasedDataChange> = emptyList(),
+  override val policyBasedDataChanges: Map<PolicyType, List<PolicyBasedDataChange>> = emptyList(),
   val data: List<Map<String, Any?>>,
 ) : DataProductExecutionResults(ResultType.REPORT)
 
 data class DashboardExecutionResults(
-  override val policyBasedDataChanges: List<PolicyBasedDataChange> = emptyList(),
+  override val policyBasedDataChanges: Map<PolicyType, List<PolicyBasedDataChange>> = emptyList(),
   val data: List<Map<String, Any?>>,
 ) : DataProductExecutionResults(ResultType.DASHBOARD)
