@@ -6,8 +6,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class ReferenceType {
-  @SerializedName("number")
-  @SerialName("number")
+  @SerializedName("establishment")
+  @SerialName("establishment")
   ESTABLISHMENT,
 
   @SerializedName("wing")
