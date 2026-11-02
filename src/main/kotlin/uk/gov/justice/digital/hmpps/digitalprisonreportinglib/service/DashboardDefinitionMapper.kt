@@ -194,7 +194,7 @@ class DashboardDefinitionMapper(
     allDatasources: List<Datasource>,
   ) = FieldDefinition(
     name = schemaField.name,
-    display = schemaField.display,
+    display = schemaField.display ?: schemaField.name,
     type = convertParameterTypeToFieldType(schemaField.type),
     filter = schemaField.filter?.let {
       map(
