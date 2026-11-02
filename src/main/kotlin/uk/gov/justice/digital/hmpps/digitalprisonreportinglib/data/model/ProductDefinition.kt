@@ -31,13 +31,14 @@ data class ProductDefinition(
   override val metadata: MetaData,
   // path is deprecated - to be removed
   override var path: DataDefinitionPath? = DataDefinitionPath.ORPHANAGE,
-  override val datasource: List<Datasource> = emptyList(),
-  override val dataset: List<Dataset> = emptyList(),
+  override val datasource: List<Datasource>,
+  override val dataset: List<Dataset>,
   override val report: List<Report> = emptyList(),
-  override val policy: List<Policy> = emptyList(),
+  override val policy: List<Policy>,
   override val dashboard: List<Dashboard>? = null,
 ) : AnyProductDefinition
 
+@Serializable
 data class ProductDefinitionSummary(
   override val id: String,
   override val name: String,
@@ -45,8 +46,8 @@ data class ProductDefinitionSummary(
   override val metadata: MetaData,
   // path is deprecated - to be removed
   override var path: DataDefinitionPath? = DataDefinitionPath.ORPHANAGE,
-  override val dataset: List<Dataset> = emptyList(),
+  override val dataset: List<Dataset>,
   override val report: List<ReportLite> = emptyList(),
-  override val policy: List<Policy> = emptyList(),
+  override val policy: List<Policy>,
   override val dashboard: List<Dashboard>? = null,
 ) : AnyProductDefinition

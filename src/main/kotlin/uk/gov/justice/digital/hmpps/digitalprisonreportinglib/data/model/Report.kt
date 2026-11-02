@@ -13,6 +13,7 @@ interface AnyReport : Identified {
   override fun getIdentifier() = id
 }
 
+@Serializable
 data class ReportLite(
   override val id: String,
   override val name: String,

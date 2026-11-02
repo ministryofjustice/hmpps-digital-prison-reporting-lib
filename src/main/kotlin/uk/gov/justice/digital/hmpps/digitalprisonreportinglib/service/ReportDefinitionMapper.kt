@@ -227,7 +227,7 @@ class ReportDefinitionMapper(
     val schemaField = identifiedHelper.findOrFail(schemaFields, field.name)
     return FieldDefinition(
       name = schemaField.name,
-      display = populateDisplay(field.display, schemaField.display),
+      display = populateDisplay(field.display, schemaField.display, schemaField.name),
       wordWrap = field.wordwrap?.toString()?.let(WordWrap::valueOf),
       filter = (schemaField.filter ?: field.filter)?.let {
         map(
@@ -257,7 +257,7 @@ class ReportDefinitionMapper(
     )
   }
 
-  private fun populateDisplay(reportFieldDisplay: String?, schemaFieldDisplay: String): String = reportFieldDisplay?.ifBlank { schemaFieldDisplay } ?: schemaFieldDisplay
+  private fun populateDisplay(reportFieldDisplay: String?, schemaFieldDisplay: String?, schemaFieldName: String): String = reportFieldDisplay?.ifBlank { schemaFieldDisplay } ?: schemaFieldDisplay ?: schemaFieldName
 
   private fun populateVisible(visible: Visible?): Boolean = visible?.let {
     when (visible) {

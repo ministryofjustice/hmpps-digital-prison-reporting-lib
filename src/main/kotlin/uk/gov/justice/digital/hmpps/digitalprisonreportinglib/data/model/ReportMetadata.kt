@@ -14,6 +14,7 @@ data class ReportMetadata(
   }
 }
 
+@Serializable
 enum class ReportMetadataHint {
   @SerialName(INTERACTIVE_FLAG)
   @SerializedName(INTERACTIVE_FLAG)

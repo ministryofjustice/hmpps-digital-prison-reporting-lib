@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
 import uk.gov.justice.hmpps.kotlin.auth.AuthSource
-import java.util.Collections.singletonMap
 
 class ReportDefinitionSummaryMapperTest {
 
@@ -110,6 +109,7 @@ class ReportDefinitionSummaryMapperTest {
     dataset = listOf(fullDataset),
     datasource = listOf(fullDatasource),
     report = listOf(fullReport),
+    policy = emptyList(),
   )
 
   private val executionContext = ExecutionContext(
@@ -160,6 +160,9 @@ class ReportDefinitionSummaryMapperTest {
         owner = "4",
         version = "5",
       ),
+      dataset = emptyList(),
+      datasource = emptyList(),
+      policy = emptyList(),
     )
     val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
@@ -208,6 +211,8 @@ class ReportDefinitionSummaryMapperTest {
           classification = "someClassification",
         ),
       ),
+      datasource = emptyList(),
+      policy = emptyList(),
     )
     val mapper = ReportDefinitionSummaryMapper(IdentifiedHelper())
 
