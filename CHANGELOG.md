@@ -6,7 +6,7 @@ Below you can find the changes included in each release.
 - Added Kotlinx deserialisation support.
 - Removed defaults from datasource, dataset and policy so that Kotlinx validation will fail if these are not provided in the DPD.
 - Schema field display made optional which aligns with the schema. In the case both the report specification field display and the schema field display are missing the display now defaults to schema field name. Also, if the schema field display is missing for dashboards with filters, the dashboard filter defaults to the schema field name. 
-- Removed LegacySchemaFieldSerializerDeserializer and LegacySpecificationSerializerDeserializer as the same behaviour is achieved with constructor defaults without the extra complexity and boilerplate.
+- Removed LegacySchemaFieldSerializerDeserializer and LegacySpecificationSerializerDeserializer as the same behaviour is achieved with constructor defaults without the extra complexity and boilerplate. The default display value is provided as mentioned above instead of defaulting to an empty String as it was in LegacySchemaFieldSerializerDeserializer. 
 - Kotlinx deserialisation is still not used. GSON is the one still parsing DPDs. 
 
 # 18.4.1
