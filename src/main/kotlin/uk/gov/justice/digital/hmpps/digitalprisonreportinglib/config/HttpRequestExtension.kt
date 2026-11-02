@@ -6,8 +6,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProduc
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UserAuthorisationException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.DprSystemAuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.ManageUsersClient
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 
 fun HttpServletRequest.getExecutionContext(
   manageUsersClient: ManageUsersClient,
@@ -29,7 +31,7 @@ fun HttpServletRequest.getExecutionContext(
     ?.takeUnless { it.isBlank() }
     ?.let {
       ExecutionContext(
-        manageUsersClient.getCaseloads(it),
+        getCaseLoads(manageUsersClient, it, authToken.authSource),
         manageUsersClient.getUsersRoles(it),
         manageUsersClient.getUserInfo(it),
         hasProbationDatasources,
@@ -42,4 +44,14 @@ fun HttpServletRequest.getExecutionContext(
         policies,
       )
     } ?: throw UserAuthorisationException("userName on auth token was blank or did not exist")
+}
+
+fun getCaseLoads(
+  manageUsersClient: ManageUsersClient,
+  userName: String,
+  authSource: AuthSource,
+): CaseloadResponse? = if (authSource == AuthSource.NOMIS) {
+  manageUsersClient.getCaseloads(userName)
+} else {
+  null
 }

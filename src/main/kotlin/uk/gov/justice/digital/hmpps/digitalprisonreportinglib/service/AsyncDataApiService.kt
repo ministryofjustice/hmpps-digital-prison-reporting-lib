@@ -272,7 +272,7 @@ class AsyncDataApiService(
     pageSize: Long? = null,
     filters: Map<String, String>,
     executionContext: ExecutionContext,
-  ): List<List<Map<String, Any?>>> {
+  ): List<Map<String, Any?>> {
     auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId)
     return auditService.runAuditableAction(
@@ -285,22 +285,20 @@ class AsyncDataApiService(
         env = env,
         identifiedHelper = identifiedHelper,
       )
-      listOf(
-        redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
-          tableId = tableId,
-          selectedPage = selectedPage,
-          pageSize = pageSize,
-          filters = validateAndMapFilters(productDefinition, filters, true),
-        )
-          .map { row ->
-            formatColumnNamesToSourceFieldNamesCasing(
-              row,
-              productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
-            )
-          }
-          .map(formulaEngine::applyFormulas)
-          .map { row -> toMetricData(row) },
+      redshiftDataApiRepository.getDashboardPaginatedExternalTableResult(
+        tableId = tableId,
+        selectedPage = selectedPage,
+        pageSize = pageSize,
+        filters = validateAndMapFilters(productDefinition, filters, true),
       )
+        .map { row ->
+          formatColumnNamesToSourceFieldNamesCasing(
+            row,
+            productDefinition.dashboardDataset.schema.field.map(SchemaField::name),
+          )
+        }
+        .map(formulaEngine::applyFormulas)
+        .map { row -> toMetricData(row) }
     }
   }
 

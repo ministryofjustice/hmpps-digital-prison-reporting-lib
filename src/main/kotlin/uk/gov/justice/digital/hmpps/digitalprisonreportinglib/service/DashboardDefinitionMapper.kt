@@ -221,7 +221,7 @@ class DashboardDefinitionMapper(
     allDatasources: List<Datasource>,
   ): List<FilterOption>? {
     if (filterDefinition.type == FilterType.Caseloads) {
-      return executionContext.prisonCaseloadData.caseloads.map { FilterOption(it.id, it.name) }
+      return executionContext.prisonCaseloadData?.caseloads?.map { FilterOption(it.id, it.name) }
     }
     return filterDefinition.dynamicOptions
       ?.takeIf { it.returnAsStaticOptions }
