@@ -1,5 +1,13 @@
 Below you can find the changes included in each release.
 
+# 18.4.0
+- Alignment of the model with new schema [v1.1.0](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema/blob/main/schema/1.1.0/data-product-definition-schema.json).
+- Added Kotlinx deserialisation support.
+- Removed defaults from datasource, dataset and policy so that Kotlinx validation will fail if these are not provided in the DPD.
+- Schema field display made optional which aligns with the schema. In the case both the report specification field display and the schema field display are missing the display now defaults to schema field name.
+- Removed LegacySchemaFieldSerializerDeserializer and LegacySpecificationSerializerDeserializer as the same behaviour is achieved with constructor defaults without the extra complexity and boilerplate.
+- Kotlinx deserialisation is still not used. GSON is the one still parsing DPDs. 
+
 # 18.3.1
 - Publication success in download uses context after report definition retrieval with retrieved definition specific information.
 - Code clean up and refactoring in DataApiAsyncController, AsyncDataApiService and ExecutionContext. 
