@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class Template {
+  @SerialName("list")
   @SerializedName("list")
   List,
 
@@ -17,6 +18,7 @@ enum class Template {
   @SerializedName("list-tab")
   ListTab,
 
+  @SerialName("summary")
   @SerializedName("summary")
   Summary,
 

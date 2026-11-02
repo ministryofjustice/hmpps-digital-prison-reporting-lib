@@ -378,7 +378,8 @@ abstract class CommonDataApiService(
   private fun calculateDisplayField(
     reportFields: List<ReportField>?,
     schemaField: SchemaField,
-  ): String = matchingReportField(reportFields, schemaField)?.display?.ifBlank { schemaField.display } ?: schemaField.display
+  ): String =
+    matchingReportField(reportFields, schemaField)?.display?.ifBlank { schemaField.display } ?: schemaField.display ?: ""
 
   private fun matchingReportField(
     reportFields: List<ReportField>?,

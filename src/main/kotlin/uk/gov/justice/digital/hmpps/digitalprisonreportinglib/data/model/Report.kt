@@ -32,13 +32,11 @@ data class Report(
   override val render: RenderMethod,
   val schedule: String? = null,
   val specification: Specification? = null,
-  val destination: List<Map<String, String>> = emptyList(),
   val classification: String? = null,
   val feature: List<Feature>? = emptyList(),
   val summary: List<ReportSummary>? = emptyList(),
   val filter: ReportFilter? = null,
   val metadata: ReportMetadata? = null,
   val child: List<ReportChild>? = null,
-  val isMissing: Boolean = false,
   override val loadType: LoadType? = null,
 ) : AnyReport

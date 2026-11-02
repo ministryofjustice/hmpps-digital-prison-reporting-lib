@@ -92,7 +92,6 @@ class ReportDefinitionSummaryMapperTest {
         ),
       ),
     ),
-    destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
     loadType = LoadType.SYNC,
   )

@@ -2,14 +2,19 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
 import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class DashboardVisualisationType {
+  @SerialName("list")
   @SerializedName("list")
   LIST,
 
+  @SerialName("doughnut")
   @SerializedName("doughnut")
   DOUGHNUT,
 
+  @SerialName("bar")
   @SerializedName("bar")
   BAR,
 
@@ -17,9 +22,11 @@ enum class DashboardVisualisationType {
   @SerializedName("bar-timeseries")
   BAR_TIMESERIES,
 
+  @SerialName("line")
   @SerializedName("line")
   LINE,
 
+  @SerialName("scorecard")
   @SerializedName("scorecard")
   SCORECARD,
 

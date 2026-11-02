@@ -142,7 +142,6 @@ class ReportDefinitionMapperTest {
         ),
       ),
     ),
-    destination = emptyList(),
     classification = "someChildClassification",
     feature = emptyList(),
     summary = emptyList(),
@@ -183,7 +182,6 @@ class ReportDefinitionMapperTest {
         ),
       ),
     ),
-    destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
     feature = listOf(feature),
     summary = listOf(
@@ -405,7 +403,6 @@ class ReportDefinitionMapperTest {
             ),
           ),
         ),
-        destination = listOf(singletonMap("28", "29")),
         classification = "someClassification",
       ),
       policy = listOf(
@@ -1376,7 +1373,6 @@ class ReportDefinitionMapperTest {
         ),
       ),
     ),
-    destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
   )
 
@@ -1446,7 +1442,6 @@ class ReportDefinitionMapperTest {
         ),
       ),
     ),
-    destination = listOf(singletonMap("28", "29")),
     classification = "someClassification",
   )
 
