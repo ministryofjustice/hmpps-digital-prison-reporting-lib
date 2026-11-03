@@ -1323,6 +1323,8 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       report = listOf(
         reportLite,
       ),
+      dataset = emptyList(),
+      policy = emptyList(),
     )
     val expectedRepositoryResult = listOf(
       mapOf("9" to "1"),

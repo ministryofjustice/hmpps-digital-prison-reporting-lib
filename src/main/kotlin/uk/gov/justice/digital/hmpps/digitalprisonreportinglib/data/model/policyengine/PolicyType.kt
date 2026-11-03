@@ -7,6 +7,10 @@ import kotlinx.serialization.Serializable
 enum class PolicyType(val type: String) {
   @SerialName("row-level")
   ROW_LEVEL("row-level"),
+
+  @SerialName("access")
   ACCESS("access"),
+
+  @SerialName("lao")
   LAO("lao"),
 }

@@ -16,6 +16,8 @@ data class Policy(
   @SerialName("action")
   private val _action: List<String>? = null,
   val rule: List<Rule>,
+  val name: String? = null,
+  val description: String? = null,
 ) {
 
   val action

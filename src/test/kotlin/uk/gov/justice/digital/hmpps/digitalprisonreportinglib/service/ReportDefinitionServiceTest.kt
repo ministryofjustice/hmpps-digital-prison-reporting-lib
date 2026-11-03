@@ -47,6 +47,8 @@ class ReportDefinitionServiceTest {
       version = "5",
     ),
     report = emptyList(),
+    dataset = emptyList(),
+    policy = emptyList(),
   )
 
   private val policy: Policy = Policy(
