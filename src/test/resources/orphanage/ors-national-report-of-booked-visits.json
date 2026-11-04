@@ -6,7 +6,9 @@
     "author": "",
     "owner": "",
     "version": "1.0.0",
-    "tags": ["PND0015 v00.00.01 LSRIT039"]
+    "tags": [
+      "PND0015 v00.00.01 LSRIT039"
+    ]
   },
   "datasource": [
     {
@@ -56,19 +58,16 @@
       "schema": {
         "field": [
           {
-            "index": 0,
             "name": "AGY_LOC_ID",
             "type": "string",
             "display": "Establishment Code Where Visit Held"
           },
           {
-            "index": 1,
             "name": "DESCRIPTION",
             "type": "string",
             "display": "Establishment Name Where Visit Held"
           },
           {
-            "index": 2,
             "name": "VISIT_COUNT",
             "type": "double",
             "display": "Visit Count"
@@ -96,7 +95,10 @@
           "effect": "permit",
           "condition": [
             {
-              "match": ["${role}", "ROLE_PRISONS_REPORTING_USER"]
+              "match": [
+                "${role}",
+                "ROLE_PRISONS_REPORTING_USER"
+              ]
             }
           ]
         }
@@ -115,7 +117,7 @@
         "name": "prefilter_",
         "query": "prefilter_ AS (SELECT * FROM dataset_ WHERE AGY_LOC_ID <> 'ZZGHI')"
       },
-      "feature": [ 
+      "feature": [
         {
           "type": "print"
         }

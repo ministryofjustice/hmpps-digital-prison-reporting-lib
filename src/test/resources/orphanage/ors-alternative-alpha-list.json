@@ -54,85 +54,71 @@
       "schema": {
         "field": [
           {
-            "index": 0,
             "name": "OFFENDER_ID_DISPLAY",
             "type": "string",
             "display": "NOMS Number"
           },
           {
-            "index": 1,
             "name": "LAST_NAME",
             "type": "string",
             "display": "Last Name"
           },
           {
-            "index": 2,
             "name": "FIRST_NAME",
             "type": "string",
             "display": "First Name"
           },
           {
-            "index": 3,
             "name": "BIRTH_DATE",
             "type": "date",
             "display": "Date of Birth"
           },
           {
-            "index": 4,
             "name": "AGE",
             "type": "double",
             "display": "Age"
           },
           {
-            "index": 5,
             "name": "UNIT_DESCRIPTION_4_SHORT",
             "type": "string",
             "display": "Unit Description 4 Short"
           },
           {
-            "index": 6,
             "name": "DESCRIPTION",
             "type": "string",
             "display": "Establishment Name"
           },
           {
-            "index": 7,
             "name": "PROFILE_CODE",
             "type": "string",
             "display": "Religion"
           },
           {
-            "index": 8,
             "name": "RELIGION_DESCRIPTION",
             "type": "string",
             "display": "Religion Description"
           },
           {
-            "index": 9,
             "name": "NATIONALITY",
             "type": "string",
             "display": "Nationality"
           },
           {
-            "index": 10,
             "name": "ETHNIC_CODE",
             "type": "string",
             "display": "Ethnic Code"
           },
           {
-            "index": 11,
             "name": "V_HDCED",
             "type": "string",
             "display": "V_HDCED"
           },
           {
-            "index": 12,
             "name": "V_CURRENTRELEASEDATE",
             "type": "string",
             "display": "V_CURRENTRELEASEDATE"
           },
           {
-            "index": 13,
             "name": "V_ALERT_DESCRIPTION",
             "type": "string",
             "display": "V_ALERT_DESCRIPTION"
@@ -171,79 +157,66 @@
       "schema": {
         "field": [
           {
-            "index": 0,
             "name": "OFFENDER_ID_DISPLAY",
             "type": "string",
             "display": "NOMS Number"
           },
           {
-            "index": 1,
             "name": "LAST_NAME",
             "type": "string",
             "display": "Last Name"
           },
           {
-            "index": 2,
             "name": "FIRST_NAME",
             "type": "string",
             "display": "First Name"
           },
           {
-            "index": 3,
             "name": "BIRTH_DATE",
             "type": "date",
             "display": "Date of Birth"
           },
           {
-            "index": 4,
             "name": "AGE",
             "type": "double",
             "display": "Age"
           },
           {
-            "index": 5,
             "name": "UNIT_DESCRIPTION_4_SHORT",
             "type": "string",
             "display": "Unit Description 4 Short"
           },
           {
-            "index": 6,
             "name": "DESCRIPTION",
             "type": "string",
             "display": "Establishment Name"
           },
           {
-            "index": 7,
             "name": "PROFILE_CODE",
             "type": "string",
             "display": "Religion"
           },
           {
-            "index": 8,
             "name": "RELIGION_DESCRIPTION",
             "type": "string",
             "display": "Religion Description"
           },
           {
-            "index": 9,
             "name": "NATIONALITY",
             "type": "string",
             "display": "Nationality"
           },
           {
-            "index": 10,
             "name": "ETHNIC_CODE",
             "type": "string",
             "display": "Ethnic Code"
           },
           {
-            "index": 11,
             "name": "V_HDCED",
             "type": "string",
             "display": "V_HDCED"
           },
           {
-            "index": 12,
             "name": "V_CURRENTRELEASEDATE",
             "type": "string",
             "display": "V_CURRENTRELEASEDATE"
@@ -272,19 +245,16 @@
       "schema": {
         "field": [
           {
-            "index": 0,
             "name": "OFFENDER_ID_DISPLAY",
             "type": "string",
             "display": "NOMS Number"
           },
           {
-            "index": 1,
             "name": "HDCED_DATE",
             "type": "date",
             "display": "HDCED Date"
           },
           {
-            "index": 2,
             "name": "CURRENT_RELEASE_DATE",
             "type": "date",
             "display": "Current Release Date"
@@ -313,19 +283,16 @@
       "schema": {
         "field": [
           {
-            "index": 0,
             "name": "OFFENDER_ID_DISPLAY",
             "type": "string",
             "display": "NOMS Number"
           },
           {
-            "index": 1,
             "name": "DESCRIPTION",
             "type": "string",
             "display": "Alert Description"
           },
           {
-            "index": 2,
             "name": "ALERT_CODE",
             "type": "string",
             "display": "Alert Type Code"
@@ -439,8 +406,7 @@
             "formula": "format_date(${V_HDCED}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[HDCED Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_CURRENTRELEASEDATE",
@@ -448,8 +414,7 @@
             "formula": "format_date(${V_CURRENTRELEASEDATE}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[Current Release Date]"
+            "defaultsort": false
           }
         ]
       }
@@ -539,8 +504,7 @@
             "formula": "format_date(${V_HDCED}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[HDCED Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_CURRENTRELEASEDATE",
@@ -548,8 +512,7 @@
             "formula": "format_date(${V_CURRENTRELEASEDATE}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[Current Release Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_ALERT_DESCRIPTION",
@@ -557,8 +520,7 @@
             "formula": "",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[Alert Description]"
+            "defaultsort": false
           }
         ]
       }
@@ -648,8 +610,7 @@
             "formula": "format_date(${V_HDCED}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[HDCED Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_CURRENTRELEASEDATE",
@@ -657,8 +618,7 @@
             "formula": "format_date(${V_CURRENTRELEASEDATE}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[Current Release Date]"
+            "defaultsort": false
           }
         ]
       }
@@ -806,8 +766,7 @@
             "formula": "format_date(${V_HDCED}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[HDCED Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_CURRENTRELEASEDATE",
@@ -815,8 +774,7 @@
             "formula": "format_date(${V_CURRENTRELEASEDATE}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[Current Release Date]"
+            "defaultsort": false
           }
         ]
       }
@@ -906,8 +864,7 @@
             "formula": "format_date(${V_HDCED}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[HDCED Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_CURRENTRELEASEDATE",
@@ -915,8 +872,7 @@
             "formula": "format_date(${V_CURRENTRELEASEDATE}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": true,
-            "defaultsort": true,
-            "legacySql": "=[Current Release Date]"
+            "defaultsort": true
           }
         ]
       }
@@ -1014,8 +970,7 @@
             "formula": "format_date(${V_HDCED}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[HDCED Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_CURRENTRELEASEDATE",
@@ -1023,8 +978,7 @@
             "formula": "format_date(${V_CURRENTRELEASEDATE}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[Current Release Date]"
+            "defaultsort": false
           }
         ]
       }
@@ -1114,8 +1068,7 @@
             "formula": "format_date(${V_HDCED}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[HDCED Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_CURRENTRELEASEDATE",
@@ -1123,8 +1076,7 @@
             "formula": "format_date(${V_CURRENTRELEASEDATE}, 'dd/MM/yyyy')",
             "visible": "true",
             "sortable": false,
-            "defaultsort": false,
-            "legacySql": "=[Current Release Date]"
+            "defaultsort": false
           },
           {
             "name": "$ref:V_ALERT_DESCRIPTION",
@@ -1132,8 +1084,7 @@
             "formula": "",
             "visible": "true",
             "sortable": true,
-            "defaultsort": true,
-            "legacySql": "=[Alert Description]"
+            "defaultsort": true
           }
         ]
       }
