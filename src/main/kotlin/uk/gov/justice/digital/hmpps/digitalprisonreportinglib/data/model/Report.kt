@@ -40,4 +40,13 @@ data class Report(
   val metadata: ReportMetadata? = null,
   val child: List<ReportChild>? = null,
   override val loadType: LoadType? = null,
-) : AnyReport
+) : AnyReport {
+  fun toReportLite(): ReportLite = ReportLite(
+    id = id,
+    name = name,
+    description = description,
+    dataset = dataset,
+    render = render,
+    loadType = loadType,
+  )
+}

@@ -50,3 +50,4 @@ uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserSubscrip
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.subscription.UserSubscriptionRepository
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
 uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AuditConfig
+uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionKotlinxConfig

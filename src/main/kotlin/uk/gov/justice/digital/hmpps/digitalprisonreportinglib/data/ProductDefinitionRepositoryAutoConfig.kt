@@ -86,6 +86,7 @@ class ProductDefinitionRepositoryAutoConfig(
     s3Client: S3Client,
     properties: AwsProperties,
     s3AndDdbDefinitionsCache: Cache<String, LoadedDefinitions>?,
+    productDefinitionDecoder: ProductDefinitionDecoder,
     identifiedHelper: IdentifiedHelper,
     @Value("\${dpr.lib.dataProductDefinitions.s3.bucket}")
     s3Bucket: String,
@@ -96,6 +97,7 @@ class ProductDefinitionRepositoryAutoConfig(
     properties = properties,
     s3Bucket = s3Bucket,
     s3AndDdbDefinitionsCache = s3AndDdbDefinitionsCache,
+    productDefinitionDecoder = productDefinitionDecoder,
     identifiedHelper = identifiedHelper,
   )
 

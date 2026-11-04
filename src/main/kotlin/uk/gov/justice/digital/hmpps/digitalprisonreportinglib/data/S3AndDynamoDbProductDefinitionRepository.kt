@@ -24,6 +24,7 @@ class S3AndDynamoDbProductDefinitionRepository(
   private val s3Bucket: String,
   private val gson: Gson,
   private val s3AndDdbDefinitionsCache: Cache<String, LoadedDefinitions>? = null,
+  private val productDefinitionDecoder: ProductDefinitionDecoder,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 

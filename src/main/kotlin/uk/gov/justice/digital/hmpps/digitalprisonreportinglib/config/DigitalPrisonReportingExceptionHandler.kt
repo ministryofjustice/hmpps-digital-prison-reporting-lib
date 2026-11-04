@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 import software.amazon.awssdk.services.redshiftdata.model.ActiveStatementsExceededException
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.InvalidProductDefinitionException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.AthenaClientNotEnabledException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.ExecutionStatementNotFound
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.InvalidDpdException
@@ -70,6 +71,10 @@ class DigitalPrisonReportingExceptionHandler {
         ),
       )
   }
+
+  @ExceptionHandler(InvalidProductDefinitionException::class)
+  @ResponseStatus(BAD_REQUEST)
+  fun handleInvalidProductDefinitionExceptionException(e: Exception): ResponseEntity<ErrorResponse> = respondWithBadRequest(e)
 
   @ExceptionHandler(HttpMessageNotReadableException::class)
   fun handleHttpMessageNotReadableException(

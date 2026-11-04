@@ -7,6 +7,7 @@ import com.google.gson.TypeAdapterFactory
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionDecoder.Companion.V_1_0_0
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.AnyProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UnsupportedVersionException
 
@@ -28,11 +29,11 @@ class SchemaVersionTypeAdapterFactory : TypeAdapterFactory {
         val jsonElement = elementAdapter.read(input)
         if (jsonElement.isJsonObject) {
           val jsonObject = jsonElement.asJsonObject
-          var version = "1.0.0"
+          var version = V_1_0_0
           if (jsonObject.has("schemaversion")) {
             version = jsonObject.get("schemaversion").asString
           }
-          if (!(version.equals("1.0.0"))) {
+          if (!(version.equals(V_1_0_0))) {
             throw UnsupportedVersionException("Unsupported schemaversion: $version: Only 1.0.0 is supported at this time")
           }
         }

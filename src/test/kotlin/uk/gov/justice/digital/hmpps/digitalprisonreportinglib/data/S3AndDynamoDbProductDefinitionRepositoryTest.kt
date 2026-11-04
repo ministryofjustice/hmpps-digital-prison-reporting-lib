@@ -30,6 +30,7 @@ import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionKotlinxConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.LoadedDefinitions
 import java.util.concurrent.TimeUnit
 
@@ -54,6 +55,10 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
       .expireAfterWrite(30, TimeUnit.MINUTES)
       .concurrencyLevel(Runtime.getRuntime().availableProcessors())
       .build<String, LoadedDefinitions>(),
+    productDefinitionDecoder = ProductDefinitionDecoder(
+      dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+    ),
   )
 
   @Test
