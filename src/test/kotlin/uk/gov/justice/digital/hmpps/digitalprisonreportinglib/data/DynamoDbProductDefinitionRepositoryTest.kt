@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.dynamodb.paginators.QueryIterable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.AwsProperties
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionKotlinxConfig
 import java.util.concurrent.TimeUnit
 
 class DynamoDbProductDefinitionRepositoryTest {
@@ -30,7 +31,10 @@ class DynamoDbProductDefinitionRepositoryTest {
 
   private val repo = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
-    gson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    productDefinitionDecoder =  ProductDefinitionDecoder(
+      dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+    ),
     properties = properties,
     identifiedHelper = IdentifiedHelper(),
     definitionsCache = CacheBuilder.newBuilder()

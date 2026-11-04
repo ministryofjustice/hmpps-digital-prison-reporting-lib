@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataAp
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
   private val properties: AwsProperties,
-  private val gson: Gson,
+  private val productDefinitionDecoder: ProductDefinitionDecoder,
   private val definitionsCache: Cache<String, List<ProductDefinitionSummary>>? = null,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
@@ -61,7 +61,8 @@ class DynamoDbProductDefinitionRepository(
       throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
     val item = response.item()
-    val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
+    val decoded = productDefinitionDecoder.decode(item[properties.dynamoDb.definitionFieldName]!!.s())
+    val definition = decoded.definition
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
     definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
     stopwatch.stop()
@@ -86,9 +87,9 @@ class DynamoDbProductDefinitionRepository(
     val request = getQueryRequest(properties, path)
     val paginator = dynamoDbClient.queryPaginator(request)
     paginator.items().forEach { item ->
-      val json = item[properties.dynamoDb.definitionFieldName]!!.s()
+      val decoded = productDefinitionDecoder.decode(item[properties.dynamoDb.definitionFieldName]!!.s())
       val definition =
-        gson.fromJson(json, ProductDefinitionSummary::class.java)
+        decoded.summary
       val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
       definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
       results.add(definition)

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import com.google.gson.Gson
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -28,11 +27,11 @@ class ProductDefinitionRepositoryAutoConfig(
   @ConditionalOnProperty(prefix = "dpr.lib.definition", name = ["locations"])
   fun productDefinitionRepository(
     localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
-    dprDefinitionGson: Gson,
+    productDefinitionDecoder: ProductDefinitionDecoder,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     definitionResourceLocations ?: emptyList(),
-    dprDefinitionGson,
+    productDefinitionDecoder,
     identifiedHelper,
   )
 
@@ -45,14 +44,14 @@ class ProductDefinitionRepositoryAutoConfig(
     matchIfMissing = true,
   )
   fun dynamoDbProductDefinitionsRepository(
-    dprDefinitionGson: Gson,
+    decoder: ProductDefinitionDecoder,
     dynamoDbClient: DynamoDbClient,
     properties: AwsProperties,
     definitionsCache: Cache<String, List<ProductDefinitionSummary>>?,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
-    gson = dprDefinitionGson,
+    productDefinitionDecoder = decoder,
     properties = properties,
     definitionsCache = definitionsCache,
     identifiedHelper = identifiedHelper,

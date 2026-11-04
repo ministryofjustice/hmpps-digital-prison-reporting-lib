@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.FilterTypeDes
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.LocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.PolicyTypeDeserializer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RuleEffectTypeDeserializer
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.SchemaVersionTypeAdapterFactory
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
@@ -21,7 +20,6 @@ class DefinitionGsonConfig {
   fun definitionGson(
     localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
   ): Gson = GsonBuilder()
-    .registerTypeAdapterFactory(SchemaVersionTypeAdapterFactory())
     .registerTypeAdapter(LocalDateTime::class.java, localDateTimeTypeAdaptor)
     .registerTypeAdapter(FilterType::class.java, FilterTypeDeserializer())
     .registerTypeAdapter(Effect::class.java, RuleEffectTypeDeserializer())

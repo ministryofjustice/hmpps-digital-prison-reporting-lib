@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
-import com.google.gson.Gson
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
