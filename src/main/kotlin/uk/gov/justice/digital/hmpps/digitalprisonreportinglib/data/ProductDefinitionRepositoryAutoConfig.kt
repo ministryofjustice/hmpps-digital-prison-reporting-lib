@@ -81,7 +81,6 @@ class ProductDefinitionRepositoryAutoConfig(
   @ConditionalOnProperty("dpr.lib.dataProductDefinitions.s3.enabled", havingValue = "true")
   @ConditionalOnBean(DynamoDbClient::class, S3Client::class)
   fun s3AndDynamoDbProductDefinitionsRepository(
-    dprDefinitionGson: Gson,
     dynamoDbClient: DynamoDbClient,
     s3Client: S3Client,
     properties: AwsProperties,
@@ -93,7 +92,6 @@ class ProductDefinitionRepositoryAutoConfig(
   ): ProductDefinitionRepository = S3AndDynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
     s3Client = s3Client,
-    gson = dprDefinitionGson,
     properties = properties,
     s3Bucket = s3Bucket,
     s3AndDdbDefinitionsCache = s3AndDdbDefinitionsCache,

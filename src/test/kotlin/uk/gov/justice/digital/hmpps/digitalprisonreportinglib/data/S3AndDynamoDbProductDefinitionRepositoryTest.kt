@@ -47,7 +47,6 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
   private val repo = S3AndDynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
     s3Client = s3Client,
-    gson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
     properties = properties,
     s3Bucket = "dpr-data-product-definitions-development",
     identifiedHelper = IdentifiedHelper(),
