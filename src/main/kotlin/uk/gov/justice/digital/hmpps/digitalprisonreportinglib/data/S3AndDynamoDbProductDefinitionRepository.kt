@@ -22,7 +22,7 @@ class S3AndDynamoDbProductDefinitionRepository(
   private val properties: AwsProperties,
   private val s3Bucket: String,
   private val s3AndDdbDefinitionsCache: Cache<String, LoadedDefinitions>? = null,
-  private val productDefinitionDecoder: ProductDefinitionDecoder,
+  private val productDefinitionParser: ProductDefinitionParser,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 
@@ -86,7 +86,7 @@ class S3AndDynamoDbProductDefinitionRepository(
     return paginator.items().mapNotNull { item ->
       try {
         val json = item[properties.dynamoDb.definitionFieldName]!!.s()
-        val decoded = productDefinitionDecoder.decode(json)
+        val decoded = productDefinitionParser.parse(json)
 
         val originalSummary = decoded.summary
         val originalDefinition = decoded.definition
@@ -141,7 +141,7 @@ class S3AndDynamoDbProductDefinitionRepository(
     return keys.mapNotNull { key ->
       try {
         val json = getS3ObjectAsString(key)
-        val decoded = productDefinitionDecoder.decode(json)
+        val decoded = productDefinitionParser.parse(json)
 
         val originalSummary = decoded.summary
         val originalDefinition = decoded.definition

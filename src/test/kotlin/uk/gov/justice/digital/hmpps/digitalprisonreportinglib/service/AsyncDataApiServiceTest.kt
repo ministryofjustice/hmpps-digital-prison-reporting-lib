@@ -38,7 +38,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionDecoder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionParser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RepositoryHelper.Companion.EXTERNAL_MOVEMENTS_PRODUCT_ID
@@ -84,7 +84,7 @@ import java.util.UUID
 class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json"),
-    ProductDefinitionDecoder(
+    ProductDefinitionParser(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
@@ -92,7 +92,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   )
   private val datamartProductDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinitionDatamart.json"),
-    ProductDefinitionDecoder(
+    ProductDefinitionParser(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
@@ -240,7 +240,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should make the dashboard async call to the RedshiftDataApiRepository with all provided arguments when validateAndExecuteStatementAsync is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboardDatamart.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -355,7 +355,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when cancelDashboardStatementExecution is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboardDatamart.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -432,7 +432,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should make the async call to the AthenaApiRepository for nomis and bodmis with all provided arguments when validateAndExecuteStatementAsync is called`(definitionFile: String) {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -823,7 +823,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when getStatementStatus is called for a report`(definitionFile: String) {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -862,7 +862,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should call the RedshiftDataApiRepository for datamart with the statement execution ID when getDashboardStatementStatus is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboardDatamart.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1005,7 +1005,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should call the AthenaApiRepository with the statement execution ID when cancelDashboardStatementExecution is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboard.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1038,7 +1038,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should call the AthenaApiRepository for nomis and bodmis with the statement execution ID when cancelStatementExecution is called`(definitionFile: String) {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf(definitionFile),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1101,7 +1101,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `validateAndExecuteStatementAsync should not fail validation for filters which were converted from DPD parameters and convert these filters to prompts`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithParameters.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1244,7 +1244,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     )
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithFormula.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1288,7 +1288,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     )
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithFormula.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1324,7 +1324,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should call the repository with all provided arguments when getDashboardStatementResult is called`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboard.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1378,7 +1378,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `getDashboardStatementResult throws an exception when the result columns are not in the dataset schema`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboard.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -1574,7 +1574,7 @@ class AsyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `should throw TableExpiredException if s3 does exist and table does`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionSummarySort.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataAp
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
   private val properties: AwsProperties,
-  private val productDefinitionDecoder: ProductDefinitionDecoder,
+  private val productDefinitionParser: ProductDefinitionParser,
   private val definitionsCache: Cache<String, List<ProductDefinitionSummary>>? = null,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
@@ -60,7 +60,7 @@ class DynamoDbProductDefinitionRepository(
       throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
     val item = response.item()
-    val decoded = productDefinitionDecoder.decode(item[properties.dynamoDb.definitionFieldName]!!.s())
+    val decoded = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s())
     val definition = decoded.definition
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
     definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
@@ -86,7 +86,7 @@ class DynamoDbProductDefinitionRepository(
     val request = getQueryRequest(properties, path)
     val paginator = dynamoDbClient.queryPaginator(request)
     paginator.items().forEach { item ->
-      val decoded = productDefinitionDecoder.decode(item[properties.dynamoDb.definitionFieldName]!!.s())
+      val decoded = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s())
       val definition =
         decoded.summary
       val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()

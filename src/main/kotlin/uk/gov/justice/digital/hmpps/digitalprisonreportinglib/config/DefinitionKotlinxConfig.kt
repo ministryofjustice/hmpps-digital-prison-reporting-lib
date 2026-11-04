@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import kotlinx.serialization.json.Json
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionDecoder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionParser
 
 @Configuration
 class DefinitionKotlinxConfig {
@@ -27,5 +27,5 @@ class DefinitionKotlinxConfig {
   fun productDefinitionDecoder(
     dprDefinitionGson: Gson,
     dprDefinitionKotlin: Json,
-  ): ProductDefinitionDecoder = ProductDefinitionDecoder(dprDefinitionGson, dprDefinitionKotlin)
+  ): ProductDefinitionParser = ProductDefinitionParser(dprDefinitionGson, dprDefinitionKotlin)
 }

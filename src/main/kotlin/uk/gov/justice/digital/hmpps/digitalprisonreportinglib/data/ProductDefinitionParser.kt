@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Product
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ProductDefinitionSummary
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.UnsupportedVersionException
 
-class ProductDefinitionDecoder(
+class ProductDefinitionParser(
   private val dprDefinitionGson: Gson,
   private val dprDefinitionKotlinx: Json,
 ) {
@@ -21,15 +21,15 @@ class ProductDefinitionDecoder(
     const val V_1_1_0 = "1.1.0"
   }
 
-  fun decode(json: String): DecodedProductDefinition {
+  fun parse(json: String): ParsedProductDefinition {
     val root = parseProductDefinition(json)
 
     return when (val schemaVersion = extractSchemaVersion(root)) {
       null,
       V_1_0_0,
-      -> decodeLenientlyWithGson(json)
+      -> parseLenientlyWithGson(json)
 
-      V_1_1_0 -> decodeStrictlyWithKotlinx(root)
+      V_1_1_0 -> parseStrictlyWithKotlinx(root)
 
       else -> throw UnsupportedVersionException("Unsupported schemaversion '$schemaVersion'. Supported versions are $V_1_0_0 and $V_1_1_0.")
     }
@@ -51,22 +51,22 @@ class ProductDefinitionDecoder(
     return versionPrimitive.content
   }
 
-  private fun decodeStrictlyWithKotlinx(root: JsonObject): DecodedProductDefinition {
+  private fun parseStrictlyWithKotlinx(root: JsonObject): ParsedProductDefinition {
     val definition = dprDefinitionKotlinx.decodeFromJsonElement<ProductDefinition>(root)
 
-    return DecodedProductDefinition(
+    return ParsedProductDefinition(
       definition = definition,
       summary = definition.toSummary(),
     )
   }
 
-  private fun decodeLenientlyWithGson(json: String): DecodedProductDefinition = DecodedProductDefinition(
+  private fun parseLenientlyWithGson(json: String): ParsedProductDefinition = ParsedProductDefinition(
     definition = dprDefinitionGson.fromJson(json, ProductDefinition::class.java),
     summary = dprDefinitionGson.fromJson(json, ProductDefinitionSummary::class.java),
   )
 }
 
-data class DecodedProductDefinition(
+data class ParsedProductDefinition(
   val summary: ProductDefinitionSummary,
   val definition: ProductDefinition,
 )

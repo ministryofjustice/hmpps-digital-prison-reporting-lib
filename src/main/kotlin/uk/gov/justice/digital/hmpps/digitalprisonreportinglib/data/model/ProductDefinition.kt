@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionDecoder.Companion.SCHEMA_VERSION_FIELD
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionParser.Companion.SCHEMA_VERSION_FIELD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
 import kotlin.String

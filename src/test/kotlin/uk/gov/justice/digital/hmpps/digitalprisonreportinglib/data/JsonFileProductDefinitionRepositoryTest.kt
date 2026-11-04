@@ -15,7 +15,7 @@ class JsonFileProductDefinitionRepositoryTest {
 
   private val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json", "dpd001-court-hospital-movements.json"),
-    ProductDefinitionDecoder(
+    ProductDefinitionParser(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
@@ -42,7 +42,7 @@ class JsonFileProductDefinitionRepositoryTest {
   fun `getSingleReportProductDefinition fails when there is no matching dataset`() {
     val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("nonMatchingDatasetProductDefinition.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
@@ -61,7 +61,7 @@ class JsonFileProductDefinitionRepositoryTest {
   fun `getSingleReportProductDefinition fails when report fields do not match any dataset fields`() {
     val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("nonMatchingDatasetProductDefinition.json"),
-      ProductDefinitionDecoder(
+      ProductDefinitionParser(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
         dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),

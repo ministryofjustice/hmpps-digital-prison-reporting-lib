@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataAp
 
 class JsonFileProductDefinitionRepository(
   private val resourceLocations: List<String>,
-  private val productDefinitionDecoder: ProductDefinitionDecoder,
+  private val productDefinitionParser: ProductDefinitionParser,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 
@@ -20,10 +20,10 @@ class JsonFileProductDefinitionRepository(
 
   fun doGetProductDefinitions(): List<ProductDefinition> = resourceLocations.map { readLocalDefinition(it).definition }
 
-  private fun readLocalDefinition(location: String): DecodedProductDefinition {
+  private fun readLocalDefinition(location: String): ParsedProductDefinition {
     val resource = requireNotNull(javaClass.classLoader.getResource(location)) {
       "Product definition resource not found: $location"
     }
-    return productDefinitionDecoder.decode(resource.readText())
+    return productDefinitionParser.parse(resource.readText())
   }
 }

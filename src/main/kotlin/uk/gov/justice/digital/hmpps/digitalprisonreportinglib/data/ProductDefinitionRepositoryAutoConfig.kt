@@ -27,11 +27,11 @@ class ProductDefinitionRepositoryAutoConfig(
   @ConditionalOnProperty(prefix = "dpr.lib.definition", name = ["locations"])
   fun productDefinitionRepository(
     localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
-    productDefinitionDecoder: ProductDefinitionDecoder,
+    productDefinitionParser: ProductDefinitionParser,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     definitionResourceLocations ?: emptyList(),
-    productDefinitionDecoder,
+    productDefinitionParser,
     identifiedHelper,
   )
 
@@ -44,14 +44,14 @@ class ProductDefinitionRepositoryAutoConfig(
     matchIfMissing = true,
   )
   fun dynamoDbProductDefinitionsRepository(
-    decoder: ProductDefinitionDecoder,
+    parser: ProductDefinitionParser,
     dynamoDbClient: DynamoDbClient,
     properties: AwsProperties,
     definitionsCache: Cache<String, List<ProductDefinitionSummary>>?,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
-    productDefinitionDecoder = decoder,
+    productDefinitionParser = parser,
     properties = properties,
     definitionsCache = definitionsCache,
     identifiedHelper = identifiedHelper,
@@ -84,7 +84,7 @@ class ProductDefinitionRepositoryAutoConfig(
     s3Client: S3Client,
     properties: AwsProperties,
     s3AndDdbDefinitionsCache: Cache<String, LoadedDefinitions>?,
-    productDefinitionDecoder: ProductDefinitionDecoder,
+    productDefinitionParser: ProductDefinitionParser,
     identifiedHelper: IdentifiedHelper,
     @Value("\${dpr.lib.dataProductDefinitions.s3.bucket}")
     s3Bucket: String,
@@ -94,7 +94,7 @@ class ProductDefinitionRepositoryAutoConfig(
     properties = properties,
     s3Bucket = s3Bucket,
     s3AndDdbDefinitionsCache = s3AndDdbDefinitionsCache,
-    productDefinitionDecoder = productDefinitionDecoder,
+    productDefinitionParser = productDefinitionParser,
     identifiedHelper = identifiedHelper,
   )
 

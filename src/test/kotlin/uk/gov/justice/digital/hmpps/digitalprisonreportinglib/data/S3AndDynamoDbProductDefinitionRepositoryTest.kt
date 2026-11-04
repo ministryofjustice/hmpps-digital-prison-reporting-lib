@@ -54,7 +54,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
       .expireAfterWrite(30, TimeUnit.MINUTES)
       .concurrencyLevel(Runtime.getRuntime().availableProcessors())
       .build<String, LoadedDefinitions>(),
-    productDefinitionDecoder = ProductDefinitionDecoder(
+    productDefinitionParser = ProductDefinitionParser(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
       dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
