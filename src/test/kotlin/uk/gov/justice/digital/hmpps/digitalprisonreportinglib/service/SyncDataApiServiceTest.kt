@@ -112,7 +112,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     listOf("productDefinition.json", "productDefinitionWithDashboard.json"),
     ProductDefinitionDecoder(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
     identifiedHelper,
   )
@@ -568,7 +568,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       listOf("productDefinitionPolicyNoAction.json"),
       ProductDefinitionDecoder(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
       identifiedHelper,
     )

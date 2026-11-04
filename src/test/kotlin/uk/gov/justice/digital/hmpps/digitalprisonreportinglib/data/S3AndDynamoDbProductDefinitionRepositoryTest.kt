@@ -56,7 +56,7 @@ class S3AndDynamoDbProductDefinitionRepositoryTest {
       .build<String, LoadedDefinitions>(),
     productDefinitionDecoder = ProductDefinitionDecoder(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
   )
 

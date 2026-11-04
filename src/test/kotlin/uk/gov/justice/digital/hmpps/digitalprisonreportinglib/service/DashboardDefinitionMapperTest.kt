@@ -59,7 +59,7 @@ class DashboardDefinitionMapperTest {
     listOf("productDefinitionWithDashboard.json"),
     ProductDefinitionDecoder(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
     identifiedHelper = IdentifiedHelper(),
   )
@@ -442,7 +442,7 @@ class DashboardDefinitionMapperTest {
       listOf("productDefinitionWithDashboardChild.json"),
       ProductDefinitionDecoder(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
       identifiedHelper = IdentifiedHelper(),
     )

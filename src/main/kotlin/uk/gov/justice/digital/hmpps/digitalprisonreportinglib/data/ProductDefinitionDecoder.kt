@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.Unsuppor
 
 class ProductDefinitionDecoder(
   private val dprDefinitionGson: Gson,
-  private val dprDefinitionKotlinx: Json
+  private val dprDefinitionKotlinx: Json,
 ) {
 
   companion object {
@@ -26,7 +26,8 @@ class ProductDefinitionDecoder(
 
     return when (val schemaVersion = extractSchemaVersion(root)) {
       null,
-      V_1_0_0 -> decodeLenientlyWithGson(json)
+      V_1_0_0,
+      -> decodeLenientlyWithGson(json)
 
       V_1_1_0 -> decodeStrictlyWithKotlinx(root)
 
@@ -34,9 +35,7 @@ class ProductDefinitionDecoder(
     }
   }
 
-  private fun parseProductDefinition(json: String, ): JsonObject {
-    return dprDefinitionKotlinx.parseToJsonElement(json) as? JsonObject ?: throw InvalidProductDefinitionException("The DPD must be a JSON object",)
-  }
+  private fun parseProductDefinition(json: String): JsonObject = dprDefinitionKotlinx.parseToJsonElement(json) as? JsonObject ?: throw InvalidProductDefinitionException("The DPD must be a JSON object")
 
   private fun extractSchemaVersion(root: JsonObject): String? {
     return extractVersionString(root[SCHEMA_VERSION_FIELD] ?: return null)
@@ -61,11 +60,10 @@ class ProductDefinitionDecoder(
     )
   }
 
-  private fun decodeLenientlyWithGson(json: String): DecodedProductDefinition =
-    DecodedProductDefinition(
-      definition = dprDefinitionGson.fromJson(json, ProductDefinition::class.java,),
-      summary = dprDefinitionGson.fromJson(json, ProductDefinitionSummary::class.java,),
-    )
+  private fun decodeLenientlyWithGson(json: String): DecodedProductDefinition = DecodedProductDefinition(
+    definition = dprDefinitionGson.fromJson(json, ProductDefinition::class.java),
+    summary = dprDefinitionGson.fromJson(json, ProductDefinitionSummary::class.java),
+  )
 }
 
 data class DecodedProductDefinition(

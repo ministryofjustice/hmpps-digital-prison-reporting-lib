@@ -45,18 +45,17 @@ data class ProductDefinition(
   override val dashboard: List<Dashboard>? = null,
 ) : AnyProductDefinition {
 
-  fun toSummary(): ProductDefinitionSummary =
-    ProductDefinitionSummary(
-      id = id,
-      name = name,
-      description = description,
-      metadata = metadata,
-      path = path,
-      dataset = dataset,
-      report = report.map { it.toReportLite() },
-      policy = policy,
-      dashboard = dashboard,
-    )
+  fun toSummary(): ProductDefinitionSummary = ProductDefinitionSummary(
+    id = id,
+    name = name,
+    description = description,
+    metadata = metadata,
+    path = path,
+    dataset = dataset,
+    report = report.map { it.toReportLite() },
+    policy = policy,
+    dashboard = dashboard,
+  )
 }
 
 @Serializable

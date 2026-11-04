@@ -26,6 +26,6 @@ class DefinitionKotlinxConfig {
   @Bean
   fun productDefinitionDecoder(
     dprDefinitionGson: Gson,
-    dprDefinitionKotlin: Json
+    dprDefinitionKotlin: Json,
   ): ProductDefinitionDecoder = ProductDefinitionDecoder(dprDefinitionGson, dprDefinitionKotlin)
 }

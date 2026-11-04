@@ -17,7 +17,7 @@ class JsonFileProductDefinitionRepositoryTest {
     listOf("productDefinition.json", "dpd001-court-hospital-movements.json"),
     ProductDefinitionDecoder(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
     identifiedHelper = IdentifiedHelper(),
   )
@@ -44,7 +44,7 @@ class JsonFileProductDefinitionRepositoryTest {
       listOf("nonMatchingDatasetProductDefinition.json"),
       ProductDefinitionDecoder(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
       identifiedHelper = IdentifiedHelper(),
     )
@@ -63,7 +63,7 @@ class JsonFileProductDefinitionRepositoryTest {
       listOf("nonMatchingDatasetProductDefinition.json"),
       ProductDefinitionDecoder(
         dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
       ),
       identifiedHelper = IdentifiedHelper(),
     )

@@ -31,9 +31,9 @@ class DynamoDbProductDefinitionRepositoryTest {
 
   private val repo = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
-    productDefinitionDecoder =  ProductDefinitionDecoder(
+    productDefinitionDecoder = ProductDefinitionDecoder(
       dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
-      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson()
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
     ),
     properties = properties,
     identifiedHelper = IdentifiedHelper(),
