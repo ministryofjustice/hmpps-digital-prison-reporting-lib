@@ -58,15 +58,24 @@ class ProductDefinitionParserTest {
   }
 
   @Test
-  fun `strict DPD with unsupported schemaversion 1_1_1 is rejected`() {
+  fun `strict DPD with unsupported schemaversion 1_2_0 is rejected`() {
     val json = readResource("productDefinitionInvalidVersion.json")
 
     assertThatThrownBy { parser.parse(json) }
       .isInstanceOf(UnsupportedVersionException::class.java)
       .hasMessage(
-        "Unsupported schemaversion '1.2.0'. " +
+        "Unsupported schemaversion: '1.2.0'. " +
           "Supported versions are 1.0.0 and 1.1.0.",
       )
+  }
+
+  @Test
+  fun `strict DPD with null schemaversion is rejected`() {
+    val json = readResource("productDefinitionNullVersion.json")
+
+    assertThatThrownBy { parser.parse(json) }
+      .isInstanceOf(InvalidProductDefinitionException::class.java)
+      .hasMessage("schemaversion must be a JSON string")
   }
 
   private fun readResource(resourceLocation: String): String {

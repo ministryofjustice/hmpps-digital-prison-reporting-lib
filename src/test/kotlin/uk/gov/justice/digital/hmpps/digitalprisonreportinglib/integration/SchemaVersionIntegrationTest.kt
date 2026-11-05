@@ -202,7 +202,7 @@ class SchemaVersionIntegrationTest {
         .returnResult()
 
       assertThat(result.responseBody?.userMessage)
-        .isEqualTo("Validation failure: Unsupported schemaversion: 1.2.0: Supported versions are 1.0.0 and 1.1.0.")
+        .isEqualTo("Validation failure: Unsupported schemaversion '1.2.0'. Supported versions are 1.0.0 and 1.1.0.")
     }
   }
 }
