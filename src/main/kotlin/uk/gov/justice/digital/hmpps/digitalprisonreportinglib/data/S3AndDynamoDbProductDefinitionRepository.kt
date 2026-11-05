@@ -86,10 +86,10 @@ class S3AndDynamoDbProductDefinitionRepository(
     return paginator.items().mapNotNull { item ->
       try {
         val json = item[properties.dynamoDb.definitionFieldName]!!.s()
-        val decoded = productDefinitionParser.parse(json)
+        val parsedDefinition = productDefinitionParser.parse(json)
 
-        val originalSummary = decoded.summary
-        val originalDefinition = decoded.definition
+        val originalSummary = parsedDefinition.summary
+        val originalDefinition = parsedDefinition.definition
         requireNotNull(originalSummary.id) { "The ID of the DPD stored in DDB was null." }
         val globalId = "$DDB_ID_PREFIX${originalSummary.id}"
 
@@ -141,10 +141,10 @@ class S3AndDynamoDbProductDefinitionRepository(
     return keys.mapNotNull { key ->
       try {
         val json = getS3ObjectAsString(key)
-        val decoded = productDefinitionParser.parse(json)
+        val parsedDefinition = productDefinitionParser.parse(json)
 
-        val originalSummary = decoded.summary
-        val originalDefinition = decoded.definition
+        val originalSummary = parsedDefinition.summary
+        val originalDefinition = parsedDefinition.definition
 
         requireNotNull(originalSummary.id) { "The ID of the DPD stored in S3 was null." }
         val globalId = "${teamPrefix}_${originalSummary.id}"

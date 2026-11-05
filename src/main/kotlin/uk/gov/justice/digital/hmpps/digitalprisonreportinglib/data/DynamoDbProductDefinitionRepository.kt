@@ -60,8 +60,7 @@ class DynamoDbProductDefinitionRepository(
       throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
     val item = response.item()
-    val decoded = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s())
-    val definition = decoded.definition
+    val definition = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s()).definition
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
     definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
     stopwatch.stop()
@@ -86,9 +85,7 @@ class DynamoDbProductDefinitionRepository(
     val request = getQueryRequest(properties, path)
     val paginator = dynamoDbClient.queryPaginator(request)
     paginator.items().forEach { item ->
-      val decoded = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s())
-      val definition =
-        decoded.summary
+      val definition = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s()).summary
       val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
       definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
       results.add(definition)
