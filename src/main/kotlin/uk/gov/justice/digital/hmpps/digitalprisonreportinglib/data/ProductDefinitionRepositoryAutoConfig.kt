@@ -44,14 +44,14 @@ class ProductDefinitionRepositoryAutoConfig(
     matchIfMissing = true,
   )
   fun dynamoDbProductDefinitionsRepository(
-    parser: ProductDefinitionParser,
+    productDefinitionParser: ProductDefinitionParser,
     dynamoDbClient: DynamoDbClient,
     properties: AwsProperties,
     definitionsCache: Cache<String, List<ProductDefinitionSummary>>?,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
-    productDefinitionParser = parser,
+    productDefinitionParser = productDefinitionParser,
     properties = properties,
     definitionsCache = definitionsCache,
     identifiedHelper = identifiedHelper,
