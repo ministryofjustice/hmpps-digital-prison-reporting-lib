@@ -11,6 +11,138 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.R
 
 class SchemaVersionIntegrationTest {
 
+  class KotlinxDeserialisationV110PositiveTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(
+        registry: DynamicPropertyRegistry,
+      ) {
+        registry.add("dpr.lib.definition.locations") {
+          "strictlyValidDefinition.json"
+        }
+      }
+    }
+
+    @Test
+    fun `Get definitions returns a 200 response for strictly valid DPD with schemaversion 1_1_0 `() {
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(String::class.java)
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+    }
+
+    @Test
+    fun `Get definition summaries returns a 200 response for strictly valid DPD with schemaversion 1_1_0 `() {
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(String::class.java)
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+    }
+
+    @Test
+    fun `Get single definition returns a 200 response for strictly valid DPD with schemaversion 1_1_0 `() {
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict/last-month")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(String::class.java)
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+    }
+  }
+
+  class KotlinxDeserialisationV110NegativeTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(
+        registry: DynamicPropertyRegistry,
+      ) {
+        registry.add("dpr.lib.definition.locations") {
+          "productDefinitionLenientBut1_1_0.json,strictlyValidDefinition.json"
+        }
+      }
+    }
+
+    @Test
+    fun `Get definitions returns a 400 response for not strictly valid DPD with schemaversion 1_1_0 `() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+    @Test
+    fun `Get definition summaries returns a 400 response for not strictly valid DPD with schemaversion 1_1_0 `() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+    @Test
+    fun `Get single definition returns a 400 response for not strictly valid DPD with schemaversion 1_1_0 `() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict/last-month")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+  }
+
   class ValidSchemaVersionTest : IntegrationTestBase() {
     companion object {
       @JvmStatic
@@ -70,7 +202,7 @@ class SchemaVersionIntegrationTest {
         .returnResult()
 
       assertThat(result.responseBody?.userMessage)
-        .isEqualTo("Validation failure: Unsupported schemaversion: 1.1.0: Only 1.0.0 is supported at this time")
+        .isEqualTo("Validation failure: Unsupported schemaversion: 1.2.0: Supported versions are 1.0.0 and 1.1.0.")
     }
   }
 }
