@@ -64,7 +64,7 @@ class ProductDefinitionParserTest {
     assertThatThrownBy { parser.parse(json) }
       .isInstanceOf(UnsupportedVersionException::class.java)
       .hasMessage(
-        "Unsupported schemaversion: '1.2.0'. " +
+        "Unsupported schemaversion '1.2.0'. " +
           "Supported versions are 1.0.0 and 1.1.0.",
       )
   }
