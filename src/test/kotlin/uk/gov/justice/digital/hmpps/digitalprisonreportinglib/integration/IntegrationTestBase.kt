@@ -104,7 +104,8 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var hmppsQueueService: HmppsQueueService
 
-  @Autowired lateinit var productDefinitionParser: ProductDefinitionParser
+  @Autowired
+  protected lateinit var productDefinitionParser: ProductDefinitionParser
 
   protected val inboundQueue by lazy { hmppsQueueService.findByQueueName("auditqueue") ?: throw MissingQueueException("HmppsQueue auditqueue not found") }
   protected val inboundSqsClient by lazy { inboundQueue.sqsClient }
