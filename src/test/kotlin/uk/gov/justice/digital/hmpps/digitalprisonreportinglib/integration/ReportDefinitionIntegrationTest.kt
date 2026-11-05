@@ -1301,4 +1301,104 @@ class ReportDefinitionIntegrationTest : IntegrationTestBase() {
       assertThat(staticOptions[0].display).isEqualTo("FirstName")
     }
   }
+
+  class KotlinxDeserialisationV1_1_0_PositiveTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(
+        registry: DynamicPropertyRegistry,
+      ) {
+        registry.add("dpr.lib.definition.locations") {
+          "strictlyValidDefinition.json"
+        }
+      }
+    }
+
+    @Test
+    fun `Get definitions returns a 200 response for strictly valid DPD with schemaversion 1_1_0 `() {
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(String::class.java)
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+    }
+
+    @Test
+    fun `Get single definition returns a 200 response for strictly valid DPD with schemaversion 1_1_0 `() {
+      val result = webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict/last-month")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody(String::class.java)
+        .returnResult()
+
+      assertThat(result.responseBody).isNotNull
+    }
+
+  }
+
+  class KotlinxDeserialisationV1_1_0_NegativeTest : IntegrationTestBase() {
+
+    companion object {
+      @JvmStatic
+      @DynamicPropertySource
+      fun registerProperties(
+        registry: DynamicPropertyRegistry,
+      ) {
+        registry.add("dpr.lib.definition.locations") {
+          "productDefinitionLenientBut1_1_0.json"
+        }
+      }
+    }
+
+    @Test
+    fun `Get definitions returns a 400 response for not strictly valid DPD with schemaversion 1_1_0 `() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+    @Test
+    fun `Get single definition returns a 400 response for not strictly valid DPD with schemaversion 1_1_0 `() {
+      webTestClient.get()
+        .uri { uriBuilder: UriBuilder ->
+          uriBuilder
+            .path("/definitions/external-movements-strict/last-month")
+            .queryParam("renderMethod", "HTML")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf(authorisedRole)))
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+    }
+
+  }
 }

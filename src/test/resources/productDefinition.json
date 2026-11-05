@@ -2,6 +2,7 @@
   "id" : "external-movements",
   "name" : "External Movements",
   "description" : "Reports about prisoner external movements",
+  "schemaversion": "1.0.0",
   "scheduled": "true",
   "metadata" : {
     "author" : "Adam",
