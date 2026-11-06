@@ -1,5 +1,7 @@
 Below you can find the changes included in each release.
 
+# 18.5.1
+- Added optional hint: string field to FilterDefinition
 
 # 18.6.0
 - DPDs which contain a `schemaversion` will be strictly validated using Kotlinx if the version is `1.1.0`, otherwise if the version is `1.0.0` or `schemaversion` is not defined they will be validated leniently with GSON.
