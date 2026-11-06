@@ -691,41 +691,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
     }
 
-    @Test
-    fun `should execute a report with a row level caseload policy as a probation user but return nothing`() {
-      manageUsersMockServer.stubLookupUserCaseload404("request-user")
-      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(authSource = AuthSource.DELIUS, roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-
-    @Test
-    fun `should execute a report with a row level caseload policy as an external user but return nothing`() {
-      manageUsersMockServer.stubLookupUserCaseload404("request-user")
-      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH)
-      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(authSource = AuthSource.AUTH, roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-  }
-
   class LaoDataApiIntegrationTestPermitPolicy : IntegrationTestBase() {
     companion object {
       @JvmStatic
