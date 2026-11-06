@@ -34,7 +34,7 @@ fun HttpServletRequest.getExecutionContext(
       ExecutionContext(
         getCaseLoads(manageUsersClient, username, userInfo.authSource),
         manageUsersClient.getUsersRoles(username),
-        manageUsersClient.getUserInfo(username),
+        userInfo,
         hasProbationDatasources,
         dataProductReportableInformation,
         preFilters,
