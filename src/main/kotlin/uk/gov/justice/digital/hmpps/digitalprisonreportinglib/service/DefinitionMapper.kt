@@ -87,6 +87,7 @@ abstract class DefinitionMapper(
     index = filterDefinition.index,
     minSelected = filterDefinition.minSelected,
     maxSelected = filterDefinition.maxSelected,
+    hint = filterDefinition.hint,
   )
 
   protected fun populateStaticOptions(

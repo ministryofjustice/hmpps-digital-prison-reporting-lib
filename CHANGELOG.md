@@ -1,5 +1,7 @@
 Below you can find the changes included in each release.
 
+# 18.5.1
+- Added optional hint: string field to FilterDefinition
 
 # 18.5.0
 - Alignment of the model with new schema [v1.1.0](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema/blob/main/schema/1.1.0/data-product-definition-schema.json).

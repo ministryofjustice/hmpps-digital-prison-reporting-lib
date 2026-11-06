@@ -24,4 +24,5 @@ data class FilterDefinition(
   val index: Int? = null,
   val minSelected: Int? = null,
   val maxSelected: Int? = null,
+  val hint: String? = null,
 )
