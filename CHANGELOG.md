@@ -1,6 +1,13 @@
 Below you can find the changes included in each release.
 
 
+# 18.6.0
+- DPDs which contain a `schemaversion` will be strictly validated using Kotlinx if the version is `1.1.0`, otherwise if the version is `1.0.0` or `schemaversion` is not defined they will be validated leniently with GSON.
+- More fixes to align the model with schema [v1.1.0](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema/blob/main/schema/1.1.0/data-product-definition-schema.json). Mainly addition of missing @SerialName annotations.
+- Added `schemaversion` as optional to support the transition period. This will become mandatory when only the 1.1.0 will be supported.
+- Removed `SchemaVersionTypeAdapterFactory` as the updated behaviour is now handled by `ProductDefinitionParser`.
+
+
 # 18.5.0
 - Alignment of the model with new schema [v1.1.0](https://github.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema/blob/main/schema/1.1.0/data-product-definition-schema.json).
 - Added Kotlinx deserialisation support.

@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
-import com.google.gson.Gson
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
@@ -18,7 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.SyncDataAp
 class DynamoDbProductDefinitionRepository(
   private val dynamoDbClient: DynamoDbClient,
   private val properties: AwsProperties,
-  private val gson: Gson,
+  private val productDefinitionParser: ProductDefinitionParser,
   private val definitionsCache: Cache<String, List<ProductDefinitionSummary>>? = null,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
@@ -61,7 +60,7 @@ class DynamoDbProductDefinitionRepository(
       throw ValidationException("$INVALID_REPORT_ID_MESSAGE $definitionId")
     }
     val item = response.item()
-    val definition = gson.fromJson(item[properties.dynamoDb.definitionFieldName]!!.s(), ProductDefinition::class.java)
+    val definition = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s()).definition
     val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
     definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
     stopwatch.stop()
@@ -86,9 +85,7 @@ class DynamoDbProductDefinitionRepository(
     val request = getQueryRequest(properties, path)
     val paginator = dynamoDbClient.queryPaginator(request)
     paginator.items().forEach { item ->
-      val json = item[properties.dynamoDb.definitionFieldName]!!.s()
-      val definition =
-        gson.fromJson(json, ProductDefinitionSummary::class.java)
+      val definition = productDefinitionParser.parse(item[properties.dynamoDb.definitionFieldName]!!.s()).summary
       val definitionPath = item[properties.dynamoDb.categoryFieldName]!!.s()
       definition.path = pathLookup[definitionPath] ?: DataDefinitionPath.OTHER
       results.add(definition)

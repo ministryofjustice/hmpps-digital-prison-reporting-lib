@@ -1,9 +1,13 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model
 
+import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.DataDefinitionPath
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionParser.Companion.SCHEMA_VERSION_FIELD
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
+import kotlin.String
 
 interface AnyProductDefinition : WithPolicy {
   val id: String
@@ -27,6 +31,9 @@ data class ProductDefinition(
   override val id: String,
   override val name: String,
   override val description: String? = null,
+  @SerialName(SCHEMA_VERSION_FIELD)
+  @SerializedName(SCHEMA_VERSION_FIELD)
+  val schemaVersion: String? = null,
   override val scheduled: Boolean? = false,
   override val metadata: MetaData,
   // path is deprecated - to be removed
@@ -36,7 +43,20 @@ data class ProductDefinition(
   override val report: List<Report> = emptyList(),
   override val policy: List<Policy>,
   override val dashboard: List<Dashboard>? = null,
-) : AnyProductDefinition
+) : AnyProductDefinition {
+
+  fun toSummary(): ProductDefinitionSummary = ProductDefinitionSummary(
+    id = id,
+    name = name,
+    description = description,
+    metadata = metadata,
+    path = path,
+    dataset = dataset,
+    report = report.map { it.toReportLite() },
+    policy = policy,
+    dashboard = dashboard,
+  )
+}
 
 @Serializable
 data class ProductDefinitionSummary(

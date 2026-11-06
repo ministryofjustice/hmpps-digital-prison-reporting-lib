@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
-import com.google.gson.Gson
 import jakarta.validation.ValidationException
 import org.apache.commons.lang3.time.StopWatch
 import org.slf4j.LoggerFactory
@@ -22,8 +21,8 @@ class S3AndDynamoDbProductDefinitionRepository(
   private val s3Client: S3Client,
   private val properties: AwsProperties,
   private val s3Bucket: String,
-  private val gson: Gson,
   private val s3AndDdbDefinitionsCache: Cache<String, LoadedDefinitions>? = null,
+  private val productDefinitionParser: ProductDefinitionParser,
   identifiedHelper: IdentifiedHelper,
 ) : AbstractProductDefinitionRepository(identifiedHelper) {
 
@@ -87,8 +86,10 @@ class S3AndDynamoDbProductDefinitionRepository(
     return paginator.items().mapNotNull { item ->
       try {
         val json = item[properties.dynamoDb.definitionFieldName]!!.s()
-        val originalSummary = gson.fromJson(json, ProductDefinitionSummary::class.java)
-        val originalDefinition = gson.fromJson(json, ProductDefinition::class.java)
+        val parsedDefinition = productDefinitionParser.parse(json)
+
+        val originalSummary = parsedDefinition.summary
+        val originalDefinition = parsedDefinition.definition
         requireNotNull(originalSummary.id) { "The ID of the DPD stored in DDB was null." }
         val globalId = "$DDB_ID_PREFIX${originalSummary.id}"
 
@@ -140,9 +141,10 @@ class S3AndDynamoDbProductDefinitionRepository(
     return keys.mapNotNull { key ->
       try {
         val json = getS3ObjectAsString(key)
+        val parsedDefinition = productDefinitionParser.parse(json)
 
-        val originalSummary = gson.fromJson(json, ProductDefinitionSummary::class.java)
-        val originalDefinition = gson.fromJson(json, ProductDefinition::class.java)
+        val originalSummary = parsedDefinition.summary
+        val originalDefinition = parsedDefinition.definition
 
         requireNotNull(originalSummary.id) { "The ID of the DPD stored in S3 was null." }
         val globalId = "${teamPrefix}_${originalSummary.id}"

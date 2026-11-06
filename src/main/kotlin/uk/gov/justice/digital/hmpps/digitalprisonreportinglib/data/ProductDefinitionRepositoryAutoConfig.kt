@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
-import com.google.gson.Gson
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -28,11 +27,11 @@ class ProductDefinitionRepositoryAutoConfig(
   @ConditionalOnProperty(prefix = "dpr.lib.definition", name = ["locations"])
   fun productDefinitionRepository(
     localDateTimeTypeAdaptor: LocalDateTimeTypeAdaptor,
-    dprDefinitionGson: Gson,
+    productDefinitionParser: ProductDefinitionParser,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     definitionResourceLocations ?: emptyList(),
-    dprDefinitionGson,
+    productDefinitionParser,
     identifiedHelper,
   )
 
@@ -45,14 +44,14 @@ class ProductDefinitionRepositoryAutoConfig(
     matchIfMissing = true,
   )
   fun dynamoDbProductDefinitionsRepository(
-    dprDefinitionGson: Gson,
+    productDefinitionParser: ProductDefinitionParser,
     dynamoDbClient: DynamoDbClient,
     properties: AwsProperties,
     definitionsCache: Cache<String, List<ProductDefinitionSummary>>?,
     identifiedHelper: IdentifiedHelper,
   ): ProductDefinitionRepository = DynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
-    gson = dprDefinitionGson,
+    productDefinitionParser = productDefinitionParser,
     properties = properties,
     definitionsCache = definitionsCache,
     identifiedHelper = identifiedHelper,
@@ -81,21 +80,21 @@ class ProductDefinitionRepositoryAutoConfig(
   @ConditionalOnProperty("dpr.lib.dataProductDefinitions.s3.enabled", havingValue = "true")
   @ConditionalOnBean(DynamoDbClient::class, S3Client::class)
   fun s3AndDynamoDbProductDefinitionsRepository(
-    dprDefinitionGson: Gson,
     dynamoDbClient: DynamoDbClient,
     s3Client: S3Client,
     properties: AwsProperties,
     s3AndDdbDefinitionsCache: Cache<String, LoadedDefinitions>?,
+    productDefinitionParser: ProductDefinitionParser,
     identifiedHelper: IdentifiedHelper,
     @Value("\${dpr.lib.dataProductDefinitions.s3.bucket}")
     s3Bucket: String,
   ): ProductDefinitionRepository = S3AndDynamoDbProductDefinitionRepository(
     dynamoDbClient = dynamoDbClient,
     s3Client = s3Client,
-    gson = dprDefinitionGson,
     properties = properties,
     s3Bucket = s3Bucket,
     s3AndDdbDefinitionsCache = s3AndDdbDefinitionsCache,
+    productDefinitionParser = productDefinitionParser,
     identifiedHelper = identifiedHelper,
   )
 
