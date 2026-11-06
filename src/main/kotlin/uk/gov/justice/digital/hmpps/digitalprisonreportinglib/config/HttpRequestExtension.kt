@@ -29,11 +29,12 @@ fun HttpServletRequest.getExecutionContext(
 
   return authToken?.userName
     ?.takeUnless { it.isBlank() }
-    ?.let {
+    ?.let { username ->
+      val userInfo = manageUsersClient.getUserInfo(username)
       ExecutionContext(
-        getCaseLoads(manageUsersClient, it, authToken.authSource),
-        manageUsersClient.getUsersRoles(it),
-        manageUsersClient.getUserInfo(it),
+        getCaseLoads(manageUsersClient, username, userInfo.authSource),
+        manageUsersClient.getUsersRoles(username),
+        manageUsersClient.getUserInfo(username),
         hasProbationDatasources,
         dataProductReportableInformation,
         preFilters,
