@@ -756,12 +756,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
@@ -777,12 +777,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
   }
 
