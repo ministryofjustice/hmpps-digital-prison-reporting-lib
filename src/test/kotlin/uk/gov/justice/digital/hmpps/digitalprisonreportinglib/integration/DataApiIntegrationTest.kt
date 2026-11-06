@@ -674,701 +674,726 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class ProbationDataSourcesAuthSourceCaseloadPolicyTest : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicy.json" }
-        registry.add("dpr.lib.hasProbationDatasources") { true }
-        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
+    class LaoDataApiIntegrationTestPermitPolicy : IntegrationTestBase() {
+      companion object {
+        @JvmStatic
+        @DynamicPropertySource
+        fun registerProperties(registry: DynamicPropertyRegistry) {
+          registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicy.json" }
+          registry.add("dpr.lib.hasProbationDatasources") { true }
+          registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
+        }
       }
-    }
 
-    @BeforeEach
-    fun laoSetup() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
-    }
-
-  class LaoDataApiIntegrationTestPermitPolicy : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicy.json" }
-        registry.add("dpr.lib.hasProbationDatasources") { true }
-        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
-      }
-    }
-
-    @BeforeEach
-    fun laoSetup() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
-    }
-
-    @Test
-    fun `Should return data if LAO permit policy exists even if user is excluded`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Should return data if LAO permit policy exists even if other user is restricted to LAO and requesting user is not`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-  }
-
-  class LaoDataApiIntegrationTestPermitPolicyWithAction : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicyAndAction.json" }
-        registry.add("dpr.lib.hasProbationDatasources") { true }
-        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
-      }
-    }
-
-    @BeforeEach
-    fun laoSetup() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
-        .execute()
-    }
-
-    @Test
-    fun `Should return data if LAO permit policy exists even if user is excluded`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
-        .execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
-        .execute()
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-  }
-
-  class LaoDataApiIntegrationTestNoPolicy : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
-        registry.add("dpr.lib.hasProbationDatasources") { true }
-      }
-    }
-
-    @BeforeEach
-    fun laoSetup() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
-    }
-
-    @Test
-    fun `Should be forbidden if no LAO policy exists but running app with probation datasources`() {
-      manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
-      manageUsersMockServer.stubGetUserInfo("P111111")
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isForbidden
-    }
-  }
-
-  class LaoDataApiIntegrationTest : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPolicy.json" }
-        registry.add("dpr.lib.hasProbationDatasources") { true }
-        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
-      }
-    }
-
-    @BeforeEach
-    fun laoSetup() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
-    }
-
-    @Test
-    fun `Data API count returns zero if LAO is restricted to someone who isnt the requesting user`() {
-      // Restrict every prisoner in the data to another user, so that the LAO policy alone filters the data
-      listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
+      @BeforeEach
+      fun laoSetup() {
         DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
-          .execute()
-        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:Z000000', '$crn', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
           .execute()
       }
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
 
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-
-    @Test
-    fun `Data API count returns zero if requesting user is excluded from the LAO`() {
-      listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
+      @Test
+      fun `Should return data if LAO permit policy exists even if user is excluded`() {
         DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
           .execute()
         DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:P111111', '$crn', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
           .execute()
+        manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
       }
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
 
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-
-    @Test
-    fun `Data API count returns data if LAO is restricted to someone who isnt the requesting user but restriction is expired`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Data API count returns data if requesting user is excluded from the LAO but exclusion is expired`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Data API count returns data if requesting user is not excluded from the LAO`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Data API count returns data if LAO is restricted to the requesting user`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111113', 'G3411VR', 'P111113', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Data API count returns zero if requesting user is restricted to AND excluded from the LAO`() {
-      listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
+      @Test
+      fun `Should return data if LAO permit policy exists even if other user is restricted to LAO and requesting user is not`() {
         DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
           .execute()
         DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:P111111', '$crn', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
           .execute()
-        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:P111111', '$crn', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
-          .execute()
-      }
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
+        manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
 
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-
-    @Test
-    fun `Data API count returns data if data does not contain any LAOs`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Data API count returns data if requesting user is not excluded from the LAO and is an external user`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Data API count returns data if data does not contain any LAOs and is an external user`() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
-      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("5")
-    }
-
-    @Test
-    fun `Data API count returns zero if LAO is restricted to someone who isnt the requesting user and the user is an external user`() {
-      listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
-        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
-          .execute()
-        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:Z000000', '$crn', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
-          .execute()
-      }
-      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
-      manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-  }
-
-  @Test
-  fun `Data API returns 400 for invalid selectedPage query param`() {
-    requestWithQueryAndAssert400("selectedPage", 0, "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API returns 400 for invalid pageSize query param`() {
-    requestWithQueryAndAssert400("pageSize", 0, "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API returns 400 for invalid (wrong type) pageSize query param`() {
-    requestWithQueryAndAssert400("pageSize", "a", "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API returns 400 for invalid sortColumn query param`() {
-    requestWithQueryAndAssert400("sortColumn", "nonExistentColumn", "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API returns 400 for invalid sortedAsc query param`() {
-    requestWithQueryAndAssert400("sortedAsc", "abc", "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API returns 400 for non-existent filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}abc", "abc", "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API count returns 400 for non-existent filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}abc", "abc", "/reports/external-movements/last-month/count")
-  }
-
-  @Test
-  fun `Data API returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API count returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month/count")
-  }
-
-  @Test
-  fun `Data API returns 400 for invalid startDate query param`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX", "abc", "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `External movements returns 400 for invalid endDate query param`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX", "b", "/reports/external-movements/last-month")
-  }
-
-  @Test
-  fun `Data API count returns 400 for invalid startDate query param`() {
-    requestWithQueryAndAssert400("filters.startDate", "a", "/reports/external-movements/last-month/count")
-  }
-
-  @Test
-  fun `Data API count returns 400 for invalid endDate query param`() {
-    requestWithQueryAndAssert400("filters.endDate", "17-12-2050", "/reports/external-movements/last-month/count")
-  }
-
-  @Test
-  fun `External movements returns 400 for missing mandatory filter query param`() {
-    val params = mapOf(
-      "${FILTERS_PREFIX}origin" to "AAA",
-      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "",
-    )
-    requestWithQueryAndAssert400(params, "/reports/external-movements/last-year")
-  }
-
-  @Test
-  fun `External movements returns 400 for filter query param that doesn't match pattern`() {
-    val params = mapOf(
-      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "2000-01-02",
-      "${FILTERS_PREFIX}origin" to "Invalid",
-    )
-    requestWithQueryAndAssert400(params, "/reports/external-movements/last-year")
-  }
-
-  @Test
-  fun `External movements returns 200 for filter query param that matches pattern`() {
-    val params = mapOf(
-      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "2000-01-02",
-      "${FILTERS_PREFIX}origin" to "AAA",
-    )
-    requestWithQueryAndAssert200(params, "/reports/external-movements/last-year")
-  }
-
-  @Execution(ExecutionMode.SAME_THREAD)
-  class AuditIntegrationTest : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("hmpps.sqs.queues.audit.queueName") { "auditqueue" }
-        registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
-        registry.add("dpr.lib.serviceName") { "int-test-mi" }
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
       }
     }
 
-    @BeforeEach
-    override fun setup() {
-      super.setup()
-      inboundSqsClient.purgeQueue(
-        PurgeQueueRequest.builder()
-          .queueUrl(inboundQueueUrl)
-          .build(),
-      ).get()
+    class LaoDataApiIntegrationTestPermitPolicyWithAction : IntegrationTestBase() {
+      companion object {
+        @JvmStatic
+        @DynamicPropertySource
+        fun registerProperties(registry: DynamicPropertyRegistry) {
+          registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicyAndAction.json" }
+          registry.add("dpr.lib.hasProbationDatasources") { true }
+          registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
+        }
+      }
+
+      @BeforeEach
+      fun laoSetup() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
+          .execute()
+      }
+
+      @Test
+      fun `Should return data if LAO permit policy exists even if user is excluded`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+    }
+
+    class LaoDataApiIntegrationTestNoPolicy : IntegrationTestBase() {
+      companion object {
+        @JvmStatic
+        @DynamicPropertySource
+        fun registerProperties(registry: DynamicPropertyRegistry) {
+          registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+          registry.add("dpr.lib.hasProbationDatasources") { true }
+        }
+      }
+
+      @BeforeEach
+      fun laoSetup() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
+          .execute()
+      }
+
+      @Test
+      fun `Should be forbidden if no LAO policy exists but running app with probation datasources`() {
+        manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
+        manageUsersMockServer.stubGetUserInfo("P111111")
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    class LaoDataApiIntegrationTest : IntegrationTestBase() {
+      companion object {
+        @JvmStatic
+        @DynamicPropertySource
+        fun registerProperties(registry: DynamicPropertyRegistry) {
+          registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPolicy.json" }
+          registry.add("dpr.lib.hasProbationDatasources") { true }
+          registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
+        }
+      }
+
+      @BeforeEach
+      fun laoSetup() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
+          .execute()
+      }
+
+      @Test
+      fun `Data API count returns zero if LAO is restricted to someone who isnt the requesting user`() {
+        // Restrict every prisoner in the data to another user, so that the LAO policy alone filters the data
+        listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
+            .execute()
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:Z000000', '$crn', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+            .execute()
+        }
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("0")
+      }
+
+      @Test
+      fun `Data API count returns zero if requesting user is excluded from the LAO`() {
+        listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
+            .execute()
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:P111111', '$crn', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+            .execute()
+        }
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("0")
+      }
+
+      @Test
+      fun `Data API count returns data if LAO is restricted to someone who isnt the requesting user but restriction is expired`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+
+      @Test
+      fun `Data API count returns data if requesting user is excluded from the LAO but exclusion is expired`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+
+      @Test
+      fun `Data API count returns data if requesting user is not excluded from the LAO`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+
+      @Test
+      fun `Data API count returns data if LAO is restricted to the requesting user`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111113', 'G3411VR', 'P111113', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+
+      @Test
+      fun `Data API count returns zero if requesting user is restricted to AND excluded from the LAO`() {
+        listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
+            .execute()
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:P111111', '$crn', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+            .execute()
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:P111111', '$crn', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+            .execute()
+        }
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("0")
+      }
+
+      @Test
+      fun `Data API count returns data if data does not contain any LAOs`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+
+      @Test
+      fun `Data API count returns data if requesting user is not excluded from the LAO and is an external user`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+
+      @Test
+      fun `Data API count returns data if data does not contain any LAOs and is an external user`() {
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+          .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+          .execute()
+        manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("5")
+      }
+
+      @Test
+      fun `Data API count returns zero if LAO is restricted to someone who isnt the requesting user and the user is an external user`() {
+        listOf("G2504UV", "G2927UV", "G3418VR", "G3411VR", "G3154UG").forEach { crn ->
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('$crn', 0, NOW())")
+            .execute()
+          DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+            .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('$crn:Z000000', '$crn', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+            .execute()
+        }
+        manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
+        manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri("/reports/external-movements/last-month/count")
+          .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.AUTH))
+          .exchange()
+          .expectStatus()
+          .isOk()
+          .expectBody()
+          .jsonPath("count").isEqualTo("0")
+      }
     }
 
     @Test
-    fun `Data API audits attempt and success events`() = runTest {
-      wireMockServer.resetAll()
-      manageUsersMockServer.stubLookupUserCaseload("request-user", null)
-      manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
-      stubDefinitionsResponse()
+    fun `Data API returns 400 for invalid selectedPage query param`() {
+      requestWithQueryAndAssert400("selectedPage", 0, "/reports/external-movements/last-month")
+    }
 
+    @Test
+    fun `Data API returns 400 for invalid pageSize query param`() {
+      requestWithQueryAndAssert400("pageSize", 0, "/reports/external-movements/last-month")
+    }
+
+    @Test
+    fun `Data API returns 400 for invalid (wrong type) pageSize query param`() {
+      requestWithQueryAndAssert400("pageSize", "a", "/reports/external-movements/last-month")
+    }
+
+    @Test
+    fun `Data API returns 400 for invalid sortColumn query param`() {
+      requestWithQueryAndAssert400("sortColumn", "nonExistentColumn", "/reports/external-movements/last-month")
+    }
+
+    @Test
+    fun `Data API returns 400 for invalid sortedAsc query param`() {
+      requestWithQueryAndAssert400("sortedAsc", "abc", "/reports/external-movements/last-month")
+    }
+
+    @Test
+    fun `Data API returns 400 for non-existent filter`() {
+      requestWithQueryAndAssert400("${FILTERS_PREFIX}abc", "abc", "/reports/external-movements/last-month")
+    }
+
+    @Test
+    fun `Data API count returns 400 for non-existent filter`() {
+      requestWithQueryAndAssert400("${FILTERS_PREFIX}abc", "abc", "/reports/external-movements/last-month/count")
+    }
+
+    @Test
+    fun `Data API returns 400 for a report field which is not a filter`() {
+      requestWithQueryAndAssert400(
+        "${FILTERS_PREFIX}destination",
+        "some name",
+        "/reports/external-movements/last-month"
+      )
+    }
+
+    @Test
+    fun `Data API count returns 400 for a report field which is not a filter`() {
+      requestWithQueryAndAssert400(
+        "${FILTERS_PREFIX}destination",
+        "some name",
+        "/reports/external-movements/last-month/count"
+      )
+    }
+
+    @Test
+    fun `Data API returns 400 for invalid startDate query param`() {
+      requestWithQueryAndAssert400(
+        "${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX",
+        "abc",
+        "/reports/external-movements/last-month"
+      )
+    }
+
+    @Test
+    fun `External movements returns 400 for invalid endDate query param`() {
+      requestWithQueryAndAssert400(
+        "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX",
+        "b",
+        "/reports/external-movements/last-month"
+      )
+    }
+
+    @Test
+    fun `Data API count returns 400 for invalid startDate query param`() {
+      requestWithQueryAndAssert400("filters.startDate", "a", "/reports/external-movements/last-month/count")
+    }
+
+    @Test
+    fun `Data API count returns 400 for invalid endDate query param`() {
+      requestWithQueryAndAssert400("filters.endDate", "17-12-2050", "/reports/external-movements/last-month/count")
+    }
+
+    @Test
+    fun `External movements returns 400 for missing mandatory filter query param`() {
+      val params = mapOf(
+        "${FILTERS_PREFIX}origin" to "AAA",
+        "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "",
+      )
+      requestWithQueryAndAssert400(params, "/reports/external-movements/last-year")
+    }
+
+    @Test
+    fun `External movements returns 400 for filter query param that doesn't match pattern`() {
+      val params = mapOf(
+        "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "2000-01-02",
+        "${FILTERS_PREFIX}origin" to "Invalid",
+      )
+      requestWithQueryAndAssert400(params, "/reports/external-movements/last-year")
+    }
+
+    @Test
+    fun `External movements returns 200 for filter query param that matches pattern`() {
+      val params = mapOf(
+        "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX" to "2000-01-02",
+        "${FILTERS_PREFIX}origin" to "AAA",
+      )
+      requestWithQueryAndAssert200(params, "/reports/external-movements/last-year")
+    }
+
+    @Execution(ExecutionMode.SAME_THREAD)
+    class AuditIntegrationTest : IntegrationTestBase() {
+      companion object {
+        @JvmStatic
+        @DynamicPropertySource
+        fun registerProperties(registry: DynamicPropertyRegistry) {
+          registry.add("hmpps.sqs.queues.audit.queueName") { "auditqueue" }
+          registry.add("dpr.lib.definition.locations") { "productDefinition.json" }
+          registry.add("dpr.lib.serviceName") { "int-test-mi" }
+        }
+      }
+
+      @BeforeEach
+      override fun setup() {
+        super.setup()
+        inboundSqsClient.purgeQueue(
+          PurgeQueueRequest.builder()
+            .queueUrl(inboundQueueUrl)
+            .build(),
+        ).get()
+      }
+
+      @Test
+      fun `Data API audits attempt and success events`() = runTest {
+        wireMockServer.resetAll()
+        manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+        manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+        stubDefinitionsResponse()
+
+        webTestClient.get()
+          .uri { uriBuilder: UriBuilder ->
+            uriBuilder
+              .path("/reports/external-movements/last-month")
+              .queryParam("selectedPage", 1)
+              .queryParam("pageSize", 3)
+              .queryParam("sortColumn", "date")
+              .queryParam("sortedAsc", false)
+              .build()
+          }
+          .headers(setAuthorisation(roles = listOf(authorisedRole)))
+          .exchange()
+          .expectStatus()
+          .isOk()
+
+        val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
+        val json = Json { coerceInputValues = true }
+
+        await()
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted {
+            val msgs = inboundSqsClient.receiveMessage(
+              ReceiveMessageRequest.builder()
+                .queueUrl(inboundQueueUrl)
+                .maxNumberOfMessages(2)
+                .waitTimeSeconds(1)
+                .build(),
+            ).get().messages()
+
+            msgs.forEach { message ->
+              eventsByMessageId[message.messageId()] = json.decodeFromString(
+                MapSerializer(
+                  String.serializer(),
+                  String.serializer().nullable,
+                ),
+                message.body(),
+              )
+            }
+
+            assertThat(eventsByMessageId.values.map { it["what"] })
+              .containsExactlyInAnyOrder(
+                "VIEW_DATA_ATTEMPT",
+                "VIEW_DATA_SUCCESS",
+              )
+          }
+
+        assertThat(eventsByMessageId).hasSize(2)
+
+        val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
+
+        val successEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_SUCCESS" }
+
+        assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
+
+        // Local DPDs don't contain the dpr_ prefix.
+        assertThat(successEvent["subjectId"]).isEqualTo("external-movements_last-month")
+      }
+
+      @Test
+      fun `Data API audits attempt and failure events`() = runTest {
+        wireMockServer.resetAll()
+        manageUsersMockServer.stubLookupUserCaseload("request-user", null)
+        manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
+        manageUsersMockServer.stubLookupUsersRoles()
+        stubDefinitionsResponse()
+
+        doThrow(IllegalStateException("Some error message"))
+          .whenever(configuredApiRepository).executeQuery(
+            query = any(),
+            filters = any(),
+            selectedPage = any(),
+            pageSize = any(),
+            sortColumn = any(),
+            sortedAsc = any(),
+            policyEngineResult = any(),
+            dynamicFilterFieldId = anyOrNull(),
+            dataSourceName = any(),
+            reportFilter = anyOrNull(),
+            prompts = anyOrNull(),
+          )
+
+        webTestClient.mutate().responseTimeout(Duration.ofSeconds(5000)).build().get()
+          .uri { uriBuilder: UriBuilder ->
+            uriBuilder
+              .path("/reports/external-movements/last-month")
+              .queryParam("selectedPage", 1)
+              .queryParam("pageSize", 3)
+              .queryParam("sortColumn", "date")
+              .queryParam("sortedAsc", false)
+              .build()
+          }
+          .headers(setAuthorisation(roles = listOf(authorisedRole)))
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+
+        val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
+        val json = Json { coerceInputValues = true }
+
+        await()
+          .atMost(Duration.ofSeconds(10))
+          .untilAsserted {
+            val msgs = inboundSqsClient.receiveMessage(
+              ReceiveMessageRequest.builder()
+                .queueUrl(inboundQueueUrl)
+                .maxNumberOfMessages(2)
+                .waitTimeSeconds(1)
+                .build(),
+            ).get().messages()
+
+            msgs.forEach { message ->
+              eventsByMessageId[message.messageId()] = json.decodeFromString(
+                MapSerializer(
+                  String.serializer(),
+                  String.serializer().nullable,
+                ),
+                message.body(),
+              )
+            }
+
+            assertThat(eventsByMessageId.values.map { it["what"] })
+              .containsExactlyInAnyOrder(
+                "VIEW_DATA_ATTEMPT",
+                "VIEW_DATA_FAILURE",
+              )
+          }
+
+        assertThat(eventsByMessageId).hasSize(2)
+
+        val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
+
+        val failureEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_FAILURE" }
+
+        assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
+
+        assertThat(failureEvent["subjectId"]).isEqualTo("external-movements_last-month")
+      }
+    }
+
+    private fun requestWithQueryAndAssert400(paramName: String, paramValue: Any, path: String) {
+      requestWithQueryAndAssert400(mapOf(paramName to paramValue), path)
+    }
+
+    private fun requestWithQueryAndAssert400(params: Map<String, Any>, path: String) {
+      requestWithQueryAndAssert(params, path).isBadRequest
+    }
+
+    private fun requestWithQueryAndAssert200(params: Map<String, Any>, path: String) {
+      requestWithQueryAndAssert(params, path).isOk
+    }
+
+    private fun requestWithQueryAndAssert(params: Map<String, Any>, path: String): StatusAssertions =
       webTestClient.get()
         .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path("/reports/external-movements/last-month")
-            .queryParam("selectedPage", 1)
-            .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
-            .queryParam("sortedAsc", false)
-            .build()
+          params.entries.forEach { uriBuilder.queryParam(it.key, it.value) }
+
+          uriBuilder.path(path).build()
         }
         .headers(setAuthorisation(roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
-        .isOk()
-
-      val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
-      val json = Json { coerceInputValues = true }
-
-      await()
-        .atMost(Duration.ofSeconds(10))
-        .untilAsserted {
-          val msgs = inboundSqsClient.receiveMessage(
-            ReceiveMessageRequest.builder()
-              .queueUrl(inboundQueueUrl)
-              .maxNumberOfMessages(2)
-              .waitTimeSeconds(1)
-              .build(),
-          ).get().messages()
-
-          msgs.forEach { message ->
-            eventsByMessageId[message.messageId()] = json.decodeFromString(
-              MapSerializer(
-                String.serializer(),
-                String.serializer().nullable,
-              ),
-              message.body(),
-            )
-          }
-
-          assertThat(eventsByMessageId.values.map { it["what"] })
-            .containsExactlyInAnyOrder(
-              "VIEW_DATA_ATTEMPT",
-              "VIEW_DATA_SUCCESS",
-            )
-        }
-
-      assertThat(eventsByMessageId).hasSize(2)
-
-      val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
-
-      val successEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_SUCCESS" }
-
-      assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
-
-      // Local DPDs don't contain the dpr_ prefix.
-      assertThat(successEvent["subjectId"]).isEqualTo("external-movements_last-month")
-    }
-
-    @Test
-    fun `Data API audits attempt and failure events`() = runTest {
-      wireMockServer.resetAll()
-      manageUsersMockServer.stubLookupUserCaseload("request-user", null)
-      manageUsersMockServer.stubGetUserInfo("request-user", AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles()
-      stubDefinitionsResponse()
-
-      doThrow(IllegalStateException("Some error message"))
-        .whenever(configuredApiRepository).executeQuery(
-          query = any(),
-          filters = any(),
-          selectedPage = any(),
-          pageSize = any(),
-          sortColumn = any(),
-          sortedAsc = any(),
-          policyEngineResult = any(),
-          dynamicFilterFieldId = anyOrNull(),
-          dataSourceName = any(),
-          reportFilter = anyOrNull(),
-          prompts = anyOrNull(),
-        )
-
-      webTestClient.mutate().responseTimeout(Duration.ofSeconds(5000)).build().get()
-        .uri { uriBuilder: UriBuilder ->
-          uriBuilder
-            .path("/reports/external-movements/last-month")
-            .queryParam("selectedPage", 1)
-            .queryParam("pageSize", 3)
-            .queryParam("sortColumn", "date")
-            .queryParam("sortedAsc", false)
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .is5xxServerError
-
-      val eventsByMessageId = mutableMapOf<String, Map<String, String?>>()
-      val json = Json { coerceInputValues = true }
-
-      await()
-        .atMost(Duration.ofSeconds(10))
-        .untilAsserted {
-          val msgs = inboundSqsClient.receiveMessage(
-            ReceiveMessageRequest.builder()
-              .queueUrl(inboundQueueUrl)
-              .maxNumberOfMessages(2)
-              .waitTimeSeconds(1)
-              .build(),
-          ).get().messages()
-
-          msgs.forEach { message ->
-            eventsByMessageId[message.messageId()] = json.decodeFromString(
-              MapSerializer(
-                String.serializer(),
-                String.serializer().nullable,
-              ),
-              message.body(),
-            )
-          }
-
-          assertThat(eventsByMessageId.values.map { it["what"] })
-            .containsExactlyInAnyOrder(
-              "VIEW_DATA_ATTEMPT",
-              "VIEW_DATA_FAILURE",
-            )
-        }
-
-      assertThat(eventsByMessageId).hasSize(2)
-
-      val attemptEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_ATTEMPT" }
-
-      val failureEvent = eventsByMessageId.values.single { it["what"] == "VIEW_DATA_FAILURE" }
-
-      assertThat(attemptEvent["subjectId"]).isEqualTo("external-movements_last-month")
-
-      assertThat(failureEvent["subjectId"]).isEqualTo("external-movements_last-month")
-    }
-  }
-
-  private fun requestWithQueryAndAssert400(paramName: String, paramValue: Any, path: String) {
-    requestWithQueryAndAssert400(mapOf(paramName to paramValue), path)
-  }
-
-  private fun requestWithQueryAndAssert400(params: Map<String, Any>, path: String) {
-    requestWithQueryAndAssert(params, path).isBadRequest
-  }
-
-  private fun requestWithQueryAndAssert200(params: Map<String, Any>, path: String) {
-    requestWithQueryAndAssert(params, path).isOk
-  }
-
-  private fun requestWithQueryAndAssert(params: Map<String, Any>, path: String): StatusAssertions = webTestClient.get()
-    .uri { uriBuilder: UriBuilder ->
-      params.entries.forEach { uriBuilder.queryParam(it.key, it.value) }
-
-      uriBuilder.path(path).build()
-    }
-    .headers(setAuthorisation(roles = listOf(authorisedRole)))
-    .exchange()
-    .expectStatus()
 }
