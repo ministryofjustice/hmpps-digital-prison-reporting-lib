@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionKotlinxConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Condition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
@@ -14,7 +15,10 @@ class JsonFileProductDefinitionRepositoryTest {
 
   private val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json", "dpd001-court-hospital-movements.json"),
-    DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    ProductDefinitionParser(
+      dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
+    ),
     identifiedHelper = IdentifiedHelper(),
   )
 
@@ -38,7 +42,10 @@ class JsonFileProductDefinitionRepositoryTest {
   fun `getSingleReportProductDefinition fails when there is no matching dataset`() {
     val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("nonMatchingDatasetProductDefinition.json"),
-      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      ProductDefinitionParser(
+        dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
+      ),
       identifiedHelper = IdentifiedHelper(),
     )
     val exception = assertThrows(IllegalArgumentException::class.java) {
@@ -54,7 +61,10 @@ class JsonFileProductDefinitionRepositoryTest {
   fun `getSingleReportProductDefinition fails when report fields do not match any dataset fields`() {
     val jsonFileProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("nonMatchingDatasetProductDefinition.json"),
-      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      ProductDefinitionParser(
+        dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
+      ),
       identifiedHelper = IdentifiedHelper(),
     )
     val exception = assertThrows(IllegalArgumentException::class.java) {

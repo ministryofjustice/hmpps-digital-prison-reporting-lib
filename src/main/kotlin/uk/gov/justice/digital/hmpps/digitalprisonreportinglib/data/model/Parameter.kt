@@ -12,4 +12,5 @@ data class Parameter(
   val mandatory: Boolean = false,
   val referenceType: ReferenceType? = null,
   val default: String? = null,
+  val description: String? = null,
 )

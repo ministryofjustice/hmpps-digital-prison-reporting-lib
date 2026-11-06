@@ -5,6 +5,7 @@ import kotlinx.serialization.SerialName
 
 enum class DatasourceConnection {
   @SerializedName("federated")
+  @SerialName("federated")
   FEDERATED,
 
   @SerialName("datawarehouse")

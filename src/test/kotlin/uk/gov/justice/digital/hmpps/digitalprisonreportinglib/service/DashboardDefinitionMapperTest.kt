@@ -10,6 +10,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionKotlinxConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardDefinition
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.V
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionParser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.establishmentsAndWings.EstablishmentToWing
@@ -55,7 +57,10 @@ class DashboardDefinitionMapperTest {
 
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinitionWithDashboard.json"),
-    DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    ProductDefinitionParser(
+      dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
+    ),
     identifiedHelper = IdentifiedHelper(),
   )
   private val syncDataApiService: SyncDataApiService = mock()
@@ -435,7 +440,10 @@ class DashboardDefinitionMapperTest {
 
     val productDefinitionRepositoryWithChild: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionWithDashboardChild.json"),
-      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      ProductDefinitionParser(
+        dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
+      ),
       identifiedHelper = IdentifiedHelper(),
     )
 

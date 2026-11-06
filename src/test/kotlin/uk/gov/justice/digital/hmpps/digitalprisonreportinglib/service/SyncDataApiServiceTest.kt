@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditServ
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.LoadType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.common.model.SortDirection
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionGsonConfig
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.config.DefinitionKotlinxConfig
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.JsonFileProductDefinitionRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionParser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.QueryDeserializer.Companion.PLACEHOLDER_DATASOURCE
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.RedshiftDataApiRepository
@@ -108,7 +110,10 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val identifiedHelper: IdentifiedHelper = IdentifiedHelper()
   private val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
     listOf("productDefinition.json", "productDefinitionWithDashboard.json"),
-    DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+    ProductDefinitionParser(
+      dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
+    ),
     identifiedHelper,
   )
   private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
@@ -561,7 +566,10 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   fun `the policy engine should parse a null action correctly and return TRUE for an access policy with a matching condition`() {
     val productDefinitionRepository: ProductDefinitionRepository = JsonFileProductDefinitionRepository(
       listOf("productDefinitionPolicyNoAction.json"),
-      DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+      ProductDefinitionParser(
+        dprDefinitionGson = DefinitionGsonConfig().definitionGson(IsoLocalDateTimeTypeAdaptor()),
+        dprDefinitionKotlinx = DefinitionKotlinxConfig().kotlinxJson(),
+      ),
       identifiedHelper,
     )
     val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
