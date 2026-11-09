@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.6.2
+- Retrieve authSource from userinfo endpoint rather then the token.
+
 # 18.6.1
 - Added optional hint: string field to FilterDefinition
 

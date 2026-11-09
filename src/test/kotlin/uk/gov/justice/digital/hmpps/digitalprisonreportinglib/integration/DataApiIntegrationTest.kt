@@ -227,7 +227,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectBody()
       .json(
         """[
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${
+          dateTimeWithSeconds(
+            movementPrisoner4[DATE],
+          )
+        }", 
         "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
         "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
@@ -494,7 +498,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .expectBody()
       .json(
         """[
-         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}",
+         {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${
+          dateTimeWithSeconds(
+            movementPrisoner4[DATE],
+          )
+        }",
           "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}", 
           "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]       
@@ -518,7 +526,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       .json(
         """
       [
-        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${dateTimeWithSeconds(movementPrisoner4[DATE])}", 
+        {"prisonNumber": "${movementPrisoner4[PRISON_NUMBER]}", "name": "${movementPrisoner4[NAME]}", "date": "${
+          dateTimeWithSeconds(
+            movementPrisoner4[DATE],
+          )
+        }", 
         "origin": "${movementPrisoner4[ORIGIN]}", "origin_code": "${movementPrisoner4[ORIGIN_CODE]}", "destination": "${movementPrisoner4[DESTINATION]}", "destination_code": "${movementPrisoner4[DESTINATION_CODE]}",
         "direction": "${movementPrisoner4[DIRECTION]}", "type": "${movementPrisoner4[TYPE]}", "reason": "${movementPrisoner4[REASON]}"}
       ]
@@ -674,58 +686,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     }
   }
 
-  class ProbationDataSourcesAuthSourceCaseloadPolicyTest : IntegrationTestBase() {
-    companion object {
-      @JvmStatic
-      @DynamicPropertySource
-      fun registerProperties(registry: DynamicPropertyRegistry) {
-        registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPermitPolicy.json" }
-        registry.add("dpr.lib.hasProbationDatasources") { true }
-        registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
-      }
-    }
-
-    @BeforeEach
-    fun laoSetup() {
-      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
-    }
-
-    @Test
-    fun `should execute a report with a row level caseload policy as a probation user but return nothing`() {
-      manageUsersMockServer.stubLookupUserCaseload404("request-user")
-      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.DELIUS)
-      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(authSource = AuthSource.DELIUS, roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-
-    @Test
-    fun `should execute a report with a row level caseload policy as an external user but return nothing`() {
-      manageUsersMockServer.stubLookupUserCaseload404("request-user")
-      manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH)
-      manageUsersMockServer.stubLookupUsersRoles("request-user", listOf(authorisedRole))
-      stubDefinitionsResponse()
-
-      webTestClient.get()
-        .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(authSource = AuthSource.AUTH, roles = listOf(authorisedRole)))
-        .exchange()
-        .expectStatus()
-        .isOk()
-        .expectBody()
-        .jsonPath("count").isEqualTo("0")
-    }
-  }
-
   class LaoDataApiIntegrationTestPermitPolicy : IntegrationTestBase() {
     companion object {
       @JvmStatic
@@ -740,15 +700,18 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @BeforeEach
     fun laoSetup() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
+        .execute()
     }
 
     @Test
     fun `Should return data if LAO permit policy exists even if user is excluded`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
@@ -756,20 +719,22 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
 
     @Test
     fun `Should return data if LAO permit policy exists even if other user is restricted to LAO and requesting user is not`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
@@ -777,12 +742,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
       webTestClient.get()
         .uri("/reports/external-movements/last-month/count")
-        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
+        .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole), authSource = AuthSource.DELIUS))
         .exchange()
         .expectStatus()
         .isOk()
         .expectBody()
-        .jsonPath("count").isEqualTo("1")
+        .jsonPath("count").isEqualTo("5")
     }
   }
 
@@ -840,7 +805,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @BeforeEach
     fun laoSetup() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
+        .execute()
     }
 
     @Test
@@ -873,7 +839,8 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @BeforeEach
     fun laoSetup() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;")
+        .execute()
     }
 
     @Test
@@ -928,9 +895,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Data API count returns data if LAO is restricted to someone who isnt the requesting user but restriction is expired`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:Z000000', 'G3411VR', 'Z000000', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -948,11 +917,14 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Data API count returns data if requesting user is excluded from the LAO but exclusion is expired`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111115', 'G3411VR', 'P111115', 'a reason', NOW() - INTERVAL '2 day', NOW() - INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -970,9 +942,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Data API count returns data if requesting user is not excluded from the LAO`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -990,11 +964,14 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Data API count returns data if LAO is restricted to the requesting user`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111111', 'G3411VR', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111113', 'G3411VR', 'P111113', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111113', 'G3411VR', 'P111113', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -1039,11 +1016,14 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Data API count returns data if data does not contain any LAOs`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -1061,9 +1041,11 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Data API count returns data if requesting user is not excluded from the LAO and is an external user`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('G3411VR:P111112', 'G3411VR', 'P111112', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -1081,11 +1063,14 @@ class DataApiIntegrationTest : IntegrationTestBase() {
     @Test
     fun `Data API count returns data if data does not contain any LAOs and is an external user`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())").execute()
+        .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('A123456', 0, NOW())")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_restrictions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
-        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')").execute()
+        .prepareStatement("INSERT INTO product_.lao_exclusions (crn_user_id, crn, user_id, reason, since, until) VALUES ('A123456:P111111', 'A123456', 'P111111', 'a reason', NOW(), NOW() + INTERVAL '1 day')")
+        .execute()
       manageUsersMockServer.stubGetUserInfo(authSource = AuthSource.AUTH, username = "P111111")
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
@@ -1162,22 +1147,38 @@ class DataApiIntegrationTest : IntegrationTestBase() {
 
   @Test
   fun `Data API returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month")
+    requestWithQueryAndAssert400(
+      "${FILTERS_PREFIX}destination",
+      "some name",
+      "/reports/external-movements/last-month",
+    )
   }
 
   @Test
   fun `Data API count returns 400 for a report field which is not a filter`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}destination", "some name", "/reports/external-movements/last-month/count")
+    requestWithQueryAndAssert400(
+      "${FILTERS_PREFIX}destination",
+      "some name",
+      "/reports/external-movements/last-month/count",
+    )
   }
 
   @Test
   fun `Data API returns 400 for invalid startDate query param`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX", "abc", "/reports/external-movements/last-month")
+    requestWithQueryAndAssert400(
+      "${FILTERS_PREFIX}date$RANGE_FILTER_START_SUFFIX",
+      "abc",
+      "/reports/external-movements/last-month",
+    )
   }
 
   @Test
   fun `External movements returns 400 for invalid endDate query param`() {
-    requestWithQueryAndAssert400("${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX", "b", "/reports/external-movements/last-month")
+    requestWithQueryAndAssert400(
+      "${FILTERS_PREFIX}date$RANGE_FILTER_END_SUFFIX",
+      "b",
+      "/reports/external-movements/last-month",
+    )
   }
 
   @Test
@@ -1400,7 +1401,6 @@ class DataApiIntegrationTest : IntegrationTestBase() {
   private fun requestWithQueryAndAssert(params: Map<String, Any>, path: String): StatusAssertions = webTestClient.get()
     .uri { uriBuilder: UriBuilder ->
       params.entries.forEach { uriBuilder.queryParam(it.key, it.value) }
-
       uriBuilder.path(path).build()
     }
     .headers(setAuthorisation(roles = listOf(authorisedRole)))
