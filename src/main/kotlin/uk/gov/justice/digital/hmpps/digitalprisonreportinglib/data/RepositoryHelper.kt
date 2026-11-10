@@ -6,15 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Date
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
-import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.Timestamp
 import javax.sql.DataSource
@@ -31,7 +28,6 @@ abstract class RepositoryHelper {
     const val REPORT_ = """report_"""
     const val POLICY_ = """policy_"""
     const val FILTER_ = """filter_"""
-    const val TRANSFORMATION_ = """transformation_"""
     const val PROMPT = """prompt_"""
     const val CONTEXT = """context_"""
 
@@ -140,9 +136,7 @@ abstract class RepositoryHelper {
     return filterClause
   }
 
-  private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) = dynamicFilterFieldId?.let {
-    "DISTINCT ${dynamicFilterFieldId.plus(listOf("has_related_lao_exclusion", "has_related_lao_restriction", "lao_reason")).joinToString(", ")}"
-  } ?: "*"
+  private fun constructProjectedColumns(dynamicFilterFieldId: Set<String>?) = dynamicFilterFieldId?.let { "DISTINCT ${dynamicFilterFieldId.joinToString(", ")}" } ?: "*"
 
   protected fun buildOrderByClause(sortColumn: String?, sortedAsc: Boolean) = sortColumn?.let { """ORDER BY $sortColumn ${calculateSortingDirection(sortedAsc)}""" } ?: ""
 
