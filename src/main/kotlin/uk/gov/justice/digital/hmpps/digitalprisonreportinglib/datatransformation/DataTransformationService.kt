@@ -82,10 +82,12 @@ class DataTransformationService(
     for ((policyType, policies) in policiesByType) {
       val transformer = dataTransformationPolicyTypesToTransformers[policyType] ?: error("No transformer for $policyType")
 
-      val (newData, changes) = transformer.transform(transformedData, policies, executionContext)
+      val (newData, changes) = transformer.transform(transformedData, policies, executionContext, product::class)
 
       transformedData = newData
-      allChanges[policyType] = changes
+      if (changes.isNotEmpty()) {
+        allChanges[policyType] = changes
+      }
     }
 
     return Pair(transformedData, allChanges)

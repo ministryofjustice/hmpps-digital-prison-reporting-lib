@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.google.gson.Gson
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -26,8 +27,8 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
       registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPolicy.json" }
-//      registry.add("dpr.lib.hasProbationDatasources") { true }
-//      registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
+      registry.add("dpr.lib.hasProbationDatasources") { true }
+      registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
     }
   }
 
@@ -36,24 +37,26 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
     super.setup()
     DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
       .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
-//    manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
-//    manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
-//    stubDefinitionsResponse()
+    manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+    manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+    stubDefinitionsResponse()
+  }
 
+  @AfterEach
+  fun tearDown() {
+    DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+      .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
   }
 
   @Test
   fun `should return data inside results object for sync report data endpoint`() {
-    manageUsersMockServer.stubLookupUserCaseload(activeCaseloadId = "LWSTMC")
-    manageUsersMockServer.stubLookupUsersRoles(roles = listOf("INCIDENT_REPORTS__RO", "PRISONS_REPORTING_USER"))
-    stubDefinitionsResponse()
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
         uriBuilder
           .path("/v2/reports/external-movements/last-month")
           .build()
       }
-      .headers(setAuthorisation( roles = listOf(authorisedRole)))
+      .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()

@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.Awaitility.await
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -704,6 +705,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .execute()
     }
 
+    @AfterEach
+    fun tearDown() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+    }
+
     @Test
     fun `Should return data if LAO permit policy exists even if user is excluded`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
@@ -769,6 +776,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .execute()
     }
 
+    @AfterEach
+    fun tearDown() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+    }
+
     @Test
     fun `Should return data if LAO permit policy exists even if user is excluded`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
@@ -809,6 +822,12 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .execute()
     }
 
+    @AfterEach
+    fun tearDown() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+    }
+
     @Test
     fun `Should be forbidden if no LAO policy exists but running app with probation datasources`() {
       manageUsersMockServer.stubLookupUserCaseload("P111111", "LWSTMC")
@@ -843,8 +862,14 @@ class DataApiIntegrationTest : IntegrationTestBase() {
         .execute()
     }
 
+    @AfterEach
+    fun tearDown() {
+      DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+        .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+    }
+
     @Test
-    fun `Data API returns zero entries if LAO is restricted to someone who isnt the requesting user`() {
+    fun `Data API does not return restricted entry if LAO is restricted to someone who isnt the requesting user`() {
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
         .prepareStatement("INSERT INTO product_.lao_crns (crn, version, last_updated) VALUES ('G3411VR', 0, NOW())").execute()
       DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
@@ -854,14 +879,16 @@ class DataApiIntegrationTest : IntegrationTestBase() {
       manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
       stubDefinitionsResponse()
 
-      webTestClient.get()
+      val body = webTestClient.get()
         .uri("/reports/external-movements/last-month")
         .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
         .exchange()
         .expectStatus()
         .isOk()
-        .expectBody()
-        .json("[]")
+        .expectBodyList<Map<String, Any>>()
+        .returnResult()
+
+      assertThat(body.responseBody!!.any { it["crn"] == "G3411VR" }).isFalse()
     }
 
     @Test

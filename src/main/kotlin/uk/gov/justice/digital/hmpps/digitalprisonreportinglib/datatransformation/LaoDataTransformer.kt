@@ -5,11 +5,15 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnChange
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LaoPolicyMetadata
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.PolicyBasedDataChange
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RowIdentifier
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
+import kotlin.reflect.KClass
 
 data class DataTransformation(
   val data: List<Map<String, Any?>>,
@@ -26,6 +30,7 @@ class LaoDataTransformer(
     data: List<Map<String, Any?>>,
     policies: List<Policy>,
     executionContext: ExecutionContext,
+    clazz: KClass<out WithPolicy>,
   ): DataTransformation {
     if (policies.any { it.type != policyType }) {
       throw ValidationException("LaoDataTransformer was given non LAO policies")
@@ -54,7 +59,12 @@ class LaoDataTransformer(
     }
     val crnColumn = matchedCrnColumns.first()
     val exclusions = laoDataRepository.getLaoExclusionsForUser(executionContext.userInfo.username)
-    val crnColumnValues = data.map { it[crnColumn] as String }
+    val crnColumnValues = data.map {
+      if (clazz == SingleDashboardProductDefinition::class) {
+        return@map (it[crnColumn] as MetricData).raw as String
+      }
+      it[crnColumn] as String
+    }
     val restrictions = laoDataRepository.getLaoRestrictionsForCrns(crnColumnValues)
     val excludedCrns = exclusions.map { it.crn }.toSet()
 
