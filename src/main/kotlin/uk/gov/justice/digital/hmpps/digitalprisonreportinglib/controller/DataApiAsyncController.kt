@@ -472,7 +472,7 @@ class DataApiAsyncController(
             sortColumnName = sortColumn,
             sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
-        ),
+        ).data,
       )
   }
 
@@ -506,27 +506,25 @@ class DataApiAsyncController(
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        ReportExecutionResults(
-          data = asyncDataApiService.getStatementResult(
-            tableId = tableId,
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            filters = filterHelper.filtersOnly(filters),
-            sortedAsc = sortedAsc,
-            sortColumn = sortColumn,
-            executionContext = httpRequest.getExecutionContext(
-              manageUsersClient = manageUsersClient,
-              hasProbationDatasources = hasProbationDatasources,
-              dataProductReportableInformation = DataProductReportableInformation(
-                id = reportId,
-                variantId = reportVariantId,
-              ),
-              preFilters = cleanFilters,
-              sortColumnName = sortColumn,
-              sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+        asyncDataApiService.getStatementResult(
+          tableId = tableId,
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
+          sortedAsc = sortedAsc,
+          sortColumn = sortColumn,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
             ),
+            preFilters = cleanFilters,
+            sortColumnName = sortColumn,
+            sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
         ),
       )
@@ -575,7 +573,7 @@ class DataApiAsyncController(
               ),
               preFilters = cleanFilters,
             ),
-          ),
+          ).data,
         ),
       )
   }
@@ -606,23 +604,21 @@ class DataApiAsyncController(
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        DashboardExecutionResults(
-          data = asyncDataApiService.getDashboardStatementResult(
-            tableId = tableId,
-            reportId = reportId,
-            dashboardId = dashboardId,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            filters = filterHelper.filtersOnly(filters),
-            executionContext = httpRequest.getExecutionContext(
-              manageUsersClient = manageUsersClient,
-              hasProbationDatasources = hasProbationDatasources,
-              dataProductReportableInformation = DataProductReportableInformation(
-                id = reportId,
-                variantId = dashboardId,
-              ),
-              preFilters = cleanFilters,
+        asyncDataApiService.getDashboardStatementResult(
+          tableId = tableId,
+          reportId = reportId,
+          dashboardId = dashboardId,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          filters = filterHelper.filtersOnly(filters),
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = dashboardId,
             ),
+            preFilters = cleanFilters,
           ),
         ),
       )
@@ -672,7 +668,7 @@ class DataApiAsyncController(
             sortColumnName = sortColumn,
             sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
-        ),
+        ).data,
       )
   }
 

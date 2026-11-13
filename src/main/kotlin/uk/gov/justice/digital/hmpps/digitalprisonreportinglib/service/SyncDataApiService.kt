@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditActi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasou
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.datatransformation.DataTransformationService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.AthenaClientNotEnabledException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.AsyncDataApiService.Companion.DATAMART
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
@@ -29,6 +32,7 @@ class SyncDataApiService(
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   identifiedHelper: IdentifiedHelper,
   val auditService: AuditService,
+  val dataTransformationService: DataTransformationService,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
 ) : CommonDataApiService(
   identifiedHelper = identifiedHelper,
@@ -60,7 +64,7 @@ class SyncDataApiService(
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     datasetForFilter: Dataset? = null,
-  ): List<Map<String, Any?>> {
+  ): ReportExecutionResults {
     auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository
       .getSingleReportProductDefinition(reportId, reportVariantId)
@@ -103,6 +107,9 @@ class SyncDataApiService(
             datasetForFilter,
           )
         }
+        .let {
+          dataTransformationService.transformResults(it, productDefinition, executionContext)
+        }
     }
   }
 
@@ -132,7 +139,16 @@ class SyncDataApiService(
       reportId,
       reportVariantId,
     )
-    checkAuth(productDefinition, executionContext)
+    val enhancedExecutionContext = executionContext.copy(
+      policies = productDefinition.policy,
+      dataProductReportableInformation = executionContext.dataProductReportableInformation.copy(
+        id = productDefinition.id,
+        name = productDefinition.name,
+        variantName = productDefinition.report.name,
+        datasource = productDefinition.datasource,
+      ),
+    )
+    checkAuth(productDefinition, enhancedExecutionContext)
     val policyEngine = PolicyEngine(productDefinition.policy, executionContext)
     return Count(
       configuredApiRepository.count(
@@ -142,6 +158,7 @@ class SyncDataApiService(
         policyEngineResult = policyEngine.execute(),
         dataSourceName = productDefinition.datasource.name,
         productDefinition = productDefinition,
+        executionContext = enhancedExecutionContext,
       ),
     )
   }
@@ -158,7 +175,7 @@ class SyncDataApiService(
     reportFieldId: Set<String>? = null,
     prefix: String? = null,
     datasetForFilter: Dataset? = null,
-  ): List<Map<String, Any?>> {
+  ): DashboardExecutionResults {
     auditService.publishAttempt(AuditAction.DATA, executionContext)
     val dashboardDefinition = productDefinitionRepository
       .getSingleDashboardProductDefinition(reportId, dashboardId)
@@ -198,6 +215,9 @@ class SyncDataApiService(
         }
         .map(formulaEngine::applyFormulas)
         .map { row -> toMetricData(row) }
+        .let {
+          dataTransformationService.transformResults(it, dashboardDefinition, executionContext)
+        }
     }
   }
 

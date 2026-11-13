@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration
 
 import com.google.gson.Gson
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -10,19 +12,40 @@ import org.mockito.kotlin.verify
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.web.util.UriBuilder
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultType
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
+import java.sql.DriverManager
 
 class V2DataApiIntegrationTest : IntegrationTestBase() {
   companion object {
     @JvmStatic
     @DynamicPropertySource
     fun registerProperties(registry: DynamicPropertyRegistry) {
-      registry.add("dpr.lib.definition.locations") { "productDefinitionWithFormula.json" }
+      registry.add("dpr.lib.definition.locations") { "productDefinitionWithLaoPolicy.json" }
+      registry.add("dpr.lib.hasProbationDatasources") { true }
+      registry.add("dpr.lib.user.requiredAuthSources") { "DELIUS,AUTH" }
     }
+  }
+
+  @BeforeEach
+  fun laoSetup() {
+    super.setup()
+    DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+      .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
+    manageUsersMockServer.stubGetUserInfo(username = "P111111", authSource = AuthSource.DELIUS)
+    manageUsersMockServer.stubLookupUsersRoles("P111111", listOf(authorisedRole))
+    stubDefinitionsResponse()
+  }
+
+  @AfterEach
+  fun tearDown() {
+    DriverManager.getConnection(PostgresContainer.jdbcUrl, "test", "test")
+      .prepareStatement("TRUNCATE TABLE product_.lao_exclusions; TRUNCATE TABLE product_.lao_restrictions; TRUNCATE TABLE product_.lao_crns;").execute()
   }
 
   @Test
@@ -33,7 +56,7 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
           .path("/v2/reports/external-movements/last-month")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -53,7 +76,7 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
           .path("/v2/reports/external-movements/dashboards/age-breakdown-dashboard-1")
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
@@ -70,7 +93,8 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
     val tableId = "tableId"
     val selectedPage = 2L
     val pageSize = 20L
-    val expectedServiceResult =
+    val expectedServiceResult = ReportExecutionResults(
+      emptyMap(),
       listOf(
         mapOf(
           "prisonNumber" to "1",
@@ -82,7 +106,8 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
           "type" to "trn",
           "reason" to "normal transfer",
         ),
-      )
+      ),
+    )
 
     given(
       asyncDataApiService.getStatementResult(
@@ -107,13 +132,13 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("pageSize", 20L)
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()
       .expectBody(ReportExecutionResults::class.java)
       .value {
-        assertThat(it!!.data).isEqualTo(expectedServiceResult)
+        assertThat(it!!.data).isEqualTo(expectedServiceResult.data)
         assertThat(it.policyBasedDataChanges).isEmpty()
         assertThat(it.resultType).isEqualTo(ResultType.REPORT)
       }
@@ -138,7 +163,7 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
     )
 
     given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
-      .willReturn(data)
+      .willReturn(DashboardExecutionResults(emptyMap(), data))
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -148,7 +173,7 @@ class V2DataApiIntegrationTest : IntegrationTestBase() {
           .queryParam("pageSize", pageSize)
           .build()
       }
-      .headers(setAuthorisation(roles = listOf(authorisedRole)))
+      .headers(setAuthorisation(user = "P111111", roles = listOf(authorisedRole)))
       .exchange()
       .expectStatus()
       .isOk()

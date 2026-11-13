@@ -58,20 +58,7 @@ data class Policy(
       return POLICY_PERMIT
     } else {
       if (type == PolicyType.LAO) {
-        return """
-          ${_action!!.first()} NOT IN (
-              WITH exclusions_cte as (
-                SELECT crn FROM product_.lao_exclusions e WHERE e.user_id = '${executionContext.userInfo.username}' AND e.since <= NOW() AND e.until >= NOW()
-              ),
-              restrictions_cte as (
-                SELECT crn FROM product_.lao_restrictions r 
-                WHERE r.since <= NOW() AND r.until >= NOW()
-                GROUP BY crn
-                HAVING NOT BOOL_OR(user_id = '${executionContext.userInfo.username}')
-              )
-              SELECT crn FROM exclusions_cte UNION SELECT crn FROM restrictions_cte
-          )
-        """.trimIndent()
+        return POLICY_PERMIT
       }
       return action.joinToString(" AND ", transform = transformFunction)
     }

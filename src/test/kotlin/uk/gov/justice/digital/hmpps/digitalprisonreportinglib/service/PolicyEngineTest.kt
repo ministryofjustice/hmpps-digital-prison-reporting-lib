@@ -664,44 +664,4 @@ class PolicyEngineTest {
     val policyEngine = PolicyEngine(listOf(policy), context)
     assertThat(policyEngine.execute()).isEqualTo(POLICY_PERMIT)
   }
-
-  @Test
-  fun `policy engine returns sql for an lao policy with effect deny and an action indicating a crn column`() {
-    val context = ExecutionContext(
-      CaseloadResponse(
-        username = testUsername,
-        active = true,
-        accountType = "GENERAL",
-        caseloads = listOf(testCaseload),
-        activeCaseload = testCaseload,
-      ),
-      emptyList(),
-      AuthUser(testUsername, true, testUsername, AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
-      false,
-      DataProductReportableInformation("", "", mock(), "", ""),
-    )
-    val policy = Policy(
-      id = "lao",
-      type = PolicyType.LAO,
-      rule = listOf(Rule(Effect.DENY, emptyList())),
-      _action = listOf("a_crn_col"),
-    )
-    val policyEngine = PolicyEngine(listOf(policy), context)
-    assertThat(policyEngine.execute()).isEqualTo(
-      """
-        a_crn_col NOT IN (
-            WITH exclusions_cte as (
-              SELECT crn FROM product_.lao_exclusions e WHERE e.user_id = 'request-user' AND e.since <= NOW() AND e.until >= NOW()
-            ),
-            restrictions_cte as (
-              SELECT crn FROM product_.lao_restrictions r 
-              WHERE r.since <= NOW() AND r.until >= NOW()
-              GROUP BY crn
-              HAVING NOT BOOL_OR(user_id = 'request-user')
-            )
-            SELECT crn FROM exclusions_cte UNION SELECT crn FROM restrictions_cte
-        )
-      """.trimIndent(),
-    )
-  }
 }

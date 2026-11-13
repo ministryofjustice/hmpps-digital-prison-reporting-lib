@@ -10,12 +10,14 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ReportFilter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleReportProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SqlDialect
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.datatransformation.DataTransformationService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Prompt
 import java.sql.ResultSet
 
 @Service
 class ConfiguredApiRepository(
   private val redShiftSummaryTableHelper: RedShiftSummaryTableHelper,
+  private val dataTransformationService: DataTransformationService,
 ) : RepositoryHelper() {
 
   fun executeQuery(
@@ -182,6 +184,7 @@ class ConfiguredApiRepository(
     policyEngineResult: String,
     dataSourceName: String,
     productDefinition: SingleReportProductDefinition,
+    executionContext: ExecutionContext,
   ): Long {
     val jdbcTemplate = populateNamedParameterJdbcTemplate(dataSourceName)
     return jdbcTemplate.queryForList(
@@ -190,10 +193,14 @@ class ConfiguredApiRepository(
         reportQuery = buildReportQuery(productDefinition.report.filter),
         policiesQuery = buildPolicyQuery(policyEngineResult),
         filtersQuery = buildFiltersQuery(filters),
-        selectFromFinalStageQuery = "SELECT COUNT(1) as total FROM $FILTER_",
+        selectFromFinalStageQuery = buildFinalStageQuery(
+          sortedAsc = true,
+        ),
       ) + ";",
       buildPreparedStatementNamedParams(filters),
-    ).first().get("total") as Long
+    ).let {
+      dataTransformationService.transformResults(it, productDefinition, executionContext)
+    }.data.size.toLong()
   }
 
   private fun buildPreparedStatementNamedParams(filters: List<Filter>): MapSqlParameterSource {

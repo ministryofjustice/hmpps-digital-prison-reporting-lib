@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.mockito.Mockito
 import org.mockito.Mockito.RETURNS_DEEP_STUBS
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -15,6 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.DataProductReportableInformation
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.NAME
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepositoryTest.AllMovementPrisoners.PRISON_NUMBER
@@ -46,6 +49,10 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy.PolicyResult.POLICY_DENY
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
+import uk.gov.justice.hmpps.kotlin.auth.AuthSource
 import java.time.LocalDateTime
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -79,6 +86,23 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
   }
 
   val productDefinition = mock<SingleReportProductDefinition>()
+
+  val defaultExecutionContext = ExecutionContext(
+    CaseloadResponse(
+      username = "request-user",
+      active = true,
+      accountType = "GENERAL",
+      caseloads = listOf(
+        Caseload("HEI", ""),
+        Caseload("LWSTMC", ""),
+      ),
+      activeCaseload = Caseload(id = "LWSTMC", name = ""),
+    ),
+    listOf("ROLE_PRISONS_REPORTING_USER"),
+    AuthUser("request-user", true, "request-user", AuthSource.NOMIS, "abc123", "f23-f2-f32f23-f3223f"),
+    false,
+    DataProductReportableInformation("", "", Mockito.mock(), "", ""),
+  )
 
   @BeforeEach
   override fun setup() {
@@ -810,6 +834,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(5L, actual)
   }
@@ -823,6 +848,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(4L, actual)
   }
@@ -836,6 +862,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(1L, actual)
   }
@@ -849,6 +876,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(2, actual)
   }
@@ -862,6 +890,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(1, actual)
   }
@@ -875,6 +904,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(2, actual)
   }
@@ -888,6 +918,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(0, actual)
   }
@@ -901,6 +932,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(0, actual)
   }
@@ -914,6 +946,7 @@ class ConfiguredApiRepositoryTest : IntegrationTestBase() {
       policyEngineResult = REPOSITORY_TEST_POLICY_ENGINE_RESULT,
       dataSourceName = REPOSITORY_TEST_DATASOURCE_NAME,
       productDefinition = productDefinition,
+      executionContext = defaultExecutionContext,
     )
     Assertions.assertEquals(0, actual)
   }

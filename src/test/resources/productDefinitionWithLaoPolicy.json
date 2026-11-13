@@ -522,5 +522,59 @@
         } ]
       },
       "destination" : [ ]
-    }]
+    }],
+  "dashboard": [
+    {
+      "id": "age-breakdown-dashboard-1",
+      "name": "Age Breakdown Dashboard",
+      "description": "Age Breakdown Dashboard Description",
+      "dataset": "external-movements",
+      "section": [
+        {
+          "id": "totals-breakdown",
+          "display": "Totals breakdown",
+          "visualisation": [
+            {
+              "id": "total-prisoners",
+              "type": "list",
+              "display": "Total prisoners by wing",
+              "column": {
+                "key": [
+                  {
+                    "id": "establishment_id",
+                    "display": "Establishment ID"
+                  },
+                  {
+                    "id": "wing",
+                    "display": "Wing"
+                  }
+                ],
+                "measure": [
+                  {
+                    "id": "establishment_id",
+                    "display": "Establishment ID"
+                  },
+                  {
+                    "id": "wing",
+                    "display": "Wing"
+                  },
+                  {
+                    "id": "total_prisoners",
+                    "display": "Total prisoners"
+                  }
+                ],
+                "filter": [
+                  {
+                    "id": "establishment_id",
+                    "equals": null
+                  }
+                ],
+                "expectNull": true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
