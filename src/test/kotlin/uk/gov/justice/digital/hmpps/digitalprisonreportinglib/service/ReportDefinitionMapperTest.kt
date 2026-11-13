@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Multiselect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType.Text
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.SingleVariantReportDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefinitionRepository
@@ -361,7 +362,7 @@ class ReportDefinitionMapperTest {
   fun `Getting report for statically returned dynamic filter values on a number succeeds`() {
     whenever(
       configuredApiService.validateAndFetchData(any(), any(), any(), anyLong(), anyLong(), any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull()),
-    ).thenReturn(listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2))))
+    ).thenReturn(ReportExecutionResults(emptyMap(), listOf(mapOf("1" to BigDecimal(1)), mapOf("2" to BigDecimal(2)))))
 
     val datasource = Datasource("datasourceId", "datasourceName")
     val productDefinition = SingleReportProductDefinition(
@@ -565,7 +566,7 @@ class ReportDefinitionMapperTest {
         true,
         setOf("13"),
       ),
-    ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
+    ).thenReturn(ReportExecutionResults(emptyMap(), listOf(mapOf("13" to "static1"), mapOf("13" to "static2"))))
 
     val result = mapper.mapReport(fullSingleProductDefinition, executionContext)
 
@@ -751,7 +752,7 @@ class ReportDefinitionMapperTest {
         true,
         setOf("13"),
       ),
-    ).thenReturn(listOf(mapOf("13" to "static1"), mapOf("13" to "static2")))
+    ).thenReturn(ReportExecutionResults(emptyMap(), listOf(mapOf("13" to "static1"), mapOf("13" to "static2"))))
 
     val result = mapper.mapReport(fullSingleProductDefinition, executionContext)
 

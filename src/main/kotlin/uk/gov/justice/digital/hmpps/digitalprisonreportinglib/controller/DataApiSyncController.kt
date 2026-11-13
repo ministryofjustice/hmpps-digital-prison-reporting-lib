@@ -106,26 +106,24 @@ class DataApiSyncController(
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        ReportExecutionResults(
-          data = dataApiSyncService.validateAndFetchData(
-            reportId = reportId,
-            reportVariantId = reportVariantId,
-            filters = cleanFilters,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            executionContext = httpRequest.getExecutionContext(
-              manageUsersClient = manageUsersClient,
-              hasProbationDatasources = hasProbationDatasources,
-              dataProductReportableInformation = DataProductReportableInformation(
-                id = reportId,
-                variantId = reportVariantId,
-              ),
-              preFilters = cleanFilters,
-              sortColumnName = sortColumn,
-              sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+        dataApiSyncService.validateAndFetchData(
+          reportId = reportId,
+          reportVariantId = reportVariantId,
+          filters = cleanFilters,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = reportVariantId,
             ),
+            preFilters = cleanFilters,
+            sortColumnName = sortColumn,
+            sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
         ),
       )
@@ -192,7 +190,7 @@ class DataApiSyncController(
             sortColumnName = sortColumn,
             sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
-        ),
+        ).data,
       )
   }
 
@@ -285,26 +283,24 @@ class DataApiSyncController(
     return ResponseEntity
       .status(HttpStatus.OK)
       .body(
-        DashboardExecutionResults(
-          data = dataApiSyncService.validateAndFetchDataForDashboard(
-            reportId = reportId,
-            dashboardId = dashboardId,
-            filters = cleanFilters,
-            selectedPage = selectedPage,
-            pageSize = pageSize,
-            sortColumn = sortColumn,
-            sortedAsc = sortedAsc,
-            executionContext = httpRequest.getExecutionContext(
-              manageUsersClient = manageUsersClient,
-              hasProbationDatasources = hasProbationDatasources,
-              dataProductReportableInformation = DataProductReportableInformation(
-                id = reportId,
-                variantId = dashboardId,
-              ),
-              preFilters = cleanFilters,
-              sortColumnName = sortColumn,
-              sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
+        dataApiSyncService.validateAndFetchDataForDashboard(
+          reportId = reportId,
+          dashboardId = dashboardId,
+          filters = cleanFilters,
+          selectedPage = selectedPage,
+          pageSize = pageSize,
+          sortColumn = sortColumn,
+          sortedAsc = sortedAsc,
+          executionContext = httpRequest.getExecutionContext(
+            manageUsersClient = manageUsersClient,
+            hasProbationDatasources = hasProbationDatasources,
+            dataProductReportableInformation = DataProductReportableInformation(
+              id = reportId,
+              variantId = dashboardId,
             ),
+            preFilters = cleanFilters,
+            sortColumnName = sortColumn,
+            sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
         ),
       )
@@ -371,7 +367,7 @@ class DataApiSyncController(
             sortColumnName = sortColumn,
             sortColumnDirection = sortedAsc?.let { if (it) SortDirection.ASC.name else SortDirection.DESC.name },
           ),
-        ),
+        ).data,
       )
   }
 

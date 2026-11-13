@@ -28,7 +28,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionC
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ConfiguredApiRepository.Filter
@@ -66,6 +68,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policye
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType.ACCESS
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Rule
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.datatransformation.DataTransformationService
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.datatransformation.LaoDataRepository
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.datatransformation.LaoDataTransformer
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.Caseload
@@ -79,6 +84,8 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
   private val redshiftDataApiRepository: RedshiftDataApiRepository = mock<RedshiftDataApiRepository>()
   private val athenaApiRepository: AthenaApiRepository = mock<AthenaApiRepository>()
   private val auditService: AuditService = mock<AuditService>()
+  private val laoDataRepository: LaoDataRepository = mock<LaoDataRepository>()
+  private val dataTransformationService: DataTransformationService = DataTransformationService(listOf(LaoDataTransformer(laoDataRepository)))
   private val expectedRepositoryResult = listOf(
     mapOf(
       "PRISONNUMBER" to "1",
@@ -91,16 +98,19 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       "REASON" to "normal transfer",
     ),
   )
-  private val expectedServiceResult = listOf(
-    mapOf(
-      "prisonNumber" to "1",
-      "name" to "FirstName",
-      "date" to "2023-05-20",
-      "origin" to "OriginLocation",
-      "destination" to "DestinationLocation",
-      "direction" to "in",
-      "type" to "trn",
-      "reason" to "normal transfer",
+  private val expectedServiceResult = ReportExecutionResults(
+    emptyMap(),
+    listOf(
+      mapOf(
+        "prisonNumber" to "1",
+        "name" to "FirstName",
+        "date" to "2023-05-20",
+        "origin" to "OriginLocation",
+        "destination" to "DestinationLocation",
+        "direction" to "in",
+        "type" to "trn",
+        "reason" to "normal transfer",
+      ),
     ),
   )
   private val reportId = EXTERNAL_MOVEMENTS_PRODUCT_ID
@@ -116,7 +126,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     ),
     identifiedHelper,
   )
-  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
+  private val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, dataTransformationService, null)
 
   private val executionContext = ExecutionContext(
     CaseloadResponse(
@@ -136,6 +146,8 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
   @BeforeEach
   fun setup() {
+    whenever(laoDataRepository.getLaoRestrictionsForCrns(any())).thenReturn(emptyList())
+    whenever(laoDataRepository.getLaoExclusionsForUser(any())).thenReturn(emptyList())
     whenever(
       productDefinitionTokenPolicyChecker.determineAuth(
         withPolicy = any(),
@@ -281,10 +293,13 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         estCodeSchemaFieldName.uppercase() to "establishment code",
       ),
     )
-    val expectedServiceResult = listOf(
-      mapOf(
-        estNameSchemaFieldName to "establishment name",
-        estCodeSchemaFieldName to "establishment code",
+    val expectedServiceResult = ReportExecutionResults(
+      emptyMap(),
+      listOf(
+        mapOf(
+          estNameSchemaFieldName to "establishment name",
+          estCodeSchemaFieldName to "establishment code",
+        ),
       ),
     )
     val singleReportProductDefinition =
@@ -344,24 +359,26 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.count(
-        filters = repositoryFilters,
-        query = dataSet.query.first().query,
-        reportId = reportId,
-        policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
-        productDefinition = singleReportProductDefinition,
+        filters = eq(repositoryFilters),
+        query = eq(dataSet.query.first().query),
+        reportId = eq(reportId),
+        policyEngineResult = eq(policyEngineResult),
+        dataSourceName = eq(dataSourceName),
+        productDefinition = eq(singleReportProductDefinition),
+        executionContext = any(),
       ),
     ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
-      filters = repositoryFilters,
-      query = dataSet.query.first().query,
-      reportId = reportId,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
-      productDefinition = singleReportProductDefinition,
+      filters = eq(repositoryFilters),
+      query = eq(dataSet.query.first().query),
+      reportId = eq(reportId),
+      policyEngineResult = eq(policyEngineResult),
+      dataSourceName = eq(dataSourceName),
+      productDefinition = eq(singleReportProductDefinition),
+      executionContext = any(),
     )
     assertEquals(Count(4), actual)
   }
@@ -420,24 +437,26 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.count(
-        filters = repositoryFilters,
-        query = dataSet.query.first().query,
-        reportId = reportId,
-        policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
-        productDefinition = singleReportProductDefinition,
+        filters = eq(repositoryFilters),
+        query = eq(dataSet.query.first().query),
+        reportId = eq(reportId),
+        policyEngineResult = eq(policyEngineResult),
+        dataSourceName = eq(dataSourceName),
+        productDefinition = eq(singleReportProductDefinition),
+        executionContext = any(),
       ),
     ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
-      filters = repositoryFilters,
-      query = dataSet.query.first().query,
-      reportId = reportId,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
-      productDefinition = singleReportProductDefinition,
+      filters = eq(repositoryFilters),
+      query = eq(dataSet.query.first().query),
+      reportId = eq(reportId),
+      policyEngineResult = eq(policyEngineResult),
+      dataSourceName = eq(dataSourceName),
+      productDefinition = eq(singleReportProductDefinition),
+      executionContext = any(),
     )
     assertEquals(Count(4), actual)
   }
@@ -497,24 +516,26 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.count(
-        filters = repositoryFilters,
-        query = dataSet.query.first().query,
-        reportId = reportId,
-        policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
-        productDefinition = singleReportProductDefinition,
+        filters = eq(repositoryFilters),
+        query = eq(dataSet.query.first().query),
+        reportId = eq(reportId),
+        policyEngineResult = eq(policyEngineResult),
+        dataSourceName = eq(dataSourceName),
+        productDefinition = eq(singleReportProductDefinition),
+        executionContext = any(),
       ),
     ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
-      filters = repositoryFilters,
-      query = dataSet.query.first().query,
-      reportId = reportId,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
-      productDefinition = singleReportProductDefinition,
+      filters = eq(repositoryFilters),
+      query = eq(dataSet.query.first().query),
+      reportId = eq(reportId),
+      policyEngineResult = eq(policyEngineResult),
+      dataSourceName = eq(dataSourceName),
+      productDefinition = eq(singleReportProductDefinition),
+      executionContext = any(),
     )
     assertEquals(Count(4), actual)
   }
@@ -572,7 +593,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       ),
       identifiedHelper,
     )
-    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
+    val configuredApiService = SyncDataApiService(productDefinitionRepository, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, dataTransformationService, null)
     val context = ExecutionContext(
       CaseloadResponse(
         username = "request-user",
@@ -641,24 +662,26 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.count(
-        filters = repositoryFilters,
-        query = dataSet.query.first().query,
-        reportId = reportId,
-        policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
-        productDefinition = singleReportProductDefinition,
+        filters = eq(repositoryFilters),
+        query = eq(dataSet.query.first().query),
+        reportId = eq(reportId),
+        policyEngineResult = eq(policyEngineResult),
+        dataSourceName = eq(dataSourceName),
+        productDefinition = eq(singleReportProductDefinition),
+        executionContext = any(),
       ),
     ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
 
     verify(configuredApiRepository, times(1)).count(
-      filters = repositoryFilters,
-      query = dataSet.query.first().query,
-      reportId = reportId,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
-      productDefinition = singleReportProductDefinition,
+      filters = eq(repositoryFilters),
+      query = eq(dataSet.query.first().query),
+      reportId = eq(reportId),
+      policyEngineResult = eq(policyEngineResult),
+      dataSourceName = eq(dataSourceName),
+      productDefinition = eq(singleReportProductDefinition),
+      executionContext = any(),
     )
     assertEquals(Count(4), actual)
   }
@@ -706,8 +729,11 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       reportFilter = singleReportProductDefinition.report.filter,
     )
     assertEquals(
-      listOf(
-        mapOf("prisonNumber" to "1"),
+      ReportExecutionResults(
+        emptyMap(),
+        listOf(
+          mapOf("prisonNumber" to "1"),
+        ),
       ),
       actual,
     )
@@ -722,24 +748,26 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
 
     whenever(
       configuredApiRepository.count(
-        filters = emptyList(),
-        query = dataSet.query.first().query,
-        reportId = reportId,
-        policyEngineResult = policyEngineResult,
-        dataSourceName = dataSourceName,
-        productDefinition = singleReportProductDefinition,
+        filters = eq(emptyList()),
+        query = eq(dataSet.query.first().query),
+        reportId = eq(reportId),
+        policyEngineResult = eq(policyEngineResult),
+        dataSourceName = eq(dataSourceName),
+        productDefinition = eq(singleReportProductDefinition),
+        executionContext = any(),
       ),
     ).thenReturn(4)
 
     val actual = configuredApiService.validateAndCount(reportId, reportVariantId, emptyMap(), executionContext)
 
     verify(configuredApiRepository, times(1)).count(
-      filters = emptyList(),
-      query = dataSet.query.first().query,
-      reportId = reportId,
-      policyEngineResult = policyEngineResult,
-      dataSourceName = dataSourceName,
-      productDefinition = singleReportProductDefinition,
+      filters = eq(emptyList()),
+      query = eq(dataSet.query.first().query),
+      reportId = eq(reportId),
+      policyEngineResult = eq(policyEngineResult),
+      dataSourceName = eq(dataSourceName),
+      productDefinition = eq(singleReportProductDefinition),
+      executionContext = any(),
     )
     assertEquals(Count(4), actual)
   }
@@ -783,7 +811,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_ID_MESSAGE} $reportId", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -823,7 +851,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals("${SyncDataApiService.INVALID_REPORT_VARIANT_ID_MESSAGE} $reportVariantId", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1039,7 +1067,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1077,7 +1105,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_FILTERS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1115,7 +1143,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1190,7 +1218,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals(SyncDataApiService.INVALID_STATIC_OPTIONS_MESSAGE, e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1228,7 +1256,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       configuredApiService.validateAndCount(reportId, reportVariantId, filters, executionContext)
     }
     assertEquals("Invalid value abc for filter date. Cannot be parsed as a date.", e.message)
-    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any())
+    verify(configuredApiRepository, times(0)).count(any(), any(), any(), any(), any(), any(), any())
   }
 
   @Test
@@ -1337,11 +1365,14 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
     val expectedRepositoryResult = listOf(
       mapOf("9" to "1"),
     )
-    val expectedServiceResult = listOf(
-      mapOf("9" to "1"),
+    val expectedServiceResult = ReportExecutionResults(
+      emptyMap(),
+      listOf(
+        mapOf("9" to "1"),
+      ),
     )
     val productDefRepo = mock<ProductDefinitionRepository>()
-    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, null)
+    val configuredApiService = SyncDataApiService(productDefRepo, configuredApiRepository, athenaApiRepository, productDefinitionTokenPolicyChecker, identifiedHelper, auditService, dataTransformationService, null)
     val dataSourceName = "name"
 
     whenever(productDefRepo.getProductDefinitions())
@@ -1473,11 +1504,14 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
         "ethnicity_is_missing" to "2",
       ),
     )
-    val expectedDashboardServiceResult = listOf(
-      mapOf(
-        "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/OUT' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">OUT</a>"),
-        "has_ethnicity" to MetricData("4000"),
-        "ethnicity_is_missing" to MetricData("2"),
+    val expectedDashboardServiceResult = DashboardExecutionResults(
+      emptyMap(),
+      listOf(
+        mapOf(
+          "establishment_id" to MetricData("<a href='https://prisoner.digital.prison.service.justice.gov.uk/prison/OUT' class=\"govuk-link\" rel=\"noreferrer noopener\" target=\"_blank\">OUT</a>"),
+          "has_ethnicity" to MetricData("4000"),
+          "ethnicity_is_missing" to MetricData("2"),
+        ),
       ),
     )
     val selectedPage = 1L
@@ -1594,6 +1628,7 @@ class SyncDataApiServiceTest : CommonDataApiServiceTestBase() {
       productDefinitionTokenPolicyChecker = productDefinitionTokenPolicyChecker,
       identifiedHelper = identifiedHelper,
       auditService = auditService,
+      dataTransformationService,
       env = null,
     )
     val downloadContext = syncDataApiService.prepareSyncDownloadContext(

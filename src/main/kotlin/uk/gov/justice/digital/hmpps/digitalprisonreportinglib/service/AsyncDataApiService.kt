@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditActi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.auditing.AuditService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaAndRedshiftCommonRepository
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.AthenaApiRepository
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementExecutionStatus
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.datatransformation.DataTransformationService
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.exception.TableExpiredException
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.model.AsyncDownloadContext
 import java.io.Writer
@@ -39,6 +42,7 @@ class AsyncDataApiService(
   productDefinitionTokenPolicyChecker: ProductDefinitionTokenPolicyChecker,
   val s3ApiService: S3ApiService,
   val auditService: AuditService,
+  val dataTransformationService: DataTransformationService,
   @Value(URL_ENV_SUFFIX_ENV_VAR) env: String? = null,
 ) : CommonDataApiService(
   identifiedHelper = identifiedHelper,
@@ -233,7 +237,7 @@ class AsyncDataApiService(
     executionContext: ExecutionContext,
     sortedAsc: Boolean?,
     sortColumn: String? = null,
-  ): List<Map<String, Any?>> {
+  ): ReportExecutionResults {
     auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
 
@@ -260,7 +264,9 @@ class AsyncDataApiService(
         ),
         productDefinition.reportDataset.schema.field,
         formulaEngine,
-      )
+      ).let {
+        dataTransformationService.transformResults(it, productDefinition, executionContext)
+      }
     }
   }
 
@@ -272,7 +278,7 @@ class AsyncDataApiService(
     pageSize: Long? = null,
     filters: Map<String, String>,
     executionContext: ExecutionContext,
-  ): List<Map<String, Any?>> {
+  ): DashboardExecutionResults {
     auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository.getSingleDashboardProductDefinition(reportId, dashboardId)
     return auditService.runAuditableAction(
@@ -299,6 +305,9 @@ class AsyncDataApiService(
         }
         .map(formulaEngine::applyFormulas)
         .map { row -> toMetricData(row) }
+        .let {
+          dataTransformationService.transformResults(it, productDefinition, executionContext)
+        }
     }
   }
 
@@ -311,7 +320,7 @@ class AsyncDataApiService(
     sortColumn: String?,
     sortedAsc: Boolean?,
     executionContext: ExecutionContext,
-  ): List<Map<String, Any?>> {
+  ): ReportExecutionResults {
     auditService.publishAttempt(AuditAction.DATA, executionContext)
     val productDefinition = productDefinitionRepository.getSingleReportProductDefinition(reportId, reportVariantId)
 
@@ -337,16 +346,19 @@ class AsyncDataApiService(
         sortedAsc,
       )
 
-      results.map {
-        formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
-      }
+      ReportExecutionResults(
+        results.policyBasedDataChanges,
+        results.data.map {
+          formatColumnNamesToSourceFieldNamesCasing(it, dataset.schema.field.map(SchemaField::name))
+        },
+      )
     }
   }
 
   // Request data from the summary table.
   // If it doesn't exist, create it (waiting for creation to complete).
   // TODO: When looking at the interactive journey, we will need to figure out how to re-request the summaries when the filters have changed.
-  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext, sortColumn: String?, sortedAsc: Boolean?): List<Map<String, Any?>> {
+  fun checkDataExistsAndFetch(tableSummaryId: String, tableId: String, summaryId: String, dataset: Dataset, productDefinition: SingleReportProductDefinition, executionContext: ExecutionContext, sortColumn: String?, sortedAsc: Boolean?): ReportExecutionResults {
     val tableExists = !redshiftDataApiRepository.isTableMissing(tableSummaryId)
     val s3DataExists = s3ApiService.doesPrefixExist(tableSummaryId)
     val summarySort = validateSummarySort(sortColumn, dataset)
@@ -354,11 +366,15 @@ class AsyncDataApiService(
     log.debug("S3 data exists: $s3DataExists")
     log.debug("SummarySort values: $summarySort")
     if (tableExists && s3DataExists) {
-      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc)
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc).let {
+        dataTransformationService.transformResults(it, productDefinition, executionContext)
+      }
     } else if (!tableExists && !s3DataExists) {
       configuredApiRepository.createSummaryTable(tableId, summaryId, dataset.query.first().query, productDefinition.datasource.name, executionContext)
       // Might need a small delay here as reading straight after creation might fail
-      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc)
+      return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc).let {
+        dataTransformationService.transformResults(it, productDefinition, executionContext)
+      }
     } else {
       try {
         // We cannot ensure total alignment of both the Redshift table and S3 data having completed their deletion before we check if one or the other is missing.
@@ -368,7 +384,9 @@ class AsyncDataApiService(
         // We will refactor this code so that summary tables get created, like redshift, as part of the main report generation.
         log.warn("Summary table is in an expired state.")
         // Cause a failure to log the exact reason of the failure.
-        return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc)
+        return redshiftDataApiRepository.getFullExternalTableResult(tableSummaryId, summarySort, sortedAsc).let {
+          dataTransformationService.transformResults(it, productDefinition, executionContext)
+        }
       } catch (e: Exception) {
         // Log what the actual error is when trying to retrieve the result in each case i.e. redshift table missing or S3 data missing
         log.warn("Summary table {} has expired and cannot be retrieved", tableSummaryId, e)

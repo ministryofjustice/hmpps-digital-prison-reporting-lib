@@ -20,7 +20,9 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApi
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_END_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.DataApiSyncController.FiltersPrefix.RANGE_FILTER_START_SUFFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.Count
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.DashboardExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetricData
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ReportExecutionResults
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryState
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ResultTableExpiryStateRequest
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.redshiftdata.StatementCancellationResponse
@@ -384,7 +386,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         sortColumn = eq(null),
       ),
     )
-      .willReturn(expectedServiceResult)
+      .willReturn(ReportExecutionResults(emptyMap(), expectedServiceResult))
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->
@@ -408,7 +410,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val selectedPage = 2L
     val pageSize = 20L
     val sortColumn = "columnA"
-    val expectedServiceResult =
+    val expectedServiceResult = ReportExecutionResults(
+      emptyMap(),
       listOf(
         mapOf(
           "prisonNumber" to "1",
@@ -420,7 +423,8 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
           "type" to "trn",
           "reason" to "normal transfer",
         ),
-      )
+      ),
+    )
 
     given(asyncDataApiService.getStatementResult(any(), any(), any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
@@ -441,7 +445,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectBody()
-      .json(Gson().toJson(expectedServiceResult))
+      .json(Gson().toJson(expectedServiceResult.data))
 
     verify(asyncDataApiService)
       .getStatementResult(
@@ -499,14 +503,16 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val dashboardId = "dashboardId"
     val selectedPage = 2L
     val pageSize = 20L
-    val expectedServiceResult =
+    val expectedServiceResult = DashboardExecutionResults(
+      emptyMap(),
       listOf(
         mapOf(
           "establishment_id" to MetricData("KMI"),
           "has_ethnicity" to MetricData("10"),
           "ethnicity_is_missing" to MetricData("30"),
         ),
-      )
+      ),
+    )
 
     given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
@@ -524,7 +530,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectBody()
-      .json(Gson().toJson(listOf(expectedServiceResult)))
+      .json(Gson().toJson(listOf(expectedServiceResult.data)))
 
     verify(asyncDataApiService).getDashboardStatementResult(
       eq(tableId),
@@ -544,14 +550,16 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
     val dashboardId = "dashboardId"
     val selectedPage = 2L
     val pageSize = 20L
-    val expectedServiceResult =
+    val expectedServiceResult = DashboardExecutionResults(
+      emptyMap(),
       listOf(
         mapOf(
           "establishment_id" to MetricData("KMI"),
           "has_ethnicity" to MetricData("10"),
           "ethnicity_is_missing" to MetricData("30"),
         ),
-      )
+      ),
+    )
 
     given(asyncDataApiService.getDashboardStatementResult(any(), any(), any(), any(), any(), any(), any()))
       .willReturn(expectedServiceResult)
@@ -570,7 +578,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
       .expectStatus()
       .isOk()
       .expectBody()
-      .json(Gson().toJson(listOf(expectedServiceResult)))
+      .json(Gson().toJson(listOf(expectedServiceResult.data)))
 
     verify(asyncDataApiService).getDashboardStatementResult(
       eq(tableId),
@@ -641,7 +649,7 @@ class RedshiftDataApiIntegrationTest : IntegrationTestBase() {
         any<ExecutionContext>(),
       ),
     )
-      .willReturn(expectedServiceResult)
+      .willReturn(ReportExecutionResults(emptyMap(), expectedServiceResult))
 
     webTestClient.get()
       .uri { uriBuilder: UriBuilder ->

@@ -268,6 +268,7 @@ abstract class DefinitionMapper(
     executionContext = executionContext,
     reportFieldId = setOf(schemaFieldName),
   )
+    .data
     .flatMap { it.entries }
     .map { FilterOption(it.value.toString(), it.value.toString()) }
 

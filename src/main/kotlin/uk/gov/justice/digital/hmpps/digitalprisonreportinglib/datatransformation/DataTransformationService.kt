@@ -12,28 +12,24 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleR
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.WithPolicy
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 @Service
-class DataTransformationService {
-  private final val dataTransformationPolicyTypesToTransformers: Map<PolicyType, KClass<out DataTransformer>> = mapOf(
-    PolicyType.LAO to LaoDataTransformer::class,
-  )
+class DataTransformationService(
+  private val transformers: List<DataTransformer>,
+) {
+  private val dataTransformationPolicyTypesToTransformers = transformers.associateBy { it.policyType }
 
   fun transformResults(
     data: List<Map<String, Any?>>,
     product: SingleReportProductDefinition,
     executionContext: ExecutionContext,
-  ): ReportExecutionResults =
-    transformResultsImpl(data, product, executionContext) as ReportExecutionResults
+  ): ReportExecutionResults = transformResultsImpl(data, product, executionContext) as ReportExecutionResults
 
   fun transformResults(
     data: List<Map<String, Any?>>,
     product: SingleDashboardProductDefinition,
     executionContext: ExecutionContext,
-  ): DashboardExecutionResults =
-    transformResultsImpl(data, product, executionContext) as DashboardExecutionResults
+  ): DashboardExecutionResults = transformResultsImpl(data, product, executionContext) as DashboardExecutionResults
 
   private fun transformResultsImpl(
     data: List<Map<String, Any?>>,
@@ -48,12 +44,13 @@ class DataTransformationService {
     return when (product) {
       is SingleReportProductDefinition -> ReportExecutionResults(
         data = data.first,
-        policyBasedDataChanges = data.second
+        policyBasedDataChanges = data.second,
       )
       is SingleDashboardProductDefinition -> DashboardExecutionResults(
         data = data.first,
         policyBasedDataChanges = data.second,
       )
+      else -> throw IllegalStateException("Unsupported product type ${product::class.simpleName}")
     }
   }
 
@@ -67,6 +64,10 @@ class DataTransformationService {
       return Pair(data, emptyMap())
     }
 
+    if (data.isEmpty()) {
+      return Pair(data, emptyMap())
+    }
+
     val duplicates = transformationPolicies.groupBy(Policy::type).filterValues { it.size > 1 }
 
     // At present there shouldn't be multiple of the same type of transformation policy
@@ -74,19 +75,19 @@ class DataTransformationService {
       throw ValidationException("Multiple duplicate policies found for type(s) ${duplicates.keys}")
     }
 
-    var currentData = data
+    var transformedData = data
     val allChanges = mutableMapOf<PolicyType, List<PolicyBasedDataChange>>()
 
-    for (policy in transformationPolicies) {
-      val transformer = dataTransformationPolicyTypesToTransformers[policy.type]?.createInstance()
-        ?: error("No transformer for ${policy.type}")
+    val policiesByType = transformationPolicies.groupBy { it.type }
+    for ((policyType, policies) in policiesByType) {
+      val transformer = dataTransformationPolicyTypesToTransformers[policyType] ?: error("No transformer for $policyType")
 
-      val (newData, changes) = transformer.transform(currentData, policy, executionContext)
+      val (newData, changes) = transformer.transform(transformedData, policies, executionContext)
 
-      currentData = newData
-      allChanges[policy.type] = changes
+      transformedData = newData
+      allChanges[policyType] = changes
     }
 
-    return Pair(data, allChanges)
+    return Pair(transformedData, allChanges)
   }
 }

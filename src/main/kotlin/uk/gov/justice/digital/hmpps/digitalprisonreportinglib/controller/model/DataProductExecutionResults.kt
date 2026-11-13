@@ -40,11 +40,11 @@ abstract class DataProductExecutionResults(
 }
 
 data class ReportExecutionResults(
-  override val policyBasedDataChanges: Map<PolicyType, List<PolicyBasedDataChange>> = emptyList(),
+  override val policyBasedDataChanges: Map<PolicyType, List<PolicyBasedDataChange>> = emptyMap(),
   val data: List<Map<String, Any?>>,
 ) : DataProductExecutionResults(ResultType.REPORT)
 
 data class DashboardExecutionResults(
-  override val policyBasedDataChanges: Map<PolicyType, List<PolicyBasedDataChange>> = emptyList(),
+  override val policyBasedDataChanges: Map<PolicyType, List<PolicyBasedDataChange>> = emptyMap(),
   val data: List<Map<String, Any?>>,
 ) : DataProductExecutionResults(ResultType.DASHBOARD)

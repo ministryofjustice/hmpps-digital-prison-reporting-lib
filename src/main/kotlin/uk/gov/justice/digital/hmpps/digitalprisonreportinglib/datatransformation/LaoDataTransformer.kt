@@ -1,41 +1,90 @@
 package uk.gov.justice.digital.hmpps.digitalprisonreportinglib.datatransformation
 
 import jakarta.validation.ValidationException
+import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.context.ExecutionContext
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ColumnChange
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.LaoPolicyMetadata
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.PolicyBasedDataChange
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.RowIdentifier
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Effect
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.Policy
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.policyengine.PolicyType
 
-class LaoDataTransformer: DataTransformer {
+data class DataTransformation(
+  val data: List<Map<String, Any?>>,
+  val policyBasedChanges: List<PolicyBasedDataChange>,
+)
+
+@Component
+class LaoDataTransformer(
+  private val laoDataRepository: LaoDataRepository,
+) : DataTransformer {
+  override val policyType: PolicyType = PolicyType.LAO
+
   override fun transform(
     data: List<Map<String, Any?>>,
-    policy: Policy,
+    policies: List<Policy>,
     executionContext: ExecutionContext,
-  ): Pair<List<Map<String, Any?>>, List<PolicyBasedDataChange>> {
-
-//
-//    ${_action!!.first()} NOT IN (
-//      WITH exclusions_cte as (
-//        SELECT crn FROM product_.lao_exclusions e WHERE e.user_id = '${executionContext.userInfo.username}' AND e.since <= NOW() AND e.until >= NOW()
-//      ),
-//      restrictions_cte as (
-//        SELECT crn FROM product_.lao_restrictions r
-//        WHERE r.since <= NOW() AND r.until >= NOW()
-//        GROUP BY crn
-//        HAVING NOT BOOL_OR(user_id = '${executionContext.userInfo.username}')
-//    )
-//    SELECT crn FROM exclusions_cte UNION SELECT crn FROM restrictions_cte
-//    )
-//    """.trimIndent()
-
-    val laoCrnColumn = policy.action.first()
-    if (laoCrnColumn.isEmpty()) {
-      throw ValidationException("`action` was empty for LAO policy type, should contain one entry which is the name of the column representing CRN.")
+  ): DataTransformation {
+    if (policies.any { it.type != policyType }) {
+      throw ValidationException("LaoDataTransformer was given non LAO policies")
     }
+    if (policies.isEmpty()) {
+      throw ValidationException("LaoDataTransformer was given no policies")
+    }
+    if (policies.size > 1) {
+      throw ValidationException("Data product had more than one policy of $policyType which is not currently supported")
+    }
+
+    val policy = policies.first()
+    if (policy.rule.first().effect == Effect.PERMIT) {
+      return DataTransformation(data, emptyList())
+    }
+    val userEnteredCrnColumn = policy.action.firstOrNull()?.lowercase()
+    if (userEnteredCrnColumn.isNullOrBlank()) {
+      throw ValidationException("action for LAO policy was null or empty")
+    }
+    val matchedCrnColumns = data.flatMap { it.keys }.toSet().filter { it.lowercase() == userEnteredCrnColumn }
+    if (matchedCrnColumns.isEmpty()) {
+      throw ValidationException("Data product had no columns matching the given 'crn' column in action ${data.flatMap { it.keys }.toSet()}")
+    }
+    if (matchedCrnColumns.size > 1) {
+      throw ValidationException("Data product had multiple columns matching the given 'crn' column in action")
+    }
+    val crnColumn = matchedCrnColumns.first()
+    val exclusions = laoDataRepository.getLaoExclusionsForUser(executionContext.userInfo.username)
+    val crnColumnValues = data.map { it[crnColumn] as String }
+    val restrictions = laoDataRepository.getLaoRestrictionsForCrns(crnColumnValues)
+    val excludedCrns = exclusions.map { it.crn }.toSet()
+
+    val policyBasedChanges = mutableListOf<PolicyBasedDataChange>()
 
     val filteredData = data.filterNot {
-      it["has_related_lao_exclusion"] as Boolean || it["has_related_lao_restriction"] as Boolean
+      val dataRowCrnValue = it[crnColumn]
+      val shouldBeFilteredOut = excludedCrns.contains(dataRowCrnValue) ||
+        (
+          restrictions.any { restriction -> restriction.userId != executionContext.userInfo.username && restriction.crn == dataRowCrnValue } &&
+            !restrictions.any { restriction -> restriction.userId == executionContext.userInfo.username && restriction.crn == dataRowCrnValue }
+          )
+
+      if (shouldBeFilteredOut) {
+        policyBasedChanges.add(
+          PolicyBasedDataChange(
+            rowIdentifier = RowIdentifier(rowIndex = 1L),
+            columnChanges = it.keys.map { colName -> ColumnChange(columnName = colName, newColumnValue = "") },
+            policy = policy,
+            policySpecificMetaData = LaoPolicyMetadata(
+              identifyingColumn = crnColumn,
+              identifyingColumnValue = dataRowCrnValue as String,
+            ),
+          ),
+        )
+      }
+
+      shouldBeFilteredOut
     }
 
-    return Pair(filteredData, emptyList())
+    return DataTransformation(filteredData, policyBasedChanges)
   }
 }
