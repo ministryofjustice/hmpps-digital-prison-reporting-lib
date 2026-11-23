@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.ProductDefini
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dashboard
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SingleDashboardProductDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.CaseloadResponse
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.security.authentication.AuthUser
@@ -54,14 +55,16 @@ class DashboardDefinitionServiceTest {
     val definitionId = "missing-ethnicity-metrics"
     val dashboardId = "age-breakdown-dashboard-1"
     val datasource: Datasource = mock()
+    val metadata: MetaData = mock()
 
-    whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), any(), any(), anyOrNull(), anyOrNull())).doReturn(dashboardDefinition)
+    whenever(dashboardDefinitionMapper.toDashboardDefinition(any(), any(), any(), any(), anyOrNull(), anyOrNull(), any())).doReturn(dashboardDefinition)
     whenever(productDefinitionTokenPolicyChecker.determineAuth(any(), any())).doReturn(true)
     whenever(productDefinitionRepository.getSingleDashboardProductDefinition(any(), any())).doReturn(productDefinition)
     whenever(productDefinition.dashboard).doReturn(dashboard)
     whenever(productDefinition.allDatasets).doReturn(allDatasets)
     whenever(productDefinition.datasource).doReturn(datasource)
     whenever(productDefinition.allDatasources).doReturn(listOf(datasource))
+    whenever(productDefinition.metadata).doReturn(metadata)
 
     val actual = dashboardDefinitionService.getDashboardDefinition(
       dataProductDefinitionId = definitionId,
@@ -72,6 +75,6 @@ class DashboardDefinitionServiceTest {
     assertThat(actual).isEqualTo(dashboardDefinition)
 
     verify(productDefinitionRepository).getSingleDashboardProductDefinition(definitionId, dashboardId)
-    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, emptyList(), allDatasets, executionContext, null, listOf(datasource))
+    verify(dashboardDefinitionMapper).toDashboardDefinition(dashboard, emptyList(), allDatasets, executionContext, null, listOf(datasource), metadata)
   }
 }

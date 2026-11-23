@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.F
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterType
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetaDataDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IsoLocalDateTimeTypeAdaptor
@@ -39,6 +40,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Dataset
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasource
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.AutoComplete
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType.Caseloads
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MultiphaseQuery
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Parameter
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.ParameterType
@@ -94,6 +96,8 @@ class DashboardDefinitionMapperTest {
     DataProductReportableInformation("", "", mock(), "", ""),
   )
 
+  private val metadata = MetaData(author = "Adam", version = "1", owner = "Eve")
+
   @Test
   fun `getDashboardDefinition returns the dashboard definition`() {
     whenever(syncDataApiService.validateAndFetchDataForFilterWithDataset(any(), any(), any(), anyOrNull(), anyOrNull(), anyOrNull())).then {
@@ -111,12 +115,14 @@ class DashboardDefinitionMapperTest {
       executionContext = executionContext,
       null,
       productDefinition.allDatasources,
+      productDefinition.metadata,
     )
     assertEquals(
       DashboardDefinition(
         id = "age-breakdown-dashboard-1",
         name = "Age Breakdown Dashboard",
         description = "Age Breakdown Dashboard Description",
+        metadata = MetaDataDefinition(metadata.author, metadata.owner, "Daily Bugle"),
         sections = listOf(
           DashboardSectionDefinition(
             id = "totals-breakdown",
@@ -227,11 +233,13 @@ class DashboardDefinitionMapperTest {
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
       allDatasources = listOf(datasource1),
+      metadata = metadata,
     )
     val expected = DashboardDefinition(
       id,
       name,
       description,
+      MetaDataDefinition(metadata.author, metadata.owner),
       listOf(),
       listOf(
         FieldDefinition(
@@ -316,11 +324,13 @@ class DashboardDefinitionMapperTest {
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
       allDatasources = listOf(datasource1),
+      metadata = metadata,
     )
     val expected = DashboardDefinition(
       id,
       name,
       description,
+      MetaDataDefinition(metadata.author, metadata.owner),
       listOf(),
       listOf(
         FieldDefinition(
@@ -392,11 +402,13 @@ class DashboardDefinitionMapperTest {
       allDatasets = listOf(dashboardDataset),
       executionContext = executionContext,
       allDatasources = listOf(datasource1),
+      metadata = metadata,
     )
     val expected = DashboardDefinition(
       id,
       name,
       description,
+      MetaDataDefinition(metadata.author, metadata.owner),
       listOf(),
       listOf(
         FieldDefinition(
@@ -457,8 +469,6 @@ class DashboardDefinitionMapperTest {
     )
 
     val productDefinitionWithChild = productDefinitionRepositoryWithChild.getSingleDashboardProductDefinition("missing-ethnicity-metrics", "age-breakdown-dashboard-with-child")
-    val database = "testdb"
-    val catalog = "testcatalog"
     val datasource1 = Datasource("nomis", "NOMIS", "DIGITAL_PRISON_REPORTING", "nomis")
 
     val actual = dashboardDefinitionMapperWithChild.toDashboardDefinition(
@@ -467,6 +477,7 @@ class DashboardDefinitionMapperTest {
       allDatasets = productDefinitionWithChild.allDatasets,
       executionContext = executionContext,
       allDatasources = listOf(datasource1),
+      metadata = metadata,
     )
 
     val expectedSections = listOf(
@@ -533,6 +544,7 @@ class DashboardDefinitionMapperTest {
         id = "establishment-dashboard",
         name = "Establishment Dashboard",
         description = "Establishment Dashboard Description",
+        metadata = MetaDataDefinition(metadata.author, metadata.owner, "Daily Planet"),
         sections = expectedSections,
         filterFields = expectedFilterFields,
         childVariants = null,
@@ -544,6 +556,7 @@ class DashboardDefinitionMapperTest {
         id = "age-breakdown-dashboard-with-child",
         name = "Age Breakdown Dashboard",
         description = "Age Breakdown Dashboard Description",
+        metadata = MetaDataDefinition(metadata.author, metadata.owner, "Daily Bugle"),
         sections = expectedSections,
         filterFields = expectedFilterFields,
         childVariants = expectedChildVariants,

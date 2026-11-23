@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.D
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FieldType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.FilterOption
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.MetaDataDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.UnitTypeDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.controller.model.ValueVisualisationColumnDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.IdentifiedHelper
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Datasou
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterDefinition
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.FilterType
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.Identified.Companion.REF_PREFIX
+import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.MetaData
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.data.model.SchemaField
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.FormulaEngine.Companion.MAKE_URL_FORMULA_PREFIX
 import uk.gov.justice.digital.hmpps.digitalprisonreportinglib.service.alert.AlertCategoryCacheService
@@ -60,6 +62,7 @@ class DashboardDefinitionMapper(
     executionContext: ExecutionContext,
     filters: Map<String, String>? = null,
     allDatasources: List<Datasource>,
+    metadata: MetaData,
   ): DashboardDefinition {
     val dataset = identifiedHelper.findOrFail(allDatasets, dashboard.dataset)
 
@@ -67,11 +70,21 @@ class DashboardDefinitionMapper(
       id = dashboard.id,
       name = dashboard.name,
       description = dashboard.description,
+      metadata = mapMetadata(dashboard, metadata),
       sections = mapSections(dashboard, dataset),
       filterFields = mapAndAggregateAllFilters(dataset, allDatasets, executionContext, filters, allDatasources),
-      childVariants = mapChildVariants(dashboard, allDashboards, allDatasets, executionContext, filters, allDatasources),
+      childVariants = mapChildVariants(dashboard, allDashboards, allDatasets, executionContext, filters, allDatasources, metadata),
     )
   }
+
+  private fun mapMetadata(
+    dashboard: Dashboard,
+    metadata: MetaData,
+  ): MetaDataDefinition = MetaDataDefinition(
+    author = metadata.author,
+    owner = metadata.owner,
+    datasource = dashboard.metadata?.datasource,
+  )
 
   private fun mapChildVariants(
     dashboard: Dashboard,
@@ -80,6 +93,7 @@ class DashboardDefinitionMapper(
     executionContext: ExecutionContext,
     filters: Map<String, String>?,
     datasource: List<Datasource>,
+    metadata: MetaData,
   ): List<DashboardDefinition>? = dashboard.child?.map { child ->
     val dashboard = identifiedHelper.findOrFail<Dashboard>(
       all = allDashboards,
@@ -93,6 +107,7 @@ class DashboardDefinitionMapper(
       executionContext = executionContext,
       filters = filters,
       allDatasources = datasource,
+      metadata = metadata,
     )
   }
 
