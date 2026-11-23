@@ -4,6 +4,7 @@ data class DashboardDefinition(
   val id: String,
   val name: String,
   val description: String?,
+  val metadata: MetaDataDefinition,
   val sections: List<DashboardSectionDefinition>,
   val filterFields: List<FieldDefinition>?,
   val childVariants: List<DashboardDefinition>? = null,

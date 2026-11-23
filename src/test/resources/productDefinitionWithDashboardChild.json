@@ -92,6 +92,9 @@
       "id": "age-breakdown-dashboard-with-child",
       "name": "Age Breakdown Dashboard",
       "description": "Age Breakdown Dashboard Description",
+      "metadata": {
+        "datasource": "Daily Bugle"
+      },
       "dataset": "missing-ethnicity-dataset",
       "child": [
         {
@@ -149,6 +152,9 @@
       "id": "establishment-dashboard",
       "name": "Establishment Dashboard",
       "description": "Establishment Dashboard Description",
+      "metadata": {
+        "datasource": "Daily Planet"
+      },
       "dataset": "establishments",
       "section": [
         {

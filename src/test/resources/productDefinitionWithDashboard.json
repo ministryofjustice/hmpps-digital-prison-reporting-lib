@@ -131,7 +131,10 @@
             }
           ]
         }
-      ]
+      ],
+      "metadata": {
+        "datasource": "Daily Bugle"
+      }
     }
   ],
   "policy": [

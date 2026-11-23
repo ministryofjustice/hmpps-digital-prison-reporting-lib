@@ -13,6 +13,7 @@ data class Dashboard(
   val filter: ReportFilter? = null,
   val loadType: LoadType? = null,
   val child: List<DashboardChild>? = null,
+  val metadata: DashboardMetadata? = null,
 ) : Identified {
   override fun getIdentifier() = this.id
 }
