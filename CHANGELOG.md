@@ -1,5 +1,8 @@
 Below you can find the changes included in each release.
 
+# 18.7.0
+- Added metadata field to dashboard definition
+
 # 18.6.2
 - Retrieve authSource from userinfo endpoint rather then the token.
 
