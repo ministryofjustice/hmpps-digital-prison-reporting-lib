@@ -20,4 +20,6 @@ enum class DashboardVisualisationTypeDefinition(@JsonValue val type: String) {
   MATRIX_TIMESERIES("matrix-timeseries"),
 
   LINE_TIMESERIES("line-timeseries"),
+
+  BOX_PLOT("boxplot"),
 }
