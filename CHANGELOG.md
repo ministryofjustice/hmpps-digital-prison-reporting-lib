@@ -1,5 +1,9 @@
 Below you can find the changes included in each release.
 
+
+# 18.7.1
+- Added boxplot to `DashboardVisualisationTypeDefinition`
+
 # 18.7.0
 - Added metadata field to dashboard definition
 
