@@ -41,4 +41,8 @@ enum class DashboardVisualisationType {
   @SerialName("line-timeseries")
   @SerializedName("line-timeseries")
   LINE_TIMESERIES,
+
+  @SerialName("boxplot")
+  @SerializedName("boxplot")
+  BOX_PLOT,
 }
