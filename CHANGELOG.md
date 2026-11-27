@@ -1,6 +1,8 @@
 Below you can find the changes included in each release.
 
-
+# 18.7.2
+- Added boxplot to `DashboardVisualisationType`
+- 
 # 18.7.1
 - Added boxplot to `DashboardVisualisationTypeDefinition`
 
